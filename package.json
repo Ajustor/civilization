@@ -1,0 +1,21 @@
+{
+  "name": "simulation",
+  "version": "1.0.0",
+  "scripts": {
+    "start:back": "bunx nx dev @ajustor/civ-api",
+    "build:back": "bunx nx build @ajustor/civ-api",
+    "start:front": "bunx nx dev front",
+    "start": "concurrently \"bun start:back\" \"bun start:front\""
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "devDependencies": {
+    "@bogeychan/elysia-logger": "^0.1.1",
+    "@chneau/elysia-compression": "^1.0.8",
+    "@elysiajs/cors": "^1.1.0",
+    "@elysiajs/cron": "^1.1.0",
+    "concurrently": "^8.2.2",
+    "nx": "19.5.6"
+  }
+}
