@@ -16,6 +16,10 @@
     "@elysiajs/cors": "^1.1.0",
     "@elysiajs/cron": "^1.1.0",
     "concurrently": "^8.2.2",
-    "nx": "19.5.6"
+    "nx": "19.5.6",
+    "chalk": "5.3.0",
+    "elysia": "^1.1.5",
+    "inquirer": "^10.1.2",
+    "unique-names-generator": "^4.7.1"
   }
 }
