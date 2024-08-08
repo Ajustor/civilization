@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "build": "bun build src/index.ts --minify --target node",
+    "build": "bun build src/index.ts --minify --target node --outfile civ_server --compile",
     "start": "NODE_ENV=production bun src/index.ts",
     "demo": "bun run src/demo.ts"
   },
