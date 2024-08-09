@@ -15,4 +15,6 @@ const app = new Elysia()
 
 app.listen(3000)
 
+console.log(`🦄 Server started at ${app.server?.url}`)
+
 export type App = typeof app 

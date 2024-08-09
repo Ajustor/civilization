@@ -3,6 +3,7 @@ import { Resource, ResourceType } from './resource'
 import { Civilization } from './civilization'
 
 export type WorldInfos = {
+  name: string
   resources: Resource[]
   month: number
   year: number
@@ -11,13 +12,12 @@ export type WorldInfos = {
 
 export class World {
   private resources: Resource[]
-  private month: number = 1
   private civilizations: Civilization[] = []
 
-  constructor() {
+  constructor(private readonly name = 'The world', private month = 1, foodQuantity = 10000, woodQuantity = 5000) {
     this.resources = [
-      new Resource(ResourceType.FOOD, 10000),
-      new Resource(ResourceType.WOOD, 5000)
+      new Resource(ResourceType.FOOD, foodQuantity),
+      new Resource(ResourceType.WOOD, woodQuantity)
     ]
   }
 
@@ -27,6 +27,14 @@ export class World {
 
   public getYear(): number {
     return ~~(this.month / 12)
+  }
+
+  public getName(): string {
+    return this.name
+  }
+
+  public getResources(): Resource[] {
+    return this.resources
   }
 
   getResource(type: ResourceType): Resource | undefined {
@@ -66,7 +74,7 @@ export class World {
     const foodResource = this.getResource(ResourceType.FOOD)
     const woodResource = this.getResource(ResourceType.WOOD)
     return `
-${chalk.blue('--- World Status ---')}
+${chalk.blue(`--- ${this.name} Status ---`)}
 ${foodResource?.quantity ? chalk.green(`Available food: ${foodResource?.quantity}`) : chalk.red(`Available food: ${foodResource?.quantity}`)}
 ${woodResource?.quantity ? chalk.green(`Available wood: ${woodResource?.quantity}`) : chalk.red(`Available wood: ${woodResource?.quantity}`)}
 ${chalk.blue('---------------------------')}`
@@ -74,6 +82,7 @@ ${chalk.blue('---------------------------')}`
 
   public getInfos(): WorldInfos {
     return {
+      name: this.name,
       civilizations: this.civilizations,
       month: this.month,
       resources: this.resources,

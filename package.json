@@ -15,11 +15,14 @@
     "@chneau/elysia-compression": "^1.0.8",
     "@elysiajs/cors": "^1.1.0",
     "@elysiajs/cron": "^1.1.0",
-    "concurrently": "^8.2.2",
-    "nx": "19.5.6",
+    "@paralleldrive/cuid2": "^2.2.2",
     "chalk": "5.3.0",
+    "concurrently": "^8.2.2",
+    "drizzle-kit": "^0.24.0",
+    "drizzle-orm": "^0.33.0",
     "elysia": "^1.1.5",
     "inquirer": "^10.1.2",
+    "nx": "19.5.6",
     "unique-names-generator": "^4.7.1"
   }
 }
