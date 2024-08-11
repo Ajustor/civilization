@@ -3,6 +3,7 @@ import { version } from '../package.json'
 import { cors } from '@elysiajs/cors'
 import { worldModule } from './modules/world'
 import { logger } from "@bogeychan/elysia-logger"
+import { usersModule } from './modules/users'
 
 
 const app = new Elysia()
@@ -11,6 +12,7 @@ const app = new Elysia()
   // .use(compression())
   .get('/', () => `api-version: ${version}`)
   .use(worldModule)
+  .use(usersModule)
 
 
 app.listen(3000)

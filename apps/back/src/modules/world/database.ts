@@ -5,12 +5,18 @@ import { and, eq } from 'drizzle-orm'
 import { World } from '../../simulation/world'
 import { ResourceType } from '../../simulation/resource'
 
+export type GetOptions = {
+  populate: {
+    resources: boolean
+  }
+}
+
 export class WorldsTable {
   constructor(private readonly client: BunSQLiteDatabase) {
 
   }
 
-  async getAll(): Promise<World[]> {
+  async getAll(options?: GetOptions): Promise<World[]> {
     const worlds = await this.client
       .select()
       .from(worldsTable)
@@ -18,10 +24,12 @@ export class WorldsTable {
     const results: World[] = []
 
     for (const world of worlds) {
-      const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
-      const woodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.WOOD)
-      const foodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.FOOD)
-      results.push(new World(world.name, world.month, foodResource?.quantity, woodResource?.quantity))
+      if (options?.populate.resources) {
+        const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
+        const woodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.WOOD)
+        const foodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.FOOD)
+        results.push(new World(world.name, world.month, foodResource?.quantity, woodResource?.quantity))
+      }
     }
 
     return results
