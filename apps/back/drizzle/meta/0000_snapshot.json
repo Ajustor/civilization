@@ -1,22 +1,111 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c37d46d0-75df-490a-89f8-d8de14d78761",
+  "id": "7fe41586-352a-40b9-a148-c58ec04bacc3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "resources": {
-      "name": "resources",
+    "civilizations": {
+      "name": "civilizations",
       "columns": {
-        "type": {
-          "name": "type",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
+        },
+        "buildings": {
+          "name": "buildings",
+          "type": "blob",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
+        },
+        "citizens": {
+          "name": "citizens",
+          "type": "blob",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
         }
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "civilizationsId": {
+          "name": "civilizationsId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "columns": [
+            "username"
+          ],
+          "isUnique": true
+        },
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "users_civilizationsId_civilizations_id_fk": {
+          "name": "users_civilizationsId_civilizations_id_fk",
+          "tableFrom": "users",
+          "tableTo": "civilizations",
+          "columnsFrom": [
+            "civilizationsId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -41,7 +130,7 @@
           "name": "month",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": 0
         }
@@ -76,18 +165,18 @@
           "notNull": false,
           "autoincrement": false
         },
-        "resourceType": {
-          "name": "resourceType",
+        "type": {
+          "name": "type",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "quantity": {
           "name": "quantity",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": 0
         }
@@ -103,19 +192,6 @@
           ],
           "columnsTo": [
             "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "worlds_resources_resourceType_resources_type_fk": {
-          "name": "worlds_resources_resourceType_resources_type_fk",
-          "tableFrom": "worlds_resources",
-          "tableTo": "resources",
-          "columnsFrom": [
-            "resourceType"
-          ],
-          "columnsTo": [
-            "type"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
