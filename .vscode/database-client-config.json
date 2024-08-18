@@ -1,41 +1,4 @@
 {
-    "database": {
-        "1723191902115": {
-            "host": "127.0.0.1",
-            "port": 3306,
-            "dbType": "SQLite",
-            "advance": {
-                "hideSystemSchema": true,
-                "groupingTables": false
-            },
-            "treeFeatures": [],
-            "timezone": "+00:00",
-            "usingSSH": false,
-            "useSocksProxy": false,
-            "useHTTPProxy": false,
-            "athena": {},
-            "bigQuery": {},
-            "global": false,
-            "savePassword": "Forever",
-            "readonly": false,
-            "sort": 11,
-            "useSSL": false,
-            "dbPath": "/home/alexandre/dev/perso/civilization/apps/back/civ-simulator.sqlite",
-            "fs": {
-                "encoding": "utf8",
-                "showHidden": true
-            },
-            "dm": {
-                "usingServiceName": false
-            },
-            "httpAuth": {
-                "authType": "none"
-            },
-            "key": "1723191902115",
-            "connectionKey": "database.connections",
-            "isJdbc": false,
-            "requiredAuth": true
-        }
-    },
+    "database": {},
     "$schema": "https://cdn.database-client.com/dbclient/schema.json"
 }

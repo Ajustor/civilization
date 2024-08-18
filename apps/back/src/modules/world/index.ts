@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia'
+import { Elysia, NotFoundError } from 'elysia'
 import { logger } from '@bogeychan/elysia-logger'
 import { cron, Patterns } from '@elysiajs/cron'
 import { WorldsTable } from './database'
@@ -31,5 +31,9 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .get('', async ({ log, dbClient }) => {
     const worlds = await dbClient.getAll()
 
-    return worlds.map((world) => world.getInfos()) ?? new Error('No world found')
+    if (!worlds.length) {
+      throw new NotFoundError('No worlds found')
+    }
+
+    return worlds.map((world) => world.getInfos())
   })
