@@ -8,3 +8,5 @@ export const civilizationTable = sqliteTable('civilizations', {
   buildings: blob('buildings', { mode: 'json' }).notNull().default([]).$type<Building[]>(),
   citizens: blob('citizens', { mode: 'json' }).notNull().default([]).$type<Citizen[]>()
 })
+
+export type CivilizationEntity = typeof civilizationTable.$inferSelect

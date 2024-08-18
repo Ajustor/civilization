@@ -17,16 +17,6 @@ export class World {
   constructor(private readonly name = 'The world', private month = 1) {
   }
 
-  setResource(type: ResourceType, quantity: number) {
-    const existingResource = this.resources.find((resource) => resource.getType() === type)
-
-    if (existingResource) {
-      existingResource.quantity = quantity
-    } else {
-      this.resources.push(new Resource(type, quantity))
-    }
-  }
-
   public addCivilization(civilization: Civilization) {
     this.civilizations.push(civilization)
   }
@@ -44,7 +34,7 @@ export class World {
   }
 
   getResource(type: ResourceType): Resource | undefined {
-    return this.resources.find(resource => resource.type === type)
+    return this.resources.find(resource => resource.getType() === type)
   }
 
   decreaseResource(type: ResourceType, amount: number): void {
@@ -81,8 +71,8 @@ export class World {
     const woodResource = this.getResource(ResourceType.WOOD)
     return `
 ${chalk.blue(`--- ${this.name} Status ---`)}
-${foodResource?.quantity ? chalk.green(`Available food: ${foodResource?.quantity}`) : chalk.red(`Available food: ${foodResource?.quantity}`)}
-${woodResource?.quantity ? chalk.green(`Available wood: ${woodResource?.quantity}`) : chalk.red(`Available wood: ${woodResource?.quantity}`)}
+${foodResource?.getQuantity() ? chalk.green(`Available food: ${foodResource?.getQuantity()}`) : chalk.red(`Available food: ${foodResource?.getQuantity()}`)}
+${woodResource?.getQuantity() ? chalk.green(`Available wood: ${woodResource?.getQuantity()}`) : chalk.red(`Available wood: ${woodResource?.getQuantity()}`)}
 ${chalk.blue('---------------------------')}`
   }
 

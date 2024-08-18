@@ -4,15 +4,19 @@ import { cors } from '@elysiajs/cors'
 import { worldModule } from './modules/world'
 import { logger } from "@bogeychan/elysia-logger"
 import { usersModule } from './modules/users'
+import { civilizationModule } from './modules/civilizations'
+import { swagger } from '@elysiajs/swagger'
 
 
 const app = new Elysia()
   .use(cors())
   .use(logger())
+  .use(swagger())
   // .use(compression())
   .get('/', () => `api-version: ${version}`)
   .use(worldModule)
   .use(usersModule)
+  .use(civilizationModule)
 
 
 app.listen(3000)

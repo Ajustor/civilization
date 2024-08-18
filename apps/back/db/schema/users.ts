@@ -11,6 +11,7 @@ export const usersTable = sqliteTable('users', {
   civilizations: text('civilizationsId').references(() => civilizationTable.id)
 })
 
-export type UserEntity = typeof usersTable.$inferInsert
+export type UserEntity = typeof usersTable.$inferSelect
+export type UserCreation = typeof usersTable.$inferInsert
 
 export const createUser = createInsertSchema(usersTable)

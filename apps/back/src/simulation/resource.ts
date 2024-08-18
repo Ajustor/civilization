@@ -6,16 +6,17 @@ export enum ResourceType {
 }
 
 export class Resource {
-  type: ResourceType
-  quantity: number
 
-  constructor(type: ResourceType, quantity: number) {
-    this.type = type
-    this.quantity = quantity
+  constructor(private type: ResourceType, private quantity: number) {
+
   }
 
   getType(): ResourceType {
     return this.type
+  }
+
+  getQuantity(): number {
+    return this.quantity
   }
 
   increase(quantity: number): void {

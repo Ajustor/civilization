@@ -4,32 +4,32 @@ import { cron, Patterns } from '@elysiajs/cron'
 import { WorldsTable } from './database'
 import { db } from '../../libs/database'
 
-const dbClient = new WorldsTable(db)
-
 export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(logger())
   .decorate({
-    dbClient
+    worldDbClient: new WorldsTable(db)
   })
   .use(
     cron({
       name: 'monthPass',
       pattern: Patterns.everyHours(),
       async run() {
-        const worlds = await dbClient.getAll()
+        const worldDbClient = new WorldsTable(db)
+
+        const worlds = await worldDbClient.getAll()
 
         for (const world of worlds) {
           world.passAMonth()
         }
 
-        await dbClient.saveAll(worlds)
+        await worldDbClient.saveAll(worlds)
         console.log('A month has passed')
       }
     }
     )
   )
-  .get('', async ({ log, dbClient }) => {
-    const worlds = await dbClient.getAll({ populate: { resources: true } })
+  .get('', async ({ log, worldDbClient }) => {
+    const worlds = await worldDbClient.getAll({ populate: { resources: true } })
 
     if (!worlds.length) {
       throw new NotFoundError('No worlds found')

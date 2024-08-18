@@ -1,5 +1,5 @@
 import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
-import { usersTable, UserEntity } from '../../../db/schema/users'
+import { usersTable, UserCreation } from '../../../db/schema/users'
 
 export type GetOptions = {
   populate: {
@@ -20,7 +20,7 @@ export class UsersTable {
     return users
   }
 
-  async create(user: UserEntity) {
+  async create(user: UserCreation) {
     await this.client.insert(usersTable).values(user)
   }
 }

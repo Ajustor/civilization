@@ -3,7 +3,8 @@ import { worldsTable } from '../../../db/schema/worldSchema'
 import { worldsResourcesTable } from '../../../db/schema/worldsResourcesTable'
 import { and, eq } from 'drizzle-orm'
 import { World } from '../../simulation/world'
-import { ResourceType } from '../../simulation/resource'
+import { Resource } from '../../simulation/resource'
+import { WorldBuilder } from '../../simulation/builders/worldBuilder'
 
 export type GetOptions = {
   populate: {
@@ -24,20 +25,14 @@ export class WorldsTable {
     const results: World[] = []
 
     for (const world of worlds) {
-      const newWorld = new World(world.name, world.month)
+      const builder = new WorldBuilder()
+      builder.withName(world.name).startingMonth(world.month)
       if (options?.populate.resources) {
         const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
-        const woodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.WOOD)
-        const foodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.FOOD)
-        if (foodResource) {
-          newWorld.setResource(ResourceType.FOOD, foodResource.quantity)
-        }
 
-        if (woodResource) {
-          newWorld.setResource(ResourceType.WOOD, woodResource.quantity)
-        }
+        builder.addResource(...worldResources.map(({ quantity, resourceType }) => new Resource(resourceType, quantity)))
       }
-      results.push(newWorld)
+      results.push(builder.build())
     }
 
     return results
@@ -55,10 +50,10 @@ export class WorldsTable {
 
       for (const resource of resources) {
         await this.client.update(worldsResourcesTable).set({
-          quantity: resource.quantity
+          quantity: resource.getQuantity()
         }).where(and(
           eq(worldsResourcesTable.worldId, dbEntity.id),
-          eq(worldsResourcesTable.resourceType, resource.type),
+          eq(worldsResourcesTable.resourceType, resource.getType()),
         ))
       }
       await this.client.update(worldsTable).set({

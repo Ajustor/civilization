@@ -10,7 +10,7 @@ import { Farmer } from './citizen/work/farmer'
 import { BuildingTypes } from './buildings/enum'
 
 export class Civilization {
-    private name = uniqueNamesGenerator({ dictionaries: [countries] })
+    name = uniqueNamesGenerator({ dictionaries: [countries] })
     private citizens: Citizen[]
     private resources: Resource[]
     private houses: House[]
@@ -33,12 +33,12 @@ ${this.citizens.map((citizen) => `${citizen.name}, ${citizen.age} years old, ${c
 ${chalk.green(`buildings:
 ${this.houses.map((house) => `Houses: ${house.residents.length}/${house.capacity}`).join(' || ')}`)}
 ${chalk.yellow(`resources:
-${this.resources.map((resource) => `- ${resource.type}: ${resource.quantity}`).join('\n')}`)}
+${this.resources.map((resource) => `- ${resource.getType()}: ${resource.getQuantity()}`).join('\n')}`)}
 ${chalk.blue('---------------------------')}`
     }
 
     increaseResource(type: ResourceType, count: number) {
-        const resource = this.resources.find(({ type: resourceType }) => type === resourceType)
+        const resource = this.resources.find((resource) => type === resource.getType())
 
         if (!resource) {
             this.resources.push(new Resource(type, count))
@@ -48,7 +48,7 @@ ${chalk.blue('---------------------------')}`
     }
 
     decreaseResource(type: ResourceType, count: number) {
-        const resource = this.resources.find(({ type: resourceType }) => type === resourceType)
+        const resource = this.resources.find((resource) => type === resource.getType())
 
         if (!resource) {
             this.resources.push(new Resource(type, 0))
@@ -58,7 +58,7 @@ ${chalk.blue('---------------------------')}`
     }
 
     getResource(type: ResourceType): Resource {
-        let resource = this.resources.find(({ type: resourceType }) => resourceType === type)
+        let resource = this.resources.find((resource) => resource.getType() === type)
 
         if (!resource) {
             resource = new Resource(type, 0)
@@ -85,8 +85,8 @@ ${chalk.blue('---------------------------')}`
     }
 
     constructBuilding(type: BuildingTypes, capacity: number): void {
-        const woodResource = this.resources.find(res => res.type === ResourceType.WOOD)
-        if (woodResource && woodResource.quantity >= 15 && type === BuildingTypes.HOUSE) {
+        const woodResource = this.resources.find(res => res.getType() === ResourceType.WOOD)
+        if (woodResource && woodResource.getQuantity() >= 15 && type === BuildingTypes.HOUSE) {
             woodResource.decrease(15)
             this.addBuilding(new House(capacity))
         } else {
@@ -104,7 +104,7 @@ ${chalk.blue('---------------------------')}`
         const farmers = this.getCitizenWithProfession(ProfessionType.FARMER)
         const carpenters = this.getCitizenWithProfession(ProfessionType.CARPENTER)
 
-        if (foodResource?.quantity) {
+        if (foodResource?.getQuantity()) {
 
             const farmerGetResources = 4
 
@@ -117,7 +117,7 @@ ${chalk.blue('---------------------------')}`
             }
         }
 
-        if (woodResource?.quantity) {
+        if (woodResource?.getQuantity()) {
             carpentersLoop: for (const carpenter of carpenters) {
                 if (!carpenter.isBuilding) {
                     const successfullyCollectResource = carpenter.collectResource(world, 1)
@@ -133,7 +133,7 @@ ${chalk.blue('---------------------------')}`
         if (civilizationFood) {
 
             for (const farmer of farmers.sort((firstCitizen, secondCitizen) => firstCitizen.age - secondCitizen.age)) {
-                if (civilizationFood.quantity >= 1) {
+                if (civilizationFood.getQuantity() >= 1) {
                     civilizationFood.decrease(1)
                     farmer.increaseLife(1)
                 } else {
@@ -142,7 +142,7 @@ ${chalk.blue('---------------------------')}`
             }
 
             for (const carpenter of carpenters.sort((firstCitizen, secondCitizen) => firstCitizen.age - secondCitizen.age)) {
-                if (civilizationFood.quantity >= 2) {
+                if (civilizationFood.getQuantity() >= 2) {
                     civilizationFood.decrease(2)
                     carpenter.increaseLife(1)
                 } else {
@@ -157,7 +157,7 @@ ${chalk.blue('---------------------------')}`
         this.removeDeadCitizens()
         this.birthNewCitizen()
 
-        if (this.citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.quantity >= 15) {
+        if (this.citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.getQuantity() >= 15) {
             const carpenter = this.getCitizenWithProfession(ProfessionType.CARPENTER).find(citizen => !citizen.isBuilding)
             if (carpenter) {
                 carpenter.startBuilding()
