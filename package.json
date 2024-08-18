@@ -16,8 +16,10 @@
   "devDependencies": {
     "@bogeychan/elysia-logger": "^0.1.1",
     "@chneau/elysia-compression": "^1.0.8",
+    "@elysiajs/bearer": "^1.1.1",
     "@elysiajs/cors": "^1.1.0",
     "@elysiajs/cron": "^1.1.0",
+    "@elysiajs/jwt": "^1.1.0",
     "@elysiajs/swagger": "^1.1.1",
     "@paralleldrive/cuid2": "^2.2.2",
     "chalk": "5.3.0",

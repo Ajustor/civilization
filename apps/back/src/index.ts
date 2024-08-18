@@ -6,15 +6,22 @@ import { logger } from "@bogeychan/elysia-logger"
 import { usersModule } from './modules/users'
 import { civilizationModule } from './modules/civilizations'
 import { swagger } from '@elysiajs/swagger'
-
+import { jwt } from '@elysiajs/jwt'
+import { authModule } from './modules/auth'
 
 const app = new Elysia()
   .use(cors())
   .use(logger())
   .use(swagger())
+  .use(jwt({
+    name: 'jwt',
+    secret: process.env.JWT_SECRETS!,
+    exp: '7d'
+  }))
   // .use(compression())
   .get('/', () => `api-version: ${version}`)
   .use(worldModule)
+  .use(authModule)
   .use(usersModule)
   .use(civilizationModule)
 
