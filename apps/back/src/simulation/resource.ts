@@ -14,6 +14,10 @@ export class Resource {
     this.quantity = quantity
   }
 
+  getType(): ResourceType {
+    return this.type
+  }
+
   increase(quantity: number): void {
     this.quantity += quantity
   }

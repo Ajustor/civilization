@@ -29,7 +29,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     )
   )
   .get('', async ({ log, dbClient }) => {
-    const worlds = await dbClient.getAll()
+    const worlds = await dbClient.getAll({ populate: { resources: true } })
 
     if (!worlds.length) {
       throw new NotFoundError('No worlds found')

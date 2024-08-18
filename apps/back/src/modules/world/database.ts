@@ -24,12 +24,20 @@ export class WorldsTable {
     const results: World[] = []
 
     for (const world of worlds) {
+      const newWorld = new World(world.name, world.month)
       if (options?.populate.resources) {
         const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
         const woodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.WOOD)
         const foodResource = worldResources.find(({ resourceType }) => resourceType === ResourceType.FOOD)
-        results.push(new World(world.name, world.month, foodResource?.quantity, woodResource?.quantity))
+        if (foodResource) {
+          newWorld.setResource(ResourceType.FOOD, foodResource.quantity)
+        }
+
+        if (woodResource) {
+          newWorld.setResource(ResourceType.WOOD, woodResource.quantity)
+        }
       }
+      results.push(newWorld)
     }
 
     return results

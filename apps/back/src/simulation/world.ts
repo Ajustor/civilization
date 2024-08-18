@@ -11,14 +11,20 @@ export type WorldInfos = {
 }
 
 export class World {
-  private resources: Resource[]
+  private resources: Resource[] = []
   private civilizations: Civilization[] = []
 
-  constructor(private readonly name = 'The world', private month = 1, foodQuantity = 10000, woodQuantity = 5000) {
-    this.resources = [
-      new Resource(ResourceType.FOOD, foodQuantity),
-      new Resource(ResourceType.WOOD, woodQuantity)
-    ]
+  constructor(private readonly name = 'The world', private month = 1) {
+  }
+
+  setResource(type: ResourceType, quantity: number) {
+    const existingResource = this.resources.find((resource) => resource.getType() === type)
+
+    if (existingResource) {
+      existingResource.quantity = quantity
+    } else {
+      this.resources.push(new Resource(type, quantity))
+    }
   }
 
   public addCivilization(civilization: Civilization) {
