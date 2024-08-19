@@ -25,11 +25,11 @@ export class UsersTable {
     await this.client.insert(usersTable).values(user)
   }
 
-  async getUser({ username, password }: { username: string, password: string }) {
+  async getAuthUser({ username, password }: { username: string, password: string }) {
     return this.client.select({
+      id: usersTable.id,
       username: usersTable.username,
       email: usersTable.email,
-      civilizations: usersTable.civilizations
     }).from(usersTable).where(and(
       or(
         eq(usersTable.username, username),
@@ -37,6 +37,14 @@ export class UsersTable {
       ),
       eq(usersTable.password, password)
     ))
+  }
+
+  async getUser(id: string) {
+    return this.client.select({
+      username: usersTable.username,
+      email: usersTable.email,
+      civilizations: usersTable.civilizations
+    }).from(usersTable).where(eq(usersTable.id, id))
 
   }
 }
