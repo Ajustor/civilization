@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "7fe41586-352a-40b9-a148-c58ec04bacc3",
+  "id": "b4c2f190-476b-4ce8-8b01-bdad0e4ec96b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "civilizations": {
@@ -36,6 +36,115 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "civilizations_resources": {
+      "name": "civilizations_resources",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "civilizationId": {
+          "name": "civilizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "civilizations_resources_civilizationId_civilizations_id_fk": {
+          "name": "civilizations_resources_civilizationId_civilizations_id_fk",
+          "tableFrom": "civilizations_resources",
+          "tableTo": "civilizations",
+          "columnsFrom": [
+            "civilizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "civilizations_worlds": {
+      "name": "civilizations_worlds",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "civilizationId": {
+          "name": "civilizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "worldId": {
+          "name": "worldId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "civilizations_worlds_civilizationId_civilizations_id_fk": {
+          "name": "civilizations_worlds_civilizationId_civilizations_id_fk",
+          "tableFrom": "civilizations_worlds",
+          "tableTo": "civilizations",
+          "columnsFrom": [
+            "civilizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "civilizations_worlds_worldId_worlds_id_fk": {
+          "name": "civilizations_worlds_worldId_worlds_id_fk",
+          "tableFrom": "civilizations_worlds",
+          "tableTo": "worlds",
+          "columnsFrom": [
+            "worldId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "users": {
       "name": "users",
       "columns": {
@@ -66,13 +175,6 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "civilizationsId": {
-          "name": "civilizationsId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         }
       },
       "indexes": {
@@ -91,13 +193,56 @@
           "isUnique": true
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "users_civilizations": {
+      "name": "users_civilizations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "civilizationId": {
+          "name": "civilizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
       "foreignKeys": {
-        "users_civilizationsId_civilizations_id_fk": {
-          "name": "users_civilizationsId_civilizations_id_fk",
-          "tableFrom": "users",
+        "users_civilizations_userId_users_id_fk": {
+          "name": "users_civilizations_userId_users_id_fk",
+          "tableFrom": "users_civilizations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "users_civilizations_civilizationId_civilizations_id_fk": {
+          "name": "users_civilizations_civilizationId_civilizations_id_fk",
+          "tableFrom": "users_civilizations",
           "tableTo": "civilizations",
           "columnsFrom": [
-            "civilizationsId"
+            "civilizationId"
           ],
           "columnsTo": [
             "id"
