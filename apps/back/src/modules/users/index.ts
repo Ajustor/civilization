@@ -8,6 +8,6 @@ export const usersModule = new Elysia({ prefix: '/users' }).decorate({
 }).get('', async ({ userDbClient }) => {
   const users = userDbClient.getAll()
   return users
-}).post('', ({ userDbClient, body }) => {
-  userDbClient.create(body)
-}, { body: createUser })
+}).post('', async ({ userDbClient, body }) =>
+  userDbClient.create({ ...body, password: await Bun.password.hash(body.password) })
+  , { body: createUser })
