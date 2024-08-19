@@ -1,6 +1,5 @@
 import { createId } from '@paralleldrive/cuid2'
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { civilizationTable } from './civilizations'
 import { createInsertSchema } from 'drizzle-typebox'
 
 export const usersTable = sqliteTable('users', {
@@ -8,7 +7,6 @@ export const usersTable = sqliteTable('users', {
   username: text('username').unique().notNull(),
   password: text('password').notNull(),
   email: text('email').unique().notNull(),
-  civilizations: text('civilizationsId').references(() => civilizationTable.id)
 })
 
 export type UserEntity = typeof usersTable.$inferSelect

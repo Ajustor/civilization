@@ -1,6 +1,8 @@
 import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { usersTable, UserCreation } from '../../../db/schema/users'
 import { and, eq, or } from 'drizzle-orm'
+import { civilizationTable } from '../../../db/schema/civilizations'
+import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 
 export type GetOptions = {
   populate: {
@@ -40,11 +42,19 @@ export class UsersTable {
   }
 
   async getUser(id: string) {
-    return this.client.select({
+    const [user] = await this.client.select({
       username: usersTable.username,
       email: usersTable.email,
-      civilizations: usersTable.civilizations
     }).from(usersTable).where(eq(usersTable.id, id))
 
+    if (!user) {
+      return null
+    }
+
+    const civilizations = await this.client.select().from(usersCivilizationTable).where(eq(usersCivilizationTable.userId, id)).rightJoin(civilizationTable, eq(civilizationTable.id, usersCivilizationTable.civilizationId)).groupBy(usersCivilizationTable.userId)
+
+    console.log(civilizations)
+
+    return user
   }
 }
