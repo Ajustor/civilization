@@ -7,14 +7,14 @@ export const authModule = new Elysia({ prefix: '/auth' })
   .use(jwtMiddleware)
   .decorate({ userDbClient: new UsersTable(db) })
   .post('', async ({ jwt, body, set, cookie: { auth }, userDbClient }) => {
-    const [user] = await userDbClient.getAuthUser({ ...body, password: await Bun.password.hash(body.password) })
+    const user = await userDbClient.getAuthUser({ ...body })
     if (!user) {
       set.status = 404
       throw new NotFoundError('User not found')
     }
     auth.set({
-      httpOnly: true,
-      value: jwt.sign(user)
+
+      value: await jwt.sign(user)
     })
   }, {
     body: t.Object(

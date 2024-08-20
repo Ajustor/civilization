@@ -1,6 +1,6 @@
 import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { usersTable, UserCreation } from '../../../db/schema/users'
-import { and, eq, or } from 'drizzle-orm'
+import { eq, or } from 'drizzle-orm'
 import { civilizationTable } from '../../../db/schema/civilizations'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 
@@ -28,17 +28,29 @@ export class UsersTable {
   }
 
   async getAuthUser({ username, password }: { username: string, password: string }) {
-    return this.client.select({
+    console.log('search user', { username, password })
+    const [retrievedUser] = await this.client.select({
       id: usersTable.id,
       username: usersTable.username,
       email: usersTable.email,
-    }).from(usersTable).where(and(
-      or(
-        eq(usersTable.username, username),
-        eq(usersTable.email, username)
-      ),
-      eq(usersTable.password, password)
+      password: usersTable.password
+    }).from(usersTable).where(or(
+      eq(usersTable.username, username),
+      eq(usersTable.email, username)
     ))
+
+    if (!retrievedUser) {
+      return null
+    }
+
+    console.log('retrieved', retrievedUser)
+    const isPasswordValid = await Bun.password.verify(password, retrievedUser.password)
+    if (!isPasswordValid) {
+      return null
+    }
+
+    const { password: _, ...user } = retrievedUser
+    return user
   }
 
   async getUser(id: string) {

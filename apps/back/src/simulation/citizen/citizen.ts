@@ -10,6 +10,14 @@ const professions = {
   [ProfessionType.FARMER]: Farmer
 }
 
+export type CitizenEntity = {
+  id?: string
+  name: string
+  age: number
+  profession?: ProfessionType
+  lifeCounter: number
+}
+
 export class Citizen {
   name: string
   age: number

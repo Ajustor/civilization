@@ -8,6 +8,7 @@ import { range } from '../utils'
 import { ProfessionType } from './citizen/work/enum'
 import { Farmer } from './citizen/work/farmer'
 import { BuildingTypes } from './buildings/enum'
+import { Building } from './buildings/buildings.type'
 
 export class Civilization {
     name = uniqueNamesGenerator({ dictionaries: [countries] })
@@ -23,6 +24,18 @@ export class Civilization {
 
     nobodyAlive(): boolean {
         return this.citizens.length === 0
+    }
+
+    getCitizens(): Citizen[] {
+        return this.citizens
+    }
+
+    getResources(): Resource[] {
+        return this.resources
+    }
+
+    getBuildings(): Building[] {
+        return [...this.houses]
     }
 
     getCivilizationInfos(): string {

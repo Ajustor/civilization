@@ -1,0 +1,1 @@
+ALTER TABLE `civilizations` ADD `name` text NOT NULL;
