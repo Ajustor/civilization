@@ -9,6 +9,10 @@ export class Carpenter implements Work {
     return ProfessionType.CARPENTER
   }
 
+  startBuilding(): void {
+    this.isBuilding = true
+    this.buildingYearsLeft = 2
+  }
 
   canWork(citizenAge: number): boolean {
     return citizenAge >= 12 && citizenAge < 60
@@ -17,7 +21,7 @@ export class Carpenter implements Work {
   collectResources(world: World, count: number): boolean {
     const resource = world.getResource(ResourceType.WOOD)
     if (resource) {
-      if (resource.quantity >= count) {
+      if (resource.getQuantity() >= count) {
         resource.decrease(count)
         return true
       }

@@ -8,6 +8,11 @@ import { Citizen } from '../../simulation/citizen/citizen'
 import { names, uniqueNamesGenerator } from 'unique-names-generator'
 import { ProfessionType } from '../../simulation/citizen/work/enum'
 import { Resource, ResourceType } from '../../simulation/resource'
+import { Civilization } from '../../simulation/civilization'
+
+function formatCivilizations(civilizations: Civilization[]) {
+  return civilizations.map((civilization) => ({ ...civilization, citizens: civilization.getCitizens().map((citizen) => ({ ...citizen, profession: citizen.profession?.professionType })) }))
+}
 
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
@@ -15,7 +20,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .decorate({ civilizationDbClient: new CivilizationTable(db) })
   .get('', async ({ civilizationDbClient, log }) => {
     const civilizations = await civilizationDbClient.getAll()
-    return civilizations
+    return { civilizations: formatCivilizations(civilizations) }
   })
   .post('', async ({ civilizationDbClient, jwt, cookie: { auth }, set, body, log }) => {
     const user = await jwt.verify(auth.value)
@@ -24,8 +29,8 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       throw new Error('You need to connect to create a civilization')
     }
     const civilizationBuilder = new CivilizationBuilder()
-    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 10, 3)
-    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 10, 3)
+    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
+    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
 
     firstCitizen.setProfession(ProfessionType.FARMER)
     secondCitizen.setProfession(ProfessionType.CARPENTER)

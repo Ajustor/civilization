@@ -1,7 +1,8 @@
 CREATE TABLE `civilizations` (
 	`id` text PRIMARY KEY NOT NULL,
-	`buildings` blob DEFAULT '[]' NOT NULL,
-	`citizens` blob DEFAULT '[]' NOT NULL
+	`name` text NOT NULL,
+	`buildings` text NOT NULL,
+	`citizens` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `civilizations_resources` (
@@ -49,6 +50,7 @@ CREATE TABLE `worlds_resources` (
 	FOREIGN KEY (`worldId`) REFERENCES `worlds`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `civilizations_name_unique` ON `civilizations` (`name`);--> statement-breakpoint
 CREATE UNIQUE INDEX `users_username_unique` ON `users` (`username`);--> statement-breakpoint
 CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);--> statement-breakpoint
 CREATE UNIQUE INDEX `worlds_name_unique` ON `worlds` (`name`);

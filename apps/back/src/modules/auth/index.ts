@@ -13,7 +13,6 @@ export const authModule = new Elysia({ prefix: '/auth' })
       throw new NotFoundError('User not found')
     }
     auth.set({
-
       value: await jwt.sign(user)
     })
   }, {

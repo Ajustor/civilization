@@ -5,6 +5,6 @@ import { worldsTable } from './worldSchema'
 
 export const civilizationsWorldTable = sqliteTable('civilizations_worlds', {
   id: text('id').primaryKey().$defaultFn(createId),
-  civilizationId: text('civilizationId').references(() => civilizationTable.id),
-  worldId: text('worldId').references(() => worldsTable.id)
+  civilizationId: text('civilizationId').notNull().references(() => civilizationTable.id),
+  worldId: text('worldId').notNull().references(() => worldsTable.id)
 })

@@ -4,21 +4,23 @@ import { Civilization } from './civilization'
 
 export type WorldInfos = {
   name: string
-  resources: Resource[]
+  resources: { type: ResourceType, quantity: number }[]
   month: number
   year: number
   civilizations: Civilization[]
 }
 
 export class World {
+  id: string
   private resources: Resource[] = []
   private civilizations: Civilization[] = []
 
   constructor(private readonly name = 'The world', private month = 1) {
+    this.id = ''
   }
 
-  public addCivilization(civilization: Civilization) {
-    this.civilizations.push(civilization)
+  public addCivilization(...civilizations: Civilization[]) {
+    this.civilizations.push(...civilizations)
   }
 
   public getYear(): number {
@@ -81,7 +83,10 @@ ${chalk.blue('---------------------------')}`
       name: this.name,
       civilizations: this.civilizations,
       month: this.month,
-      resources: this.resources,
+      resources: this.resources.map((resource) => ({
+        type: resource.getType(),
+        quantity: resource.getQuantity()
+      })),
       year: this.getYear()
     }
   }

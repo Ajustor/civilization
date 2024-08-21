@@ -3,10 +3,16 @@ import { Resource } from '../resource'
 import { World } from '../world'
 
 export class WorldBuilder {
+  private id: string = ''
   private name: string = 'The world';
   private month: number = 1;
   private resources: Resource[] = [];
   private civilizations: Civilization[] = [];
+
+  withId(id: string): this {
+    this.id = id
+    return this
+  }
 
   withName(name: string): this {
     this.name = name
@@ -30,6 +36,7 @@ export class WorldBuilder {
 
   build(): World {
     const world = new World(this.name, this.month)
+    world.id = this.id
 
     // Add resources
     for (const resource of this.resources) {

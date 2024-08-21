@@ -13,36 +13,43 @@ const professions = {
 export type CitizenEntity = {
   id?: string
   name: string
-  age: number
+  month: number
   profession?: ProfessionType
-  lifeCounter: number
-}
-
-export class Citizen {
-  name: string
-  age: number
-  profession: Work | null = null
   lifeCounter: number
   isBuilding: boolean
   buildingYearsLeft: number
 
-  constructor(name: string, age: number, lifeCounter: number = 3) {
+}
+
+export class Citizen {
+  name: string
+  month: number
+  profession: Work | null = null
+  lifeCounter: number
+  isBuilding: boolean
+  buildingMonthsLeft: number
+
+  constructor(name: string, month: number, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0) {
     this.name = name
-    this.age = age
+    this.month = month
     this.lifeCounter = lifeCounter
-    this.isBuilding = false
-    this.buildingYearsLeft = 0
+    this.isBuilding = isBuilding
+    this.buildingMonthsLeft = buildingMonthsLeft
   }
 
   setProfession(professionType: ProfessionType) {
     this.profession = new professions[professionType]()
   }
 
-  ageOneYear(): void {
-    this.age += 1
+  get years() {
+    return ~~(this.month / 12)
+  }
+
+  ageOneMonth(): void {
+    this.month += 1
     if (this.isBuilding) {
-      this.buildingYearsLeft -= 1
-      if (this.buildingYearsLeft <= 0) {
+      this.buildingMonthsLeft -= 1
+      if (this.buildingMonthsLeft <= 0) {
         this.isBuilding = false
       }
     }
@@ -57,11 +64,11 @@ export class Citizen {
   }
 
   isAlive(): boolean {
-    return this.lifeCounter > 0 && this.age < 90
+    return this.lifeCounter > 0 && this.years < 90
   }
 
   collectResource(world: World, amount: number): boolean {
-    if (!this.profession?.canWork(this.age)) {
+    if (!this.profession?.canWork(this.years)) {
       return false
     }
 
@@ -70,11 +77,11 @@ export class Citizen {
 
   startBuilding(): void {
     this.isBuilding = true
-    this.buildingYearsLeft = 2
+    this.buildingMonthsLeft = 2
   }
 
   canReproduce(): boolean {
-    return this.age > 16 && this.age < 60 && this.lifeCounter >= 8
+    return this.years > 16 && this.years < 60 && this.lifeCounter >= 8
   }
 
 }

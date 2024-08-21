@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b4c2f190-476b-4ce8-8b01-bdad0e4ec96b",
+  "id": "aef4c05f-a980-4a40-9979-3d7850baa4ab",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "civilizations": {
@@ -14,24 +14,37 @@
           "notNull": true,
           "autoincrement": false
         },
-        "buildings": {
-          "name": "buildings",
-          "type": "blob",
+        "name": {
+          "name": "name",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'[]'"
+          "autoincrement": false
+        },
+        "buildings": {
+          "name": "buildings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "citizens": {
           "name": "citizens",
-          "type": "blob",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'[]'"
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "civilizations_name_unique": {
+          "name": "civilizations_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}

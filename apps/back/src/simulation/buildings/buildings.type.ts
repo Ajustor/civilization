@@ -1,12 +1,13 @@
 import { Citizen, CitizenEntity } from '../citizen/citizen'
-import { Resource } from '../resource'
+import { Resource, ResourceEntity } from '../resource'
 import { BuildingTypes } from './enum'
 
 export type BuildingEntity = {
+  id?: string
   type?: BuildingTypes
   capacity?: number
   residents?: CitizenEntity[]
-  resources?: Resource[]
+  resources?: ResourceEntity[]
 }
 
 export interface Building {

@@ -39,7 +39,6 @@ export class WorldsTable {
   }
 
   async saveAll(worlds: World[]) {
-    console.log('save worlds', worlds)
     for (const world of worlds) {
       const { name, month, resources } = world.getInfos()
       const [dbEntity] = await this.client.select().from(worldsTable).where(eq(worldsTable.name, name)).limit(1)
@@ -50,10 +49,10 @@ export class WorldsTable {
 
       for (const resource of resources) {
         await this.client.update(worldsResourcesTable).set({
-          quantity: resource.getQuantity()
+          quantity: resource.quantity
         }).where(and(
           eq(worldsResourcesTable.worldId, dbEntity.id),
-          eq(worldsResourcesTable.resourceType, resource.getType()),
+          eq(worldsResourcesTable.resourceType, resource.type),
         ))
       }
       await this.client.update(worldsTable).set({

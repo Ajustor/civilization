@@ -16,7 +16,7 @@ export class Farmer implements Work {
   collectResources(world: World, count: number): boolean {
     const resource = world.getResource(ResourceType.FOOD)
     if (resource) {
-      if (resource.quantity >= count) {
+      if (resource.getQuantity() >= count) {
         resource.decrease(count)
         return true
       }

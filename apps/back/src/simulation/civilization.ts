@@ -42,7 +42,7 @@ export class Civilization {
         return `
 ${chalk.blue(`--- ${this.name} Status ---`)}
 ${chalk.green(`citizens:
-${this.citizens.map((citizen) => `${citizen.name}, ${citizen.age} years old, ${citizen.profession?.professionType} (${citizen.lifeCounter} life points)`).join(' || ')}`)}
+${this.citizens.map((citizen) => `${citizen.name}, ${citizen.years} years old, ${citizen.profession?.professionType} (${citizen.lifeCounter} life points)`).join(' || ')}`)}
 ${chalk.green(`buildings:
 ${this.houses.map((house) => `Houses: ${house.residents.length}/${house.capacity}`).join(' || ')}`)}
 ${chalk.yellow(`resources:
@@ -115,7 +115,7 @@ ${chalk.blue('---------------------------')}`
         const civilizationWood = this.getResource(ResourceType.WOOD)
 
         const farmers = this.getCitizenWithProfession(ProfessionType.FARMER)
-        const carpenters = this.getCitizenWithProfession(ProfessionType.CARPENTER)
+        const carpentersCitizens = this.getCitizenWithProfession(ProfessionType.CARPENTER)
 
         if (foodResource?.getQuantity()) {
 
@@ -131,7 +131,7 @@ ${chalk.blue('---------------------------')}`
         }
 
         if (woodResource?.getQuantity()) {
-            carpentersLoop: for (const carpenter of carpenters) {
+            carpentersLoop: for (const carpenter of carpentersCitizens) {
                 if (!carpenter.isBuilding) {
                     const successfullyCollectResource = carpenter.collectResource(world, 1)
                     if (!successfullyCollectResource) {
@@ -145,7 +145,7 @@ ${chalk.blue('---------------------------')}`
         // Handle food consumption and life counter
         if (civilizationFood) {
 
-            for (const farmer of farmers.sort((firstCitizen, secondCitizen) => firstCitizen.age - secondCitizen.age)) {
+            for (const farmer of farmers.sort((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years)) {
                 if (civilizationFood.getQuantity() >= 1) {
                     civilizationFood.decrease(1)
                     farmer.increaseLife(1)
@@ -154,7 +154,7 @@ ${chalk.blue('---------------------------')}`
                 }
             }
 
-            for (const carpenter of carpenters.sort((firstCitizen, secondCitizen) => firstCitizen.age - secondCitizen.age)) {
+            for (const carpenter of carpentersCitizens.sort((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years)) {
                 if (civilizationFood.getQuantity() >= 2) {
                     civilizationFood.decrease(2)
                     carpenter.increaseLife(1)
@@ -164,9 +164,8 @@ ${chalk.blue('---------------------------')}`
             }
         }
 
-
         // Age all citizens
-        this.citizens.forEach(citizen => citizen.ageOneYear())
+        this.citizens.forEach(citizen => citizen.ageOneMonth())
         this.removeDeadCitizens()
         this.birthNewCitizen()
 

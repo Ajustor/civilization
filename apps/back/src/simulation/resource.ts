@@ -5,6 +5,11 @@ export enum ResourceType {
   FOOD = 'food'
 }
 
+export type ResourceEntity = {
+  type: ResourceType
+  quantity: number
+}
+
 export class Resource {
 
   constructor(private type: ResourceType, private quantity: number) {

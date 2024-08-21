@@ -28,7 +28,6 @@ export class UsersTable {
   }
 
   async getAuthUser({ username, password }: { username: string, password: string }) {
-    console.log('search user', { username, password })
     const [retrievedUser] = await this.client.select({
       id: usersTable.id,
       username: usersTable.username,
@@ -43,7 +42,6 @@ export class UsersTable {
       return null
     }
 
-    console.log('retrieved', retrievedUser)
     const isPasswordValid = await Bun.password.verify(password, retrievedUser.password)
     if (!isPasswordValid) {
       return null
