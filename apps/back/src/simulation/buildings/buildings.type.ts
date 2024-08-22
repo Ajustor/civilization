@@ -16,4 +16,5 @@ export interface Building {
   resources?: Resource[]
 
   getType(): BuildingTypes
+  formatToEntity(): BuildingEntity
 }

@@ -17,7 +17,7 @@ export type CitizenEntity = {
   profession?: ProfessionType
   lifeCounter: number
   isBuilding: boolean
-  buildingYearsLeft: number
+  buildingMonthsLeft: number
 
 }
 
@@ -82,6 +82,34 @@ export class Citizen {
 
   canReproduce(): boolean {
     return this.years > 16 && this.years < 60 && this.lifeCounter >= 8
+  }
+
+  formatToEntity(): CitizenEntity {
+    return {
+      buildingMonthsLeft: this.buildingMonthsLeft,
+      isBuilding: this.isBuilding,
+      lifeCounter: this.lifeCounter,
+      month: this.month,
+      name: this.name,
+      profession: this.profession?.professionType
+    }
+  }
+
+  [Symbol.toPrimitive](hint: string) {
+    const formatedCitizen = {
+      buildingMonthsLeft: this.buildingMonthsLeft,
+      isBuilding: this.isBuilding,
+      lifeCounter: this.lifeCounter,
+      month: this.month,
+      name: this.name,
+      profession: this.profession?.professionType
+    }
+
+    if (hint === 'string') {
+      return JSON.stringify(formatedCitizen)
+    }
+
+    return formatedCitizen
   }
 
 }

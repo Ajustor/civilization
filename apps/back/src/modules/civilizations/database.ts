@@ -42,7 +42,7 @@ export class CivilizationTable {
       }
     }
 
-    builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingYearsLeft, isBuilding }) => {
+    builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
       const citizen = new Citizen(name, month, lifeCounter)
       if (profession) {
         citizen.setProfession(profession)
@@ -90,8 +90,8 @@ export class CivilizationTable {
 
   async create(userId: string, civilization: Civilization) {
     const [createdCivilization] = await this.client.insert(civilizationTable).values({
-      citizens: civilization.getCitizens().map(({ month, name, profession, lifeCounter, isBuilding, buildingMonthsLeft: buildingYearsLeft }) => ({ month, name, profession: profession?.professionType, lifeCounter, isBuilding, buildingYearsLeft })),
-      // buildings: civilization.getBuildings(),
+      citizens: civilization.getCitizens().map((citizen) => citizen.formatToEntity()),
+      buildings: civilization.getBuildings().map((building) => building.formatToEntity()),
       name: civilization.name
     }).returning({ id: civilizationTable.id })
 
