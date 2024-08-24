@@ -3,7 +3,7 @@ import { CivilizationEntity, civilizationTable } from '../../../db/schema/civili
 import { Civilization } from '../../simulation/civilization'
 import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { Resource } from '../../simulation/resource'
 import { BuildingTypes } from '../../simulation/buildings/enum'
 import { House } from '../../simulation/buildings/house'
@@ -114,5 +114,26 @@ export class CivilizationTable {
       civilizationId: createdCivilization.id,
       worldId: world.id,
     })
+  }
+
+  async delete(userId: string, civilizationId: string) {
+    const [civilizationLink] = await this.client
+      .select()
+      .from(usersCivilizationTable)
+      .where(
+        and(
+          eq(usersCivilizationTable.userId, userId),
+          eq(usersCivilizationTable.civilizationId, civilizationId)
+        )
+      )
+
+    if (!civilizationLink) {
+      throw new Error('No civilization found')
+    }
+
+    await this.client.delete(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilizationId))
+    await this.client.delete(civilizationsWorldTable).where(eq(civilizationsWorldTable.civilizationId, civilizationId))
+    await this.client.delete(usersCivilizationTable).where(eq(usersCivilizationTable.civilizationId, civilizationId))
+    await this.client.delete(civilizationTable).where(eq(civilizationTable.id, civilizationId))
   }
 }

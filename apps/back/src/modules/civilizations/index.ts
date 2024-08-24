@@ -48,3 +48,12 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       name: t.String({ minLength: 3 })
     })
   })
+  .delete(':civilizationId', async ({ civilizationDbClient, jwt, cookie: { auth }, set, params: { civilizationId } }) => {
+    const user = await jwt.verify(auth.value)
+    if (!user) {
+      set.status = 403
+      throw new Error('You need to connect to delete a civilization')
+    }
+
+    await civilizationDbClient.delete(user.id as string, civilizationId)
+  })
