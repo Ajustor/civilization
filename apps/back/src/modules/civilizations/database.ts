@@ -12,51 +12,51 @@ import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsT
 import { worldsTable } from '../../../db/schema/worldSchema'
 import { Citizen } from '../../simulation/citizen/citizen'
 
+export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
+  const builder = new CivilizationBuilder()
+  const civilizationResources = await dbClient.select().from(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
+
+  for (const civilizationResource of civilizationResources) {
+    const resource = new Resource(civilizationResource.resourceType, civilizationResource.quantity)
+    builder.addResource(resource)
+  }
+
+  for (const house of civilization.buildings.filter((building) => building.type === BuildingTypes.HOUSE)) {
+    if (house.capacity) {
+      const civilizationHouse = new House(house.capacity)
+
+      // for (const resident of house.residents ?? []) {
+      //   const citizen = new Citizen(resident.name, resident.age, resident.lifeCounter)
+      //   if (resident.profession) {
+      //     citizen.setProfession(resident.profession)
+      //   }
+      //   civilizationHouse.addResident(citizen)
+      // }
+
+      builder.addHouse(civilizationHouse)
+    }
+  }
+
+  builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
+    const citizen = new Citizen(name, month, lifeCounter)
+    if (profession) {
+      citizen.setProfession(profession)
+    }
+    citizen.isBuilding = isBuilding
+    citizen.buildingMonthsLeft = buildingYearsLeft
+    return citizen
+  }))
+
+  return builder.withName(civilization.name).build()
+}
+
 export class CivilizationTable {
   constructor(private readonly client: BunSQLiteDatabase) {
 
   }
 
-  private async buildCivilization(civilization: CivilizationEntity): Promise<Civilization> {
-    const builder = new CivilizationBuilder()
-    const civilizationResources = await this.client.select().from(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
-
-    for (const civilizationResource of civilizationResources) {
-      const resource = new Resource(civilizationResource.resourceType, civilizationResource.quantity)
-      builder.addResource(resource)
-    }
-
-    for (const house of civilization.buildings.filter((building) => building.type === BuildingTypes.HOUSE)) {
-      if (house.capacity) {
-        const civilizationHouse = new House(house.capacity)
-
-        // for (const resident of house.residents ?? []) {
-        //   const citizen = new Citizen(resident.name, resident.age, resident.lifeCounter)
-        //   if (resident.profession) {
-        //     citizen.setProfession(resident.profession)
-        //   }
-        //   civilizationHouse.addResident(citizen)
-        // }
-
-        builder.addHouse(civilizationHouse)
-      }
-    }
-
-    builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
-      const citizen = new Citizen(name, month, lifeCounter)
-      if (profession) {
-        citizen.setProfession(profession)
-      }
-      citizen.isBuilding = isBuilding
-      citizen.buildingMonthsLeft = buildingYearsLeft
-      return citizen
-    }))
-
-    return builder.withName(civilization.name).build()
-  }
-
   private async buildCivilizations(...civilizations: CivilizationEntity[]): Promise<Civilization[]> {
-    return Promise.all(civilizations.map((civilization) => this.buildCivilization(civilization)))
+    return Promise.all(civilizations.map((civilization) => buildCivilization(this.client, civilization)))
   }
 
   async getAllByWorldId(worldId: string): Promise<Civilization[]> {
@@ -77,7 +77,7 @@ export class CivilizationTable {
       .from(civilizationTable)
       .where(eq(civilizationTable.id, civilizationId))
 
-    return this.buildCivilization(civilization)
+    return buildCivilization(this.client, civilization)
   }
 
   async getAll(): Promise<Civilization[]> {

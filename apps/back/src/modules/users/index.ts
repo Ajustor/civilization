@@ -3,6 +3,7 @@ import { UsersTable } from './database'
 import { db } from '../../libs/database'
 import { createUser } from '../../../db/schema/users'
 import { logger } from '@bogeychan/elysia-logger'
+import { authorization } from '../../libs/handlers/authorization'
 
 export const usersModule = new Elysia({ prefix: '/users' })
   .use(logger())
@@ -11,7 +12,8 @@ export const usersModule = new Elysia({ prefix: '/users' })
   }).get('', async ({ userDbClient }) => {
     const users = await userDbClient.getAll()
     return users
-  }).post('', async ({ log, userDbClient, body, set }) => {
+  })
+  .post('', async ({ log, userDbClient, body, set }) => {
     try {
       await userDbClient.create({ ...body, password: await Bun.password.hash(body.password) })
     } catch (error) {
@@ -21,3 +23,12 @@ export const usersModule = new Elysia({ prefix: '/users' })
     }
   }
     , { body: createUser })
+  .use(authorization('You need to login to access this route'))
+  .get('me', async ({ user, userDbClient }) => {
+    const selectedUser = await userDbClient.getUser(user.id)
+    return { user: selectedUser }
+  })
+  .get(':userId', async ({ params: { userId }, userDbClient }) => {
+    const selectedUser = await userDbClient.getUser(userId)
+    return { user: selectedUser }
+  })

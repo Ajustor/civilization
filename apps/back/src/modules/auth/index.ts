@@ -2,6 +2,8 @@ import Elysia, { NotFoundError, t } from 'elysia'
 import { UsersTable } from '../users/database'
 import { db } from '../../libs/database'
 import { jwtMiddleware } from '../../libs/jwt'
+import { authorization } from '../../libs/handlers/authorization'
+import { addDays } from 'date-fns'
 
 export const authModule = new Elysia({ prefix: '/auth' })
   .use(jwtMiddleware)
@@ -13,7 +15,8 @@ export const authModule = new Elysia({ prefix: '/auth' })
       throw new NotFoundError('User not found')
     }
     auth.set({
-      value: await jwt.sign(user)
+      value: await jwt.sign(user),
+      expires: addDays(new Date(), 1)
     })
   }, {
     body: t.Object(
@@ -23,6 +26,7 @@ export const authModule = new Elysia({ prefix: '/auth' })
       }
     )
   })
-  .get('', ({ jwt, cookie: { auth } }) => {
-    return jwt.verify(auth.value)
+  .use(authorization('You need to connect to check your auth'))
+  .get('', ({ user }) => {
+    return user
   })
