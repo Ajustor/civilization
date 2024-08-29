@@ -3,7 +3,7 @@ import { CivilizationEntity, civilizationTable } from '../../../db/schema/civili
 import { Civilization } from '../../simulation/civilization'
 import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { Resource } from '../../simulation/resource'
 import { BuildingTypes } from '../../simulation/buildings/enum'
 import { House } from '../../simulation/buildings/house'
@@ -82,6 +82,30 @@ export class CivilizationTable {
     const civilizations = await this.client
       .select()
       .from(civilizationTable)
+
+    return this.buildCivilizations(...civilizations)
+  }
+
+  async getByUserId(userId: string): Promise<Civilization[]> {
+    const userCivilizationsIds = await this.client
+      .select()
+      .from(usersCivilizationTable)
+      .where(
+        eq(usersCivilizationTable.userId, userId),
+      )
+
+    const civilizationsIds = userCivilizationsIds.reduce<string[]>((ids, { civilizationId }) => {
+      if (civilizationId) {
+        return [...ids, civilizationId]
+      }
+      return ids
+    }, [])
+
+
+    const civilizations = await this.client
+      .select()
+      .from(civilizationTable)
+      .where(inArray(civilizationTable.id, civilizationsIds))
 
     return this.buildCivilizations(...civilizations)
   }

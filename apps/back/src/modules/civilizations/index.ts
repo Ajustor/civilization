@@ -21,9 +21,13 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .decorate({ civilizationDbClient: new CivilizationTable(db) })
   .get('', async ({ civilizationDbClient, log }) => {
     const civilizations = await civilizationDbClient.getAll()
-    return { civilizations: formatCivilizations(civilizations) }
+    return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
   .use(authorization('Actions on civilization require auth'))
+  .get('mine', async ({ user, civilizationDbClient }) => {
+    const civilizations = await civilizationDbClient.getByUserId(user.id)
+    return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
+  })
   .post('', async ({ civilizationDbClient, body, log, user }) => {
     const civilizationBuilder = new CivilizationBuilder()
     const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
