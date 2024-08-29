@@ -40,7 +40,7 @@ export class WorldBuilder {
 
     // Add resources
     for (const resource of this.resources) {
-      world.increaseResource(resource.getType(), resource.getQuantity())
+      world.addResource(resource)
     }
 
     // Add civilizations

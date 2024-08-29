@@ -5,7 +5,7 @@ import { Civilization } from '../civilization'
 import { Resource } from '../resource'
 
 export class CivilizationBuilder {
-  private id!: string
+  private id?: string
   private name: string
   private citizens: Citizen[] = [];
   private resources: Resource[] = [];
@@ -46,7 +46,9 @@ export class CivilizationBuilder {
     civilization.addResource(...this.resources)
     civilization.addBuilding(...this.houses)
 
-    civilization.id = this.id
+    if (this.id) {
+      civilization.id = this.id
+    }
 
     // Override the default generated name if the name was set using withName
     if (this.name) {

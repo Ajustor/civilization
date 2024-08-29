@@ -54,6 +54,10 @@ export class World {
     }
   }
 
+  addResource(resource: Resource): void {
+    this.resources.push(resource)
+  }
+
   passAMonth(): void {
     this.month++
     if (this.month % 2 === 0) {

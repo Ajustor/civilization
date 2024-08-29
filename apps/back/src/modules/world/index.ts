@@ -14,7 +14,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(
     cron({
       name: 'monthPass',
-      pattern: Patterns.everyHours(),
+      pattern: Patterns.everyMinutes(),
       async run() {
         const worldDbClient = new WorldsTable(db)
         const civilizationsDbClient = new CivilizationTable(db)
@@ -35,7 +35,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     )
   )
   .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
-    const worlds = await worldDbClient.getAll({ populate: { resources: true } })
+    const worlds = await worldDbClient.getAll()
 
     if (!worlds.length) {
       throw new NotFoundError('No worlds found')

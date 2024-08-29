@@ -17,7 +17,7 @@ export class WorldsTable {
 
   }
 
-  async getAll(options?: GetOptions): Promise<World[]> {
+  async getAll(): Promise<World[]> {
     const worlds = await this.client
       .select()
       .from(worldsTable)
@@ -26,12 +26,11 @@ export class WorldsTable {
 
     for (const world of worlds) {
       const builder = new WorldBuilder()
-      builder.withName(world.name).startingMonth(world.month)
-      if (options?.populate.resources) {
-        const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
+      builder.withName(world.name).withId(world.id).startingMonth(world.month)
 
-        builder.addResource(...worldResources.map(({ quantity, resourceType }) => new Resource(resourceType, quantity)))
-      }
+      const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
+      builder.addResource(...worldResources.map(({ quantity, resourceType }) => new Resource(resourceType, quantity)))
+
       results.push(builder.build())
     }
 
