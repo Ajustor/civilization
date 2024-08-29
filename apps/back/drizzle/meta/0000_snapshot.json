@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "aef4c05f-a980-4a40-9979-3d7850baa4ab",
+  "id": "2295424e-eaee-4556-a684-8c978ac79224",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "civilizations": {
@@ -115,14 +115,14 @@
           "name": "civilizationId",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "worldId": {
           "name": "worldId",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },

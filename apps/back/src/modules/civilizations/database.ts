@@ -122,9 +122,13 @@ export class CivilizationTable {
       }).where(eq(civilizationTable.id, civilization.id))
       for (const civilizationResource of civilization.getResources()) {
         await this.client.update(civilizationsResourcesTable).set({
-          resourceType: civilizationResource.getType(),
           quantity: civilizationResource.getQuantity(),
-        }).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
+        }).where(
+          and(
+            eq(civilizationsResourcesTable.civilizationId, civilization.id),
+            eq(civilizationsResourcesTable.resourceType, civilizationResource.getType()),
+          )
+        )
       }
     }
   }

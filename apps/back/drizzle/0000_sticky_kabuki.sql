@@ -15,8 +15,8 @@ CREATE TABLE `civilizations_resources` (
 --> statement-breakpoint
 CREATE TABLE `civilizations_worlds` (
 	`id` text PRIMARY KEY NOT NULL,
-	`civilizationId` text,
-	`worldId` text,
+	`civilizationId` text NOT NULL,
+	`worldId` text NOT NULL,
 	FOREIGN KEY (`civilizationId`) REFERENCES `civilizations`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`worldId`) REFERENCES `worlds`(`id`) ON UPDATE no action ON DELETE no action
 );
