@@ -11,7 +11,7 @@ export const usersModule = new Elysia({ prefix: '/users' })
     userDbClient: new UsersTable(db)
   }).get('', async ({ userDbClient }) => {
     const users = await userDbClient.getAll()
-    return users
+    return users.map(({ password, ...user }) => user)
   })
   .post('', async ({ log, userDbClient, body, set }) => {
     try {
