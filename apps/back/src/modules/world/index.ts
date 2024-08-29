@@ -46,5 +46,6 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       world.addCivilization(...worldCivilizations)
     }
 
-    return worlds.map((world) => world.getInfos())
+    const worldInfos = worlds.map((world) => world.getInfos())
+    return worldInfos
   })
