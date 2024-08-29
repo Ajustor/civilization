@@ -11,6 +11,7 @@ import { BuildingTypes } from './buildings/enum'
 import { Building } from './buildings/buildings.type'
 
 export class Civilization {
+    public id!: string
     name = uniqueNamesGenerator({ dictionaries: [countries] })
     private citizens: Citizen[]
     private resources: Resource[]

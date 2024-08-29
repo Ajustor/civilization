@@ -47,7 +47,7 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     return citizen
   }))
 
-  return builder.withName(civilization.name).build()
+  return builder.withId(civilization.id).withName(civilization.name).build()
 }
 
 export class CivilizationTable {
@@ -65,8 +65,6 @@ export class CivilizationTable {
     })
       .from(civilizationsWorldTable)
       .where(eq(civilizationsWorldTable.worldId, worldId))
-
-
 
     return Promise.all(civilizationIds.map(({ civilizationId }) => this.getById(civilizationId)))
   }
@@ -114,6 +112,21 @@ export class CivilizationTable {
       civilizationId: createdCivilization.id,
       worldId: world.id,
     })
+  }
+
+  async saveAll(civilizations: Civilization[]) {
+    for (const civilization of civilizations) {
+      await this.client.update(civilizationTable).set({
+        citizens: civilization.getCitizens().map((citizen) => citizen.formatToEntity()),
+        buildings: civilization.getBuildings().map((building) => building.formatToEntity()),
+      }).where(eq(civilizationTable.id, civilization.id))
+      for (const civilizationResource of civilization.getResources()) {
+        await this.client.update(civilizationsResourcesTable).set({
+          resourceType: civilizationResource.getType(),
+          quantity: civilizationResource.getQuantity(),
+        }).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
+      }
+    }
   }
 
   async delete(userId: string, civilizationId: string) {

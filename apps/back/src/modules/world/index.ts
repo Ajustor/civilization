@@ -25,6 +25,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
           const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
           world.addCivilization(...worldCivilizations)
           world.passAMonth()
+          await civilizationsDbClient.saveAll(worldCivilizations)
         }
 
         await worldDbClient.saveAll(worlds)

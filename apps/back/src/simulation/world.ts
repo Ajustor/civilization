@@ -1,13 +1,14 @@
 import chalk from 'chalk'
 import { Resource, ResourceType } from './resource'
 import { Civilization } from './civilization'
+import { formatCivilizations } from '../modules/civilizations'
 
 export type WorldInfos = {
   name: string
   resources: { type: ResourceType, quantity: number }[]
   month: number
   year: number
-  civilizations: Civilization[]
+  civilizations: Record<string, any>[]
 }
 
 export class World {
@@ -81,7 +82,7 @@ ${chalk.blue('---------------------------')}`
   public getInfos(): WorldInfos {
     return {
       name: this.name,
-      civilizations: this.civilizations,
+      civilizations: formatCivilizations(this.civilizations),
       month: this.month,
       resources: this.resources.map((resource) => ({
         type: resource.getType(),

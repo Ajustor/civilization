@@ -11,7 +11,7 @@ import { Resource, ResourceType } from '../../simulation/resource'
 import { Civilization } from '../../simulation/civilization'
 import { authorization } from '../../libs/handlers/authorization'
 
-function formatCivilizations(civilizations: Civilization[]) {
+export function formatCivilizations(civilizations: Civilization[]) {
   return civilizations.map((civilization) => ({ ...civilization, citizens: civilization.getCitizens().map((citizen) => ({ ...citizen, profession: citizen.profession?.professionType })) }))
 }
 
