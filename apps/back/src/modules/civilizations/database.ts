@@ -25,14 +25,6 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     if (house.capacity) {
       const civilizationHouse = new House(house.capacity)
 
-      // for (const resident of house.residents ?? []) {
-      //   const citizen = new Citizen(resident.name, resident.age, resident.lifeCounter)
-      //   if (resident.profession) {
-      //     citizen.setProfession(resident.profession)
-      //   }
-      //   civilizationHouse.addResident(citizen)
-      // }
-
       builder.addHouse(civilizationHouse)
     }
   }

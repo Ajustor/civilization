@@ -9,10 +9,6 @@ export class Carpenter implements Work {
     return ProfessionType.CARPENTER
   }
 
-  startBuilding(): void {
-    this.isBuilding = true
-    this.buildingYearsLeft = 2
-  }
 
   canWork(citizenAge: number): boolean {
     return citizenAge >= 12 && citizenAge < 60
