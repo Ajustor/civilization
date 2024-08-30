@@ -49,6 +49,8 @@ export class WorldsTable {
           eq(worldsResourcesTable.resourceType, resource.type),
         ))
       }
+
+      console.log('Saving world to database')
       await this.client.update(worldsTable).set({
         month
       }).where(eq(worldsTable.id, world.id))
