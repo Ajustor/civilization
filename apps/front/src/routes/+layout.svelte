@@ -1,7 +1,7 @@
 <script>
-	import '../app.pcss';
-	import Header from './Header.svelte';
-	import './styles.css';
+	import Header from './Header.svelte'
+	import './styles.css'
+	import '../app.pcss'
 </script>
 
 <div class="app">

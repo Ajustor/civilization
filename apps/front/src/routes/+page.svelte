@@ -2,6 +2,7 @@
 	import type { PageData } from './$types'
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
+
 	export let data: PageData
 </script>
 
@@ -31,6 +32,7 @@
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
+							Année: {world.year}, {world.month}e mois<br />
 							Civilisations:
 							<ul>
 								{#each world.civilizations as civilisation}
@@ -48,8 +50,8 @@
 				</Item>
 			{/each}
 		</Content>
-		<Previous />
-		<Next />
+		<Previous variant="ghost" />
+		<Next variant="ghost" />
 	</Root>
 </section>
 
