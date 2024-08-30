@@ -1,6 +1,8 @@
-<script>
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
+<script lang="ts">
+	import type { PageData } from './$types'
+	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
+	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
+	export let data: PageData
 </script>
 
 <svelte:head>
@@ -11,7 +13,45 @@
 	/>
 </svelte:head>
 
-<section></section>
+<section>
+	<Root
+		opts={{
+			align: 'start'
+		}}
+		class="w-full max-w-sm"
+	>
+		<Content>
+			{#each data.worlds as world}
+				<!-- content here -->
+				<Item>
+					<Card>
+						<CardHeader>
+							<CardTitle>
+								{world.name}
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							Civilisations:
+							<ul>
+								{#each world.civilizations as civilisation}
+									<li>{civilisation.name}</li>
+								{/each}
+							</ul>
+							Resources:
+							<ul>
+								{#each world.resources as resource}
+									<li>{resource.type}: {resource.quantity} restante</li>
+								{/each}
+							</ul>
+						</CardContent>
+					</Card>
+				</Item>
+			{/each}
+		</Content>
+		<Previous />
+		<Next />
+	</Root>
+</section>
 
 <style>
 	section {

@@ -1,6 +1,6 @@
 import { client } from './client'
 
-export async function getWorldInfos() {
+export async function getWorldsInfos() {
   const { data: worldInfos, error } = await client.worlds.get()
 
   if (error) {
