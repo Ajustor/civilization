@@ -39,7 +39,7 @@ export class WorldsTable {
 
   async saveAll(worlds: World[]) {
     for (const world of worlds) {
-      const { name, month, resources } = world.getInfos()
+      const { month, resources } = world.getInfos()
 
       for (const resource of resources) {
         await this.client.update(worldsResourcesTable).set({

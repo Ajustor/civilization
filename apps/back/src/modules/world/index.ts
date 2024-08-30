@@ -29,9 +29,13 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         }
 
         console.log('Civilizations saved, save the worlds')
+        try {
+          await worldDbClient.saveAll(worlds)
+          console.log('A month has passed')
+        } catch (error) {
+          console.error(error)
+        }
 
-        await worldDbClient.saveAll(worlds)
-        console.log('A month has passed')
       }
     }
     )
