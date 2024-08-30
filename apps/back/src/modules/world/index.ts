@@ -20,13 +20,15 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         const civilizationsDbClient = new CivilizationTable(db)
 
         const worlds = await worldDbClient.getAll()
-
+        console.log('Worlds retrieved, start passing a month')
         for (const world of worlds) {
           const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
           world.addCivilization(...worldCivilizations)
           world.passAMonth()
           await civilizationsDbClient.saveAll(worldCivilizations)
         }
+
+        console.log('Civilizations saved, save the worlds')
 
         await worldDbClient.saveAll(worlds)
         console.log('A month has passed')
