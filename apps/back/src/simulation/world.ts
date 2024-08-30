@@ -87,7 +87,7 @@ ${chalk.blue('---------------------------')}`
     return {
       name: this.name,
       civilizations: formatCivilizations(this.civilizations),
-      month: this.month,
+      month: this.month % 12,
       resources: this.resources.map((resource) => ({
         type: resource.getType(),
         quantity: resource.getQuantity()
