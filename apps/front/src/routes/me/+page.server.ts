@@ -36,9 +36,7 @@ export const actions: Actions = {
     }
     try {
       await login(form.data.username, form.data.password, cookies)
-      console.log(cookies.getAll())
       const user = await getUser(cookies)
-      console.log('logged as', user)
       return { user }
     } catch (error) {
       console.error(error)

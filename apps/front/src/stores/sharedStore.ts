@@ -1,4 +1,4 @@
-import { getAllContexts, getContext, hasContext, setContext } from "svelte"
+import { getContext, hasContext, setContext } from "svelte"
 import { readable, writable } from "svelte/store"
 import { rune } from "./rune.svelte"
 
@@ -7,9 +7,7 @@ export const useSharedStore = <T, A>(
   fn: (value?: A) => T,
   defaultValue?: A,
 ) => {
-  console.log('context', name, hasContext(name), getAllContexts())
   if (hasContext(name)) {
-    console.log('context present with', getContext<T>(name))
     return getContext<T>(name)
   }
   const _value = fn(defaultValue)
