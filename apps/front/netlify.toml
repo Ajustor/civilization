@@ -1,7 +1,6 @@
 [build]
-base = "apps/front"
-command = "bun run build"
-publish = "build"
+command = "bun run build:front"
+publish = "apps/front/build"
 
 [context.production.environment]
 BACK_URL = "http://home.darthoit.eu:26064"
