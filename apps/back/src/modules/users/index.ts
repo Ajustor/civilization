@@ -24,11 +24,11 @@ export const usersModule = new Elysia({ prefix: '/users' })
   }
     , { body: createUser })
   .use(authorization('You need to login to access this route'))
-  .get('me', async ({ user, userDbClient }) => {
+  .get('/me', async ({ user, userDbClient }) => {
     const selectedUser = await userDbClient.getUser(user.id)
     return { user: selectedUser }
   })
-  .get(':userId', async ({ params: { userId }, userDbClient }) => {
+  .get('/:userId', async ({ params: { userId }, userDbClient }) => {
     const selectedUser = await userDbClient.getUser(userId)
     return { user: selectedUser }
   })

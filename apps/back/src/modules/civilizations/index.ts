@@ -12,7 +12,19 @@ import { Civilization } from '../../simulation/civilization'
 import { authorization } from '../../libs/handlers/authorization'
 
 export function formatCivilizations(civilizations: Civilization[]) {
-  return civilizations.map((civilization) => ({ ...civilization, citizens: civilization.getCitizens().map((citizen) => ({ ...citizen, profession: citizen.profession?.professionType })) }))
+  return civilizations.map((civilization) => ({
+    ...civilization,
+    citizens: civilization.getCitizens()
+      .map((citizen) => ({ ...citizen, profession: citizen.profession?.professionType, years: citizen.years })),
+    resources: civilization.getResources().map((resource) => ({
+      type: resource.getType(),
+      quantity: resource.getQuantity()
+    })),
+    buildings: civilization.getBuildings().map((building) => ({
+      type: building.getType(),
+      capacity: building.capacity,
+    }))
+  }))
 }
 
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
@@ -24,7 +36,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
   .use(authorization('Actions on civilization require auth'))
-  .get('mine', async ({ user, civilizationDbClient }) => {
+  .get('/mine', async ({ user, civilizationDbClient }) => {
     const civilizations = await civilizationDbClient.getByUserId(user.id)
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
@@ -49,6 +61,6 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       name: t.String({ minLength: 3 })
     })
   })
-  .delete(':civilizationId', async ({ civilizationDbClient, params: { civilizationId }, user }) => {
+  .delete('/:civilizationId', async ({ civilizationDbClient, params: { civilizationId }, user }) => {
     await civilizationDbClient.delete(user.id as string, civilizationId)
   })

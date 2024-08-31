@@ -12,11 +12,8 @@
 </script>
 
 <svelte:head>
-	<title>Les mondes</title>
-	<meta
-		name="description"
-		content="Une simulation d'un monde avec des civilisations qui vivent seule"
-	/>
+	<title>Mes civilisations</title>
+	<meta name="description" content="La page pour gérer mes civilisations" />
 </svelte:head>
 
 <section>
@@ -27,26 +24,36 @@
 		class="w-full max-w-sm"
 	>
 		<Content>
-			{#each data.worlds as world}
+			{#each data.myCivilizations as civilization}
 				<!-- content here -->
 				<Item>
 					<Card>
 						<CardHeader>
 							<CardTitle>
-								{world.name}
+								{civilization.name}
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							Année: {world.year}, {world.month}e mois<br />
-							Civilisations:
+							Citoyens:
 							<ul>
-								{#each world.civilizations as civilisation}
-									<li>{civilisation.name}</li>
+								{#each civilization.citizens as citizen}
+									<li>
+										{citizen.name} ({citizen.years} ans): {citizen.profession}
+										Nombre de point de vie restant: {citizen.lifeCounter}
+									</li>
+								{/each}
+							</ul>
+							Bâtiments:
+							<ul>
+								{#each civilization.buildings as building}
+									<li>
+										{building.type}: avec une capacité de {building.capacity} citoyens
+									</li>
 								{/each}
 							</ul>
 							Resources:
 							<ul>
-								{#each world.resources as resource}
+								{#each civilization.resources as resource}
 									<li>{translatedResourceName[resource.type]}: {resource.quantity} restante</li>
 								{/each}
 							</ul>
