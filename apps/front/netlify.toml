@@ -1,5 +1,4 @@
 [build]
-base = "apps/front"
 command = "bun run build"
 publish = "build"
 
