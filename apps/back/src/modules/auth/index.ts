@@ -16,7 +16,10 @@ export const authModule = new Elysia({ prefix: '/auth' })
     }
     auth.set({
       value: await jwt.sign(user),
-      expires: addDays(new Date(), 1)
+      expires: addDays(new Date(), 7),
+      secure: false,
+      httpOnly: false,
+      sameSite: false,
     })
   }, {
     body: t.Object(

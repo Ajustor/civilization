@@ -1,6 +1,9 @@
-<script>
-	import { page } from '$app/stores';
-	import logo from '$lib/images/svelte-logo.svg';
+<script lang="ts">
+	import { page } from '$app/stores'
+	import logo from '$lib/images/svelte-logo.svg'
+	import { useUser, type User } from '../stores/user'
+
+	export let user: User | null | undefined
 </script>
 
 <header>
@@ -12,8 +15,20 @@
 
 	<nav>
 		<ul>
+			{#if user?.id}
+				<li aria-current={$page.url.pathname === '/my-civilizations' ? 'page' : undefined}>
+					<a href="/my-civilizations"> Mes civilisations </a>
+				</li>
+			{/if}
 			<li aria-current={$page.url.pathname === '/me' ? 'page' : undefined}>
-				<a href="/me">Mon compte</a>
+				<a href="/me">
+					{#if user?.id}
+						<!-- content here -->
+						Mon compte
+					{:else}
+						Me connecter
+					{/if}
+				</a>
 			</li>
 		</ul>
 	</nav>

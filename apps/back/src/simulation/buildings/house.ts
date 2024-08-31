@@ -25,7 +25,7 @@ export class House implements Building {
     return {
       capacity: this.capacity,
       type: this.getType(),
-      residents: this.residents.map((resident) => resident.formatToEntity()),
+      // residents: this.residents.map((resident) => resident.formatToEntity()),
     }
   }
 }

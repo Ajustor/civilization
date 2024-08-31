@@ -44,6 +44,16 @@ export class CivilizationBuilder {
     const civilization = new Civilization()
     civilization.addCitizen(...this.citizens)
     civilization.addResource(...this.resources)
+
+    for (const citizen of this.citizens) {
+      const hasAHouse = this.houses.some(({ residents }) => residents.findIndex((cit) => cit === citizen) !== -1)
+      if (!hasAHouse) {
+        const availableBuilding = this.houses.find(({ residents, capacity }) => residents.length < capacity)
+        if (availableBuilding) {
+          availableBuilding.addResident(citizen)
+        }
+      }
+    }
     civilization.addBuilding(...this.houses)
 
     if (this.id) {

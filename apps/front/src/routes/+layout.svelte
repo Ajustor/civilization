@@ -1,11 +1,20 @@
-<script>
+<script lang="ts">
 	import Header from './Header.svelte'
 	import './styles.css'
 	import '../app.pcss'
+	import { useUser } from '../stores/user'
+	import type { LayoutData } from './$types'
+
+	export let data: LayoutData
+
+	let userStore = useUser()
+	if (data.user) {
+		userStore.value = data.user
+	}
 </script>
 
 <div class="app">
-	<Header></Header>
+	<Header user={userStore.value} />
 
 	<main>
 		<slot></slot>

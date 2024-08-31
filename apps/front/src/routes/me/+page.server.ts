@@ -4,26 +4,42 @@ import { loginSchema } from '$lib/schemas/login'
 import { superValidate } from 'sveltekit-superforms'
 import { zod } from 'sveltekit-superforms/adapters'
 import { fail } from '@sveltejs/kit'
-import { login } from '../../services/api/user-api'
+import { getUser, login } from '../../services/api/user-api'
 
 export const load: PageServerLoad = async ({ cookies }) => {
   const isLogged = !!cookies.get('auth')
+  let user: { username: string, id: string, email: string } | null = null
+  if (isLogged) {
+    try {
+      user = await getUser(cookies)
+
+    } catch (error) {
+      console.error(error)
+    }
+
+  }
+
   return {
     isLogged,
+    user,
     loginForm: await superValidate(zod(loginSchema))
   }
 }
 
 export const actions: Actions = {
-  login: async (event) => {
-    const form = await superValidate(event, zod(loginSchema))
+  login: async ({ cookies, ...event }) => {
+    const form = await superValidate({ cookies, ...event }, zod(loginSchema))
     if (!form.valid) {
       return fail(400, {
         form,
       })
     }
     try {
-      return await login(form.data.username, form.data.password)
+      await login(form.data.username, form.data.password, cookies)
+      console.log(cookies.getAll())
+      const user = await getUser(cookies)
+      console.log('logged as', user)
+      return { user }
     } catch (error) {
       console.error(error)
     }
