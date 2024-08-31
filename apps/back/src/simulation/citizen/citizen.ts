@@ -100,7 +100,8 @@ export class Citizen {
       buildingMonthsLeft: this.buildingMonthsLeft,
       isBuilding: this.isBuilding,
       lifeCounter: this.lifeCounter,
-      month: this.month,
+      years: this.years,
+      month: this.month % 12,
       name: this.name,
       profession: this.profession?.professionType
     }
