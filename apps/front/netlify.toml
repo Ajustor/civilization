@@ -1,6 +1,6 @@
 [build]
 base = "apps/front"
-command = "bun run build:front"
+command = "bun run build"
 publish = "build"
 
 [context.production.environment]
