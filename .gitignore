@@ -4,3 +4,5 @@ civ_server
 
 *.sqlite
 .env
+# Local Netlify folder
+.netlify
