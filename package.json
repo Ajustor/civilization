@@ -4,7 +4,7 @@
   "scripts": {
     "start:back": "bunx nx dev @ajustor/civ-api",
     "build:back": "bunx nx build @ajustor/civ-api",
-    "build:front": "bunx nx build front",
+    "build:front": "bun nx build front",
     "back:populate": "bunx nx populate @ajustor/civ-api",
     "back:migrate": "bunx nx migration @ajustor/civ-api",
     "back:generate:migrations": "bunx nx generate:migrations @ajustor/civ-api",
