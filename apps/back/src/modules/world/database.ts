@@ -39,7 +39,7 @@ export class WorldsTable {
 
   async saveAll(worlds: World[]) {
     for (const world of worlds) {
-      const { month, resources } = world.getInfos()
+      const { month, resources, year } = world.getInfos()
 
       for (const resource of resources) {
         await this.client.update(worldsResourcesTable).set({
@@ -52,7 +52,7 @@ export class WorldsTable {
 
       console.log('Saving world to database')
       await this.client.update(worldsTable).set({
-        month
+        month: month + (year * 12),
       }).where(eq(worldsTable.id, world.id))
     }
   }
