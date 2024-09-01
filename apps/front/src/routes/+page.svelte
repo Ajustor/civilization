@@ -37,7 +37,7 @@
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							Année: {world.year}, {world.month}e mois<br />
+							Année: {world.year}, mois : {world.month}<br />
 							Civilisations:
 							<ul>
 								{#each world.civilizations as civilisation}
