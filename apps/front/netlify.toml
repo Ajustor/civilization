@@ -1,6 +1,3 @@
 [build]
-command = "bun run build"
-publish = "apps/front/build"
-
-[context.production.environment]
-BACK_URL = "http://home.darthoit.eu:26064"
+	command = "bun run build"
+	publish = "build"
