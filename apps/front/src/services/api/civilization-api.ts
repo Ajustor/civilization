@@ -15,3 +15,18 @@ export const getMyCivilizations = async (cookies: Cookies) => {
 
   return civilizationsInfos.civilizations
 }
+
+export const createCivilization = async (cookies: Cookies, civilizationName: string) => {
+  const { error } = await client.civilizations.post({ name: civilizationName },
+    {
+      headers: {
+        authorization: `Bearer ${cookies.get(('auth'))}`
+      }
+    }
+  )
+
+  if (error) {
+    console.error(error)
+    throw new Error(`[${error.status}]: ${error.value}`)
+  }
+}

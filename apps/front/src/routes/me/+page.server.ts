@@ -37,7 +37,7 @@ export const actions: Actions = {
     try {
       await login(form.data.username, form.data.password, cookies)
       const user = await getUser(cookies)
-      return { user }
+      return { form, user }
     } catch (error) {
       console.error(error)
     }

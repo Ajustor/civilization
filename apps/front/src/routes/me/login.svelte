@@ -21,7 +21,7 @@
 		validators: zodClient(loginSchema)
 	})
 
-	const { form: formData, enhance } = form
+	const { form: formData, enhance, errors } = form
 </script>
 
 <Card class="m-auto w-3/4 lg:w-1/2">
@@ -36,7 +36,11 @@
 					<Input {...attrs} bind:value={$formData.username} />
 				</FormControl>
 				<FormDescription />
-				<FormFieldErrors />
+				<FormFieldErrors>
+          {#if $errors.username}
+          {$errors.username}
+          {/if}
+        </FormFieldErrors>
 			</FormField>
 
 			<FormField {form} name="password">
@@ -45,7 +49,11 @@
 					<Input {...attrs} bind:value={$formData.password} type="password" />
 				</FormControl>
 				<FormDescription />
-				<FormFieldErrors />
+				<FormFieldErrors>
+          {#if $errors.password}
+          {$errors.password}
+          {/if}
+        </FormFieldErrors>
 			</FormField>
 			<FormButton>Se connecter</FormButton>
 		</form>
