@@ -8,10 +8,11 @@ export const usersTable = sqliteTable('users', {
   username: text('username').unique().notNull(),
   password: text('password').notNull(),
   email: text('email').unique().notNull(),
+  authorizationKey: text('authorizationKey')
 })
 
 export type UserEntity = typeof usersTable.$inferSelect
-export type User = Omit<UserEntity, 'password'>
+export type User = Omit<UserEntity, 'password' | 'authorizationKey'>
 export type UserWithCivilizations = User & { civilizations: Civilization[] }
 export type UserCreation = typeof usersTable.$inferInsert
 

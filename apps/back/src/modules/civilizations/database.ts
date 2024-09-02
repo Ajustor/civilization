@@ -3,7 +3,7 @@ import { CivilizationEntity, civilizationTable } from '../../../db/schema/civili
 import { Civilization } from '../../simulation/civilization'
 import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, count, eq, inArray } from 'drizzle-orm'
 import { Resource } from '../../simulation/resource'
 import { BuildingTypes } from '../../simulation/buildings/enum'
 import { House } from '../../simulation/buildings/house'
@@ -168,5 +168,11 @@ export class CivilizationTable {
     await this.client.delete(civilizationsWorldTable).where(eq(civilizationsWorldTable.civilizationId, civilizationId))
     await this.client.delete(usersCivilizationTable).where(eq(usersCivilizationTable.civilizationId, civilizationId))
     await this.client.delete(civilizationTable).where(eq(civilizationTable.id, civilizationId))
+  }
+
+  async exist(civilizationName: string): Promise<boolean> {
+    const [{ value }] = await this.client.select({ value: count(civilizationTable.id) }).from(civilizationTable).where(eq(civilizationTable.name, civilizationName))
+
+    return value !== 0
   }
 }

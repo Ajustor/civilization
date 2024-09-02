@@ -1,11 +1,11 @@
-CREATE TABLE `civilizations` (
+CREATE TABLE IF NOT EXISTS `civilizations` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`buildings` text NOT NULL,
 	`citizens` text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `civilizations_resources` (
+CREATE TABLE IF NOT EXISTS `civilizations_resources` (
 	`id` text PRIMARY KEY NOT NULL,
 	`civilizationId` text,
 	`type` text NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE `civilizations_resources` (
 	FOREIGN KEY (`civilizationId`) REFERENCES `civilizations`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `civilizations_worlds` (
+CREATE TABLE IF NOT EXISTS `civilizations_worlds` (
 	`id` text PRIMARY KEY NOT NULL,
 	`civilizationId` text NOT NULL,
 	`worldId` text NOT NULL,
@@ -21,14 +21,14 @@ CREATE TABLE `civilizations_worlds` (
 	FOREIGN KEY (`worldId`) REFERENCES `worlds`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
 	`id` text PRIMARY KEY NOT NULL,
 	`username` text NOT NULL,
 	`password` text NOT NULL,
 	`email` text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `users_civilizations` (
+CREATE TABLE IF NOT EXISTS `users_civilizations` (
 	`id` text PRIMARY KEY NOT NULL,
 	`userId` text,
 	`civilizationId` text,
@@ -36,13 +36,13 @@ CREATE TABLE `users_civilizations` (
 	FOREIGN KEY (`civilizationId`) REFERENCES `civilizations`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `worlds` (
+CREATE TABLE IF NOT EXISTS `worlds` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`month` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `worlds_resources` (
+CREATE TABLE IF NOT EXISTS `worlds_resources` (
 	`id` text PRIMARY KEY NOT NULL,
 	`worldId` text,
 	`type` text NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE `worlds_resources` (
 	FOREIGN KEY (`worldId`) REFERENCES `worlds`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `civilizations_name_unique` ON `civilizations` (`name`);--> statement-breakpoint
-CREATE UNIQUE INDEX `users_username_unique` ON `users` (`username`);--> statement-breakpoint
-CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);--> statement-breakpoint
-CREATE UNIQUE INDEX `worlds_name_unique` ON `worlds` (`name`);
+CREATE UNIQUE INDEX IF NOT EXISTS `civilizations_name_unique` ON `civilizations` (`name`);--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS `users_username_unique` ON `users` (`username`);--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS `users_email_unique` ON `users` (`email`);--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS `worlds_name_unique` ON `worlds` (`name`);

@@ -8,6 +8,13 @@
       "when": 1724940177828,
       "tag": "0000_sticky_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1725306439175,
+      "tag": "0001_high_pixie",
+      "breakpoints": true
     }
   ]
 }

@@ -10,7 +10,7 @@ export const getMyCivilizations = async (cookies: Cookies) => {
 
   if (error) {
     console.error(error)
-    throw new Error(`[${error.status}]: ${error.value}`)
+    throw error
   }
 
   return civilizationsInfos.civilizations
@@ -27,6 +27,6 @@ export const createCivilization = async (cookies: Cookies, civilizationName: str
 
   if (error) {
     console.error(error)
-    throw new Error(`[${error.status}]: ${error.value}`)
+    throw error
   }
 }

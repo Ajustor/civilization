@@ -1,6 +1,6 @@
 import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { usersTable, UserCreation, UserWithCivilizations } from '../../../db/schema/users'
-import { eq, or } from 'drizzle-orm'
+import { and, eq, or } from 'drizzle-orm'
 import { civilizationTable } from '../../../db/schema/civilizations'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { buildCivilization } from '../civilizations/database'
@@ -25,7 +25,8 @@ export class UsersTable {
   }
 
   async create(user: UserCreation) {
-    await this.client.insert(usersTable).values(user)
+    const [createdUser] = await this.client.insert(usersTable).values(user).returning()
+    this.addAuthorizationKey(createdUser.id)
   }
 
   async getAuthUser({ username, password }: { username: string, password: string }) {
@@ -72,5 +73,48 @@ export class UsersTable {
     }
 
     return userWithCivilizations
+  }
+
+  async resetPassword({ userId, password, authorizationKey }: { userId: string, password: string, authorizationKey: string }) {
+    const newPassword = await Bun.password.hash(password)
+    const [foundUser] = await this.client.select({
+      id: usersTable.id,
+    }).from(usersTable).where(and(
+      eq(usersTable.id, userId),
+      eq(usersTable.authorizationKey, authorizationKey)
+    ))
+
+    if (!foundUser) {
+      throw new Error('No user found with this informations')
+    }
+
+    await this.client.update(usersTable).set({ password: newPassword }).where(and(
+      eq(usersTable.id, userId),
+      eq(usersTable.authorizationKey, authorizationKey)
+    ))
+
+
+    await this.addAuthorizationKey(userId)
+  }
+
+  async addAuthorizationKey(userId: string) {
+    const [user] = await this.client.select().from(usersTable).where(eq(usersTable.id, userId))
+
+    const hasher = new Bun.CryptoHasher("blake2b256")
+
+    const rawKey = `${user.id}${user.password}${user.email}`
+    const authorizationKey = hasher.update(rawKey, 'base64')
+    await this.client.update(usersTable).set({
+      authorizationKey: authorizationKey.digest('hex')
+    }).where(eq(usersTable.id, user.id))
+
+  }
+
+  async addAuthorizationKeys() {
+    const users = await this.client.select().from(usersTable)
+
+    for (const user of users) {
+      this.addAuthorizationKey(user.id)
+    }
   }
 }

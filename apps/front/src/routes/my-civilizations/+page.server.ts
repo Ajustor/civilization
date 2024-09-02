@@ -4,9 +4,12 @@ import { createCivilization, getMyCivilizations } from '../../services/api/civil
 import type { Actions, PageServerLoad } from './$types'
 import { zod } from 'sveltekit-superforms/adapters'
 import { newCivilizationSchema } from '$lib/schemas/newCivilization'
+import { checkLogin } from '../../services/checkLogin'
 
 
-export const load: PageServerLoad = async ({ cookies }) => {
+export const load: PageServerLoad = async ({ cookies, url }) => {
+  checkLogin(cookies, url)
+
   const myCivilizations = await getMyCivilizations(cookies)
   return {
     myCivilizations,

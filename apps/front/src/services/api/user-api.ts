@@ -6,7 +6,7 @@ export async function login(username: string, password: string, cookies: Cookies
 
   if (error) {
     console.error(error)
-    throw new Error(`[${error.status}]: ${error.value}`)
+    throw error
   }
 
   const headersEntries = (headers?.entries as CallableFunction)()
@@ -29,15 +29,15 @@ export async function login(username: string, password: string, cookies: Cookies
 }
 
 export async function getUser(cookies: Cookies) {
-  const { data: user, error: getError } = await client.auth.get({
+  const { data: user, error } = await client.auth.get({
     headers: {
       authorization: `Bearer ${cookies.get(('auth'))}`
     }
   })
 
-  if (getError) {
-    console.error(getError)
-    throw new Error(`[${getError.status}]: ${JSON.stringify(getError.value)}`)
+  if (error) {
+    console.error(error)
+    throw error
   }
 
   return user

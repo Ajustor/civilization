@@ -5,7 +5,7 @@ export async function getWorldsInfos() {
 
   if (error) {
     console.error(error)
-    throw new Error(`[${error.status}]: ${error.value}`)
+    throw error
   }
 
   return worldInfos

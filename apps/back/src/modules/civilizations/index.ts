@@ -1,4 +1,4 @@
-import Elysia, { t } from 'elysia'
+import Elysia, { error, t } from 'elysia'
 import { CivilizationTable } from './database'
 import { db } from '../../libs/database'
 import { logger } from '@bogeychan/elysia-logger'
@@ -41,6 +41,13 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
   .post('', async ({ civilizationDbClient, body, log, user }) => {
+
+    const civilizationWithThatNameExist = await civilizationDbClient.exist(body.name)
+    if (civilizationWithThatNameExist) {
+      log.error('Conflict a civilization with that name already exist')
+      throw error(409, 'A civilization with that name already exist')
+    }
+
     const civilizationBuilder = new CivilizationBuilder()
     const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
     const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
@@ -52,8 +59,6 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       .withName(body.name)
       .addResource(new Resource(ResourceType.FOOD, 10), new Resource(ResourceType.WOOD, 0))
       .addCitizen(firstCitizen, secondCitizen)
-
-    log.info('On va aller créer la civilisation dans la bdd')
 
     await civilizationDbClient.create(user.id as string, civilizationBuilder.build())
   }, {

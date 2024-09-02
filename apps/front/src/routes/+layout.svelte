@@ -4,6 +4,7 @@
 	import '../app.pcss'
 	import { useUser } from '../stores/user'
 	import type { LayoutData } from './$types'
+	import { Toaster } from '$lib/components/ui/sonner'
 
 	export let data: LayoutData
 
@@ -12,6 +13,8 @@
 		userStore.value = data.user
 	}
 </script>
+
+<Toaster richColors />
 
 <div class="app">
 	<Header user={userStore.value} />
