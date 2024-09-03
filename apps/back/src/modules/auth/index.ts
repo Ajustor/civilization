@@ -33,13 +33,13 @@ export const authModule = new Elysia({ prefix: '/auth' })
       }
     )
   })
-  .get('/i-forgot', async ({ params, userDbClient, log, emailService }) => {
-    const userExist = await userDbClient.exist(params.email)
+  .get('/i-forgot', async ({ query, userDbClient, log, emailService }) => {
+    const userExist = await userDbClient.exist(query.email)
     if (!userExist) {
       return
     }
 
-    const user = await userDbClient.getByEmail(params.email)
+    const user = await userDbClient.getByEmail(query.email)
     if (!user) {
       return
     }
@@ -52,7 +52,7 @@ export const authModule = new Elysia({ prefix: '/auth' })
 
   }
     , {
-      params: t.Object(
+      query: t.Object(
         {
           email: t.String(),
         }
