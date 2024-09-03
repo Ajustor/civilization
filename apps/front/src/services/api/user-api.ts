@@ -60,3 +60,12 @@ export async function askPasswordLink(email: string) {
     throw error
   }
 }
+
+export async function createNewUser(email: string, password: string, username: string) {
+  const { error } = await client.users.post({ email, password, username })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+}
