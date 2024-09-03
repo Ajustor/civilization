@@ -13,8 +13,12 @@ export class EmailSender {
     })
 
     if (error) {
+
+      console.error(error)
       return new Response(JSON.stringify({ error }))
     }
+
+    console.log(data)
 
     return new Response(JSON.stringify({ data }))
   }
