@@ -4,14 +4,12 @@ import { db } from '../../libs/database'
 import { createUser } from '../../../db/schema/users'
 import { logger } from '@bogeychan/elysia-logger'
 import { authorization } from '../../libs/handlers/authorization'
-import { EmailSender } from '../../libs/services/emailSender'
 import { NewUserEmailTemplate } from '../../emailTemplates/newUser'
 
 export const usersModule = new Elysia({ prefix: '/users' })
   .use(logger())
   .decorate({
     userDbClient: new UsersTable(db),
-    emailService: new EmailSender()
   }).get('', async ({ userDbClient }) => {
     const users = await userDbClient.getAll()
     return users.map(({ password, ...user }) => user)
