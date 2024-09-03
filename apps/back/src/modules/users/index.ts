@@ -1,4 +1,4 @@
-import Elysia from 'elysia'
+import Elysia, { NotFoundError, t } from 'elysia'
 import { UsersTable } from './database'
 import { db } from '../../libs/database'
 import { createUser } from '../../../db/schema/users'
@@ -23,12 +23,29 @@ export const usersModule = new Elysia({ prefix: '/users' })
     }
   }
     , { body: createUser })
+  .post('/i-forgot', async ({ body, userDbClient, log }) => {
+    try {
+      await userDbClient.resetPassword({ ...body })
+    } catch (error) {
+      log.error(error)
+      throw new NotFoundError(error.message)
+    }
+  }
+    , {
+      body: t.Object(
+        {
+          userId: t.String(),
+          password: t.String(),
+          authorizationKey: t.String()
+        }
+      )
+    })
   .use(authorization('You need to login to access this route'))
   .get('/me', async ({ user, userDbClient }) => {
-    const selectedUser = await userDbClient.getUser(user.id)
+    const selectedUser = await userDbClient.getById(user.id)
     return { user: selectedUser }
   })
   .get('/:userId', async ({ params: { userId }, userDbClient }) => {
-    const selectedUser = await userDbClient.getUser(userId)
+    const selectedUser = await userDbClient.getById(userId)
     return { user: selectedUser }
   })

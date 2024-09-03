@@ -1,6 +1,6 @@
 import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { usersTable, UserCreation, UserWithCivilizations } from '../../../db/schema/users'
-import { and, eq, or } from 'drizzle-orm'
+import { and, count, eq, or } from 'drizzle-orm'
 import { civilizationTable } from '../../../db/schema/civilizations'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { buildCivilization } from '../civilizations/database'
@@ -53,11 +53,12 @@ export class UsersTable {
     return user
   }
 
-  async getUser(id: string): Promise<UserWithCivilizations | null> {
+  async getById(id: string): Promise<UserWithCivilizations | null> {
     const [user] = await this.client.select({
       id: usersTable.id,
       username: usersTable.username,
       email: usersTable.email,
+      authorizationKey: usersTable.authorizationKey
     }).from(usersTable).where(eq(usersTable.id, id))
 
     if (!user) {
@@ -73,6 +74,21 @@ export class UsersTable {
     }
 
     return userWithCivilizations
+  }
+
+  async getByEmail(email: string) {
+    const [user] = await this.client.select({
+      id: usersTable.id,
+      username: usersTable.username,
+      email: usersTable.email,
+      authorizationKey: usersTable.authorizationKey
+    }).from(usersTable).where(eq(usersTable.email, email))
+
+    if (!user) {
+      return null
+    }
+
+    return user
   }
 
   async resetPassword({ userId, password, authorizationKey }: { userId: string, password: string, authorizationKey: string }) {
@@ -117,4 +133,14 @@ export class UsersTable {
       this.addAuthorizationKey(user.id)
     }
   }
+
+  async exist(emailOrUsername: string): Promise<boolean> {
+    const [{ value }] = await this.client.select({ value: count(usersTable.id) }).from(usersTable).where((or(
+      eq(usersTable.username, emailOrUsername),
+      eq(usersTable.email, emailOrUsername)
+    )))
+
+    return value !== 0
+  }
+
 }

@@ -5,11 +5,13 @@ import { jwtMiddleware } from '../../libs/jwt'
 import { authorization } from '../../libs/handlers/authorization'
 import { addDays } from 'date-fns'
 import { logger } from '@bogeychan/elysia-logger'
+import { EmailSender } from '../../libs/services/emailSender'
+import { IForgetEmailTemplate } from '../../emailTemplates/i-forget'
 
 export const authModule = new Elysia({ prefix: '/auth' })
   .use(jwtMiddleware)
   .use(logger())
-  .decorate({ userDbClient: new UsersTable(db) })
+  .decorate({ userDbClient: new UsersTable(db), emailService: new EmailSender() })
   .post('', async ({ jwt, body, set, cookie: { auth }, userDbClient }) => {
     const user = await userDbClient.getAuthUser({ ...body })
     if (!user) {
@@ -31,20 +33,28 @@ export const authModule = new Elysia({ prefix: '/auth' })
       }
     )
   })
-  .post('/i-forgot', async ({ body, userDbClient, log }) => {
-    try {
-      await userDbClient.resetPassword({ ...body })
-    } catch (error) {
-      log.error(error)
-      throw new NotFoundError(error.message)
+  .get('/i-forgot', async ({ params, userDbClient, log, emailService }) => {
+    const userExist = await userDbClient.exist(params.email)
+    if (!userExist) {
+      return
     }
+
+    const user = await userDbClient.getByEmail(params.email)
+    if (!user) {
+      return
+    }
+
+    await emailService.sendEmail(user.email, IForgetEmailTemplate({
+      authorizationKey: user.authorizationKey ?? '',
+      userId: user.id,
+      username: user.username
+    }))
+
   }
     , {
-      body: t.Object(
+      params: t.Object(
         {
-          userId: t.String(),
-          password: t.String(),
-          authorizationKey: t.String()
+          email: t.String(),
         }
       )
     })

@@ -23,7 +23,9 @@
     "@elysiajs/jwt": "^1.1.0",
     "@elysiajs/swagger": "^1.1.1",
     "@paralleldrive/cuid2": "^2.2.2",
+    "@react-email/components": "^0.0.25",
     "@sveltejs/adapter-netlify": "^4.3.3",
+    "@types/react": "^18.3.5",
     "chalk": "5.3.0",
     "concurrently": "^8.2.2",
     "date-fns": "^3.6.0",
@@ -33,6 +35,8 @@
     "elysia": "1.1.9",
     "inquirer": "^10.1.8",
     "nx": "19.6.4",
+    "react": "^18.3.1",
+    "resend": "^4.0.0",
     "sveltekit-superforms": "^2.17.0",
     "unique-names-generator": "^4.7.1"
   }
