@@ -42,3 +42,21 @@ export async function getUser(cookies: Cookies) {
 
   return user
 }
+
+export async function forgotPasswordUpdate(userId: string, newPassword: string, authorizationKey: string) {
+  const { error } = await client.users['i-forgot'].post({ userId, password: newPassword, authorizationKey })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+export async function askPasswordLink(email: string) {
+  const { error } = await client.auth['i-forgot'].get({ query: { email } })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+}
