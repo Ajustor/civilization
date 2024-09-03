@@ -6,7 +6,7 @@ export class EmailSender {
 
   public async sendEmail(to: string, template: ReactNode) {
     const { data, error } = await this.client.emails.send({
-      from: 'My Civilizations <no-reply@civilizations.netlify.eu>',
+      from: 'My Civilizations <no-reply@civilizations.darthoit.eu>',
       to: [to],
       subject: 'Mot de passe oublié',
       react: template,
