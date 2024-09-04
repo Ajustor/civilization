@@ -14,7 +14,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(
     cron({
       name: 'monthPass',
-      pattern: Patterns.everyHours(),
+      pattern: Bun.env.CRON_TIME ?? Patterns.everyHours(),
       async run() {
         const worldDbClient = new WorldsTable(db)
         const civilizationsDbClient = new CivilizationTable(db)
