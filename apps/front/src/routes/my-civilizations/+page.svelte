@@ -3,7 +3,7 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button } from '$lib/components/ui/button'
-	import { Plus } from 'lucide-svelte'
+	import { Plus, Trash } from 'lucide-svelte'
 	import {
 		Dialog,
 		DialogTrigger,
@@ -25,6 +25,7 @@
 		FormFieldErrors,
 		FormLabel
 	} from '$lib/components/ui/form'
+	import { toast } from 'svelte-sonner'
 
 	export let data: PageData
 
@@ -41,7 +42,16 @@
 
 	let isDialogOpen = false
 
-	const { form: formData, enhance, errors } = form
+	const { form: formData, enhance, errors, message: messageStore } = form
+
+	messageStore.subscribe((message) => {
+		isDialogOpen = false
+		if (!message) {
+			return
+		}
+
+		toast.info(message.text)
+	})
 </script>
 
 <svelte:head>
@@ -88,6 +98,16 @@
 						<CardHeader>
 							<CardTitle>
 								{civilization.name}
+								<Button
+									title="Supprimer cette civilisation"
+									on:click={() =>
+										fetch('my-civilizations', {
+											method: 'DELETE',
+											body: JSON.stringify({ civilizationId: civilization.id })
+										})}
+								>
+									<Trash size="24" />
+								</Button>
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
