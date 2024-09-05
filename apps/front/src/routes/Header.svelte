@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import logo from '$lib/images/svelte-logo.svg'
+	import logo from '$lib/images/logo.png'
 	import { useUser, type User } from '../stores/user'
 
 	export let user: User | null | undefined

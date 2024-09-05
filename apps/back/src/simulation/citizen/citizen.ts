@@ -68,7 +68,7 @@ export class Citizen {
   }
 
   collectResource(world: World, amount: number): boolean {
-    if (!this.profession?.canWork(this.years)) {
+    if (!this.profession?.canWork(this.years) && !this.isBuilding) {
       return false
     }
 
