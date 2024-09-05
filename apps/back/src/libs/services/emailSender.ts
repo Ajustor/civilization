@@ -4,11 +4,11 @@ import { Resend } from 'resend'
 export class EmailSender {
   private client = new Resend(Bun.env.RESEND_API_KEY)
 
-  public async sendEmail(to: string, template: ReactNode) {
+  public async sendEmail(to: string, subject: string, template: ReactNode) {
     const { data, error } = await this.client.emails.send({
       from: 'My Civilizations <no-reply@civilizations.darthoit.eu>',
       to: [to],
-      subject: 'Mot de passe oublié',
+      subject,
       react: template,
     })
 
