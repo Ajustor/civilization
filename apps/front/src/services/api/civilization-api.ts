@@ -32,7 +32,7 @@ export const createCivilization = async (cookies: Cookies, civilizationName: str
 }
 
 export const deleteCivilization = async (cookies: Cookies, civilizationId: string) => {
-  const { error } = await client.civilizations.delete({ params: civilizationId },
+  const { error } = await client.civilizations({ civilizationId }).delete({},
     {
       headers: {
         authorization: `Bearer ${cookies.get(('auth'))}`
