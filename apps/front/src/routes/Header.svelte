@@ -15,6 +15,9 @@
 
 	<nav>
 		<ul>
+			<li aria-current={$page.url.pathname === '/rules' ? 'page' : undefined}>
+				<a href="/rules"> Les règles </a>
+			</li>
 			{#if user?.id}
 				<li aria-current={$page.url.pathname === '/my-civilizations' ? 'page' : undefined}>
 					<a href="/my-civilizations"> Mes civilisations </a>

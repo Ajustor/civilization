@@ -5,6 +5,7 @@
 	import { useUser } from '../stores/user'
 	import type { LayoutData } from './$types'
 	import { Toaster } from '$lib/components/ui/sonner'
+	import { fly } from 'svelte/transition'
 
 	export let data: LayoutData
 
@@ -20,7 +21,15 @@
 	<Header user={userStore.value} />
 
 	<main>
-		<slot></slot>
+		{#key data.url}
+			<span
+				class="h-full w-full"
+				in:fly={{ delay: 300, x: -200, duration: 300 }}
+				out:fly={{ duration: 300 }}
+			>
+				<slot></slot>
+			</span>
+		{/key}
 	</main>
 
 	<footer></footer>

@@ -2,7 +2,7 @@ import { getUser } from '../services/api/user-api'
 import type { User } from '../stores/user'
 import type { LayoutServerLoad } from './$types'
 
-export const load: LayoutServerLoad = async ({ cookies }) => {
+export const load: LayoutServerLoad = async ({ cookies, url }) => {
   const isLogged = !!cookies.get('auth')
   let user: User | null = null
   if (isLogged) {
@@ -15,6 +15,7 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
   }
 
   return {
+    url: url.pathname,
     isLogged,
     user,
   }
