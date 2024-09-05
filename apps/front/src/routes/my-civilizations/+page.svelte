@@ -99,6 +99,7 @@
 							<CardTitle>
 								{civilization.name}
 								<Button
+									variant="ghost"
 									title="Supprimer cette civilisation"
 									on:click={() =>
 										fetch('my-civilizations', {
