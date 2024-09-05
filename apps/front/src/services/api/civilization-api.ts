@@ -30,3 +30,18 @@ export const createCivilization = async (cookies: Cookies, civilizationName: str
     throw error
   }
 }
+
+export const deleteCivilization = async (cookies: Cookies, civilizationId: string) => {
+  const { error } = await client.civilizations.delete({ params: civilizationId },
+    {
+      headers: {
+        authorization: `Bearer ${cookies.get(('auth'))}`
+      }
+    }
+  )
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+}
