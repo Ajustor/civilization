@@ -31,11 +31,7 @@
 	export let formResponse: ActionData
 
 	const translatedResourceName = {
-<<<<<<< Updated upstream
 		food: 'Nouriture',
-=======
-		food: 'Nourriture',
->>>>>>> Stashed changes
 		wood: 'Bois'
 	}
 
