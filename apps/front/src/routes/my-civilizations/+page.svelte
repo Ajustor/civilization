@@ -32,12 +32,14 @@
 
 	const translatedResourceName = {
 		food: 'Nouriture',
-		wood: 'bois'
+		wood: 'Bois'
 	}
 
 	const form = superForm(data.civilizationCreationForm, {
 		validators: zodClient(newCivilizationSchema)
 	})
+
+	let isDialogOpen = false
 
 	const { form: formData, enhance, errors } = form
 </script>
@@ -47,7 +49,7 @@
 	<meta name="description" content="La page pour gérer mes civilisations" />
 </svelte:head>
 
-<Dialog>
+<Dialog bind:open={isDialogOpen}>
 	<DialogTrigger><Button><Plus /> Créer une nouvelle civilisation</Button></DialogTrigger>
 	<DialogContent>
 		<DialogHeader>Nommez votre civilisation, la simulation se charge du reste</DialogHeader>
