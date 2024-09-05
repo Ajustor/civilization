@@ -6,8 +6,8 @@
 	export let data: PageData
 
 	const translatedResourceName = {
-		food: 'Nouriture',
-		wood: 'bois'
+		food: 'Nourriture',
+		wood: 'Bois'
 	}
 </script>
 
