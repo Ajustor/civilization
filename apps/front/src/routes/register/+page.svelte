@@ -98,7 +98,7 @@
 					<Input
 						{...attrs}
 						bind:value={$formData.passwordVerif}
-						type="passwordVerif"
+						type="password"
 						{...$constraints.passwordVerif}
 					/>
 				</FormControl>
