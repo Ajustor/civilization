@@ -26,6 +26,5 @@ export const actions: Actions = {
       throw redirect(302, `/${redirectTo.slice(1)}`)
     }
     throw redirect(302, '/')
-
   }
 }
