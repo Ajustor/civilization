@@ -23,7 +23,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         console.log('Worlds retrieved, start passing a month')
         for (const world of worlds) {
           const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
-          world.addCivilization(...worldCivilizations)
+          world.addCivilization(...worldCivilizations.filter((civilization)=> civilization.getCitizens().length))
           world.passAMonth()
           await civilizationsDbClient.saveAll(worldCivilizations)
         }
