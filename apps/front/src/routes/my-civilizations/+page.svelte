@@ -2,7 +2,7 @@
 	import type { ActionData, PageData } from './$types'
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
-	import { Button } from '$lib/components/ui/button'
+	import { Button, buttonVariants } from '$lib/components/ui/button'
 	import { Plus, Trash } from 'lucide-svelte'
 	import {
 		Dialog,
@@ -26,10 +26,21 @@
 		FormLabel
 	} from '$lib/components/ui/form'
 	import { toast } from 'svelte-sonner'
+	import {
+		callDeleteCivilization,
+		callGetCivilizations
+	} from '../../services/sveltekit-api/civilization'
+	import type { Civilization } from '../../types/civilization'
+	import {
+		AlertDialog,
+		AlertDialogHeader,
+		AlertDialogContent,
+		AlertDialogFooter,
+		AlertDialogCancel,
+		AlertDialogAction
+	} from '$lib/components/ui/alert-dialog'
 
 	export let data: PageData
-
-	export let formResponse: ActionData
 
 	const translatedResourceName = {
 		food: 'Nouriture',
@@ -37,21 +48,52 @@
 	}
 
 	const form = superForm(data.civilizationCreationForm, {
-		validators: zodClient(newCivilizationSchema)
+		validators: zodClient(newCivilizationSchema),
+		onError({ result }) {
+			if (result.error) {
+				toast.error(result.error.message)
+			}
+		},
+		onUpdate({ result }) {
+			if (result.type === 'success') {
+				console.log(result)
+				if (result.data?.myCivilizations) {
+					isDialogOpen = false
+					data.myCivilizations = result.data.myCivilizations
+				}
+			}
+		}
 	})
 
 	let isDialogOpen = false
+	let deleteDialogOpen = false
+	let civilizationIdToDelete: string | null = null
 
-	const { form: formData, enhance, errors, message: messageStore } = form
+	const { form: formData, enhance } = form
 
-	messageStore.subscribe((message) => {
-		isDialogOpen = false
-		if (!message) {
+	const openDeleteModal = (civilizationId: string) => {
+		civilizationIdToDelete = civilizationId
+		deleteDialogOpen = true
+	}
+
+	const deleteCivilization = async () => {
+		if (!civilizationIdToDelete) {
 			return
 		}
+		const loaderId = toast.loading('Suppression de votre civilisation en cours')
+		await callDeleteCivilization(civilizationIdToDelete).catch((error) => {
+			toast.dismiss(loaderId)
+			toast.error('Une erreur a eu lieu lors de la suppression de votre civilisation')
 
-		toast.info(message.text)
-	})
+			throw error
+		})
+		toast.dismiss(loaderId)
+		toast.success('Suppression de votre civilisation terminée')
+
+		const { myCivilizations } = await callGetCivilizations()
+		data.myCivilizations = myCivilizations
+		civilizationIdToDelete = null
+	}
 </script>
 
 <svelte:head>
@@ -59,90 +101,120 @@
 	<meta name="description" content="La page pour gérer mes civilisations" />
 </svelte:head>
 
-<Dialog bind:open={isDialogOpen}>
-	<DialogTrigger><Button><Plus /> Créer une nouvelle civilisation</Button></DialogTrigger>
-	<DialogContent>
-		<DialogHeader>Nommez votre civilisation, la simulation se charge du reste</DialogHeader>
-		<DialogDescription>
-			<form method="post" use:enhance action="?/createNewCivilization">
-				<FormField {form} name="name">
-					<FormControl let:attrs>
-						<FormLabel>Le nom de votre civilisation</FormLabel>
-						<Input {...attrs} bind:value={$formData.name} />
-					</FormControl>
-					<FormDescription />
-					<FormFieldErrors>
-						{#if $errors.name}
-							{$errors.name}
-						{/if}
-					</FormFieldErrors>
-				</FormField>
-				<FormButton data-dialog-close>Créer ma civilisation</FormButton>
-			</form>
-		</DialogDescription>
-	</DialogContent>
-</Dialog>
+<AlertDialog bind:open={deleteDialogOpen}>
+	<AlertDialogContent>
+		<AlertDialogHeader>
+			La suppression est irréversible, êtes vous sûr de vouloir supprimer votre civilisation ?
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<AlertDialogCancel>Annuler</AlertDialogCancel>
+			<AlertDialogAction
+				class={buttonVariants({ variant: 'destructive' })}
+				on:click={deleteCivilization}
+			>
+				Supprimer
+			</AlertDialogAction>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>
 
-<section>
-	<Root
-		opts={{
-			align: 'start'
-		}}
-		class="w-full max-w-sm"
-	>
-		<Content>
-			{#each data.myCivilizations as civilization}
-				<!-- content here -->
-				<Item>
-					<Card>
-						<CardHeader>
-							<CardTitle>
-								{civilization.name}
-								<Button
-									variant="ghost"
-									title="Supprimer cette civilisation"
-									on:click={() =>
-										fetch('my-civilizations', {
-											method: 'DELETE',
-											body: JSON.stringify({ civilizationId: civilization.id })
-										})}
-								>
-									<Trash size="24" />
-								</Button>
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							Citoyens:
-							<ul>
-								{#each civilization.citizens as citizen}
-									<li>
-										{citizen.name} ({citizen.years} ans): {citizen.profession}
-										Nombre de point de vie restant: {citizen.lifeCounter}
-									</li>
-								{/each}
-							</ul>
-							Bâtiments:
-							<ul>
-								{#each civilization.buildings as building}
-									<li>
-										{building.type}: avec une capacité de {building.capacity} citoyens
-									</li>
-								{/each}
-							</ul>
-							Resources:
-							<ul>
-								{#each civilization.resources as resource}
-									<li>{translatedResourceName[resource.type]}: {resource.quantity} restante</li>
-								{/each}
-							</ul>
-						</CardContent>
-					</Card>
-				</Item>
-			{/each}
-		</Content>
-		<Previous variant="ghost" />
-		<Next variant="ghost" />
-	</Root>
+{#snippet createCivilizationDialog()}
+	<Dialog bind:open={isDialogOpen}>
+		<DialogTrigger class={buttonVariants({ variant: 'default' })}>
+			<Plus /> Créer une nouvelle civilisation
+		</DialogTrigger>
+		<DialogContent>
+			<DialogHeader>Nommez votre civilisation, la simulation se charge du reste</DialogHeader>
+			<DialogDescription>
+				<form method="post" use:enhance action="?/createNewCivilization">
+					<FormField {form} name="name">
+						<FormControl let:attrs>
+							<FormLabel>Le nom de votre civilisation</FormLabel>
+							<Input {...attrs} bind:value={$formData.name} />
+						</FormControl>
+						<FormDescription />
+						<FormFieldErrors />
+					</FormField>
+					<FormButton data-dialog-close>Créer ma civilisation</FormButton>
+				</form>
+			</DialogDescription>
+		</DialogContent>
+	</Dialog>
+{/snippet}
+
+{#snippet civilizationInformations(civilization: Civilization)}
+	<Card>
+		<CardHeader>
+			<CardTitle class="flex items-center justify-between">
+				{civilization.name}
+				<Button
+					variant="destructive"
+					title="Supprimer cette civilisation"
+					class="transition-colors hover:bg-red-600"
+					on:click={() => openDeleteModal(civilization.id)}
+				>
+					<Trash size="24" />
+				</Button>
+			</CardTitle>
+		</CardHeader>
+		<CardContent class="flex flex-col gap-4">
+			{#if !civilization.citizens.length}
+				<span
+					class="absolute left-0 top-0 m-0 flex h-full w-full flex-col items-center justify-center bg-red-600 p-0"
+				>
+					Plus personne ne vit dans la civilisation {civilization.name}
+					<Button
+						variant="destructive"
+						title="Supprimer cette civilisation"
+						on:click={() => openDeleteModal(civilization.id)}
+					>
+						<Trash size="24" />
+					</Button>
+				</span>
+			{:else}
+				<span>
+					Nombre de citoyens: {civilization.citizens.length}
+				</span>
+				<span>
+					Nombre de bâtiments: {civilization.buildings.length}
+				</span>
+				<span>
+					Resources:
+					<ul>
+						{#each civilization.resources as resource}
+							<li>{translatedResourceName[resource.type]}: {resource.quantity} restante</li>
+						{/each}
+					</ul>
+				</span>
+				<Button href="/my-civilizations/{civilization.id}" variant="default">
+					Voir le détail de la civilisation
+				</Button>
+			{/if}
+		</CardContent>
+	</Card>
+{/snippet}
+
+<section class="gap-5">
+	{@render createCivilizationDialog()}
+	{#if data.myCivilizations.length}
+		<Root
+			opts={{
+				align: 'start'
+			}}
+			class="w-full max-w-sm"
+		>
+			<Content>
+				{#each data.myCivilizations as civilization}
+					<!-- content here -->
+					<Item>
+						{@render civilizationInformations(civilization)}
+					</Item>
+				{/each}
+			</Content>
+			<Previous variant="ghost" />
+			<Next variant="ghost" />
+		</Root>
+	{/if}
 </section>
 
 <style>
@@ -152,25 +224,5 @@
 		justify-content: center;
 		align-items: center;
 		flex: 0.6;
-	}
-
-	h1 {
-		width: 100%;
-	}
-
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
 	}
 </style>

@@ -11,6 +11,13 @@ export type WorldInfos = {
   civilizations: Record<string, any>[]
 }
 
+const seasons = {
+  spring: [0, 1, 2],
+  summer: [3, 4, 5],
+  automn: [6, 7, 8],
+  winter: [9, 10, 11]
+}
+
 export class World {
   id: string
   private resources: Resource[] = []
@@ -60,12 +67,25 @@ export class World {
 
   passAMonth(): void {
     this.month++
-    if (this.month % 2 === 0) {
-      this.increaseResource(ResourceType.WOOD, 2)
-    }
-
-    if (this.month % 3 === 0) {
-      this.increaseResource(ResourceType.FOOD, 100)
+    const [currentSeason] = Object.entries(seasons).find(([_, months]) => months.includes(this.month % 12)) ?? []
+    switch (currentSeason) {
+      case 'spring': {
+        this.increaseResource(ResourceType.FOOD, 100 + 100 * this.civilizations.length)
+        break
+      }
+      case 'summer': {
+        this.increaseResource(ResourceType.FOOD, 75 + 75 * this.civilizations.length)
+        break
+      }
+      case 'automn': {
+        this.increaseResource(ResourceType.FOOD, 25 + 25 * this.civilizations.length)
+        this.increaseResource(ResourceType.WOOD, 10)
+        break
+      }
+      case 'winter': {
+        this.increaseResource(ResourceType.WOOD, 20)
+        break
+      }
     }
 
     for (const civilization of this.civilizations) {

@@ -7,9 +7,9 @@
 </script>
 
 <header>
-	<div class="corner">
+	<div>
 		<a href="/">
-			<img src={logo} alt="Logo du simulateur de civilisation" />
+			<img src={logo} class="w-32" alt="Logo du simulateur de civilisation" />
 		</a>
 	</div>
 
@@ -43,39 +43,10 @@
 		justify-content: space-between;
 	}
 
-	.corner {
-		width: 3em;
-		height: 3em;
-	}
-
-	.corner a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-	}
-
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
-	}
-
 	nav {
 		display: flex;
 		justify-content: center;
 		--background: rgba(255, 255, 255, 0.7);
-	}
-
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
-
-	path {
-		fill: var(--background);
 	}
 
 	ul {

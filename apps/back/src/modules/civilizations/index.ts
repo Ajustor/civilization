@@ -40,6 +40,10 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     const civilizations = await civilizationDbClient.getByUserId(user.id)
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
+  .get('/:civilizationId', async ({ user, civilizationDbClient, params: { civilizationId } }) => {
+    const civilization = await civilizationDbClient.getByUserAndCivilizationId(user.id, civilizationId)
+    return { civilization: formatCivilizations([civilization])[0] }
+  })
   .post('', async ({ civilizationDbClient, body, log, user }) => {
 
     const civilizationWithThatNameExist = await civilizationDbClient.exist(body.name)

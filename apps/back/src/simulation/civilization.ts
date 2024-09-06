@@ -10,6 +10,7 @@ import { Farmer } from './citizen/work/farmer'
 import { BuildingTypes } from './buildings/enum'
 import { Building } from './buildings/buildings.type'
 
+
 export class Civilization {
     public id!: string
     name = uniqueNamesGenerator({ dictionaries: [countries] })
@@ -147,7 +148,7 @@ ${chalk.blue('---------------------------')}`
         if (civilizationFood) {
 
             for (const farmer of farmers.sort((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years)) {
-                if (civilizationFood.getQuantity() >= 1 && farmer.lifeCounter<50) {
+                if (civilizationFood.getQuantity() >= 1 && farmer.lifeCounter < 50) {
                     civilizationFood.decrease(1)
                     farmer.increaseLife(1)
                 } else {
@@ -156,7 +157,7 @@ ${chalk.blue('---------------------------')}`
             }
 
             for (const carpenter of carpentersCitizens.sort((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years)) {
-                if (civilizationFood.getQuantity() >= 2 && carpenter.lifeCounter <50) {
+                if (civilizationFood.getQuantity() >= 2 && carpenter.lifeCounter < 50) {
                     civilizationFood.decrease(2)
                     carpenter.increaseLife(1)
                 } else {

@@ -1,3 +1,5 @@
+export const prerender = false
+
 import { getUser } from '../services/api/user-api'
 import type { User } from '../stores/user'
 import type { LayoutServerLoad } from './$types'
