@@ -58,7 +58,8 @@ export class CivilizationTable {
       .from(civilizationsWorldTable)
       .where(eq(civilizationsWorldTable.worldId, worldId))
 
-    return Promise.all(civilizationIds.map(({ civilizationId }) => this.getById(civilizationId)))
+    const civilizations = await Promise.all(civilizationIds.map(({ civilizationId }) => this.getById(civilizationId)))
+    return civilizations.filter(({ getCitizens }) => getCitizens().length)
   }
 
   async getById(civilizationId: string): Promise<Civilization> {
