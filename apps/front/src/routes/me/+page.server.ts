@@ -1,7 +1,11 @@
-import { getUser } from '../../services/api/user-api'
+import { passwordChangeSchema } from '$lib/schemas/passwordChanger'
+import { fail, superValidate } from 'sveltekit-superforms'
+import { changePassword, getUser } from '../../services/api/user-api'
 import { checkLogin } from '../../services/checkLogin'
 import type { User } from '../../stores/user'
-import type { PageServerLoad } from './$types'
+import type { Actions, PageServerLoad } from './$types'
+import { zod } from 'sveltekit-superforms/adapters'
+import { error } from '@sveltejs/kit'
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
   checkLogin(cookies, url)
@@ -19,5 +23,20 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 
   return {
     user,
+    passwordChangeForm: await superValidate(zod(passwordChangeSchema))
+  }
+}
+
+export const actions: Actions = {
+  default: async ({ cookies, url, ...event }) => {
+    const form = await superValidate({ cookies, url, ...event }, zod(passwordChangeSchema))
+    if (!form.valid) {
+      return fail(400, {
+        form,
+      })
+    }
+
+    await changePassword(cookies, form.data.oldPassword, form.data.newPassword).catch((e) => error(e.status, e.value.message))
+    cookies.delete('auth', { path: '/' })
   }
 }

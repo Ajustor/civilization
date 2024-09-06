@@ -143,4 +143,31 @@ export class UsersTable {
     return value !== 0
   }
 
+  async changePassword({ userId, oldPassword, newPassword }: { userId: string, oldPassword: string, newPassword: string }) {
+    const [retrievedUser] = await this.client.select({
+      id: usersTable.id,
+      username: usersTable.username,
+      email: usersTable.email,
+      password: usersTable.password
+    }).from(usersTable).where(
+      eq(usersTable.id, userId)
+    )
+
+    if (!retrievedUser) {
+      return null
+    }
+
+    const isPasswordValid = await Bun.password.verify(oldPassword, retrievedUser.password)
+    if (!isPasswordValid) {
+      throw new Error('Your password does not match')
+    }
+
+    await this.client.update(usersTable).set({ password: newPassword }).where(
+      eq(usersTable.id, userId),
+    )
+
+    await this.addAuthorizationKey(userId)
+  }
+
+
 }

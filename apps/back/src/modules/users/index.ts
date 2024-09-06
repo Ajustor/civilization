@@ -51,3 +51,9 @@ export const usersModule = new Elysia({ prefix: '/users' })
     const selectedUser = await userDbClient.getById(userId)
     return { user: selectedUser }
   })
+  .patch('/update-password', ({ user, userDbClient, body: { oldPassword, newPassword } }) => userDbClient.changePassword({ userId: user.id, oldPassword, newPassword }), {
+    body: t.Object({
+      oldPassword: t.String(),
+      newPassword: t.String()
+    })
+  })

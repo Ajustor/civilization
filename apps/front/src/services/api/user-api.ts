@@ -69,3 +69,16 @@ export async function createNewUser(email: string, password: string, username: s
     throw error
   }
 }
+
+export async function changePassword(cookies: Cookies, oldPassword: string, newPassword: string) {
+  const { error } = await client.users['update-password'].patch({ oldPassword, newPassword }, {
+    headers: {
+      authorization: `Bearer ${cookies.get(('auth'))}`
+    }
+  })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+}

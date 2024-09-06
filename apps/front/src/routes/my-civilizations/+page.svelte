@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ActionData, PageData } from './$types'
+	import type { PageData } from './$types'
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button, buttonVariants } from '$lib/components/ui/button'
@@ -11,11 +11,9 @@
 		DialogHeader,
 		DialogDescription
 	} from '$lib/components/ui/dialog'
-	import { Label } from '$lib/components/ui/label'
 	import { Input } from '$lib/components/ui/input'
-	import { loginSchema } from '$lib/schemas/login'
-	import { superValidate, superForm } from 'sveltekit-superforms'
-	import { zod, zodClient } from 'sveltekit-superforms/adapters'
+	import { superForm } from 'sveltekit-superforms'
+	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 	import {
 		FormButton,
@@ -56,7 +54,6 @@
 		},
 		onUpdate({ result }) {
 			if (result.type === 'success') {
-				console.log(result)
 				if (result.data?.myCivilizations) {
 					isDialogOpen = false
 					data.myCivilizations = result.data.myCivilizations
