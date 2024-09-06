@@ -1,10 +1,11 @@
 export const prerender = false
-import { fail, superValidate } from 'sveltekit-superforms'
+import { fail, message, superValidate } from 'sveltekit-superforms'
 import { createCivilization, getMyCivilizations } from '../../services/api/civilization-api'
 import type { Actions, PageServerLoad } from './$types'
 import { zod } from 'sveltekit-superforms/adapters'
 import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 import { checkLogin } from '../../services/checkLogin'
+import { error } from '@sveltejs/kit'
 
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
@@ -28,9 +29,10 @@ export const actions: Actions = {
     try {
       await createCivilization(cookies, form.data.name)
       const myCivilizations = await getMyCivilizations(cookies)
+      message(form, { status: 'success', text: 'Votre civilisation a bien été créée' })
       return { form, myCivilizations }
-    } catch (error) {
-      console.error(error)
+    } catch (requestError) {
+      error(requestError.status, requestError.value)
     }
   }
 } satisfies Actions

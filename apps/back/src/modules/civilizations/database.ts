@@ -102,6 +102,30 @@ export class CivilizationTable {
     return this.buildCivilizations(...civilizations)
   }
 
+  async getByUserAndCivilizationId(userId: string, civilizationId: string): Promise<Civilization> {
+    const [{ value }] = await this.client
+      .select({ value: count(usersCivilizationTable.id) })
+      .from(usersCivilizationTable)
+      .where(
+        and(
+          eq(usersCivilizationTable.userId, userId),
+          eq(usersCivilizationTable.civilizationId, civilizationId),
+        )
+      )
+
+    if (!value) {
+      throw new Error(`No civilization found for this user with id ${civilizationId}`)
+    }
+
+    const [civilization] = await this.client
+      .select()
+      .from(civilizationTable)
+      .where(eq(civilizationTable.id, civilizationId))
+
+    return buildCivilization(this.client, civilization)
+  }
+
+
   async create(userId: string, civilization: Civilization) {
     const [createdCivilization] = await this.client.insert(civilizationTable).values({
       citizens: civilization.getCitizens().map((citizen) => citizen.formatToEntity()),

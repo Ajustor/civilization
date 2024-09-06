@@ -6,6 +6,9 @@
 	import type { LayoutData } from './$types'
 	import { Toaster } from '$lib/components/ui/sonner'
 	import { fly } from 'svelte/transition'
+	import { page } from '$app/stores'
+	import { toast } from 'svelte-sonner'
+	import { useState } from '../stores/state'
 
 	export let data: LayoutData
 
@@ -13,6 +16,12 @@
 	if (data.user) {
 		userStore.value = data.user
 	}
+
+	page.subscribe(({ error }) => {
+		if (error) {
+			toast.error(error.message)
+		}
+	})
 </script>
 
 <Toaster richColors />
@@ -51,8 +60,6 @@
 		max-width: 64rem;
 		margin: 0 auto;
 		box-sizing: border-box;
-		justify-content: center;
-		align-items: center;
 	}
 
 	footer {
@@ -61,10 +68,6 @@
 		justify-content: center;
 		align-items: center;
 		padding: 12px;
-	}
-
-	footer a {
-		font-weight: bold;
 	}
 
 	@media (min-width: 480px) {

@@ -4,10 +4,12 @@ declare global {
 	namespace App {
 		// interface Error {}
 		// interface Locals {}
-		// interface PageData {}
+		interface PageData {
+			flash?: { type: 'success' | 'error' | 'loading' | 'info'; message: string }
+		}
 		// interface PageState {}
 		// interface Platform {}
 	}
 }
 
-export {};
+export { }

@@ -40,8 +40,10 @@
 							Année: {world.year}, mois : {world.month}<br />
 							Civilisations:
 							<ul>
-								{#each world.civilizations as civilisation}
-									<li>{civilisation.name}</li>
+								{#each world.civilizations as civilization}
+									{#if civilization.citizens.length}
+										<li>{civilization.name}</li>
+									{/if}
 								{/each}
 							</ul>
 							Resources:
