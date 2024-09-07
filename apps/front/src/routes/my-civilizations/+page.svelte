@@ -140,7 +140,7 @@
 {/snippet}
 
 {#snippet civilizationInformations(civilization: Civilization)}
-	<Card>
+	<Card class="relative">
 		<CardHeader>
 			<CardTitle class="flex items-center justify-between">
 				{civilization.name}
@@ -159,7 +159,7 @@
 				<span
 					class="absolute left-0 top-0 m-0 flex h-full w-full flex-col items-center justify-center bg-red-600 p-0"
 				>
-					Plus personne ne vit dans la civilisation {civilization.name}
+					Plus personne ne vit dans "{civilization.name}"
 					<Button
 						variant="destructive"
 						title="Supprimer cette civilisation"

@@ -45,6 +45,7 @@
 		"clsx": "^2.1.1",
 		"embla-carousel-svelte": "^8.2.1",
 		"formsnap": "^1.0.1",
+		"konsta": "^4.0.0",
 		"lucide-svelte": "^0.438.0",
 		"mode-watcher": "^0.4.1",
 		"svelte-headless-table": "^0.18.2",
