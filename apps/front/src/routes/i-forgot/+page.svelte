@@ -15,6 +15,7 @@
 	import { toast } from 'svelte-sonner'
 	import { iForgotSchema } from '$lib/schemas/iForgot'
 	import type { PageData } from './$types'
+	import { Block } from 'konsta/svelte'
 
 	export let data: PageData
 
@@ -38,60 +39,62 @@
 	})
 </script>
 
-<Card class="m-auto w-3/4 lg:w-1/2">
-	<CardHeader>
-		<CardTitle>Nouveau mot de passe</CardTitle>
-	</CardHeader>
-	<CardContent>
-		<form method="post" use:enhance>
-			<FormField {form} name="newPassword">
-				<FormControl let:attrs>
-					<FormLabel>Nouveau mot de passe</FormLabel>
-					<Input
-						{...attrs}
-						bind:value={$formData.newPassword}
-						type="password"
-						{...$constraints.newPassword}
-					/>
-				</FormControl>
-				<FormDescription />
-				<FormFieldErrors>
-					{#if $errors.newPassword}
-						{$errors.newPassword}
-					{/if}
-				</FormFieldErrors>
-			</FormField>
+<Block class="m-auto flex w-3/4 flex-col items-center justify-center">
+	<Card class="m-auto w-full lg:w-1/2">
+		<CardHeader>
+			<CardTitle>Nouveau mot de passe</CardTitle>
+		</CardHeader>
+		<CardContent>
+			<form method="post" use:enhance>
+				<FormField {form} name="newPassword">
+					<FormControl let:attrs>
+						<FormLabel>Nouveau mot de passe</FormLabel>
+						<Input
+							{...attrs}
+							bind:value={$formData.newPassword}
+							type="password"
+							{...$constraints.newPassword}
+						/>
+					</FormControl>
+					<FormDescription />
+					<FormFieldErrors>
+						{#if $errors.newPassword}
+							{$errors.newPassword}
+						{/if}
+					</FormFieldErrors>
+				</FormField>
 
-			<FormField {form} name="authorizationKey">
-				<FormControl let:attrs>
-					<Input {...attrs} bind:value={data.authorizationKey} type="hidden" />
-				</FormControl>
-			</FormField>
+				<FormField {form} name="authorizationKey">
+					<FormControl let:attrs>
+						<Input {...attrs} bind:value={data.authorizationKey} type="hidden" />
+					</FormControl>
+				</FormField>
 
-			<FormField {form} name="userId">
-				<FormControl let:attrs>
-					<Input {...attrs} bind:value={data.userId} type="hidden" />
-				</FormControl>
-			</FormField>
+				<FormField {form} name="userId">
+					<FormControl let:attrs>
+						<Input {...attrs} bind:value={data.userId} type="hidden" />
+					</FormControl>
+				</FormField>
 
-			<FormField {form} name="newPasswordVerif">
-				<FormControl let:attrs>
-					<FormLabel>Vérification du nouveau mot de passe</FormLabel>
-					<Input
-						{...attrs}
-						bind:value={$formData.newPasswordVerif}
-						type="password"
-						{...$constraints.newPasswordVerif}
-					/>
-				</FormControl>
-				<FormDescription />
-				<FormFieldErrors>
-					{#if $errors.newPasswordVerif}
-						{$errors.newPasswordVerif}
-					{/if}
-				</FormFieldErrors>
-			</FormField>
-			<FormButton>Changer mon mot de passe</FormButton>
-		</form>
-	</CardContent>
-</Card>
+				<FormField {form} name="newPasswordVerif">
+					<FormControl let:attrs>
+						<FormLabel>Vérification du nouveau mot de passe</FormLabel>
+						<Input
+							{...attrs}
+							bind:value={$formData.newPasswordVerif}
+							type="password"
+							{...$constraints.newPasswordVerif}
+						/>
+					</FormControl>
+					<FormDescription />
+					<FormFieldErrors>
+						{#if $errors.newPasswordVerif}
+							{$errors.newPasswordVerif}
+						{/if}
+					</FormFieldErrors>
+				</FormField>
+				<FormButton>Changer mon mot de passe</FormButton>
+			</form>
+		</CardContent>
+	</Card>
+</Block>
