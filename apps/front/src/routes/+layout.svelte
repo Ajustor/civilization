@@ -26,7 +26,7 @@
 
 <Toaster richColors />
 
-<div class="app">
+<div class="app overflow-hidden">
 	<Header user={userStore.value} />
 
 	<main>

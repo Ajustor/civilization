@@ -196,11 +196,11 @@
 	{#if data.myCivilizations.length}
 		<Root
 			opts={{
-				align: 'start'
+				slidesToScroll: 'auto'
 			}}
-			class="w-full max-w-sm"
+			class="w-full"
 		>
-			<Content>
+			<Content class="w-full md:w-1/2 lg:w-1/3">
 				{#each data.myCivilizations as civilization}
 					<!-- content here -->
 					<Item>

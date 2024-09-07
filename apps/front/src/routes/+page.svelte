@@ -19,14 +19,15 @@
 	/>
 </svelte:head>
 
-<section>
+<section class="h-full w-full">
 	<Root
 		opts={{
-			align: 'start'
+			align: 'end',
+			slidesToScroll: 'auto'
 		}}
-		class="w-full max-w-sm"
+		class="w-full"
 	>
-		<Content>
+		<Content class="w-full md:w-1/2 lg:w-1/3">
 			{#each data.worlds as world}
 				<!-- content here -->
 				<Item>
@@ -41,9 +42,9 @@
 							Civilisations:
 							<ul>
 								{#each world.civilizations as civilization}
-									{#if civilization.citizens.length}
-										<li>{civilization.name}</li>
-									{/if}
+									<li>
+										{civilization.name} ({civilization.citizens.length ? 'vivante' : 'morte'})
+									</li>
 								{/each}
 							</ul>
 							Resources:
