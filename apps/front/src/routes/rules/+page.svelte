@@ -2,7 +2,7 @@
 	import { Block, List, ListItem } from 'konsta/svelte'
 </script>
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center">
+<Block class="m-auto flex lg:w-3/4 flex-col items-center justify-center">
 	<h1 class="text-2xl">Les règles de la simulation</h1>
 	<List strong inset>
 		<ListItem title="Les règles du monde">
@@ -34,7 +34,7 @@
 				<li>
 					Le monde est sur un cycle de 12 mois, chaque groupes de 3 mois correspond a une saison
 				</li>
-				<ol class="list-inside list-decimal">
+				<ol class="list-inside list-disc">
 					<li>0, 1, 2: printemps</li>
 					<li>3, 4, 5: été</li>
 					<li>6, 7, 8: automne</li>
