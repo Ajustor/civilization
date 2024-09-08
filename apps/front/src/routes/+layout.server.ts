@@ -1,7 +1,7 @@
 export const prerender = false
 
 import { getUser } from '../services/api/user-api'
-import type { User } from '../stores/user'
+import { type User } from '../stores/user'
 import type { LayoutServerLoad } from './$types'
 
 export const load: LayoutServerLoad = async ({ cookies, url }) => {
@@ -10,7 +10,6 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
   if (isLogged) {
     try {
       user = await getUser(cookies)
-
     } catch (error) {
       console.error(error)
     }

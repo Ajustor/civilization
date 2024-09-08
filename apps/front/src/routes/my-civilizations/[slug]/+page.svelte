@@ -4,6 +4,7 @@
 	import type { PageData } from './$types'
 	import { ArrowLeft } from 'lucide-svelte'
 	import CitizensTable from './datatables/citizens-table.svelte'
+	import { Block } from 'konsta/svelte'
 
 	export let data: PageData
 
@@ -19,7 +20,7 @@
 
 <Button variant="ghost" href="/my-civilizations"><ArrowLeft />Retour</Button>
 
-<section class="flex h-full w-full flex-col gap-5">
+<Block class="flex w-full flex-col gap-5">
 	<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
 	<span>
 		Citoyens:
@@ -43,4 +44,4 @@
 			{/each}
 		</ul>
 	</span>
-</section>
+</Block>

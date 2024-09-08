@@ -9,13 +9,13 @@
 	import { page } from '$app/stores'
 	import { toast } from 'svelte-sonner'
 	import { useState } from '../stores/state'
+	import { App, Page } from 'konsta/svelte'
 
 	export let data: LayoutData
 
 	let userStore = useUser()
-	if (data.user) {
-		userStore.value = data.user
-	}
+
+	userStore.value = data.user
 
 	page.subscribe(({ error }) => {
 		if (error) {
@@ -26,53 +26,22 @@
 
 <Toaster richColors />
 
-<div class="app overflow-hidden">
-	<Header user={userStore.value} />
+<App safeAreas>
+	<Page>
+		<Header user={userStore.value} />
+		<slot></slot>
+	</Page>
 
-	<main>
-		{#key data.url}
-			<span
-				class="h-full w-full"
-				in:fly={{ delay: 300, x: -200, duration: 300 }}
-				out:fly={{ duration: 300 }}
-			>
-				<slot></slot>
-			</span>
-		{/key}
-	</main>
-
-	<footer></footer>
-</div>
+	<!-- {#key data.url}
+		<span
+			class="h-full w-full"
+			in:fly={{ delay: 300, x: -200, duration: 300 }}
+			out:fly={{ duration: 300 }}
+		>
+			<slot></slot>
+		</span>
+	{/key} -->
+</App>
 
 <style>
-	.app {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
-	}
-
-	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
-
-	footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
-	}
 </style>

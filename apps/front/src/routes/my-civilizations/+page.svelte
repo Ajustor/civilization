@@ -37,6 +37,7 @@
 		AlertDialogCancel,
 		AlertDialogAction
 	} from '$lib/components/ui/alert-dialog'
+	import { Block } from 'konsta/svelte'
 
 	export let data: PageData
 
@@ -191,7 +192,7 @@
 	</Card>
 {/snippet}
 
-<section class="gap-5">
+<Block class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
 	{@render createCivilizationDialog()}
 	{#if data.myCivilizations.length}
 		<Root
@@ -212,14 +213,4 @@
 			<Next variant="ghost" />
 		</Root>
 	{/if}
-</section>
-
-<style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
-	}
-</style>
+</Block>
