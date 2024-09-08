@@ -192,7 +192,7 @@
 	</Card>
 {/snippet}
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center">
+<Block class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
 	{@render createCivilizationDialog()}
 	{#if data.myCivilizations.length}
 		<Root
