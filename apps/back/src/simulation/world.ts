@@ -70,15 +70,15 @@ export class World {
     const [currentSeason] = Object.entries(seasons).find(([_, months]) => months.includes(this.month % 12)) ?? []
     switch (currentSeason) {
       case 'spring': {
-        this.increaseResource(ResourceType.FOOD, 100 + 100 * this.civilizations.length)
+        this.increaseResource(ResourceType.FOOD, 50 + 20 * this.civilizations.length)
         break
       }
       case 'summer': {
-        this.increaseResource(ResourceType.FOOD, 75 + 75 * this.civilizations.length)
+        this.increaseResource(ResourceType.FOOD, 25 + 10 * this.civilizations.length)
         break
       }
       case 'automn': {
-        this.increaseResource(ResourceType.FOOD, 25 + 25 * this.civilizations.length)
+        this.increaseResource(ResourceType.FOOD, 10 + 5 * this.civilizations.length)
         this.increaseResource(ResourceType.WOOD, 10)
         break
       }
