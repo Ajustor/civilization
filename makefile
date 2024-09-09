@@ -1,3 +1,6 @@
+build-deps:
+	bun build:deps
+
 migrate-hard:
 	rm -rd drizzle || true
 	rm -rd apps/back/drizzle || true
@@ -7,7 +10,7 @@ migrate-hard:
 	bun back:migrate
 	bun back:populate
 
-generate-migrations:
+generate-migrations: build-deps
 	bun back:generate:migrations
 
 migrate:

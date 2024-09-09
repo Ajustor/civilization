@@ -1,4 +1,4 @@
-import { Civilization } from '../civilization'
+import type { Civilization } from '../civilization'
 import { Resource } from '../resource'
 import { World } from '../world'
 

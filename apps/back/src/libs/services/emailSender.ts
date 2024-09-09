@@ -1,7 +1,9 @@
+import Elysia from 'elysia'
 import { ReactNode } from 'react'
 import { Resend } from 'resend'
 
-export class EmailSender {
+
+class EmailSender {
   private client = new Resend(Bun.env.RESEND_API_KEY)
 
   public async sendEmail(to: string, subject: string, template: ReactNode) {
@@ -23,3 +25,7 @@ export class EmailSender {
     return new Response(JSON.stringify({ data }))
   }
 }
+
+export const emailSender = new Elysia({ name: 'EmailSender' }).derive(({ }) => {
+  return { emailSender: new EmailSender() }
+}).as('plugin')

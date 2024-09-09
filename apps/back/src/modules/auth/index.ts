@@ -5,13 +5,14 @@ import { jwtMiddleware } from '../../libs/jwt'
 import { authorization } from '../../libs/handlers/authorization'
 import { addDays } from 'date-fns'
 import { logger } from '@bogeychan/elysia-logger'
-import { EmailSender } from '../../libs/services/emailSender'
 import { IForgetEmailTemplate } from '../../emailTemplates/i-forget'
+import { emailSender } from '../../libs/services/emailSender'
 
 export const authModule = new Elysia({ prefix: '/auth' })
   .use(jwtMiddleware)
   .use(logger())
-  .decorate({ userDbClient: new UsersTable(db), emailService: new EmailSender() })
+  .use(emailSender)
+  .decorate({ userDbClient: new UsersTable(db) })
   .post('', async ({ jwt, body, set, cookie: { auth }, userDbClient }) => {
     const user = await userDbClient.getAuthUser({ ...body })
     if (!user) {
@@ -33,7 +34,7 @@ export const authModule = new Elysia({ prefix: '/auth' })
       }
     )
   })
-  .get('/i-forgot', async ({ query, userDbClient, log, emailService }) => {
+  .get('/i-forgot', async ({ query, userDbClient, log, emailSender }) => {
     const userExist = await userDbClient.exist(query.email)
     if (!userExist) {
       return
@@ -44,7 +45,7 @@ export const authModule = new Elysia({ prefix: '/auth' })
       return
     }
 
-    await emailService.sendEmail(user.email, 'Mot de passe oublié', IForgetEmailTemplate({
+    await emailSender.sendEmail(user.email, 'Mot de passe oublié', IForgetEmailTemplate({
       authorizationKey: user.authorizationKey ?? '',
       userId: user.id,
       username: user.username

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createTable, Render, Subscribe } from 'svelte-headless-table'
 	import { readable } from 'svelte/store'
-	import type { Citizen } from '../../../../types/citizen'
 	import {
 		Table,
 		TableBody,
@@ -10,9 +9,9 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import { ProfessionType } from '../../../../types/profession'
+	import { type CitizenType, ProfessionType } from '@ajustor/simulation'
 
-	export let citizens: Citizen[]
+	export let citizens: CitizenType[]
 
 	const table = createTable(readable(citizens))
 

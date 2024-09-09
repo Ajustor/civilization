@@ -1,0 +1,19 @@
+{
+  "name": "@ajustor/simulation",
+  "description": "description",
+  "authors": "ajustor",
+  "version": "1.0.0",
+  "module": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "bun run src/demo.ts",
+    "build": "bun build src/index.ts --outdir dist"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^5.5.0"
+  }
+}

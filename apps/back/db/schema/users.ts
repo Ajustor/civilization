@@ -1,7 +1,7 @@
+import { Civilization } from '@ajustor/simulation'
 import { createId } from '@paralleldrive/cuid2'
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema } from 'drizzle-typebox'
-import { Civilization } from '../../src/simulation/civilization'
 
 export const usersTable = sqliteTable('users', {
   id: text('id').primaryKey().$defaultFn(createId),

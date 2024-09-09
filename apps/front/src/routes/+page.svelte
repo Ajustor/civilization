@@ -42,9 +42,10 @@
 							Année: {world.year}, mois : {world.month}<br />
 							Civilisations:
 							<ul>
-								{#each world.civilizations as civilization}
+								{#each world.civilizations.sort(({ livedMonths: firstLivedMonths }, { livedMonths: secondLivedMonths }) => secondLivedMonths - firstLivedMonths) as civilization}
 									<li>
-										{civilization.name} ({civilization.citizens.length ? 'vivante' : 'morte'})
+										{civilization.name} ({civilization.citizens.length ? 'vivante' : 'morte'}, a
+										survécu {civilization.livedMonths} mois)
 									</li>
 								{/each}
 							</ul>

@@ -6,3 +6,4 @@ civ_server
 .env
 # Local Netlify folder
 .netlify
+dist

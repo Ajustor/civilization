@@ -1,5 +1,5 @@
 import { Citizen } from '../citizen/citizen'
-import { Building, BuildingEntity } from './buildings.type'
+import type { Building, BuildingType } from '../types/building'
 import { BuildingTypes } from './enum'
 
 export class House implements Building {
@@ -21,7 +21,7 @@ export class House implements Building {
     }
   }
 
-  formatToEntity(): BuildingEntity {
+  formatToType(): BuildingType {
     return {
       capacity: this.capacity,
       type: this.getType(),

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
-	import type { Citizen } from '../../../types/citizen'
 	import type { PageData } from './$types'
 	import { ArrowLeft } from 'lucide-svelte'
 	import CitizensTable from './datatables/citizens-table.svelte'
 	import { Block } from 'konsta/svelte'
+	import type { CitizenType } from '@ajustor/simulation'
 
 	export let data: PageData
 
@@ -14,7 +14,7 @@
 	}
 </script>
 
-{#snippet citizensView(citizens: Citizen[])}
+{#snippet citizensView(citizens: CitizenType[])}
 	<CitizensTable {citizens} />
 {/snippet}
 
@@ -22,6 +22,11 @@
 
 <Block class="flex w-full flex-col gap-5">
 	<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
+	<span
+		>Votre civilisation vit depuis {~~(data.civilization.livedMonths % 12)} années et {~~(
+			data.civilization.livedMonths / 12
+		)} mois</span
+	>
 	<span>
 		Citoyens:
 		{@render citizensView(data.civilization.citizens)}

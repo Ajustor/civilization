@@ -2,9 +2,7 @@ import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { worldsTable } from '../../../db/schema/worldSchema'
 import { worldsResourcesTable } from '../../../db/schema/worldsResourcesTable'
 import { and, eq } from 'drizzle-orm'
-import { World } from '../../simulation/world'
-import { Resource } from '../../simulation/resource'
-import { WorldBuilder } from '../../simulation/builders/worldBuilder'
+import { World, WorldBuilder, Resource } from '@ajustor/simulation'
 
 export type GetOptions = {
   populate: {

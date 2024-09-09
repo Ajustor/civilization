@@ -27,6 +27,7 @@
 	} from '$lib/components/ui/dialog'
 	import { buttonVariants } from '$lib/components/ui/button'
 	import { Block } from 'konsta/svelte'
+	import { redirect } from '@sveltejs/kit'
 
 	export let data: PageData
 
@@ -51,11 +52,12 @@
 
 	let email = ''
 
-	const askANewPassword = () => {
+	const askANewPassword = async () => {
 		if (!email) {
 			toast.error("Merci d'entrer une adresse email")
 		}
-		fetch('/login', { body: JSON.stringify({ email }), method: 'POST' })
+		await fetch('/login', { body: JSON.stringify({ email }), method: 'POST' })
+		redirect(302, '/login')
 	}
 </script>
 
