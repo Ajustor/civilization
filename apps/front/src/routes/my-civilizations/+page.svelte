@@ -3,7 +3,7 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button, buttonVariants } from '$lib/components/ui/button'
-	import { Plus, Trash } from 'lucide-svelte'
+	import { Landmark, PersonStanding, Plus, Trash } from 'lucide-svelte'
 	import {
 		Dialog,
 		DialogTrigger,
@@ -170,14 +170,16 @@
 					</Button>
 				</span>
 			{:else}
-				<span>
-					Nombre de citoyens: {civilization.citizens.length}
+				<span class="flex items-center">
+					<PersonStanding size="24" />
+					<span class="ml-4">{civilization.citizens.length}</span>
+				</span>
+				<span class="flex items-center">
+					<Landmark size="24" />
+					<span class="ml-4">{civilization.buildings.length}</span>
 				</span>
 				<span>
-					Nombre de bâtiments: {civilization.buildings.length}
-				</span>
-				<span>
-					Resources:
+					Ressources:
 					<ul>
 						{#each civilization.resources as resource}
 							<li>{translatedResourceName[resource.type]}: {resource.quantity} restante</li>
