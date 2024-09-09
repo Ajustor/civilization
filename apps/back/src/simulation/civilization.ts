@@ -1,15 +1,16 @@
-import { Citizen } from './citizen/citizen'
 import { Resource, ResourceType } from './resource'
+import { countries, names, uniqueNamesGenerator } from 'unique-names-generator'
+
+import { Building } from './buildings/buildings.type'
+import { BuildingTypes } from './buildings/enum'
+import { Citizen } from './citizen/citizen'
+import { Farmer } from './citizen/work/farmer'
+import { Gender } from './citizen/enum'
 import { House } from './buildings/house'
+import { OccupationType } from './citizen/work/enum'
 import type { World } from './world'
-import { names, uniqueNamesGenerator, countries } from 'unique-names-generator'
 import chalk from 'chalk'
 import { range } from '../utils'
-import { ProfessionType } from './citizen/work/enum'
-import { Farmer } from './citizen/work/farmer'
-import { BuildingTypes } from './buildings/enum'
-import { Building } from './buildings/buildings.type'
-
 
 export class Civilization {
     public id!: string
@@ -44,7 +45,7 @@ export class Civilization {
         return `
 ${chalk.blue(`--- ${this.name} Status ---`)}
 ${chalk.green(`citizens:
-${this.citizens.map((citizen) => `${citizen.name}, ${citizen.years} years old, ${citizen.profession?.professionType} (${citizen.lifeCounter} life points)`).join(' || ')}`)}
+${this.citizens.map((citizen) => `${citizen.name}, ${citizen.years} years old, ${citizen.work?.occupationType} (${citizen.lifeCounter} life points)`).join(' || ')}`)}
 ${chalk.green(`buildings:
 ${this.houses.map((house) => `Houses: ${house.residents.length}/${house.capacity}`).join(' || ')}`)}
 ${chalk.yellow(`resources:
@@ -83,8 +84,8 @@ ${chalk.blue('---------------------------')}`
         return resource
     }
 
-    getCitizenWithProfession(profession: ProfessionType): Citizen[] {
-        return this.citizens.filter(({ profession: citizenProfession }) => citizenProfession && profession === citizenProfession.professionType)
+    getCitizenWithOccupation(occupation: OccupationType): Citizen[] {
+        return this.citizens.filter(({ work: citizenOccupation }) => citizenOccupation && occupation === citizenOccupation.occupationType)
     }
 
     addCitizen(...citizens: Citizen[]): void {
@@ -116,8 +117,8 @@ ${chalk.blue('---------------------------')}`
         const civilizationFood = this.getResource(ResourceType.FOOD)
         const civilizationWood = this.getResource(ResourceType.WOOD)
 
-        const farmers = this.getCitizenWithProfession(ProfessionType.FARMER)
-        const carpentersCitizens = this.getCitizenWithProfession(ProfessionType.CARPENTER)
+        const farmers = this.getCitizenWithOccupation(OccupationType.FARMER)
+        const carpentersCitizens = this.getCitizenWithOccupation(OccupationType.CARPENTER)
 
         if (foodResource?.getQuantity()) {
 
@@ -172,7 +173,7 @@ ${chalk.blue('---------------------------')}`
         this.birthNewCitizen()
 
         if (this.citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.getQuantity() >= 15) {
-            const carpenter = this.getCitizenWithProfession(ProfessionType.CARPENTER).find(citizen => !citizen.isBuilding)
+            const carpenter = this.getCitizenWithOccupation(OccupationType.CARPENTER).find(citizen => !citizen.isBuilding)
             if (carpenter) {
                 carpenter.startBuilding()
                 this.constructBuilding(BuildingTypes.HOUSE, 4)
@@ -193,14 +194,14 @@ ${chalk.blue('---------------------------')}`
     }
 
     public adaptCitizen() {
-        const farmerCount = this.getCitizenWithProfession(ProfessionType.FARMER).length
-        const carpenterCount = this.getCitizenWithProfession(ProfessionType.CARPENTER).length
+        const farmerCount = this.getCitizenWithOccupation(OccupationType.FARMER).length
+        const carpenterCount = this.getCitizenWithOccupation(OccupationType.CARPENTER).length
 
         if (farmerCount < carpenterCount) {
-            const oldCarpenters = this.getCitizenWithProfession(ProfessionType.CARPENTER)
+            const oldCarpenters = this.getCitizenWithOccupation(OccupationType.CARPENTER)
             for (let i = 0; i > oldCarpenters.length / 2; i++) {
-                oldCarpenters[i].setProfession(ProfessionType.FARMER)
-                oldCarpenters[i].profession = new Farmer()
+                oldCarpenters[i].setOccupation(OccupationType.FARMER)
+                oldCarpenters[i].work = new Farmer()
             }
         }
     }
@@ -219,9 +220,14 @@ ${chalk.blue('---------------------------')}`
 
         if (eligibleCitizens.length) {
             for (const [parent1, parent2] of eligibleCitizens) {
-                const professions = [ProfessionType.CARPENTER, ProfessionType.FARMER, parent1.profession?.professionType ?? ProfessionType.CARPENTER, parent2.profession?.professionType ?? ProfessionType.FARMER]
-                const newCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 0, 2)
-                newCitizen.setProfession(professions[Math.floor(Math.random() * professions.length)])
+                const occupations = [OccupationType.CARPENTER, OccupationType.FARMER, parent1.work?.occupationType ?? OccupationType.CARPENTER, parent2.work?.occupationType ?? OccupationType.FARMER]
+                const genders = [Gender.FEMALE, Gender.MALE]
+                const newCitizen = new Citizen(
+                    uniqueNamesGenerator({ dictionaries: [names] }),
+                    0,
+                    genders[Math.floor(Math.random() * genders.length )],
+                    2)
+                newCitizen.setOccupation(occupations[Math.floor(Math.random() * occupations.length)])
                 this.addCitizen(newCitizen)
 
                 const availableBuilding = this.houses.find(({ capacity }) => capacity < 4)

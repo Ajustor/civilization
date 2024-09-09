@@ -1,16 +1,18 @@
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
+import { and, count, eq, inArray } from 'drizzle-orm'
+
+import { BuildingTypes } from '../../simulation/buildings/enum'
+import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { Citizen } from '../../simulation/citizen/citizen'
 import { Civilization } from '../../simulation/civilization'
 import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
-import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
-import { and, count, eq, inArray } from 'drizzle-orm'
-import { Resource } from '../../simulation/resource'
-import { BuildingTypes } from '../../simulation/buildings/enum'
+import { Gender } from '../../simulation/citizen/enum'
 import { House } from '../../simulation/buildings/house'
-import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
+import { Resource } from '../../simulation/resource'
+import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
+import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
-import { Citizen } from '../../simulation/citizen/citizen'
 
 export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
@@ -29,11 +31,17 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     }
   }
 
-  builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
-    const citizen = new Citizen(name, month, lifeCounter)
-    if (profession) {
-      citizen.setProfession(profession)
+  builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, occupation, buildingMonthsLeft: buildingYearsLeft, isBuilding, gender = Gender.UNKNOWN }) => {
+    const citizen = new Citizen(name, month, gender, lifeCounter)
+    if (occupation) {
+      citizen.setOccupation(occupation)
     }
+
+    // keep it until all civilisations are renewed
+    if (profession) {
+      citizen.setOccupation(profession)
+    }
+
     citizen.isBuilding = isBuilding
     citizen.buildingMonthsLeft = buildingYearsLeft
     return citizen

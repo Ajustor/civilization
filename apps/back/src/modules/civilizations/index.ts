@@ -1,21 +1,23 @@
 import Elysia, { error, t } from 'elysia'
-import { CivilizationTable } from './database'
-import { db } from '../../libs/database'
-import { logger } from '@bogeychan/elysia-logger'
-import { jwtMiddleware } from '../../libs/jwt'
-import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
-import { Citizen } from '../../simulation/citizen/citizen'
-import { names, uniqueNamesGenerator } from 'unique-names-generator'
-import { ProfessionType } from '../../simulation/citizen/work/enum'
 import { Resource, ResourceType } from '../../simulation/resource'
+import { names, uniqueNamesGenerator } from 'unique-names-generator'
+
+import { Citizen } from '../../simulation/citizen/citizen'
 import { Civilization } from '../../simulation/civilization'
+import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
+import { CivilizationTable } from './database'
+import { Gender } from '../../simulation/citizen/enum'
+import { OccupationType } from '../../simulation/citizen/work/enum'
 import { authorization } from '../../libs/handlers/authorization'
+import { db } from '../../libs/database'
+import { jwtMiddleware } from '../../libs/jwt'
+import { logger } from '@bogeychan/elysia-logger'
 
 export function formatCivilizations(civilizations: Civilization[]) {
   return civilizations.map((civilization) => ({
     ...civilization,
     citizens: civilization.getCitizens()
-      .map((citizen) => ({ ...citizen, profession: citizen.profession?.professionType, years: citizen.years })),
+      .map((citizen) => ({ ...citizen, occupation: citizen.work?.occupationType, years: citizen.years })),
     resources: civilization.getResources().map((resource) => ({
       type: resource.getType(),
       quantity: resource.getQuantity()
@@ -53,11 +55,11 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     }
 
     const civilizationBuilder = new CivilizationBuilder()
-    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
-    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
+    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, Gender.FEMALE, 3)
+    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, Gender.MALE, 3)
 
-    firstCitizen.setProfession(ProfessionType.FARMER)
-    secondCitizen.setProfession(ProfessionType.CARPENTER)
+    firstCitizen.setOccupation(OccupationType.FARMER)
+    secondCitizen.setOccupation(OccupationType.CARPENTER)
 
     civilizationBuilder
       .withName(body.name)

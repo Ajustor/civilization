@@ -1,8 +1,8 @@
 import type { World } from '../../world'
-import type { ProfessionType } from './enum'
+import type { OccupationType } from './enum'
 
 export interface Work {
-  get professionType(): ProfessionType
+  get occupationType(): OccupationType
   collectResources(world: World, count: number): boolean
   canWork(citizenAge: number): boolean
 }

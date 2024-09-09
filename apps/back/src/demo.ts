@@ -1,21 +1,22 @@
-import { select, input } from '@inquirer/prompts'
-
-import { Civilization } from './simulation/civilization'
-import { Citizen } from './simulation/citizen/citizen'
 import { Resource, ResourceType } from './simulation/resource'
+import { input, select } from '@inquirer/prompts'
+
+import { Citizen } from './simulation/citizen/citizen'
+import { Civilization } from './simulation/civilization'
+import { Gender } from './simulation/citizen/enum'
+import { OccupationType } from './simulation/citizen/work/enum'
 import { World } from './simulation/world'
-import { ProfessionType } from './simulation/citizen/work/enum'
 
 const world = new World()
 const myCivilization = new Civilization()
 
 world.addCivilization(myCivilization)
 
-const alice = new Citizen('Alice', 5, 3)
-const bob = new Citizen('Bob', 2, 3)
+const alice = new Citizen('Alice', 5, Gender.FEMALE, 3)
+const bob = new Citizen('Bob', 2, Gender.MALE, 3)
 
-alice.setProfession(ProfessionType.FARMER)
-bob.setProfession(ProfessionType.CARPENTER)
+alice.setOccupation(OccupationType.FARMER)
+bob.setOccupation(OccupationType.CARPENTER)
 
 // Adding some citizens
 myCivilization.addCitizen(alice)

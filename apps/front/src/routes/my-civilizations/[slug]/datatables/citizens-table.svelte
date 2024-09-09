@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createTable, Render, Subscribe } from 'svelte-headless-table'
+	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table'
 	import { readable } from 'svelte/store'
 	import type { Citizen } from '../../../../types/citizen'
 	import {
@@ -10,7 +10,9 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import { ProfessionType } from '../../../../types/profession'
+	import { OccupationType } from '../../../../types/occupation'
+	import IconText from '../../../../lib/components/IconText/icon-text.svelte'
+	import { Gender } from '@ajustor/civ-api/src/simulation/citizen/enum'
 
 	export let citizens: Citizen[]
 
@@ -22,6 +24,20 @@
 			header: 'Nom'
 		}),
 		table.column({
+			accessor: 'gender',
+			header: 'Genre',
+			cell: ({ value }) => {
+				if (!value) {
+					return ''
+				}
+				return {
+					[Gender.FEMALE]: 'Femme',
+					[Gender.MALE]: 'Homme',
+					[Gender.UNKNOWN]: 'Inconnu'
+				}[value]
+			}
+		}),
+		table.column({
 			accessor: 'years',
 			header: 'Age'
 		}),
@@ -30,15 +46,15 @@
 			header: 'Points de vie'
 		}),
 		table.column({
-			accessor: 'profession',
+			accessor: 'occupation',
 			header: 'Profession',
 			cell: ({ value }) => {
 				if (!value) {
 					return ''
 				}
 				return {
-					[ProfessionType.FARMER]: 'Fermier',
-					[ProfessionType.CARPENTER]: 'Charpentier'
+					[OccupationType.FARMER]: 'Fermier',
+					[OccupationType.CARPENTER]: 'Charpentier'
 				}[value]
 			}
 		})

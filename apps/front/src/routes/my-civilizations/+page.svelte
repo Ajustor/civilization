@@ -3,7 +3,8 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button, buttonVariants } from '$lib/components/ui/button'
-	import { Landmark, PersonStanding, Plus, Trash } from 'lucide-svelte'
+	import { Carrot, FlameKindling, Landmark, PersonStanding, Plus, Trash, Icon } from 'lucide-svelte'
+
 	import {
 		Dialog,
 		DialogTrigger,
@@ -38,12 +39,19 @@
 		AlertDialogAction
 	} from '$lib/components/ui/alert-dialog'
 	import { Block } from 'konsta/svelte'
+	import IconText from '$lib/components/IconText/icon-text.svelte'
+	import { text } from '@sveltejs/kit'
 
 	export let data: PageData
 
 	const translatedResourceName = {
-		food: 'Nouriture',
+		food: 'Nourriture',
 		wood: 'Bois'
+	}
+
+	const resourceIcons = {
+		food: Carrot,
+		wood: FlameKindling
 	}
 
 	const form = superForm(data.civilizationCreationForm, {
@@ -170,19 +178,19 @@
 					</Button>
 				</span>
 			{:else}
-				<span class="flex items-center">
-					<PersonStanding size="24" />
-					<span class="ml-4">{civilization.citizens.length}</span>
-				</span>
-				<span class="flex items-center">
-					<Landmark size="24" />
-					<span class="ml-4">{civilization.buildings.length}</span>
-				</span>
+				<IconText iconComponent={PersonStanding} text={civilization.citizens.length} />
+				<IconText iconComponent={Landmark} text={civilization.buildings.length} />
+
 				<span>
 					Ressources:
 					<ul>
 						{#each civilization.resources as resource}
-							<li>{translatedResourceName[resource.type]}: {resource.quantity} restante</li>
+							<li>
+								<IconText
+									iconComponent={resourceIcons[resource.type]}
+									text="{translatedResourceName[resource.type]}: {resource.quantity} restante"
+								/>
+							</li>
 						{/each}
 					</ul>
 				</span>

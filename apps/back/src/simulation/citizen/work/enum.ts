@@ -1,4 +1,4 @@
-export enum ProfessionType {
+export enum OccupationType {
   FARMER = 'farmer',
   CARPENTER = 'carpenter'
 }

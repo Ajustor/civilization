@@ -43,12 +43,11 @@
 					Le monde reconstitue ses réserves de ressources suivant ces règles
 					<ol class="list-inside list-decimal">
 						<li>
-							au printemps<br /> 50 de nourriture avec un bonus de 20 par civilisations active
+							au printemps<br /> 50 de nourriture avec un bonus de 20 par civilisation active
 						</li>
-						<li>en été<br /> 25 de nourriture avec un bonus de 10 par civilisations active</li>
+						<li>en été<br /> 25 de nourriture avec un bonus de 10 par civilisation active</li>
 						<li>
-							en automne<br /> 10 de nourriture avec un bonus de 5 par civilisations active et 10 de
-							bois
+							en automne<br /> 10 de nourriture avec un bonus de 5 par civilisation active et 10 de bois
 						</li>
 						<li>en hiver<br />20 de bois</li>
 					</ol>

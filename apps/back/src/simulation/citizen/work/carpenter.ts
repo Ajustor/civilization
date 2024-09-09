@@ -1,12 +1,12 @@
+import { OccupationType } from './enum'
 import { ResourceType } from '../../resource'
-import type { World } from '../../world'
-import { ProfessionType } from './enum'
 import type { Work } from './interface'
+import type { World } from '../../world'
 
 export class Carpenter implements Work {
 
-  get professionType() {
-    return ProfessionType.CARPENTER
+  get occupationType() {
+    return OccupationType.CARPENTER
   }
 
 
