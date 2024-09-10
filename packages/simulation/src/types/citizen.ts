@@ -5,10 +5,11 @@ export type CitizenEntity = {
   id?: string
   name: string
   month: number
-  profession?: OccupationTypes
   occupation?: OccupationTypes
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
   gender: Gender
+  pregnancyMonthsLeft: number
+  child: null | CitizenEntity
 }

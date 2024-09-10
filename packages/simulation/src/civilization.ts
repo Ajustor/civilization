@@ -223,9 +223,9 @@ export class Civilization {
         const women = citizenCanReproduce.filter(({ gender }) => gender === Gender.FEMALE)
         const men = citizenCanReproduce.filter(({ gender }) => gender === Gender.MALE)
 
-        const smallestSize = [women.length, men.length].sort()[1]
+        const smallestSize = Math.min(women.length, men.length)
 
-        for (let i = 0; i < smallestSize; i++ ) {
+        for (let i = 0; i < smallestSize; i++) {
             eligibleCitizens.push([women[i], men[i]])
         }
 
@@ -236,7 +236,7 @@ export class Civilization {
                 const newCitizen = new Citizen(
                     uniqueNamesGenerator({ dictionaries: [names] }),
                     0,
-                    genders[Math.floor(Math.random() * genders.length )],
+                    genders[Math.floor(Math.random() * genders.length)],
                     2
                 )
                 newCitizen.setOccupation(occupations[Math.floor(Math.random() * occupations.length)])
@@ -252,7 +252,7 @@ export class Civilization {
     private birthWaitingChildren() {
         const awaitingMothers = this._citizens.filter(({ pregnancyMonthsLeft, child }) => pregnancyMonthsLeft === 0 && child)
 
-        for(const mother of awaitingMothers) {
+        for (const mother of awaitingMothers) {
             if (!mother.child) {
                 continue
             }

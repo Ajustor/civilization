@@ -84,7 +84,7 @@ export class Citizen {
   }
 
   canReproduce(): boolean {
-    return this.years > 16 && this.years < 60 && this.lifeCounter >= 8
+    return this.years > 16 && this.years < 60 && this.lifeCounter >= 8 && !this.child
   }
 
   addChildToBirth(child: Citizen) {
@@ -105,8 +105,9 @@ export class Citizen {
       month: this.month,
       name: this.name,
       occupation: this.work?.occupationType,
-      gender: this.gender
-
+      gender: this.gender,
+      pregnancyMonthsLeft: this.pregnancyMonthsLeft,
+      child: this.child?.formatToEntity() ?? null
     }
   }
 

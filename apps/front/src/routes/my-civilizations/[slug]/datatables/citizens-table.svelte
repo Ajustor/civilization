@@ -32,7 +32,7 @@
 					[Gender.MALE]: 'Homme',
 					[Gender.UNKNOWN]: 'Inconnu'
 				}[value]
-			},
+			}
 		}),
 		table.column({
 			accessor: 'years',
@@ -54,6 +54,10 @@
 					[OccupationTypes.CARPENTER]: 'Charpentier'
 				}[value]
 			}
+		}),
+		table.column({
+			accessor: 'pregnancyMonthsLeft',
+			header: 'Mois avant accouchement'
 		})
 	])
 

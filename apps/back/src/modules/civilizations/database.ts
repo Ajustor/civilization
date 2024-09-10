@@ -1,4 +1,4 @@
-import { BuildingTypes, Citizen, Civilization, CivilizationBuilder, House, Resource } from '@ajustor/simulation'
+import { BuildingTypes, Citizen, CitizenBuilder, Civilization, CivilizationBuilder, Gender, House, Resource } from '@ajustor/simulation'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
@@ -25,19 +25,29 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     }
   }
 
-  builder.addCitizen(...civilization.citizens.map(({ name, gender, month, lifeCounter, profession, occupation, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
+  builder.addCitizen(...civilization.citizens.map(({ name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child }) => {
+    const citizenBuilder = new CitizenBuilder()
+      .withGender(gender)
+      .withMonth(month)
+      .withName(name)
+      .withLifeCounter(lifeCounter)
+      .withIsBuilding(isBuilding)
+      .withBuildingMonthsLeft(buildingMonthsLeft)
     const citizen = new Citizen(name, month, gender, lifeCounter)
-    
+
     if (occupation) {
-      citizen.setOccupation(occupation)
+      citizenBuilder.withOccupation(occupation)
     }
 
-    if (profession) {
-      citizen.setOccupation(profession)
+    if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
+      citizenBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
     }
-    citizen.isBuilding = isBuilding
-    citizen.buildingMonthsLeft = buildingYearsLeft
-    return citizen
+
+    if (child && gender === Gender.FEMALE) {
+      citizenBuilder.withChild(child)
+    }
+
+    return citizenBuilder.build()
   }))
 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
