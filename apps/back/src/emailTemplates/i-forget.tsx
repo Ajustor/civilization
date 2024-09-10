@@ -2,13 +2,13 @@ import * as React from 'react'
 
 import {
   Body,
+  Button,
   Container,
   Head,
+  Heading,
   Html,
   Preview,
   Text,
-  Button,
-  Heading,
 } from '@react-email/components'
 
 interface EmailTemplateProps {
@@ -37,8 +37,8 @@ export const IForgetEmailTemplate: React.FC<Readonly<EmailTemplateProps>> = ({
           Voici un lien pour réinitialiser votre mot de passe, bon jeu !
         </Text>
         <Button
-          className='box-border w-full rounded-[8px] bg-indigo-600 px-[12px] py-[12px] text-center font-semibold text-white'
-          href={`${Bun.env.fontUrl}/i-forgot?authorizationKey=${authorizationKey}&userId=${userId}`}
+          className="box-border w-full rounded-[8px] bg-indigo-600 px-[12px] py-[12px] text-center font-semibold text-white"
+          href={`${Bun.env.frontUrl}/i-forgot?authorizationKey=${authorizationKey}&userId=${userId}`}
         >
           Réinitialiser mon mot de passe
         </Button>

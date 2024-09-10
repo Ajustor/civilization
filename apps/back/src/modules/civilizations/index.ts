@@ -1,11 +1,12 @@
+import { Citizen, CivilizationBuilder, Gender, OccupationTypes, Resource, ResourceTypes, formatCivilizations } from '@ajustor/simulation'
 import Elysia, { error, t } from 'elysia'
-import { CivilizationTable } from './database'
-import { db } from '../../libs/database'
-import { logger } from '@bogeychan/elysia-logger'
-import { jwtMiddleware } from '../../libs/jwt'
 import { names, uniqueNamesGenerator } from 'unique-names-generator'
+
+import { CivilizationTable } from './database'
 import { authorization } from '../../libs/handlers/authorization'
-import { formatCivilizations, CivilizationBuilder, ProfessionType, ResourceTypes, Resource, Citizen } from '@ajustor/simulation'
+import { db } from '../../libs/database'
+import { jwtMiddleware } from '../../libs/jwt'
+import { logger } from '@bogeychan/elysia-logger'
 
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
@@ -33,11 +34,11 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     }
 
     const civilizationBuilder = new CivilizationBuilder()
-    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
-    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, 3)
+    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, Gender.FEMALE, 3)
+    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, Gender.MALE, 3)
 
-    firstCitizen.setProfession(ProfessionType.FARMER)
-    secondCitizen.setProfession(ProfessionType.CARPENTER)
+    firstCitizen.setOccupation(OccupationTypes.FARMER)
+    secondCitizen.setOccupation(OccupationTypes.CARPENTER)
 
     civilizationBuilder
       .withName(body.name)

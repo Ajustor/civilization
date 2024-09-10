@@ -9,7 +9,7 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import { type CitizenType, ProfessionType } from '@ajustor/simulation'
+	import { type CitizenType, OccupationTypes, Gender } from '@ajustor/simulation'
 
 	export let citizens: CitizenType[]
 
@@ -21,6 +21,20 @@
 			header: 'Nom'
 		}),
 		table.column({
+			accessor: 'gender',
+			header: 'Genre',
+			cell: ({ value }) => {
+				if (!value) {
+					return ''
+				}
+				return {
+					[Gender.FEMALE]: 'Femme',
+					[Gender.MALE]: 'Homme',
+					[Gender.UNKNOWN]: 'Inconnu'
+				}[value]
+			},
+		}),
+		table.column({
 			accessor: 'years',
 			header: 'Age'
 		}),
@@ -29,15 +43,15 @@
 			header: 'Points de vie'
 		}),
 		table.column({
-			accessor: 'profession',
-			header: 'Profession',
+			accessor: 'occupation',
+			header: 'Occupation',
 			cell: ({ value }) => {
 				if (!value) {
 					return ''
 				}
 				return {
-					[ProfessionType.FARMER]: 'Fermier',
-					[ProfessionType.CARPENTER]: 'Charpentier'
+					[OccupationTypes.FARMER]: 'Fermier',
+					[OccupationTypes.CARPENTER]: 'Charpentier'
 				}[value]
 			}
 		})

@@ -1,35 +1,38 @@
+import { Carpenter } from './work/carpenter'
+import type { CitizenEntity } from '../types/citizen'
 // Citizen.ts
 import type { CitizenType } from '..'
-import type { CitizenEntity } from '../types/citizen'
-import type { World } from '../world'
-import { Carpenter } from './work/carpenter'
-import { ProfessionTypes } from './work/enum'
 import { Farmer } from './work/farmer'
+import type { Gender } from './enum'
+import { OccupationTypes } from './work/enum'
 import type { Work } from './work/interface'
+import type { World } from '../world'
 
-const professions = {
-  [ProfessionTypes.CARPENTER]: Carpenter,
-  [ProfessionTypes.FARMER]: Farmer
+const occupations = {
+  [OccupationTypes.CARPENTER]: Carpenter,
+  [OccupationTypes.FARMER]: Farmer
 }
 
 export class Citizen {
   name: string
   month: number
-  profession: Work | null = null
+  work: Work | null = null
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
+  gender: Gender
 
-  constructor(name: string, month: number, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0) {
+  constructor(name: string, month: number, gender: Gender, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0) {
     this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
     this.isBuilding = isBuilding
     this.buildingMonthsLeft = buildingMonthsLeft
+    this.gender = gender
   }
 
-  setProfession(professionType: ProfessionTypes) {
-    this.profession = new professions[professionType]()
+  setOccupation(occupationType: OccupationTypes) {
+    this.work = new occupations[occupationType]()
   }
 
   get years() {
@@ -59,11 +62,11 @@ export class Citizen {
   }
 
   collectResource(world: World, amount: number): boolean {
-    if (!this.profession?.canWork(this.years) && !this.isBuilding) {
+    if (!this.work?.canWork(this.years) && !this.isBuilding) {
       return false
     }
 
-    return this.profession?.collectResources(world, amount) ?? false
+    return this.work?.collectResources(world, amount) ?? false
   }
 
   startBuilding(): void {
@@ -82,7 +85,9 @@ export class Citizen {
       lifeCounter: this.lifeCounter,
       month: this.month,
       name: this.name,
-      profession: this.profession?.professionType
+      occupation: this.work?.occupationType,
+      gender: this.gender
+
     }
   }
 

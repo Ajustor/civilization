@@ -1,13 +1,13 @@
 import { Elysia } from 'elysia'
-import { version } from '../package.json'
-import { cors } from '@elysiajs/cors'
-import { worldModule } from './modules/world'
-import { logger } from "@bogeychan/elysia-logger"
-import { usersModule } from './modules/users'
-import { civilizationModule } from './modules/civilizations'
-import { swagger } from '@elysiajs/swagger'
 import { authModule } from './modules/auth'
+import { civilizationModule } from './modules/civilizations'
+import { cors } from '@elysiajs/cors'
 import { jwtMiddleware } from './libs/jwt'
+import { logger } from "@bogeychan/elysia-logger"
+import { swagger } from '@elysiajs/swagger'
+import { usersModule } from './modules/users'
+import { version } from '../package.json'
+import { worldModule } from './modules/world'
 
 const app = new Elysia()
   .use(cors())
@@ -22,7 +22,7 @@ const app = new Elysia()
   .use(civilizationModule)
 
 
-app.listen(3000)
+app.listen(process.env.APP_PORT!)
 
 console.log(`🦄 Server started at ${app.server?.url}`)
 

@@ -1,16 +1,21 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
-	import { ArrowLeft } from 'lucide-svelte'
+	import { ArrowLeft, Carrot, FlameKindling } from 'lucide-svelte'
 	import CitizensTable from './datatables/citizens-table.svelte'
 	import { Block } from 'konsta/svelte'
 	import type { CitizenType } from '@ajustor/simulation'
+	import IconText from '$lib/components/IconText/icon-text.svelte'
 
 	export let data: PageData
 
 	const translatedResourceName = {
 		food: 'Nouriture',
 		wood: 'Bois'
+	}
+	const resourceIcons = {
+		food: Carrot,
+		wood: FlameKindling
 	}
 </script>
 
@@ -42,10 +47,13 @@
 		</ul>
 	</span>
 	<span>
-		Resources:
+		Ressources:
 		<ul class="list-inside list-disc">
 			{#each data.civilization.resources as resource}
-				<li>{translatedResourceName[resource.type]}: {resource.quantity} restante</li>
+				<IconText
+					iconComponent={resourceIcons[resource.type]}
+					text="{translatedResourceName[resource.type]}: {resource.quantity}"
+				/>
 			{/each}
 		</ul>
 	</span>

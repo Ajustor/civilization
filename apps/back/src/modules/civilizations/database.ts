@@ -1,11 +1,12 @@
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { BuildingTypes, Citizen, Civilization, CivilizationBuilder, House, Resource } from '@ajustor/simulation'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
-import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { and, count, eq, inArray } from 'drizzle-orm'
-import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
+
+import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
+import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
-import { Civilization, CivilizationBuilder, Resource, BuildingTypes, House, Citizen } from '@ajustor/simulation'
 
 export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
@@ -24,10 +25,15 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     }
   }
 
-  builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
-    const citizen = new Citizen(name, month, lifeCounter)
+  builder.addCitizen(...civilization.citizens.map(({ name, gender, month, lifeCounter, profession, occupation, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
+    const citizen = new Citizen(name, month, gender, lifeCounter)
+    
+    if (occupation) {
+      citizen.setOccupation(occupation)
+    }
+
     if (profession) {
-      citizen.setProfession(profession)
+      citizen.setOccupation(profession)
     }
     citizen.isBuilding = isBuilding
     citizen.buildingMonthsLeft = buildingYearsLeft
