@@ -44,8 +44,15 @@
 							<ul>
 								{#each world.civilizations.sort(({ livedMonths: firstLivedMonths }, { livedMonths: secondLivedMonths }) => secondLivedMonths - firstLivedMonths) as civilization}
 									<li>
-										{civilization.name} ({civilization.citizens.length ? 'vivante' : 'morte'}, a
-										survécu {civilization.livedMonths} mois)
+										<span class="flex flex-col justify-between lg:flex-row">
+											<span class="overflow-hidden text-ellipsis">
+												{civilization.name}
+											</span>
+											<span class="overflow-hidden text-ellipsis">
+												({civilization.citizens.length ? 'vivante' : 'morte'}, a survécu {civilization.livedMonths}
+												mois)
+											</span>
+										</span>
 									</li>
 								{/each}
 							</ul>
