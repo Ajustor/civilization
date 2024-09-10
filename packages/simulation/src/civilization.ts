@@ -9,7 +9,6 @@ import { Gender } from './citizen/enum'
 import { House } from './buildings/house'
 import { OccupationTypes } from './citizen/work/enum'
 import type { World } from './world'
-import { range } from './utils'
 
 export class Civilization {
     public id!: string
@@ -175,7 +174,8 @@ export class Civilization {
         // Age all citizens
         this._citizens.forEach(citizen => citizen.ageOneMonth())
         this.removeDeadCitizens()
-        this.birthNewCitizen()
+        this.createNewCitizen()
+        this.birthWaitingChildren()
 
         if (this._citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.quantity >= 15) {
             const carpenter = this.getCitizenWithOccupation(OccupationTypes.CARPENTER).find(citizen => !citizen.isBuilding)
@@ -214,21 +214,24 @@ export class Civilization {
         }
     }
 
-    private birthNewCitizen() {
+    private createNewCitizen() {
         // Handle births
 
         let eligibleCitizens: [Citizen, Citizen][] = []
         const citizenCanReproduce = this._citizens.filter(citizen => citizen.canReproduce())
 
-        for (const i of range(0, citizenCanReproduce.length, 2)) {
-            if (citizenCanReproduce[i + 1]) {
-                eligibleCitizens.push([citizenCanReproduce[i], citizenCanReproduce[i + 1]])
-            }
+        const women = citizenCanReproduce.filter(({ gender }) => gender === Gender.FEMALE)
+        const men = citizenCanReproduce.filter(({ gender }) => gender === Gender.MALE)
+
+        const smallestSize = [women.length, men.length].sort()[1]
+
+        for (let i = 0; i < smallestSize; i++ ) {
+            eligibleCitizens.push([women[i], men[i]])
         }
 
         if (eligibleCitizens.length) {
-            for (const [parent1, parent2] of eligibleCitizens) {
-                const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, parent1.work?.occupationType ?? OccupationTypes.CARPENTER, parent2.work?.occupationType ?? OccupationTypes.FARMER]
+            for (const [mother, father] of eligibleCitizens) {
+                const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
                 const genders = [Gender.FEMALE, Gender.MALE]
                 const newCitizen = new Citizen(
                     uniqueNamesGenerator({ dictionaries: [names] }),
@@ -237,16 +240,31 @@ export class Civilization {
                     2
                 )
                 newCitizen.setOccupation(occupations[Math.floor(Math.random() * occupations.length)])
-                this.addCitizen(newCitizen)
 
-                const availableBuilding = this.houses.find(({ capacity }) => capacity < 4)
-                if (availableBuilding) {
-                    availableBuilding.addResident(newCitizen)
-                }
+                mother.addChildToBirth(newCitizen)
 
-                parent1.lifeCounter = Math.floor(parent1.lifeCounter / 2)
-                parent2.lifeCounter = Math.floor(parent2.lifeCounter / 2)
+                mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
+                father.lifeCounter = Math.floor(father.lifeCounter / 2)
             }
+        }
+    }
+
+    private birthWaitingChildren() {
+        const awaitingMothers = this._citizens.filter(({ pregnancyMonthsLeft, child }) => pregnancyMonthsLeft === 0 && child)
+
+        for(const mother of awaitingMothers) {
+            if (!mother.child) {
+                continue
+            }
+
+            this.addCitizen(mother.child)
+
+            const availableBuilding = this.houses.find(({ capacity }) => capacity < 4)
+            if (availableBuilding) {
+                availableBuilding.addResident(mother.child)
+            }
+
+            mother.giveBirth()
         }
     }
 

@@ -13,6 +13,8 @@ const occupations = {
   [OccupationTypes.FARMER]: Farmer
 }
 
+const PREGNANCY_MONTHS = 9
+
 export class Citizen {
   name: string
   month: number
@@ -20,15 +22,18 @@ export class Citizen {
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
+  pregnancyMonthsLeft: number
   gender: Gender
+  child: Citizen | null = null
 
-  constructor(name: string, month: number, gender: Gender, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0) {
+  constructor(name: string, month: number, gender: Gender, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0, pregnancyMonthsLeft = 0) {
     this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
     this.isBuilding = isBuilding
     this.buildingMonthsLeft = buildingMonthsLeft
     this.gender = gender
+    this.pregnancyMonthsLeft = pregnancyMonthsLeft
   }
 
   setOccupation(occupationType: OccupationTypes) {
@@ -40,6 +45,10 @@ export class Citizen {
   }
 
   ageOneMonth(): void {
+    if (this.pregnancyMonthsLeft) {
+      this.pregnancyMonthsLeft -= 1
+    }
+
     this.month += 1
     if (this.isBuilding) {
       this.buildingMonthsLeft -= 1
@@ -76,6 +85,16 @@ export class Citizen {
 
   canReproduce(): boolean {
     return this.years > 16 && this.years < 60 && this.lifeCounter >= 8
+  }
+
+  addChildToBirth(child: Citizen) {
+    this.child = child
+    this.pregnancyMonthsLeft = PREGNANCY_MONTHS
+  }
+
+  giveBirth() {
+    this.child = null
+    this.pregnancyMonthsLeft = 0
   }
 
   formatToEntity(): CitizenEntity {

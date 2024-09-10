@@ -1,11 +1,11 @@
+import { ResourceTypes } from '@ajustor/simulation'
 import { civilizationTable } from './db/schema/civilizations'
 import { civilizationsResourcesTable } from './db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from './db/schema/civilizationsWorldsTable'
-import { usersCivilizationTable } from './db/schema/usersCivilizationsTable'
-import { worldsTable } from './db/schema/worldSchema'
-import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
 import { db } from './src/libs/database'
-import { ResourceType } from './src/simulation/resource'
+import { usersCivilizationTable } from './db/schema/usersCivilizationsTable'
+import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
+import { worldsTable } from './db/schema/worldSchema'
 
 await db.delete(worldsTable)
 await db.delete(worldsResourcesTable)
@@ -24,12 +24,12 @@ await db.insert(worldsResourcesTable).values(worlds.flatMap(({ id }) => {
   return [
     {
       worldId: id,
-      resourceType: ResourceType.FOOD,
+      resourceType: ResourceTypes.FOOD,
       quantity: 10000
     },
     {
       worldId: id,
-      resourceType: ResourceType.WOOD,
+      resourceType: ResourceTypes.WOOD,
       quantity: 5000
     }
   ]
