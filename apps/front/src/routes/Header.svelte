@@ -11,7 +11,7 @@
 		Segmented,
 		SegmentedButton
 	} from 'konsta/svelte'
-	import { useUser, type User } from '../stores/user'
+	import { type User } from '../stores/user'
 	import { useMediaQuery } from 'svelte-breakpoints'
 	import type { Readable } from 'svelte/store'
 	import { Menu } from 'lucide-svelte'

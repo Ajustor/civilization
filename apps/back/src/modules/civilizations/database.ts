@@ -1,16 +1,11 @@
 import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
-import { Civilization } from '../../simulation/civilization'
-import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { and, count, eq, inArray } from 'drizzle-orm'
-import { Resource } from '../../simulation/resource'
-import { BuildingTypes } from '../../simulation/buildings/enum'
-import { House } from '../../simulation/buildings/house'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
-import { Citizen } from '../../simulation/citizen/citizen'
+import { Civilization, CivilizationBuilder, Resource, BuildingTypes, House, Citizen } from '@ajustor/simulation'
 
 export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
@@ -39,7 +34,7 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     return citizen
   }))
 
-  return builder.withId(civilization.id).withName(civilization.name).build()
+  return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
 }
 
 export class CivilizationTable {
@@ -128,8 +123,8 @@ export class CivilizationTable {
 
   async create(userId: string, civilization: Civilization) {
     const [createdCivilization] = await this.client.insert(civilizationTable).values({
-      citizens: civilization.getCitizens().map((citizen) => citizen.formatToEntity()),
-      buildings: civilization.getBuildings().map((building) => building.formatToEntity()),
+      citizens: civilization.citizens.map((citizen) => citizen.formatToEntity()),
+      buildings: civilization.buildings.map((building) => building.formatToType()),
       name: civilization.name
     }).returning({ id: civilizationTable.id })
 
@@ -138,10 +133,10 @@ export class CivilizationTable {
       userId
     })
 
-    for (const civilizationResource of civilization.getResources()) {
+    for (const civilizationResource of civilization.resources) {
       await this.client.insert(civilizationsResourcesTable).values({
-        resourceType: civilizationResource.getType(),
-        quantity: civilizationResource.getQuantity(),
+        resourceType: civilizationResource.type,
+        quantity: civilizationResource.quantity,
         civilizationId: createdCivilization.id
       })
     }
@@ -157,16 +152,17 @@ export class CivilizationTable {
   async saveAll(civilizations: Civilization[]) {
     for (const civilization of civilizations) {
       await this.client.update(civilizationTable).set({
-        citizens: civilization.getCitizens().map((citizen) => citizen.formatToEntity()),
-        buildings: civilization.getBuildings().map((building) => building.formatToEntity()),
+        livedMonths: civilization.livedMonths,
+        citizens: civilization.citizens.map((citizen) => citizen.formatToEntity()),
+        buildings: civilization.buildings.map((building) => building.formatToType()),
       }).where(eq(civilizationTable.id, civilization.id))
-      for (const civilizationResource of civilization.getResources()) {
+      for (const civilizationResource of civilization.resources) {
         await this.client.update(civilizationsResourcesTable).set({
-          quantity: civilizationResource.getQuantity(),
+          quantity: civilizationResource.quantity,
         }).where(
           and(
             eq(civilizationsResourcesTable.civilizationId, civilization.id),
-            eq(civilizationsResourcesTable.resourceType, civilizationResource.getType()),
+            eq(civilizationsResourcesTable.resourceType, civilizationResource.type),
           )
         )
       }

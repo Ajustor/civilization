@@ -5,6 +5,7 @@
     "start:back": "bunx nx dev @ajustor/civ-api",
     "build:back": "bunx nx build @ajustor/civ-api",
     "build:front": "bun nx build front",
+    "build:deps": "bun nx build @ajustor/simulation",
     "back:populate": "bunx nx populate @ajustor/civ-api",
     "back:migrate": "bunx nx migration @ajustor/civ-api",
     "back:generate:migrations": "bunx nx generate:migrations @ajustor/civ-api",
@@ -12,7 +13,8 @@
     "start": "concurrently \"bun start:back\" \"bun start:front\""
   },
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "devDependencies": {
     "@bogeychan/elysia-logger": "^0.1.2",

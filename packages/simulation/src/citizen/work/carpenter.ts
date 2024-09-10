@@ -1,22 +1,23 @@
-import { ResourceType } from '../../resource'
+import { ResourceTypes } from '../../resource'
 import type { World } from '../../world'
-import { ProfessionType } from './enum'
+import { ProfessionTypes } from './enum'
 import type { Work } from './interface'
 
-export class Farmer implements Work {
+export class Carpenter implements Work {
 
   get professionType() {
-    return ProfessionType.FARMER
+    return ProfessionTypes.CARPENTER
   }
 
+
   canWork(citizenAge: number): boolean {
-    return citizenAge > 4 && citizenAge < 70
+    return citizenAge >= 12 && citizenAge < 60
   }
 
   collectResources(world: World, count: number): boolean {
-    const resource = world.getResource(ResourceType.FOOD)
+    const resource = world.getResource(ResourceTypes.WOOD)
     if (resource) {
-      if (resource.getQuantity() >= count) {
+      if (resource.quantity >= count) {
         resource.decrease(count)
         return true
       }

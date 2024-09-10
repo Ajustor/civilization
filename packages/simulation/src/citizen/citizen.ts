@@ -1,24 +1,15 @@
 // Citizen.ts
+import type { CitizenType } from '..'
+import type { CitizenEntity } from '../types/citizen'
 import type { World } from '../world'
 import { Carpenter } from './work/carpenter'
-import { ProfessionType } from './work/enum'
+import { ProfessionTypes } from './work/enum'
 import { Farmer } from './work/farmer'
 import type { Work } from './work/interface'
 
 const professions = {
-  [ProfessionType.CARPENTER]: Carpenter,
-  [ProfessionType.FARMER]: Farmer
-}
-
-export type CitizenEntity = {
-  id?: string
-  name: string
-  month: number
-  profession?: ProfessionType
-  lifeCounter: number
-  isBuilding: boolean
-  buildingMonthsLeft: number
-
+  [ProfessionTypes.CARPENTER]: Carpenter,
+  [ProfessionTypes.FARMER]: Farmer
 }
 
 export class Citizen {
@@ -37,7 +28,7 @@ export class Citizen {
     this.buildingMonthsLeft = buildingMonthsLeft
   }
 
-  setProfession(professionType: ProfessionType) {
+  setProfession(professionType: ProfessionTypes) {
     this.profession = new professions[professionType]()
   }
 
@@ -95,22 +86,8 @@ export class Citizen {
     }
   }
 
-  [Symbol.toPrimitive](hint: string) {
-    const formatedCitizen = {
-      buildingMonthsLeft: this.buildingMonthsLeft,
-      isBuilding: this.isBuilding,
-      lifeCounter: this.lifeCounter,
-      years: this.years,
-      month: this.month % 12,
-      name: this.name,
-      profession: this.profession?.professionType
-    }
-
-    if (hint === 'string') {
-      return JSON.stringify(formatedCitizen)
-    }
-
-    return formatedCitizen
+  formatToType(): CitizenType {
+    return { ...this.formatToEntity(), years: this.years }
   }
 
 }

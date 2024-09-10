@@ -28,7 +28,6 @@
 		callDeleteCivilization,
 		callGetCivilizations
 	} from '../../services/sveltekit-api/civilization'
-	import type { Civilization } from '../../types/civilization'
 	import {
 		AlertDialog,
 		AlertDialogHeader,
@@ -38,11 +37,12 @@
 		AlertDialogAction
 	} from '$lib/components/ui/alert-dialog'
 	import { Block } from 'konsta/svelte'
+	import { type CivilizationType } from '@ajustor/simulation'
 
 	export let data: PageData
 
 	const translatedResourceName = {
-		food: 'Nouriture',
+		food: 'Nourriture',
 		wood: 'Bois'
 	}
 
@@ -140,7 +140,7 @@
 	</Dialog>
 {/snippet}
 
-{#snippet civilizationInformations(civilization: Civilization)}
+{#snippet civilizationInformations(civilization: CivilizationType)}
 	<Card class="relative">
 		<CardHeader>
 			<CardTitle class="flex items-center justify-between">

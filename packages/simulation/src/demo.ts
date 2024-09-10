@@ -1,39 +1,33 @@
 import { select, input } from '@inquirer/prompts'
 
-import { Civilization } from './simulation/civilization'
-import { Citizen } from './simulation/citizen/citizen'
-import { Resource, ResourceType } from './simulation/resource'
-import { World } from './simulation/world'
-import { ProfessionType } from './simulation/citizen/work/enum'
+import { Civilization, Citizen, Resource, ResourceTypes, World } from '.'
+import { ProfessionTypes } from './citizen/work/enum'
 
 const world = new World()
+
+world.addResource(new Resource(ResourceTypes.FOOD, 100), new Resource(ResourceTypes.WOOD, 10))
 const myCivilization = new Civilization()
 
 world.addCivilization(myCivilization)
 
-const alice = new Citizen('Alice', 5, 3)
-const bob = new Citizen('Bob', 2, 3)
+const alice = new Citizen('Alice', 120, 3)
+const bob = new Citizen('Bob', 120, 3)
 
-alice.setProfession(ProfessionType.FARMER)
-bob.setProfession(ProfessionType.CARPENTER)
+alice.setProfession(ProfessionTypes.FARMER)
+bob.setProfession(ProfessionTypes.CARPENTER)
 
 // Adding some citizens
 myCivilization.addCitizen(alice)
 myCivilization.addCitizen(bob)
 
 // Adding some resources
-myCivilization.addResource(new Resource(ResourceType.FOOD, 5))
-myCivilization.addResource(new Resource(ResourceType.WOOD, 0))  // Start with no wood
-
-console.log(`Initial config:
-  ${myCivilization.getCivilizationInfos()}
-`)
+myCivilization.addResource(new Resource(ResourceTypes.FOOD, 5))
+myCivilization.addResource(new Resource(ResourceTypes.WOOD, 0))  // Start with no wood
 
 
 function nextYear() {
   world.passAMonth()
   console.log(`---- Year: ${world.getYear()} ----`)
-  console.log(myCivilization.getCivilizationInfos())
 }
 
 async function promptUser() {
@@ -62,13 +56,11 @@ async function promptUser() {
 
   switch (command.trim().toLowerCase()) {
     case 'year':
-      console.log(myCivilization.getCivilizationInfos())
       break
     case 'quit':
       process.exit(0)
     case 'adapt':
       myCivilization.adaptCitizen()
-      console.log(myCivilization.getCivilizationInfos())
       break
     case 'pass':
       if (Number.isNaN(numberOfYearsToPass)) {
@@ -83,13 +75,10 @@ async function promptUser() {
     default:
       nextYear()
   }
-  console.log(world.getInfosFormated())
   promptUser()
 
 }
 
 console.clear()
-console.log(`Initial config:
-  ${myCivilization.getCivilizationInfos()}
-`)
+
 promptUser()

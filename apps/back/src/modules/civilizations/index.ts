@@ -3,29 +3,9 @@ import { CivilizationTable } from './database'
 import { db } from '../../libs/database'
 import { logger } from '@bogeychan/elysia-logger'
 import { jwtMiddleware } from '../../libs/jwt'
-import { CivilizationBuilder } from '../../simulation/builders/civilizationBuilder'
-import { Citizen } from '../../simulation/citizen/citizen'
 import { names, uniqueNamesGenerator } from 'unique-names-generator'
-import { ProfessionType } from '../../simulation/citizen/work/enum'
-import { Resource, ResourceType } from '../../simulation/resource'
-import { Civilization } from '../../simulation/civilization'
 import { authorization } from '../../libs/handlers/authorization'
-
-export function formatCivilizations(civilizations: Civilization[]) {
-  return civilizations.map((civilization) => ({
-    ...civilization,
-    citizens: civilization.getCitizens()
-      .map((citizen) => ({ ...citizen, profession: citizen.profession?.professionType, years: citizen.years })),
-    resources: civilization.getResources().map((resource) => ({
-      type: resource.getType(),
-      quantity: resource.getQuantity()
-    })),
-    buildings: civilization.getBuildings().map((building) => ({
-      type: building.getType(),
-      capacity: building.capacity,
-    }))
-  }))
-}
+import { formatCivilizations, CivilizationBuilder, ProfessionType, ResourceTypes, Resource, Citizen } from '@ajustor/simulation'
 
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
@@ -61,7 +41,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
 
     civilizationBuilder
       .withName(body.name)
-      .addResource(new Resource(ResourceType.FOOD, 10), new Resource(ResourceType.WOOD, 0))
+      .addResource(new Resource(ResourceTypes.FOOD, 10), new Resource(ResourceTypes.WOOD, 0))
       .addCitizen(firstCitizen, secondCitizen)
 
     await civilizationDbClient.create(user.id as string, civilizationBuilder.build())
