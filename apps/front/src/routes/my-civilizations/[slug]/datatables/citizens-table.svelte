@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createTable, Render, Subscribe } from 'svelte-headless-table'
+	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table'
 	import { readable } from 'svelte/store'
 	import {
 		Table,
@@ -10,14 +10,15 @@
 		TableRow
 	} from '$lib/components/ui/table'
 	import { type CitizenType, OccupationTypes, Gender } from '@ajustor/simulation'
+	import Icon from '@iconify/svelte'
 
 	export let citizens: CitizenType[]
 
 	const table = createTable(readable(citizens))
 
 	const GENRES = {
-		[Gender.FEMALE]: '♀️',
-		[Gender.MALE]: '♂️',
+		[Gender.FEMALE]: 'noto:female-sign',
+		[Gender.MALE]: 'noto:male-sign',
 		[Gender.UNKNOWN]: 'Inconnu'
 	}
 
@@ -38,7 +39,7 @@
 				if (!value) {
 					return ''
 				}
-				return GENRES[value]
+				return createRender(Icon, { icon: GENRES[value] })
 			}
 		}),
 		table.column({
