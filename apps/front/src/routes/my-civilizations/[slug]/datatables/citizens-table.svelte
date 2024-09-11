@@ -15,6 +15,12 @@
 
 	const table = createTable(readable(citizens))
 
+	const GENRES = {
+		[Gender.FEMALE]: 'Femme',
+		[Gender.MALE]: 'Homme',
+		[Gender.UNKNOWN]: 'Inconnu'
+	}
+
 	const columns = table.createColumns([
 		table.column({
 			accessor: 'name',
@@ -27,11 +33,7 @@
 				if (!value) {
 					return ''
 				}
-				return {
-					[Gender.FEMALE]: 'Femme',
-					[Gender.MALE]: 'Homme',
-					[Gender.UNKNOWN]: 'Inconnu'
-				}[value]
+				return GENRES[value]
 			}
 		}),
 		table.column({
@@ -58,6 +60,16 @@
 		table.column({
 			accessor: 'pregnancyMonthsLeft',
 			header: 'Mois avant accouchement'
+		}),
+		table.column({
+			accessor: 'child',
+			header: 'Enfant en gestation',
+			cell: ({ value }) => {
+				if (!value) {
+					return ''
+				}
+				return `nom: ${value.name}, occupation: ${value.occupation}, genre: ${GENRES[value.gender]}`
+			}
 		})
 	])
 

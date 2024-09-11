@@ -39,8 +39,8 @@
 <Block class="flex w-full flex-col gap-5">
 	<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
 	<span
-		>Votre civilisation vit depuis {~~(data.civilization.livedMonths % 12)} années et {~~(
-			data.civilization.livedMonths / 12
+		>Votre civilisation vit depuis {~~(data.civilization.livedMonths / 12)} années et {~~(
+			data.civilization.livedMonths % 12
 		)} mois</span
 	>
 	<Accordion class="w-full">
