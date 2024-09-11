@@ -16,9 +16,14 @@
 	const table = createTable(readable(citizens))
 
 	const GENRES = {
-		[Gender.FEMALE]: 'Femme',
-		[Gender.MALE]: 'Homme',
+		[Gender.FEMALE]: '♀️',
+		[Gender.MALE]: '♂️',
 		[Gender.UNKNOWN]: 'Inconnu'
+	}
+
+	const OCCUPATIONS = {
+		[OccupationTypes.FARMER]: 'Fermier',
+		[OccupationTypes.CARPENTER]: 'Charpentier'
 	}
 
 	const columns = table.createColumns([
@@ -51,10 +56,7 @@
 				if (!value) {
 					return ''
 				}
-				return {
-					[OccupationTypes.FARMER]: 'Fermier',
-					[OccupationTypes.CARPENTER]: 'Charpentier'
-				}[value]
+				return OCCUPATIONS[value]
 			}
 		}),
 		table.column({
@@ -74,7 +76,7 @@
 				if (!value) {
 					return ''
 				}
-				return `nom: ${value.name}, occupation: ${value.occupation}, genre: ${GENRES[value.gender]}`
+				return `nom: ${value.name}, occupation: ${OCCUPATIONS[value?.occupation ?? OccupationTypes.FARMER]}, genre: ${GENRES[value.gender]}`
 			}
 		})
 	])
