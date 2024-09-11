@@ -59,7 +59,13 @@
 		}),
 		table.column({
 			accessor: 'pregnancyMonthsLeft',
-			header: 'Mois avant accouchement'
+			header: 'Mois avant accouchement',
+			cell: ({ value }) => {
+				if (!value) {
+					return ''
+				}
+				return value
+			}
 		}),
 		table.column({
 			accessor: 'child',
