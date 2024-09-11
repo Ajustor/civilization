@@ -47,8 +47,7 @@
 						</li>
 						<li>en été<br /> 25 de nourriture avec un bonus de 10 par civilisation active</li>
 						<li>
-							en automne<br /> 10 de nourriture avec un bonus de 5 par civilisation active et 10 de
-							bois
+							en automne<br /> 10 de nourriture avec un bonus de 5 par civilisation active et 10 de bois
 						</li>
 						<li>en hiver<br />20 de bois</li>
 					</ol>

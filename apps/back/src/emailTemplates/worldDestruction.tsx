@@ -2,7 +2,6 @@ import * as React from 'react'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -14,17 +13,18 @@ import {
 export const WorldDestructionEmailTemplate: React.FC = () => (
   <Html>
     <Head />
-    <Preview>Bienvenue !</Preview>
+    <Preview>Le monde est détruit !</Preview>
     <Body>
       <Container>
-        <Heading>Il semble que vous veniez de créer votre compte !</Heading>
-        <Text>Rejoignez nous dans l'aventure !</Text>
-        <Button
-          className='box-border w-full rounded-[8px] bg-indigo-600 px-[12px] py-[12px] text-center font-semibold text-white'
-          href={`${Bun.env.frontUrl}/login`}
-        >
-          Rejoindre l'aventure
-        </Button>
+        <Heading>Une catastrophe à eu lieu !</Heading>
+        <Text>
+          Le monde tel que vous le connaissiez a été drétruit, toutes les
+          civilisations ont été éradiquées !
+        </Text>
+        <Text>
+          Vous pouvez en créer de nouvelles dans le nouveau monde qui vient de
+          naitre de cette destruction
+        </Text>
       </Container>
     </Body>
   </Html>
