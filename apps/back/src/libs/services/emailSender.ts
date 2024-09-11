@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 import { Resend } from 'resend'
 
 
-class EmailSender {
+export class EmailSender {
   private client = new Resend(Bun.env.RESEND_API_KEY)
 
   public async sendEmail(to: string, subject: string, template: ReactNode) {
@@ -13,6 +13,23 @@ class EmailSender {
       subject,
       react: template,
     })
+
+    if (error) {
+
+      console.error(error)
+      return new Response(JSON.stringify({ error }))
+    }
+
+    return new Response(JSON.stringify({ data }))
+  }
+
+  public async sendBatch(bcc: string[], subject: string, template: ReactNode) {
+    const { data, error } = await this.client.batch.send(bcc.map((to) => ({
+      from: 'My Civilizations <no-reply@civilizations.darthoit.eu>',
+      to,
+      subject,
+      react: template,
+    })))
 
     if (error) {
 

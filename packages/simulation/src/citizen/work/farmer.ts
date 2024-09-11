@@ -1,12 +1,12 @@
+import { OccupationTypes } from './enum'
 import { ResourceTypes } from '../../resource'
-import type { World } from '../../world'
-import { ProfessionTypes } from './enum'
 import type { Work } from './interface'
+import type { World } from '../../world'
 
 export class Farmer implements Work {
 
-  get professionType() {
-    return ProfessionTypes.FARMER
+  get occupationType() {
+    return OccupationTypes.FARMER
   }
 
   canWork(citizenAge: number): boolean {

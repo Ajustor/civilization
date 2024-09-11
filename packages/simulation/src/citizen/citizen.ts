@@ -1,35 +1,43 @@
+import { Carpenter } from './work/carpenter'
+import type { CitizenEntity } from '../types/citizen'
 // Citizen.ts
 import type { CitizenType } from '..'
-import type { CitizenEntity } from '../types/citizen'
-import type { World } from '../world'
-import { Carpenter } from './work/carpenter'
-import { ProfessionTypes } from './work/enum'
 import { Farmer } from './work/farmer'
+import type { Gender } from './enum'
+import { OccupationTypes } from './work/enum'
 import type { Work } from './work/interface'
+import type { World } from '../world'
 
-const professions = {
-  [ProfessionTypes.CARPENTER]: Carpenter,
-  [ProfessionTypes.FARMER]: Farmer
+const occupations = {
+  [OccupationTypes.CARPENTER]: Carpenter,
+  [OccupationTypes.FARMER]: Farmer
 }
+
+const PREGNANCY_MONTHS = 9
 
 export class Citizen {
   name: string
   month: number
-  profession: Work | null = null
+  work: Work | null = null
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
+  pregnancyMonthsLeft: number
+  gender: Gender
+  child: Citizen | null = null
 
-  constructor(name: string, month: number, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0) {
+  constructor(name: string, month: number, gender: Gender, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0, pregnancyMonthsLeft = 0) {
     this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
     this.isBuilding = isBuilding
     this.buildingMonthsLeft = buildingMonthsLeft
+    this.gender = gender
+    this.pregnancyMonthsLeft = pregnancyMonthsLeft
   }
 
-  setProfession(professionType: ProfessionTypes) {
-    this.profession = new professions[professionType]()
+  setOccupation(occupationType: OccupationTypes) {
+    this.work = new occupations[occupationType]()
   }
 
   get years() {
@@ -37,6 +45,10 @@ export class Citizen {
   }
 
   ageOneMonth(): void {
+    if (this.pregnancyMonthsLeft) {
+      this.pregnancyMonthsLeft -= 1
+    }
+
     this.month += 1
     if (this.isBuilding) {
       this.buildingMonthsLeft -= 1
@@ -59,11 +71,11 @@ export class Citizen {
   }
 
   collectResource(world: World, amount: number): boolean {
-    if (!this.profession?.canWork(this.years) && !this.isBuilding) {
+    if (!this.work?.canWork(this.years) && !this.isBuilding) {
       return false
     }
 
-    return this.profession?.collectResources(world, amount) ?? false
+    return this.work?.collectResources(world, amount) ?? false
   }
 
   startBuilding(): void {
@@ -72,7 +84,17 @@ export class Citizen {
   }
 
   canReproduce(): boolean {
-    return this.years > 16 && this.years < 60 && this.lifeCounter >= 8
+    return this.years > 16 && this.years < 60 && this.lifeCounter >= 8 && !this.child
+  }
+
+  addChildToBirth(child: Citizen) {
+    this.child = child
+    this.pregnancyMonthsLeft = PREGNANCY_MONTHS
+  }
+
+  giveBirth() {
+    this.child = null
+    this.pregnancyMonthsLeft = 0
   }
 
   formatToEntity(): CitizenEntity {
@@ -82,7 +104,10 @@ export class Citizen {
       lifeCounter: this.lifeCounter,
       month: this.month,
       name: this.name,
-      profession: this.profession?.professionType
+      occupation: this.work?.occupationType,
+      gender: this.gender,
+      pregnancyMonthsLeft: this.pregnancyMonthsLeft,
+      child: this.child?.formatToEntity() ?? null
     }
   }
 

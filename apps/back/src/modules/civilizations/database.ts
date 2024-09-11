@@ -1,11 +1,12 @@
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { BuildingTypes, Citizen, CitizenBuilder, Civilization, CivilizationBuilder, Gender, House, Resource } from '@ajustor/simulation'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
-import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { and, count, eq, inArray } from 'drizzle-orm'
-import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
+
+import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
+import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
-import { Civilization, CivilizationBuilder, Resource, BuildingTypes, House, Citizen } from '@ajustor/simulation'
 
 export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
@@ -24,14 +25,29 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     }
   }
 
-  builder.addCitizen(...civilization.citizens.map(({ name, month, lifeCounter, profession, buildingMonthsLeft: buildingYearsLeft, isBuilding }) => {
-    const citizen = new Citizen(name, month, lifeCounter)
-    if (profession) {
-      citizen.setProfession(profession)
+  builder.addCitizen(...civilization.citizens.map(({ name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child }) => {
+    const citizenBuilder = new CitizenBuilder()
+      .withGender(gender)
+      .withMonth(month)
+      .withName(name)
+      .withLifeCounter(lifeCounter)
+      .withIsBuilding(isBuilding)
+      .withBuildingMonthsLeft(buildingMonthsLeft)
+    const citizen = new Citizen(name, month, gender, lifeCounter)
+
+    if (occupation) {
+      citizenBuilder.withOccupation(occupation)
     }
-    citizen.isBuilding = isBuilding
-    citizen.buildingMonthsLeft = buildingYearsLeft
-    return citizen
+
+    if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
+      citizenBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
+    }
+
+    if (child && gender === Gender.FEMALE) {
+      citizenBuilder.withChild(child)
+    }
+
+    return citizenBuilder.build()
   }))
 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()

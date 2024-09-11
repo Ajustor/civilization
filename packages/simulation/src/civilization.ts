@@ -1,13 +1,14 @@
-import { Citizen } from './citizen/citizen'
 import { Resource, ResourceTypes } from './resource'
-import { House } from './buildings/house'
-import type { World } from './world'
-import { names, uniqueNamesGenerator, countries } from 'unique-names-generator'
-import { range } from './utils'
-import { ProfessionTypes } from './citizen/work/enum'
-import { Farmer } from './citizen/work/farmer'
-import { BuildingTypes } from './buildings/enum'
+import { countries, names, uniqueNamesGenerator } from 'unique-names-generator'
+
 import type { Building } from './types/building'
+import { BuildingTypes } from './buildings/enum'
+import { Citizen } from './citizen/citizen'
+import { Farmer } from './citizen/work/farmer'
+import { Gender } from './citizen/enum'
+import { House } from './buildings/house'
+import { OccupationTypes } from './citizen/work/enum'
+import type { World } from './world'
 
 export class Civilization {
     public id!: string
@@ -87,8 +88,8 @@ export class Civilization {
         return resource
     }
 
-    getCitizenWithProfession(profession: ProfessionTypes): Citizen[] {
-        return this._citizens.filter(({ profession: citizenProfession }) => citizenProfession && profession === citizenProfession.professionType)
+    getCitizenWithOccupation(occupation: OccupationTypes): Citizen[] {
+        return this._citizens.filter(({ work: citizenJob }) => citizenJob && occupation === citizenJob.occupationType)
     }
 
     addCitizen(...citizens: Citizen[]): void {
@@ -120,8 +121,8 @@ export class Civilization {
         const civilizationFood = this.getResource(ResourceTypes.FOOD)
         const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
-        const farmers = this.getCitizenWithProfession(ProfessionTypes.FARMER)
-        const carpentersCitizens = this.getCitizenWithProfession(ProfessionTypes.CARPENTER)
+        const farmers = this.getCitizenWithOccupation(OccupationTypes.FARMER)
+        const carpentersCitizens = this.getCitizenWithOccupation(OccupationTypes.CARPENTER)
 
         if (foodResource?.quantity) {
 
@@ -173,10 +174,11 @@ export class Civilization {
         // Age all citizens
         this._citizens.forEach(citizen => citizen.ageOneMonth())
         this.removeDeadCitizens()
-        this.birthNewCitizen()
+        this.createNewCitizen()
+        this.birthWaitingChildren()
 
         if (this._citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.quantity >= 15) {
-            const carpenter = this.getCitizenWithProfession(ProfessionTypes.CARPENTER).find(citizen => !citizen.isBuilding)
+            const carpenter = this.getCitizenWithOccupation(OccupationTypes.CARPENTER).find(citizen => !citizen.isBuilding)
             if (carpenter) {
                 carpenter.startBuilding()
                 this.constructBuilding(BuildingTypes.HOUSE, 4)
@@ -201,44 +203,68 @@ export class Civilization {
     }
 
     public adaptCitizen() {
-        const farmerCount = this.getCitizenWithProfession(ProfessionTypes.FARMER).length
-        const oldCarpenters = this.getCitizenWithProfession(ProfessionTypes.CARPENTER)
+        const farmerCount = this.getCitizenWithOccupation(OccupationTypes.FARMER).length
+        const oldCarpenters = this.getCitizenWithOccupation(OccupationTypes.CARPENTER)
 
         if (farmerCount < oldCarpenters.length) {
             for (let i = 0; i > oldCarpenters.length / 2; i++) {
-                oldCarpenters[i].setProfession(ProfessionTypes.FARMER)
-                oldCarpenters[i].profession = new Farmer()
+                oldCarpenters[i].setOccupation(OccupationTypes.FARMER)
+                oldCarpenters[i].work = new Farmer()
             }
         }
     }
 
-    private birthNewCitizen() {
+    private createNewCitizen() {
         // Handle births
 
         let eligibleCitizens: [Citizen, Citizen][] = []
         const citizenCanReproduce = this._citizens.filter(citizen => citizen.canReproduce())
 
-        for (const i of range(0, citizenCanReproduce.length, 2)) {
-            if (citizenCanReproduce[i + 1]) {
-                eligibleCitizens.push([citizenCanReproduce[i], citizenCanReproduce[i + 1]])
-            }
+        const women = citizenCanReproduce.filter(({ gender }) => gender === Gender.FEMALE)
+        const men = citizenCanReproduce.filter(({ gender }) => gender === Gender.MALE)
+
+        const smallestSize = Math.min(women.length, men.length)
+
+        for (let i = 0; i < smallestSize; i++) {
+            eligibleCitizens.push([women[i], men[i]])
         }
 
         if (eligibleCitizens.length) {
-            for (const [parent1, parent2] of eligibleCitizens) {
-                const professions = [ProfessionTypes.CARPENTER, ProfessionTypes.FARMER, parent1.profession?.professionType ?? ProfessionTypes.CARPENTER, parent2.profession?.professionType ?? ProfessionTypes.FARMER]
-                const newCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 0, 2)
-                newCitizen.setProfession(professions[Math.floor(Math.random() * professions.length)])
-                this.addCitizen(newCitizen)
+            for (const [mother, father] of eligibleCitizens) {
+                const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
+                const genders = [Gender.FEMALE, Gender.MALE]
+                const newCitizen = new Citizen(
+                    uniqueNamesGenerator({ dictionaries: [names] }),
+                    0,
+                    genders[Math.floor(Math.random() * genders.length)],
+                    2
+                )
+                newCitizen.setOccupation(occupations[Math.floor(Math.random() * occupations.length)])
 
-                const availableBuilding = this.houses.find(({ capacity }) => capacity < 4)
-                if (availableBuilding) {
-                    availableBuilding.addResident(newCitizen)
-                }
+                mother.addChildToBirth(newCitizen)
 
-                parent1.lifeCounter = Math.floor(parent1.lifeCounter / 2)
-                parent2.lifeCounter = Math.floor(parent2.lifeCounter / 2)
+                mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
+                father.lifeCounter = Math.floor(father.lifeCounter / 2)
             }
+        }
+    }
+
+    private birthWaitingChildren() {
+        const awaitingMothers = this._citizens.filter(({ pregnancyMonthsLeft, child }) => pregnancyMonthsLeft === 0 && child)
+
+        for (const mother of awaitingMothers) {
+            if (!mother.child) {
+                continue
+            }
+
+            this.addCitizen(mother.child)
+
+            const availableBuilding = this.houses.find(({ capacity }) => capacity < 4)
+            if (availableBuilding) {
+                availableBuilding.addResident(mother.child)
+            }
+
+            mother.giveBirth()
         }
     }
 

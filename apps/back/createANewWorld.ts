@@ -6,6 +6,9 @@ import { db } from './src/libs/database'
 import { usersCivilizationTable } from './db/schema/usersCivilizationsTable'
 import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
 import { worldsTable } from './db/schema/worldSchema'
+import { EmailSender } from './src/libs/services/emailSender'
+import { usersTable } from './db/schema/users'
+import { WorldDestructionEmailTemplate } from './src/emailTemplates/worldDestruction'
 
 await db.delete(worldsTable)
 await db.delete(worldsResourcesTable)
@@ -36,3 +39,9 @@ await db.insert(worldsResourcesTable).values(worlds.flatMap(({ id }) => {
 }))
 
 console.log(`Seeding complete.`)
+console.log('Sending emails')
+const emailService = new EmailSender()
+const users = await db.select().from(usersTable)
+const emails = users.map(({ email }) => email)
+
+await emailService.sendBatch(emails, 'Oh non !', WorldDestructionEmailTemplate({}))

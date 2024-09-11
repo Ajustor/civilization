@@ -9,55 +9,34 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import { type CitizenType, OccupationTypes, Gender } from '@ajustor/simulation'
+	import {
+		type CitizenType,
+		OccupationTypes,
+		Gender,
+		type BuildingType,
+		BuildingTypes
+	} from '@ajustor/simulation'
 
-	export let citizens: CitizenType[]
+	export let buildings: BuildingType[]
 
-	const table = createTable(readable(citizens))
+	const table = createTable(readable(buildings))
 
 	const columns = table.createColumns([
 		table.column({
-			accessor: 'name',
-			header: 'Nom'
-		}),
-		table.column({
-			accessor: 'gender',
-			header: 'Genre',
+			accessor: 'type',
+			header: 'Type de bâtiment',
 			cell: ({ value }) => {
 				if (!value) {
 					return ''
 				}
 				return {
-					[Gender.FEMALE]: 'Femme',
-					[Gender.MALE]: 'Homme',
-					[Gender.UNKNOWN]: 'Inconnu'
+					[BuildingTypes.HOUSE]: 'Maison'
 				}[value]
 			}
 		}),
 		table.column({
-			accessor: 'years',
-			header: 'Age'
-		}),
-		table.column({
-			accessor: 'lifeCounter',
-			header: 'Points de vie'
-		}),
-		table.column({
-			accessor: 'occupation',
-			header: 'Occupation',
-			cell: ({ value }) => {
-				if (!value) {
-					return ''
-				}
-				return {
-					[OccupationTypes.FARMER]: 'Fermier',
-					[OccupationTypes.CARPENTER]: 'Charpentier'
-				}[value]
-			}
-		}),
-		table.column({
-			accessor: 'pregnancyMonthsLeft',
-			header: 'Mois avant accouchement'
+			accessor: 'capacity',
+			header: 'Capacité'
 		})
 	])
 

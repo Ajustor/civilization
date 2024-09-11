@@ -1,7 +1,8 @@
-import { select, input } from '@inquirer/prompts'
+import { Citizen, Civilization, Resource, ResourceTypes, World } from '.'
+import { input, select } from '@inquirer/prompts'
 
-import { Civilization, Citizen, Resource, ResourceTypes, World } from '.'
-import { ProfessionTypes } from './citizen/work/enum'
+import { Gender } from './citizen/enum'
+import { OccupationTypes } from './citizen/work/enum'
 
 const world = new World()
 
@@ -10,11 +11,11 @@ const myCivilization = new Civilization()
 
 world.addCivilization(myCivilization)
 
-const alice = new Citizen('Alice', 120, 3)
-const bob = new Citizen('Bob', 120, 3)
+const alice = new Citizen('Alice', 120, Gender.FEMALE, 3)
+const bob = new Citizen('Bob', 120, Gender.MALE, 3)
 
-alice.setProfession(ProfessionTypes.FARMER)
-bob.setProfession(ProfessionTypes.CARPENTER)
+alice.setOccupation(OccupationTypes.FARMER)
+bob.setOccupation(OccupationTypes.CARPENTER)
 
 // Adding some citizens
 myCivilization.addCitizen(alice)
