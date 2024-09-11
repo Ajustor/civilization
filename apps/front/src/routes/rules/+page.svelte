@@ -7,7 +7,7 @@
 	<List strong inset>
 		<ListItem title="Les règles du monde">
 			<ul slot="inner" class="list-disc">
-				<li>Toutes les heures un mois passe</li>
+				<li>Toutes les 15 minutes un mois passe</li>
 				<li>
 					Tous les mois les citoyens doivent manger et avoir un logement afin de gagner de la vie
 				</li>
