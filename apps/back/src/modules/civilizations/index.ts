@@ -34,8 +34,8 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     }
 
     const civilizationBuilder = new CivilizationBuilder()
-    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, Gender.FEMALE, 3)
-    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 120, Gender.MALE, 3)
+    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 12*16, Gender.FEMALE, 3)
+    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 12*16, Gender.MALE, 3)
 
     firstCitizen.setOccupation(OccupationTypes.FARMER)
     secondCitizen.setOccupation(OccupationTypes.CARPENTER)
