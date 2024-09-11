@@ -15,7 +15,7 @@
     "generate:migrations": "bunx drizzle-kit generate",
     "migration": "bun run migrations.ts",
     "populate": "bun run seed.ts",
-    "demo": "bun run src/demo.ts"
+    "email:preview": "email -dir src/emailTemplates"
   },
   "devDependencies": {
     "@types/bun": "latest"
