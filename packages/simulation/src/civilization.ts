@@ -10,6 +10,8 @@ import { House } from './buildings/house'
 import { OccupationTypes } from './citizen/work/enum'
 import type { World } from './world'
 
+const FARMER_RESOURCES_GET = 10
+
 export class Civilization {
     public id!: string
     name = uniqueNamesGenerator({ dictionaries: [countries] })
@@ -126,14 +128,13 @@ export class Civilization {
 
         if (foodResource?.quantity) {
 
-            const farmerGetResources = 4
 
             farmerLoop: for (const farmer of farmers) {
-                const successfullyCollectResource = farmer.collectResource(world, farmerGetResources)
+                const successfullyCollectResource = farmer.collectResource(world, FARMER_RESOURCES_GET)
                 if (!successfullyCollectResource) {
                     break farmerLoop
                 }
-                civilizationFood.increase(farmerGetResources)
+                civilizationFood.increase(FARMER_RESOURCES_GET)
             }
         }
 
@@ -149,24 +150,18 @@ export class Civilization {
             }
         }
 
+        const citizens = this.citizens.toSorted((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years).toSorted((citizen) => citizen.work?.canWork(citizen.years) ? 1 : -1)
+
         // Handle food consumption and life counter
         if (civilizationFood) {
 
-            for (const farmer of farmers.sort((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years)) {
-                if (civilizationFood.quantity >= 1 && farmer.lifeCounter < 50) {
-                    civilizationFood.decrease(1)
-                    farmer.increaseLife(1)
+            for (const citizen of citizens) {
+                const eatFactor = citizen.eatFactor
+                if (civilizationFood.quantity >= eatFactor && citizen.lifeCounter < 50) {
+                    citizen.increaseLife(1)
+                    civilizationFood.decrease(eatFactor)
                 } else {
-                    farmer.decreaseLife()
-                }
-            }
-
-            for (const carpenter of carpentersCitizens.sort((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years)) {
-                if (civilizationFood.quantity >= 2 && carpenter.lifeCounter < 50) {
-                    civilizationFood.decrease(2)
-                    carpenter.increaseLife(1)
-                } else {
-                    carpenter.decreaseLife()
+                    citizen.decreaseLife()
                 }
             }
         }

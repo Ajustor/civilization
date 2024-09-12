@@ -13,6 +13,11 @@ const occupations = {
   [OccupationTypes.FARMER]: Farmer
 }
 
+const EAT_FACTOR = {
+  [OccupationTypes.CARPENTER]: 3,
+  [OccupationTypes.FARMER]: 2,
+}
+
 const PREGNANCY_MONTHS = 9
 
 export class Citizen {
@@ -113,6 +118,10 @@ export class Citizen {
 
   formatToType(): CitizenType {
     return { ...this.formatToEntity(), years: this.years }
+  }
+
+  get eatFactor(): number {
+    return this.work?.canWork(this.years) ? EAT_FACTOR[this.work.occupationType] : 1
   }
 
 }
