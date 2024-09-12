@@ -72,12 +72,12 @@
 		}),
 		table.column({
 			accessor: 'child',
-			header: 'Enfant en gestation',
+			header: 'Enfant a naitre',
 			cell: ({ value }) => {
 				if (!value) {
 					return ''
 				}
-				return `nom: ${value.name}, occupation: ${OCCUPATIONS[value?.occupation ?? OccupationTypes.FARMER]}, genre: ${GENRES[value.gender]}`
+				return `nom: ${value.name}, occupation: ${OCCUPATIONS[value?.occupation ?? OccupationTypes.FARMER]}, genre: ${<Icon icon="GENRES[value.gender]"/>}`
 			}
 		})
 	])
