@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
-	import { ArrowLeft, Carrot, FlameKindling } from 'lucide-svelte'
+	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
 	import CitizensTable from './datatables/citizens-table.svelte'
 	import { Block } from 'konsta/svelte'
 	import type { BuildingType, CitizenType } from '@ajustor/simulation'
@@ -18,11 +18,13 @@
 
 	const translatedResourceName = {
 		food: 'Nouriture',
-		wood: 'Bois'
+		wood: 'Bois',
+		stone: 'Pierre'
 	}
 	const resourceIcons = {
 		food: Carrot,
-		wood: FlameKindling
+		wood: FlameKindling,
+		stone: Cuboid
 	}
 </script>
 

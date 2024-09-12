@@ -31,6 +31,11 @@ await db.insert(worldsResourcesTable).values(worlds.flatMap(({ id }) => {
       worldId: id,
       resourceType: ResourceTypes.WOOD,
       quantity: 5000
+    },
+    {
+      worldId: id,
+      resourceType: ResourceTypes.STONE,
+      quantity: 5000
     }
   ]
 }))

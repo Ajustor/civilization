@@ -9,7 +9,9 @@ import { Gender } from './citizen/enum'
 import { House } from './buildings/house'
 import { OccupationTypes } from './citizen/work/enum'
 import type { World } from './world'
+import { isWithinChance } from './utils'
 
+const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
 
 export class Civilization {
@@ -128,7 +130,6 @@ export class Civilization {
 
         if (foodResource?.quantity) {
 
-
             farmerLoop: for (const farmer of farmers) {
                 const successfullyCollectResource = farmer.collectResource(world, FARMER_RESOURCES_GET)
                 if (!successfullyCollectResource) {
@@ -170,7 +171,7 @@ export class Civilization {
         this._citizens.forEach(citizen => citizen.ageOneMonth())
         this.removeDeadCitizens()
         this.createNewCitizen()
-        this.birthWaitingChildren()
+        this.birthAwaitingBabies()
 
         if (this._citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.quantity >= 15) {
             const carpenter = this.getCitizenWithOccupation(OccupationTypes.CARPENTER).find(citizen => !citizen.isBuilding)
@@ -210,7 +211,7 @@ export class Civilization {
     }
 
     private createNewCitizen() {
-        // Handle births
+        // Handle pregnancy
 
         let eligibleCitizens: [Citizen, Citizen][] = []
         const citizenCanReproduce = this._citizens.filter(citizen => citizen.canReproduce())
@@ -224,8 +225,13 @@ export class Civilization {
             eligibleCitizens.push([women[i], men[i]])
         }
 
-        if (eligibleCitizens.length) {
+        if (eligibleCitizens.length) {            
             for (const [mother, father] of eligibleCitizens) {
+
+                if (!isWithinChance(PREGNANCY_PROBABILITY)) {
+                    continue
+                }
+
                 const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
                 const genders = [Gender.FEMALE, Gender.MALE]
                 const newCitizen = new Citizen(
@@ -244,7 +250,7 @@ export class Civilization {
         }
     }
 
-    private birthWaitingChildren() {
+    private birthAwaitingBabies() {
         const awaitingMothers = this._citizens.filter(({ pregnancyMonthsLeft, child }) => pregnancyMonthsLeft === 0 && child)
 
         for (const mother of awaitingMothers) {
