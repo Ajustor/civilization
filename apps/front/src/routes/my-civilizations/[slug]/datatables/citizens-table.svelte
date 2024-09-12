@@ -77,7 +77,7 @@
 				if (!value) {
 					return ''
 				}
-				return `nom: ${value.name}, occupation: ${OCCUPATIONS[value?.occupation ?? OccupationTypes.FARMER]}, genre: ${<Icon icon="GENRES[value.gender]"/>}`
+				return `nom: ${value.name}, occupation: ${OCCUPATIONS[value?.occupation ?? OccupationTypes.FARMER]}, genre: ${createRender(Icon, { icon:GENRES[value.gender]})}`
 			}
 		})
 	])
