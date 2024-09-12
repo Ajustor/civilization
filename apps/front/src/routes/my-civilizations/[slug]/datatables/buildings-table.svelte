@@ -9,13 +9,7 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import {
-		type CitizenType,
-		OccupationTypes,
-		Gender,
-		type BuildingType,
-		BuildingTypes
-	} from '@ajustor/simulation'
+	import { type BuildingType, BuildingTypes } from '@ajustor/simulation'
 
 	export let buildings: BuildingType[]
 
@@ -44,7 +38,7 @@
 </script>
 
 <div class="rounded-md border border-slate-100 bg-slate-200">
-	<Table>
+	<Table class="bg-neutral text-neutral-content">
 		<TableHeader {...$tableAttrs}>
 			{#each $headerRows as headerRow}
 				<Subscribe rowAttrs={headerRow.attrs()}>

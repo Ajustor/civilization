@@ -114,10 +114,7 @@
 		</AlertDialogHeader>
 		<AlertDialogFooter>
 			<AlertDialogCancel>Annuler</AlertDialogCancel>
-			<AlertDialogAction
-				class={buttonVariants({ variant: 'destructive' })}
-				on:click={deleteCivilization}
-			>
+			<AlertDialogAction class="btn btn-error" on:click={deleteCivilization}>
 				Supprimer
 			</AlertDialogAction>
 		</AlertDialogFooter>
@@ -126,7 +123,7 @@
 
 {#snippet createCivilizationDialog()}
 	<Dialog bind:open={isDialogOpen}>
-		<DialogTrigger class={buttonVariants({ variant: 'default' })}>
+		<DialogTrigger class="btn btn-primary">
 			<Plus /> Créer une nouvelle civilisation
 		</DialogTrigger>
 		<DialogContent>
@@ -149,7 +146,7 @@
 {/snippet}
 
 {#snippet civilizationInformations(civilization: CivilizationType)}
-	<Card class="relative">
+	<Card class="card bg-neutral text-neutral-content relative shadow-xl">
 		<CardHeader>
 			<CardTitle class="flex items-center justify-between">
 				{civilization.name}
@@ -193,15 +190,15 @@
 						{/each}
 					</ul>
 				</span>
-				<Button href="/my-civilizations/{civilization.id}" variant="default">
+				<a class="btn btn-primary" href="/my-civilizations/{civilization.id}">
 					Voir le détail de la civilisation
-				</Button>
+				</a>
 			{/if}
 		</CardContent>
 	</Card>
 {/snippet}
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
+<div class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
 	{@render createCivilizationDialog()}
 	{#if data.myCivilizations.length}
 		<Root
@@ -222,4 +219,4 @@
 			<Next variant="ghost" />
 		</Root>
 	{/if}
-</Block>
+</div>

@@ -8,8 +8,6 @@
 	import { fly } from 'svelte/transition'
 	import { page } from '$app/stores'
 	import { toast } from 'svelte-sonner'
-	import { useState } from '../stores/state'
-	import { App, Page } from 'konsta/svelte'
 
 	export let data: LayoutData
 
@@ -26,22 +24,42 @@
 
 <Toaster richColors />
 
-<App safeAreas>
-	<Page>
+<div class="app">
+	<!-- <Page>
 		<Header user={userStore.value} />
 		<slot></slot>
-	</Page>
+	</Page> -->
+	<Header user={userStore.value} />
 
-	<!-- {#key data.url}
-		<span
-			class="h-full w-full"
-			in:fly={{ delay: 300, x: -200, duration: 300 }}
-			out:fly={{ duration: 300 }}
-		>
-			<slot></slot>
-		</span>
-	{/key} -->
-</App>
+	<main>
+		{#key data.url}
+			<span
+				class="h-full w-full"
+				in:fly={{ delay: 300, x: -200, duration: 300 }}
+				out:fly={{ duration: 300 }}
+			>
+				<slot></slot>
+			</span>
+		{/key}
+	</main>
+</div>
 
 <style>
+	.app {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+	main {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		padding: 1rem;
+		width: 100%;
+		max-width: 64rem;
+		margin: 0 auto;
+		box-sizing: border-box;
+		align-items: center;
+	}
 </style>

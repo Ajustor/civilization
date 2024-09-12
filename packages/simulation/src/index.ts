@@ -17,6 +17,7 @@ export { Gender } from './citizen/enum'
 export { Carpenter } from './citizen/work/carpenter'
 export { Farmer } from './citizen/work/farmer'
 export type { Work } from './citizen/work/interface'
+export * from './constants'
 
 export * from './builders'
 export * from './formatters'

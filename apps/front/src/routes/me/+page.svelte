@@ -36,7 +36,7 @@
 	const { form: formData, enhance, errors, constraints, message: messageStore } = form
 </script>
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center">
+<div class="m-auto flex w-3/4 flex-col items-center justify-center">
 	<section class="flex w-full flex-col gap-16">
 		<p>Bonsoir {userStore.value?.username}</p>
 
@@ -84,4 +84,4 @@
 			<FormButton>Changer mon mot de passe</FormButton>
 		</form>
 	</section>
-</Block>
+</div>

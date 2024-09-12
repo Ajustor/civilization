@@ -1,11 +1,72 @@
 import { fontFamily } from 'tailwindcss/defaultTheme'
-import konstaConfig from 'konsta/config'
+import daisyui from 'daisyui'
 
 /** @type {import('tailwindcss').Config} */
-const config = konstaConfig({
+const config = {
 	darkMode: ['class'],
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	safelist: ['dark'],
+	plugins: [daisyui],
+	daisyui: {
+		themes: [
+			'dark',
+			'light',
+			'cyberpunk',
+			'cupcake',
+			{
+				spring: {
+					primary: '#A7F3D0',
+					secondary: '#FBCFE8',
+					accent: '#FEF9C3',
+					neutral: '#BFDBFE',
+					'base-100': '#FFFFFF',
+					info: '#BFDBFE',
+					success: '#A7F3D0',
+					warning: '#FEF9C3',
+					error: '#FBCFE8'
+				}
+			},
+			{
+				summer: {
+					primary: '#38BDF8',
+					secondary: '#F472B6',
+					accent: '#FDE047',
+					neutral: '#FB923C',
+					'base-100': '#FFFFFF',
+					info: '#38BDF8',
+					success: '#FDE047',
+					warning: '#FB923C',
+					error: '#F472B6'
+				}
+			},
+			{
+				autumn: {
+					primary: '#F97316',
+					secondary: '#EF4444',
+					accent: '#FACC15',
+					neutral: '#9A3412',
+					'base-100': '#FFFFFF',
+					info: '#FACC15',
+					success: '#F97316',
+					warning: '#FACC15',
+					error: '#EF4444'
+				}
+			},
+			{
+				winter: {
+					primary: '#0EA5E9',
+					secondary: '#94A3B8',
+					accent: '#F1F5F9',
+					neutral: '#1E3A8A',
+					'base-100': '#FFFFFF',
+					info: '#0EA5E9',
+					success: '#F1F5F9',
+					warning: '#94A3B8',
+					error: '#1E3A8A'
+				}
+			}
+		]
+	},
 	theme: {
 		container: {
 			center: true,
@@ -21,14 +82,6 @@ const config = konstaConfig({
 				ring: 'hsl(var(--ring) / <alpha-value>)',
 				background: 'hsl(var(--background) / <alpha-value>)',
 				foreground: 'hsl(var(--foreground) / <alpha-value>)',
-				primary: {
-					DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
-					foreground: 'hsl(var(--primary-foreground) / <alpha-value>)'
-				},
-				secondary: {
-					DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
-					foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)'
-				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
 					foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)'
@@ -60,6 +113,6 @@ const config = konstaConfig({
 			}
 		}
 	}
-})
+}
 
 export default config

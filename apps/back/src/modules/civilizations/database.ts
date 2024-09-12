@@ -2,13 +2,13 @@ import { BuildingTypes, Citizen, CitizenBuilder, Civilization, CivilizationBuild
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
+import { LibSQLDatabase } from 'drizzle-orm/libsql'
 
-export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
+export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
   const civilizationResources = await dbClient.select().from(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
 
@@ -54,7 +54,7 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
 }
 
 export class CivilizationTable {
-  constructor(private readonly client: BunSQLiteDatabase) {
+  constructor(private readonly client: LibSQLDatabase) {
 
   }
 

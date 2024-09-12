@@ -3,7 +3,6 @@
 	import type { PageData } from './$types'
 	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
 	import CitizensTable from './datatables/citizens-table.svelte'
-	import { Block } from 'konsta/svelte'
 	import type { BuildingType, CitizenType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
@@ -13,14 +12,10 @@
 		AccordionItem,
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
+	import { resourceNames } from '$lib/translations'
 
 	export let data: PageData
 
-	const translatedResourceName = {
-		food: 'Nouriture',
-		wood: 'Bois',
-		stone: 'Pierre'
-	}
 	const resourceIcons = {
 		food: Carrot,
 		wood: FlameKindling,
@@ -38,7 +33,7 @@
 
 <Button variant="ghost" href="/my-civilizations"><ArrowLeft />Retour</Button>
 
-<Block class="flex w-full flex-col gap-5">
+<div class="flex w-full flex-col gap-5">
 	<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
 	<span
 		>Votre civilisation vit depuis {~~(data.civilization.livedMonths / 12)} années et {~~(
@@ -59,26 +54,16 @@
 			</AccordionContent>
 		</AccordionItem>
 	</Accordion>
-	<!-- <span> </span>
-	<span>
-		Bâtiments:
-		<ul class="list-inside list-disc">
-			{#each data.civilization.buildings as building}
-				<li>
-					{building.type}: avec une capacité de {building.capacity} citoyens
-				</li>
-			{/each}
-		</ul>
-	</span> -->
+
 	<span>
 		Ressources:
 		<ul class="list-inside list-disc">
 			{#each data.civilization.resources as resource}
 				<IconText
 					iconComponent={resourceIcons[resource.type]}
-					text="{translatedResourceName[resource.type]}: {resource.quantity}"
+					text="{resourceNames[resource.type]}: {resource.quantity}"
 				/>
 			{/each}
 		</ul>
 	</span>
-</Block>
+</div>

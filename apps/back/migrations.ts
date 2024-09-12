@@ -5,7 +5,7 @@ import { civilizationTable } from './db/schema/civilizations'
 import { civilizationsResourcesTable } from './db/schema/civilizationsResourcesTable'
 import { db } from './src/libs/database'
 import { eq } from 'drizzle-orm'
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator'
+import { migrate } from 'drizzle-orm/libsql/migrator'
 import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
 import { worldsTable } from './db/schema/worldSchema'
 
@@ -107,8 +107,8 @@ const resourceSync = async () => {
 
 
   console.log('Resources Sync Done')
-  
-    
+
+
 
 }
 

@@ -15,7 +15,6 @@
 	import { toast } from 'svelte-sonner'
 	import { iForgotSchema } from '$lib/schemas/iForgot'
 	import type { PageData } from './$types'
-	import { Block } from 'konsta/svelte'
 
 	export let data: PageData
 
@@ -39,7 +38,7 @@
 	})
 </script>
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center">
+<div class="m-auto flex w-3/4 flex-col items-center justify-center">
 	<Card class="m-auto w-full lg:w-1/2">
 		<CardHeader>
 			<CardTitle>Nouveau mot de passe</CardTitle>
@@ -97,4 +96,4 @@
 			</form>
 		</CardContent>
 	</Card>
-</Block>
+</div>
