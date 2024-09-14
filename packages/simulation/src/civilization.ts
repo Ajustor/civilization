@@ -151,7 +151,7 @@ export class Civilization {
             }
         }
 
-        const citizens = this.citizens.toSorted((firstCitizen, secondCitizen) => firstCitizen.years - secondCitizen.years).toSorted((citizen) => citizen.work?.canWork(citizen.years) ? 1 : -1)
+        const citizens = this.citizens.toSorted((firstCitizen, secondCitizen) => secondCitizen.years - firstCitizen.years).toSorted((citizen) => citizen.work?.canWork(citizen.years) ? 1 : -1)
 
         // Handle food consumption and life counter
         if (civilizationFood) {

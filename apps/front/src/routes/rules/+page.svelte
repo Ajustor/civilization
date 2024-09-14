@@ -2,7 +2,15 @@
 	import { Block, List, ListItem } from 'konsta/svelte'
 </script>
 
-<Block class="m-auto flex flex-col items-center justify-center lg:w-3/4">
+<svelte:head>
+	<title>Les règles de la simulation</title>
+	<meta
+		name="description"
+		content="Une simulation d'un monde avec des civilisations qui vivent seule"
+	/>
+</svelte:head>
+
+<div class="m-auto flex flex-col items-center justify-center lg:w-3/4">
 	<h1 class="text-2xl">Les règles de la simulation</h1>
 	<List strong inset>
 		<ListItem title="Les règles du monde">
@@ -55,4 +63,4 @@
 			</ul>
 		</ListItem>
 	</List>
-</Block>
+</div>

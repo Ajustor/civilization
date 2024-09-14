@@ -1,9 +1,9 @@
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { usersTable, UserCreation, UserWithCivilizations } from '../../../db/schema/users'
 import { and, count, eq, or } from 'drizzle-orm'
 import { civilizationTable } from '../../../db/schema/civilizations'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { buildCivilization } from '../civilizations/database'
+import { LibSQLDatabase } from 'drizzle-orm/libsql'
 
 export type GetOptions = {
   populate: {
@@ -12,7 +12,7 @@ export type GetOptions = {
 }
 
 export class UsersTable {
-  constructor(private readonly client: BunSQLiteDatabase) {
+  constructor(private readonly client: LibSQLDatabase) {
 
   }
 

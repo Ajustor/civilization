@@ -24,6 +24,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@ajustor/simulation": "1.0.0"
+    "@ajustor/simulation": "1.0.0",
+    "@libsql/client": "^0.10.0"
   }
 }

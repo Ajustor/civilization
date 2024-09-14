@@ -26,7 +26,6 @@
 		DialogTrigger
 	} from '$lib/components/ui/dialog'
 	import { buttonVariants } from '$lib/components/ui/button'
-	import { Block } from 'konsta/svelte'
 	import { redirect } from '@sveltejs/kit'
 
 	export let data: PageData
@@ -83,7 +82,7 @@
 	</Dialog>
 {/snippet}
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center">
+<div class="m-auto flex w-3/4 flex-col items-center justify-center">
 	<Card class="m-auto w-full lg:w-1/2">
 		<CardHeader>
 			<CardTitle>Connexion</CardTitle>
@@ -126,4 +125,4 @@
 			</form>
 		</CardContent>
 	</Card>
-</Block>
+</div>
