@@ -39,16 +39,19 @@
 	import { Block } from 'konsta/svelte'
 	import { type CivilizationType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
+	import Cuboid from 'lucide-svelte/icons/cuboid'
 
 	export let data: PageData
 
 	const translatedResourceName = {
 		food: 'Nourriture',
-		wood: 'Bois'
+		wood: 'Bois',
+		stone: 'Pierre'
 	}
 	const resourceIcons = {
 		food: Carrot,
-		wood: FlameKindling
+		wood: FlameKindling,
+		stone: Cuboid
 	}
 
 	const form = superForm(data.civilizationCreationForm, {
@@ -181,12 +184,12 @@
 					Ressources:
 					<ul>
 						{#each civilization.resources as resource}
-						<li>
-							<IconText
-								iconComponent={resourceIcons[resource.type]}
-								text="{translatedResourceName[resource.type]}: {resource.quantity} restante"
-							/>
-						</li>
+							<li>
+								<IconText
+									iconComponent={resourceIcons[resource.type]}
+									text="{translatedResourceName[resource.type]}: {resource.quantity} restante"
+								/>
+							</li>
 						{/each}
 					</ul>
 				</span>

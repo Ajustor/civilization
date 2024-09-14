@@ -8,7 +8,8 @@
 
 	const translatedResourceName = {
 		food: 'Nourriture',
-		wood: 'Bois'
+		wood: 'Bois',
+		stone: 'Pierre'
 	}
 </script>
 

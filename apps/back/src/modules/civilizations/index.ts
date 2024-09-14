@@ -8,6 +8,16 @@ import { db } from '../../libs/database'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 
+const INITIAL_CITIZEN_NUMBER = 6
+const INITIAL_CITIZEN_AGE = 12*16
+const INITIAL_CITIZEN_LIFE = 3
+const INITIAL_OCCUPATION_CHOICE = [OccupationTypes.CARPENTER, OccupationTypes.FARMER]
+const INITIAL_CIVILIZATION_RESOURCES = {
+  FOOD: 20,
+  WOOD: 0,
+  STONE: 0,
+}
+
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
   .use(jwtMiddleware)
@@ -34,16 +44,28 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     }
 
     const civilizationBuilder = new CivilizationBuilder()
-    const firstCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 12*16, Gender.FEMALE, 3)
-    const secondCitizen = new Citizen(uniqueNamesGenerator({ dictionaries: [names] }), 12*16, Gender.MALE, 3)
 
-    firstCitizen.setOccupation(OccupationTypes.FARMER)
-    secondCitizen.setOccupation(OccupationTypes.CARPENTER)
+    const citizens = Array.from(Array(INITIAL_CITIZEN_NUMBER)).map((_, idx) => {
+      const citizen = new Citizen(
+        uniqueNamesGenerator({ dictionaries: [names] }),
+        INITIAL_CITIZEN_AGE,
+        idx % 2 === 0 ? Gender.FEMALE : Gender.MALE,
+        INITIAL_CITIZEN_LIFE
+      )
+
+      citizen.setOccupation(INITIAL_OCCUPATION_CHOICE[Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)])
+
+      return citizen
+    })
 
     civilizationBuilder
       .withName(body.name)
-      .addResource(new Resource(ResourceTypes.FOOD, 10), new Resource(ResourceTypes.WOOD, 0))
-      .addCitizen(firstCitizen, secondCitizen)
+      .addResource(
+        new Resource(ResourceTypes.FOOD, INITIAL_CIVILIZATION_RESOURCES.FOOD),
+        new Resource(ResourceTypes.WOOD, INITIAL_CIVILIZATION_RESOURCES.WOOD),
+        new Resource(ResourceTypes.STONE, INITIAL_CIVILIZATION_RESOURCES.STONE)
+      )
+      .addCitizen(...citizens)
 
     await civilizationDbClient.create(user.id as string, civilizationBuilder.build())
   }, {

@@ -19,7 +19,7 @@
 				<li>
 					Chaque citoyen a un métier dans la liste suivante :
 					<ol class="list-inside list-decimal">
-						<li>Fermier (travaille de 4 à 70 ans et consome 1 de nourriture)</li>
+						<li>Fermier (travaille de 4 à 70 ans et consomme 1 de nourriture)</li>
 						<li>Charpentier (travaille de 12 à 60 ans et consomme 2 de nourriture)</li>
 					</ol>
 				</li>
