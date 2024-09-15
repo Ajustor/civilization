@@ -31,6 +31,10 @@
 		table.column({
 			accessor: 'capacity',
 			header: 'Capacité'
+		}),
+		table.column({
+			accessor: 'count',
+			header: 'Nombre de bâtiment de ce type'
 		})
 	])
 

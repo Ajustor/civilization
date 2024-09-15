@@ -1,4 +1,4 @@
-import { BuildingTypes, Citizen, CitizenBuilder, Civilization, CivilizationBuilder, Gender, House, Resource } from '@ajustor/simulation'
+import { BuildingTypes, CitizenBuilder, Civilization, CivilizationBuilder, Gender, House, Resource } from '@ajustor/simulation'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
@@ -17,11 +17,13 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
     builder.addResource(resource)
   }
 
-  for (const house of civilization.buildings.filter((building) => building.type === BuildingTypes.HOUSE)) {
-    if (house.capacity) {
-      const civilizationHouse = new House(house.capacity)
 
-      builder.addHouse(civilizationHouse)
+  for (const building of civilization.buildings) {
+    if (building.type === BuildingTypes.HOUSE) {
+      const house = new House(building.capacity ?? 0)
+      house.count = building.count
+
+      builder.addBuilding(house)
     }
   }
 
@@ -33,7 +35,6 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
       .withLifeCounter(lifeCounter)
       .withIsBuilding(isBuilding)
       .withBuildingMonthsLeft(buildingMonthsLeft)
-    const citizen = new Citizen(name, month, gender, lifeCounter)
 
     if (occupation) {
       citizenBuilder.withOccupation(occupation)
