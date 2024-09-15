@@ -1,8 +1,8 @@
 import { Resource, ResourceTypes } from './resource'
 
-import { Citizen } from './citizen/citizen'
-import type { CitizenEntity } from './types/citizen'
 import { Civilization } from './civilization'
+import { People } from './people/people'
+import type { PeopleEntity } from './types/people'
 import type { ResourceType } from './types/resources'
 import { World } from './world'
 
@@ -12,20 +12,20 @@ export type { BuildingType } from './types/building'
 export { BuildingTypes } from './buildings/enum'
 export { House } from './buildings/house'
 
-export { OccupationTypes } from './citizen/work/enum'
-export { Gender } from './citizen/enum'
-export { Carpenter } from './citizen/work/carpenter'
-export { Farmer } from './citizen/work/farmer'
-export type { Work } from './citizen/work/interface'
+export { OccupationTypes } from './people/work/enum'
+export { Gender } from './people/enum'
+export { Carpenter } from './people/work/carpenter'
+export { Farmer } from './people/work/farmer'
+export type { Work } from './people/work/interface'
 export * from './constants'
 
 export * from './builders'
 export * from './formatters'
 
-type CitizenType = CitizenEntity & {
+type PeopleType = PeopleEntity & {
   years: number
 }
 type CivilizationEntity = typeof Civilization
 
-export { World, Civilization, Citizen, Resource, ResourceTypes }
-export type { CivilizationEntity, CitizenType, ResourceType, CitizenEntity }
+export { World, Civilization, People, Resource, ResourceTypes }
+export type { CivilizationEntity, PeopleType, ResourceType, PeopleEntity }

@@ -1,7 +1,7 @@
-import { parseArgs } from "util"
-import { db } from './src/libs/database'
 import { CivilizationTable } from './src/modules/civilizations/database'
 import { WorldsTable } from './src/modules/world/database'
+import { db } from './src/libs/database'
+import { parseArgs } from "util"
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -30,7 +30,7 @@ for (const world of worlds) {
 
   const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
   for (let i = 0; i < +values.years * 12; i++) {
-    world.addCivilization(...worldCivilizations.filter((civilization) => civilization.citizens.length).sort(() => Math.random() - 0.5))
+    world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
     world.passAMonth()
   }
   await civilizationsDbClient.saveAll(worldCivilizations)

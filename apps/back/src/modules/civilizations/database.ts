@@ -1,12 +1,12 @@
-import { BuildingTypes, CitizenBuilder, Civilization, CivilizationBuilder, Gender, House, Resource } from '@ajustor/simulation'
+import { BuildingTypes, Civilization, CivilizationBuilder, Gender, House, PeopleBuilder, Resource } from '@ajustor/simulation'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
+import { LibSQLDatabase } from 'drizzle-orm/libsql'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
-import { LibSQLDatabase } from 'drizzle-orm/libsql'
 
 export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
@@ -27,8 +27,9 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
     }
   }
 
-  builder.addCitizen(...civilization.citizens.map(({ name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child }) => {
-    const citizenBuilder = new CitizenBuilder()
+  builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
+    const peopleBuilder = new PeopleBuilder()
+      .withId(id)
       .withGender(gender)
       .withMonth(month)
       .withName(name)
@@ -37,18 +38,22 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
       .withBuildingMonthsLeft(buildingMonthsLeft)
 
     if (occupation) {
-      citizenBuilder.withOccupation(occupation)
+      peopleBuilder.withOccupation(occupation)
     }
 
     if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
-      citizenBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
+      peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
     }
 
     if (child && gender === Gender.FEMALE) {
-      citizenBuilder.withChild(child)
+      peopleBuilder.withChild(child)
     }
 
-    return citizenBuilder.build()
+    if(lineage) {
+      peopleBuilder.withLineage(lineage)
+    }
+
+    return peopleBuilder.build()
   }))
 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
@@ -140,7 +145,7 @@ export class CivilizationTable {
 
   async create(userId: string, civilization: Civilization) {
     const [createdCivilization] = await this.client.insert(civilizationTable).values({
-      citizens: civilization.citizens.map((citizen) => citizen.formatToEntity()),
+      people: civilization.people.map((person) => person.formatToEntity()),
       buildings: civilization.buildings.map((building) => building.formatToType()),
       name: civilization.name
     }).returning({ id: civilizationTable.id })
@@ -170,7 +175,7 @@ export class CivilizationTable {
     for (const civilization of civilizations) {
       await this.client.update(civilizationTable).set({
         livedMonths: civilization.livedMonths,
-        citizens: civilization.citizens.map((citizen) => citizen.formatToEntity()),
+        people: civilization.people.map((person) => person.formatToEntity()),
         buildings: civilization.buildings.map((building) => building.formatToType()),
       }).where(eq(civilizationTable.id, civilization.id))
       for (const civilizationResource of civilization.resources) {

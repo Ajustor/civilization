@@ -161,7 +161,7 @@
 			</CardTitle>
 		</CardHeader>
 		<CardContent class="flex flex-col gap-4">
-			{#if !civilization.citizens.length}
+			{#if !civilization.people.length}
 				<span
 					class="absolute left-0 top-0 m-0 flex h-full w-full flex-col items-center justify-center bg-red-600 p-0"
 				>
@@ -175,7 +175,7 @@
 					</Button>
 				</span>
 			{:else}
-				<IconText iconComponent={PersonStanding} text={civilization.citizens.length} />
+				<IconText iconComponent={PersonStanding} text={civilization.people.length} />
 				<IconText iconComponent={Landmark} text={civilization.buildings.length} />
 				<span>
 					Ressources:

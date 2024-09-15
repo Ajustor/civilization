@@ -2,8 +2,8 @@
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
 	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
-	import CitizensTable from './datatables/citizens-table.svelte'
-	import type { BuildingType, CitizenType } from '@ajustor/simulation'
+	
+	import type { BuildingType, PeopleType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -13,6 +13,7 @@
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
 	import { resourceNames } from '$lib/translations'
+	import PeopleTable from './datatables/people-table.svelte'
 
 	export let data: PageData
 
@@ -23,8 +24,8 @@
 	}
 </script>
 
-{#snippet citizensView(citizens: CitizenType[])}
-	<CitizensTable {citizens} />
+{#snippet citizensView(people: PeopleType[])}
+	<PeopleTable {people} />
 {/snippet}
 
 {#snippet buildingsView(buildings: BuildingType[])}
@@ -41,10 +42,10 @@
 		)} mois</span
 	>
 	<Accordion class="w-full">
-		<AccordionItem value="citizens-table">
-			<AccordionTrigger>Citoyens: ({data.civilization.citizens.length} au total)</AccordionTrigger>
+		<AccordionItem value="people-table">
+			<AccordionTrigger>Citoyens: ({data.civilization.people.length} au total)</AccordionTrigger>
 			<AccordionContent>
-				{@render citizensView(data.civilization.citizens)}
+				{@render citizensView(data.civilization.people)}
 			</AccordionContent>
 		</AccordionItem>
 		<AccordionItem value="buildings-table">

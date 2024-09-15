@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2295424e-eaee-4556-a684-8c978ac79224",
+  "id": "9d0a7360-82a9-441a-9d7b-23e877446710",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "civilizations": {
@@ -21,6 +21,14 @@
           "notNull": true,
           "autoincrement": false
         },
+        "livedMonths": {
+          "name": "livedMonths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
         "buildings": {
           "name": "buildings",
           "type": "text",
@@ -28,8 +36,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "citizens": {
-          "name": "citizens",
+        "people": {
+          "name": "people",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -187,6 +195,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "authorizationKey": {
+          "name": "authorizationKey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },

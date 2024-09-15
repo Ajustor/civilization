@@ -66,7 +66,7 @@
 					return top.slice(0, 3) ?? []
 				}}
 				{@const aliveCivilizations = world.civilizations.filter(
-					({ citizens }) => citizens.length
+					({ people }) => people.length
 				).length}
 				{@const deadCivilizations = world.civilizations.length - aliveCivilizations}
 				<h2 class="text-center text-2xl md:col-span-2 lg:col-span-3">{world.name}</h2>
@@ -115,13 +115,13 @@
 					</div>
 				</div>
 				{@const { men, women } = world.civilizations.reduce(
-					(count, { citizens }) => {
-						for (const citizen of citizens) {
-							if (citizen.gender === Gender.MALE) {
+					(count, { people }) => {
+						for (const person of people) {
+							if (person.gender === Gender.MALE) {
 								count.men++
 							}
 
-							if (citizen.gender === Gender.FEMALE) {
+							if (person.gender === Gender.FEMALE) {
 								count.women++
 							}
 						}
