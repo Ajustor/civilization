@@ -3,6 +3,9 @@ import { Civilization } from './civilization'
 import { formatCivilizations } from './formatters/civilization'
 import type { CivilizationType } from './types/civilization'
 
+const BASE_FOOD_GENERATION = 30_000_000
+const BASE_WOOD_GENERATION = 15_000_000
+
 export type WorldInfos = {
   name: string
   resources: { type: ResourceTypes, quantity: number }[]
@@ -70,20 +73,24 @@ export class World {
     const [currentSeason] = Object.entries(seasons).find(([_, months]) => months.includes(this.month % 12)) ?? []
     switch (currentSeason) {
       case 'spring': {
-        this.increaseResource(ResourceTypes.FOOD, 50 + 20 * this.civilizations.length)
+        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.5)
+        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 1.1)
+
         break
       }
       case 'summer': {
-        this.increaseResource(ResourceTypes.FOOD, 25 + 10 * this.civilizations.length)
+        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.75)
+        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 1.2)
         break
       }
       case 'automn': {
-        this.increaseResource(ResourceTypes.FOOD, 10 + 5 * this.civilizations.length)
-        this.increaseResource(ResourceTypes.WOOD, 10)
+        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.2)
+        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION)
         break
       }
       case 'winter': {
-        this.increaseResource(ResourceTypes.WOOD, 20)
+        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 0.5)
+        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 0.75)
         break
       }
     }
