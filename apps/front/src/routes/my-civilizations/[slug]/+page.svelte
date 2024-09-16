@@ -42,13 +42,15 @@
 	>
 	<Accordion class="w-full">
 		<AccordionItem value="citizens-table">
-			<AccordionTrigger>Citoyens:</AccordionTrigger>
+			<AccordionTrigger>Citoyens: ({data.civilization.citizens.length} au total)</AccordionTrigger>
 			<AccordionContent>
 				{@render citizensView(data.civilization.citizens)}
 			</AccordionContent>
 		</AccordionItem>
 		<AccordionItem value="buildings-table">
-			<AccordionTrigger>Bâtiments:</AccordionTrigger>
+			<AccordionTrigger
+				>Bâtiments: ({data.civilization.buildings.reduce((acc, { count }) => acc + count, 0)} au total)</AccordionTrigger
+			>
 			<AccordionContent>
 				{@render buildingsView(data.civilization.buildings)}
 			</AccordionContent>

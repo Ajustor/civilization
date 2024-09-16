@@ -20,12 +20,12 @@ export class Civilization {
     private _citizens: Citizen[]
     private _resources: Resource[]
     private _livedMonths: number = 0
-    private houses: House[]
+    private _buildings: Building[]
 
     constructor() {
         this._citizens = []
         this._resources = []
-        this.houses = []
+        this._buildings = []
     }
 
     nobodyAlive(): boolean {
@@ -57,8 +57,15 @@ export class Civilization {
     }
 
     get buildings(): Building[] {
-        return [...this.houses]
+        return this._buildings
+    }
 
+    get houses(): House | undefined {
+        return this.buildings.find<House>((building): building is House => building.getType() === BuildingTypes.HOUSE)
+    }
+
+    set houses(house: House) {
+        this.buildings.push(house)
     }
 
     increaseResource(type: ResourceTypes, count: number) {
@@ -104,16 +111,16 @@ export class Civilization {
         this._resources.push(...resources)
     }
 
-    addBuilding(...buildings: House[]): void {
-        this.houses.push(...buildings)
+    addBuilding(...buildings: Building[]): void {
+        this._buildings.push(...buildings)
     }
 
     constructBuilding(type: BuildingTypes, capacity: number): void {
         const woodResource = this._resources.find(res => res.type === ResourceTypes.WOOD)
         if (woodResource && woodResource.quantity >= 15 && type === BuildingTypes.HOUSE) {
             woodResource.decrease(15)
-            this.addBuilding(new House(capacity))
-        } else {
+            this.houses ??= new House(capacity)
+            this.houses.count++
         }
     }
 
@@ -172,29 +179,37 @@ export class Civilization {
         this.removeDeadCitizens()
         this.createNewCitizen()
         this.birthAwaitingBabies()
+        this.buildNewHouses()
+        this.checkHabitations()
 
-        if (this._citizens.length > this.houses.reduce((acc, building) => acc + building.capacity, 0) && civilizationWood.quantity >= 15) {
-            const carpenter = this.getCitizenWithOccupation(OccupationTypes.CARPENTER).find(citizen => !citizen.isBuilding)
+        if (!this.nobodyAlive()) {
+            this.livedMonths++
+        }
+    }
+
+    private buildNewHouses() {
+        const civilizationWood = this.getResource(ResourceTypes.WOOD)
+
+        const housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+
+        if (this._citizens.length > housesTotalCapacity && civilizationWood.quantity >= 15) {
+            const carpenter = this.getCitizenWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
             if (carpenter) {
                 carpenter.startBuilding()
                 this.constructBuilding(BuildingTypes.HOUSE, 4)
             }
         }
+    }
 
-        for (const citizen of this._citizens) {
-            const hasAHouse = this.houses.some(({ residents }) => residents.findIndex((cit) => cit === citizen) !== -1)
-            if (!hasAHouse) {
-                const availableBuilding = this.houses.find(({ residents, capacity }) => residents.length < capacity)
-                if (availableBuilding) {
-                    availableBuilding.addResident(citizen)
-                } else {
-                    citizen.decreaseLife()
-                }
-            }
+    private checkHabitations() {
+        let lastCitizenWithoutHouseIndex = 0
+        if (this.houses) {
+            lastCitizenWithoutHouseIndex = this.houses.capacity * this.houses.count - 1
         }
+        const citizenWithoutHouse = this.citizens.slice(lastCitizenWithoutHouseIndex, undefined)
 
-        if (!this.nobodyAlive()) {
-            this.livedMonths++
+        for (const citizen of citizenWithoutHouse) {
+            citizen.decreaseLife()
         }
     }
 
@@ -225,7 +240,7 @@ export class Civilization {
             eligibleCitizens.push([women[i], men[i]])
         }
 
-        if (eligibleCitizens.length) {            
+        if (eligibleCitizens.length) {
             for (const [mother, father] of eligibleCitizens) {
 
                 if (!isWithinChance(PREGNANCY_PROBABILITY)) {
@@ -259,28 +274,11 @@ export class Civilization {
             }
 
             this.addCitizen(mother.child)
-
-            const availableBuilding = this.houses.find(({ capacity }) => capacity < 4)
-            if (availableBuilding) {
-                availableBuilding.addResident(mother.child)
-            }
-
             mother.giveBirth()
         }
     }
 
     private removeDeadCitizens() {
-        const deadCitizens = this._citizens.filter(citizen => !citizen.isAlive())
         this._citizens = this._citizens.filter(citizen => citizen.isAlive())
-
-        for (const deadCitizen of deadCitizens) {
-            this.houses = this.houses.reduce((buildings, { residents }) => {
-                const deadResidentIndex = residents.findIndex((cit) => cit === deadCitizen)
-                if (deadResidentIndex !== -1) {
-                    residents.splice(deadResidentIndex, 1)
-                }
-                return buildings
-            }, this.houses)
-        }
     }
 }

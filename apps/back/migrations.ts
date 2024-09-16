@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm'
 import { migrate } from 'drizzle-orm/libsql/migrator'
 import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
 import { worldsTable } from './db/schema/worldSchema'
+import type { BuildingType } from '@ajustor/simulation'
 
 await migrate(db, { migrationsFolder: './drizzle' })
 
@@ -38,6 +39,28 @@ const citizensMigrations = async () => {
 
   for (const civ of updatedCiv) {
     await db.update(civilizationTable).set({ citizens: civ.citizens }).where(eq(civilizationTable.id, civ.id))
+  }
+  console.log('Migration success')
+}
+
+const buildingMigration = async () => {
+  console.log('Start building migration')
+  const civilizations = await db.select().from(civilizationTable)
+  const updatedCiv = civilizations.map((civ) => ({
+    ...civ,
+    buildings: civ.buildings.reduce<BuildingType[]>((acc, building) => {
+      const foundBuilding = acc.find((accBuilding) => accBuilding.type === building.type)
+      if (foundBuilding) {
+        foundBuilding.count++
+      } else {
+        acc.push({ ...building, count: 1 })
+      }
+      return acc
+    }, [])
+  }))
+
+  for (const civ of updatedCiv) {
+    await db.update(civilizationTable).set({ buildings: civ.buildings }).where(eq(civilizationTable.id, civ.id))
   }
   console.log('Migration success')
 }
@@ -105,12 +128,10 @@ const resourceSync = async () => {
     await db.insert(civilizationsResourcesTable).values(civResourcesToAdd)
   }
 
-
   console.log('Resources Sync Done')
-
-
 
 }
 
 await citizensMigrations()
 await resourceSync()
+await buildingMigration()

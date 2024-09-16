@@ -25,10 +25,6 @@
 <Toaster richColors />
 
 <div class="app">
-	<!-- <Page>
-		<Header user={userStore.value} />
-		<slot></slot>
-	</Page> -->
 	<Header user={userStore.value} />
 
 	<main>

@@ -6,7 +6,7 @@
 	import Doughnut from '$lib/components/charts/Doughnut.svelte'
 	import { Carrot, FlameKindling, Cuboid } from 'lucide-svelte'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
-	import { resourceNames } from '$lib/translations'
+	import { resourceNames, seasonsTranslations } from '$lib/translations'
 
 	export let data: PageData
 
@@ -16,14 +16,6 @@
 		food: Carrot,
 		wood: FlameKindling,
 		stone: Cuboid
-	}
-
-	const seasonsTranslations = {
-		spring: 'printemps',
-		summer: 'été',
-		autumn: 'automne',
-		winter: 'hiver',
-		nope: "A c'est pété"
 	}
 
 	const changeTheme = (theme: string) => {
