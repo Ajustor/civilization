@@ -162,12 +162,37 @@ export class Civilization {
 
         // Handle food consumption and life counter
         if (civilizationFood) {
-
             for (const citizen of citizens) {
                 const eatFactor = citizen.eatFactor
                 if (civilizationFood.quantity >= eatFactor && citizen.lifeCounter < 50) {
                     citizen.increaseLife(1)
                     civilizationFood.decrease(eatFactor)
+                } else {
+                    citizen.decreaseLife()
+                }
+            }
+        }
+
+        // Handle wood consumption
+        woodConsumptionLoop: if (civilizationWood) {
+            let requiredWoodQuantity = 0
+
+            switch (world.season) {
+                case 'winter':
+                    requiredWoodQuantity = 3
+                    break
+                case 'automn':
+                    requiredWoodQuantity = 2
+                    break
+            }
+
+            if (!requiredWoodQuantity) {
+                break woodConsumptionLoop
+            }
+
+            for (const citizen of citizens) {
+                if (civilizationWood.quantity >= requiredWoodQuantity) {
+                    civilizationWood.decrease(requiredWoodQuantity)
                 } else {
                     citizen.decreaseLife()
                 }
