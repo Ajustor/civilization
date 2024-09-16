@@ -3,8 +3,8 @@ import { Civilization } from './civilization'
 import { formatCivilizations } from './formatters/civilization'
 import type { CivilizationType } from './types/civilization'
 
-const BASE_FOOD_GENERATION = 30_000_000
-const BASE_WOOD_GENERATION = 15_000_000
+export const BASE_FOOD_GENERATION = 30_000_000
+export const BASE_WOOD_GENERATION = 15_000_000
 
 export type WorldInfos = {
   name: string
@@ -28,6 +28,11 @@ export class World {
 
   constructor(private readonly name = 'The world', private month = 1) {
     this.id = ''
+  }
+
+  get season(): string {
+    const [currentSeason] = Object.entries(seasons).find(([_, months]) => months.includes(this.month % 12)) ?? []
+    return currentSeason ?? ''
   }
 
   public addCivilization(...civilizations: Civilization[]) {
@@ -70,8 +75,7 @@ export class World {
 
   passAMonth(): void {
     this.month++
-    const [currentSeason] = Object.entries(seasons).find(([_, months]) => months.includes(this.month % 12)) ?? []
-    switch (currentSeason) {
+    switch (this.season) {
       case 'spring': {
         this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.5)
         this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 1.1)

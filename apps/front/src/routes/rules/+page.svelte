@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION } from '@ajustor/simulation/src/world'
 	import { Block, List, ListItem } from 'konsta/svelte'
 </script>
 
@@ -17,7 +18,8 @@
 			<ul slot="inner" class="list-disc">
 				<li>Toutes les 15 minutes un mois passe</li>
 				<li>
-					Tous les mois les citoyens doivent manger et avoir un logement afin de gagner de la vie
+					Tous les mois les citoyens doivent manger et avoir un logement afin de gagner de la vie.
+					De plus en automne et en hiver, les citoyens ont besoin de bois pour se réchauffer
 				</li>
 				<li>Un citoyen qui atteint l'age de 91 ans meurt</li>
 				<li>
@@ -51,13 +53,25 @@
 					Le monde reconstitue ses réserves de ressources suivant ces règles
 					<ol class="list-inside list-decimal">
 						<li>
-							au printemps<br /> 50 de nourriture avec un bonus de 20 par civilisation active
+							au printemps<br />
+							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 1.5
+							{BASE_WOOD_GENERATION} de bois, avec un facteur de 1.1
 						</li>
-						<li>en été<br /> 25 de nourriture avec un bonus de 10 par civilisation active</li>
 						<li>
-							en automne<br /> 10 de nourriture avec un bonus de 5 par civilisation active et 10 de bois
+							en été<br />
+							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 1.75
+							{BASE_WOOD_GENERATION} de bois, avec un facteur de 1.2
 						</li>
-						<li>en hiver<br />20 de bois</li>
+						<li>
+							en automne<br />
+							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 1.2
+							{BASE_WOOD_GENERATION} de bois, avec un facteur de 1
+						</li>
+						<li>
+							en hiver<br />
+							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 0.5
+							{BASE_WOOD_GENERATION} de bois, avec un facteur de 0.75
+						</li>
 					</ol>
 				</li>
 			</ul>
