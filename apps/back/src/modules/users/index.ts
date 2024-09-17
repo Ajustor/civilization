@@ -18,7 +18,7 @@ export const usersModule = new Elysia({ prefix: '/users' })
   .post('', async ({ log, userDbClient, body, set, emailSender }) => {
     try {
       await userDbClient.create({ ...body, password: await Bun.password.hash(body.password) })
-      await emailSender.sendEmail(body.email, 'Un nouvel arrivant !', NewUserEmailTemplate({ username: body.username }))
+      await emailSender.sendEmail(body.email, 'Un nouvel arrivant !', NewUserEmailTemplate({ username: body.username, frontUrl: Bun.env.frontUrl ?? '' }))
       set.status = 201
     } catch (error) {
       log.error(error)

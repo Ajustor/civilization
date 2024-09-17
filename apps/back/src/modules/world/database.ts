@@ -1,8 +1,8 @@
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { worldsTable } from '../../../db/schema/worldSchema'
 import { worldsResourcesTable } from '../../../db/schema/worldsResourcesTable'
 import { and, eq } from 'drizzle-orm'
 import { World, WorldBuilder, Resource } from '@ajustor/simulation'
+import { LibSQLDatabase } from 'drizzle-orm/libsql'
 
 export type GetOptions = {
   populate: {
@@ -11,7 +11,7 @@ export type GetOptions = {
 }
 
 export class WorldsTable {
-  constructor(private readonly client: BunSQLiteDatabase) {
+  constructor(private readonly client: LibSQLDatabase) {
 
   }
 

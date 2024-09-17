@@ -1,14 +1,17 @@
+import { EmailSender } from './src/libs/services/emailSender'
 import { ResourceTypes } from '@ajustor/simulation'
+import { WorldDestructionEmailTemplate } from './src/emailTemplates/worldDestruction'
 import { civilizationTable } from './db/schema/civilizations'
 import { civilizationsResourcesTable } from './db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from './db/schema/civilizationsWorldsTable'
 import { db } from './src/libs/database'
 import { usersCivilizationTable } from './db/schema/usersCivilizationsTable'
+import { usersTable } from './db/schema/users'
 import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
 import { worldsTable } from './db/schema/worldSchema'
-import { EmailSender } from './src/libs/services/emailSender'
-import { usersTable } from './db/schema/users'
-import { WorldDestructionEmailTemplate } from './src/emailTemplates/worldDestruction'
+import { desc } from 'drizzle-orm'
+
+const topCivilizations = await db.select().from(civilizationTable).orderBy(desc(civilizationTable.livedMonths))
 
 await db.delete(worldsTable)
 await db.delete(worldsResourcesTable)
@@ -34,6 +37,11 @@ await db.insert(worldsResourcesTable).values(worlds.flatMap(({ id }) => {
       worldId: id,
       resourceType: ResourceTypes.WOOD,
       quantity: 5000
+    },
+    {
+      worldId: id,
+      resourceType: ResourceTypes.STONE,
+      quantity: 5000
     }
   ]
 }))
@@ -44,4 +52,4 @@ const emailService = new EmailSender()
 const users = await db.select().from(usersTable)
 const emails = users.map(({ email }) => email)
 
-await emailService.sendBatch(emails, 'Oh non !', WorldDestructionEmailTemplate({}))
+await emailService.sendBatch(emails, 'Oh non !', WorldDestructionEmailTemplate({ topCivilizationsNames: topCivilizations.map(({ name }) => name) }))

@@ -1,14 +1,14 @@
-import { BuildingTypes, Citizen, CitizenBuilder, Civilization, CivilizationBuilder, Gender, House, Resource } from '@ajustor/simulation'
+import { BuildingTypes, Civilization, CivilizationBuilder, Gender, House, PeopleBuilder, Resource } from '@ajustor/simulation'
 import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { LibSQLDatabase } from 'drizzle-orm/libsql'
 import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
 
-export async function buildCivilization(dbClient: BunSQLiteDatabase, civilization: CivilizationEntity): Promise<Civilization> {
+export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
   const civilizationResources = await dbClient.select().from(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
 
@@ -17,44 +17,50 @@ export async function buildCivilization(dbClient: BunSQLiteDatabase, civilizatio
     builder.addResource(resource)
   }
 
-  for (const house of civilization.buildings.filter((building) => building.type === BuildingTypes.HOUSE)) {
-    if (house.capacity) {
-      const civilizationHouse = new House(house.capacity)
 
-      builder.addHouse(civilizationHouse)
+  for (const building of civilization.buildings) {
+    if (building.type === BuildingTypes.HOUSE) {
+      const house = new House(building.capacity ?? 0)
+      house.count = building.count
+
+      builder.addBuilding(house)
     }
   }
 
-  builder.addCitizen(...civilization.citizens.map(({ name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child }) => {
-    const citizenBuilder = new CitizenBuilder()
+  builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
+    const peopleBuilder = new PeopleBuilder()
+      .withId(id)
       .withGender(gender)
       .withMonth(month)
       .withName(name)
       .withLifeCounter(lifeCounter)
       .withIsBuilding(isBuilding)
       .withBuildingMonthsLeft(buildingMonthsLeft)
-    const citizen = new Citizen(name, month, gender, lifeCounter)
 
     if (occupation) {
-      citizenBuilder.withOccupation(occupation)
+      peopleBuilder.withOccupation(occupation)
     }
 
     if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
-      citizenBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
+      peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
     }
 
     if (child && gender === Gender.FEMALE) {
-      citizenBuilder.withChild(child)
+      peopleBuilder.withChild(child)
     }
 
-    return citizenBuilder.build()
+    if(lineage) {
+      peopleBuilder.withLineage(lineage)
+    }
+
+    return peopleBuilder.build()
   }))
 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
 }
 
 export class CivilizationTable {
-  constructor(private readonly client: BunSQLiteDatabase) {
+  constructor(private readonly client: LibSQLDatabase) {
 
   }
 
@@ -139,7 +145,7 @@ export class CivilizationTable {
 
   async create(userId: string, civilization: Civilization) {
     const [createdCivilization] = await this.client.insert(civilizationTable).values({
-      citizens: civilization.citizens.map((citizen) => citizen.formatToEntity()),
+      people: civilization.people.map((person) => person.formatToEntity()),
       buildings: civilization.buildings.map((building) => building.formatToType()),
       name: civilization.name
     }).returning({ id: civilizationTable.id })
@@ -169,7 +175,7 @@ export class CivilizationTable {
     for (const civilization of civilizations) {
       await this.client.update(civilizationTable).set({
         livedMonths: civilization.livedMonths,
-        citizens: civilization.citizens.map((citizen) => citizen.formatToEntity()),
+        people: civilization.people.map((person) => person.formatToEntity()),
         buildings: civilization.buildings.map((building) => building.formatToType()),
       }).where(eq(civilizationTable.id, civilization.id))
       for (const civilizationResource of civilization.resources) {

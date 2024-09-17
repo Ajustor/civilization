@@ -10,8 +10,8 @@ export class Carpenter implements Work {
   }
 
 
-  canWork(citizenAge: number): boolean {
-    return citizenAge >= 12 && citizenAge < 60
+  canWork(personAge: number): boolean {
+    return personAge >= 12 && personAge < 60
   }
 
   collectResources(world: World, count: number): boolean {

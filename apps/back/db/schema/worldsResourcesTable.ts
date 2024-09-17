@@ -1,11 +1,12 @@
-import { createId } from '@paralleldrive/cuid2'
-import { sqliteTable, text, int } from 'drizzle-orm/sqlite-core'
-import { worldsTable } from './worldSchema'
+import { int, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+
 import { ResourceTypes } from '@ajustor/simulation'
+import { createId } from '@paralleldrive/cuid2'
+import { worldsTable } from './worldSchema'
 
 export const worldsResourcesTable = sqliteTable('worlds_resources', {
   id: text('id').primaryKey().$defaultFn(createId),
   worldId: text('worldId').references(() => worldsTable.id),
-  resourceType: text('type', { enum: [ResourceTypes.FOOD, ResourceTypes.WOOD] }).notNull(),
+  resourceType: text('type', { enum: [ResourceTypes.FOOD, ResourceTypes.WOOD, ResourceTypes.STONE] }).notNull(),
   quantity: int('quantity').default(0).notNull()
 })

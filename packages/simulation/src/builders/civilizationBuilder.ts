@@ -1,15 +1,16 @@
-import { uniqueNamesGenerator, countries } from 'unique-names-generator'
-import { House } from '../buildings/house'
-import { Citizen } from '../citizen/citizen'
-import { Resource } from '../resource'
+import { countries, uniqueNamesGenerator } from 'unique-names-generator'
+
+import type { Building } from '../types/building'
 import { Civilization } from '../civilization'
+import { People } from '../people/people'
+import { Resource } from '../resource'
 
 export class CivilizationBuilder {
   private id?: string
   private name: string
-  private citizens: Citizen[] = [];
+  private people: People[] = [];
   private resources: Resource[] = [];
-  private houses: House[] = [];
+  private buildings: Building[] = []
   private livedMonths: number
 
   constructor() {
@@ -27,8 +28,8 @@ export class CivilizationBuilder {
     return this
   }
 
-  addCitizen(...citizens: Citizen[]): this {
-    this.citizens.push(...citizens)
+  addCitizen(...people: People[]): this {
+    this.people.push(...people)
     return this
   }
 
@@ -37,8 +38,8 @@ export class CivilizationBuilder {
     return this
   }
 
-  addHouse(...houses: House[]): this {
-    this.houses.push(...houses)
+  addBuilding(...buildings: Building[]): this {
+    this.buildings.push(...buildings)
     return this
   }
 
@@ -49,19 +50,10 @@ export class CivilizationBuilder {
 
   build(): Civilization {
     const civilization = new Civilization()
-    civilization.addCitizen(...this.citizens)
+    civilization.addPeople(...this.people)
     civilization.addResource(...this.resources)
+    civilization.addBuilding(...this.buildings)
 
-    for (const citizen of this.citizens) {
-      const hasAHouse = this.houses.some(({ residents }) => residents.findIndex((cit) => cit === citizen) !== -1)
-      if (!hasAHouse) {
-        const availableBuilding = this.houses.find(({ residents, capacity }) => residents.length < capacity)
-        if (availableBuilding) {
-          availableBuilding.addResident(citizen)
-        }
-      }
-    }
-    civilization.addBuilding(...this.houses)
     civilization.livedMonths = this.livedMonths
 
     if (this.id) {

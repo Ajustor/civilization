@@ -39,16 +39,19 @@
 	import { Block } from 'konsta/svelte'
 	import { type CivilizationType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
+	import Cuboid from 'lucide-svelte/icons/cuboid'
 
 	export let data: PageData
 
 	const translatedResourceName = {
 		food: 'Nourriture',
-		wood: 'Bois'
+		wood: 'Bois',
+		stone: 'Pierre'
 	}
 	const resourceIcons = {
 		food: Carrot,
-		wood: FlameKindling
+		wood: FlameKindling,
+		stone: Cuboid
 	}
 
 	const form = superForm(data.civilizationCreationForm, {
@@ -111,10 +114,7 @@
 		</AlertDialogHeader>
 		<AlertDialogFooter>
 			<AlertDialogCancel>Annuler</AlertDialogCancel>
-			<AlertDialogAction
-				class={buttonVariants({ variant: 'destructive' })}
-				on:click={deleteCivilization}
-			>
+			<AlertDialogAction class="btn btn-error" on:click={deleteCivilization}>
 				Supprimer
 			</AlertDialogAction>
 		</AlertDialogFooter>
@@ -123,7 +123,7 @@
 
 {#snippet createCivilizationDialog()}
 	<Dialog bind:open={isDialogOpen}>
-		<DialogTrigger class={buttonVariants({ variant: 'default' })}>
+		<DialogTrigger class="btn btn-primary">
 			<Plus /> Créer une nouvelle civilisation
 		</DialogTrigger>
 		<DialogContent>
@@ -146,7 +146,7 @@
 {/snippet}
 
 {#snippet civilizationInformations(civilization: CivilizationType)}
-	<Card class="relative">
+	<Card class="card bg-neutral text-neutral-content relative shadow-xl">
 		<CardHeader>
 			<CardTitle class="flex items-center justify-between">
 				{civilization.name}
@@ -161,7 +161,7 @@
 			</CardTitle>
 		</CardHeader>
 		<CardContent class="flex flex-col gap-4">
-			{#if !civilization.citizens.length}
+			{#if !civilization.people.length}
 				<span
 					class="absolute left-0 top-0 m-0 flex h-full w-full flex-col items-center justify-center bg-red-600 p-0"
 				>
@@ -175,30 +175,30 @@
 					</Button>
 				</span>
 			{:else}
-				<IconText iconComponent={PersonStanding} text={civilization.citizens.length} />
+				<IconText iconComponent={PersonStanding} text={civilization.people.length} />
 				<IconText iconComponent={Landmark} text={civilization.buildings.length} />
 				<span>
 					Ressources:
 					<ul>
 						{#each civilization.resources as resource}
-						<li>
-							<IconText
-								iconComponent={resourceIcons[resource.type]}
-								text="{translatedResourceName[resource.type]}: {resource.quantity} restante"
-							/>
-						</li>
+							<li>
+								<IconText
+									iconComponent={resourceIcons[resource.type]}
+									text="{translatedResourceName[resource.type]}: {resource.quantity} restante"
+								/>
+							</li>
 						{/each}
 					</ul>
 				</span>
-				<Button href="/my-civilizations/{civilization.id}" variant="default">
+				<a class="btn btn-primary" href="/my-civilizations/{civilization.id}">
 					Voir le détail de la civilisation
-				</Button>
+				</a>
 			{/if}
 		</CardContent>
 	</Card>
 {/snippet}
 
-<Block class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
+<div class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
 	{@render createCivilizationDialog()}
 	{#if data.myCivilizations.length}
 		<Root
@@ -219,4 +219,4 @@
 			<Next variant="ghost" />
 		</Root>
 	{/if}
-</Block>
+</div>

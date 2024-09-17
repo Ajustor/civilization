@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
-	import { ArrowLeft, Carrot, FlameKindling } from 'lucide-svelte'
-	import CitizensTable from './datatables/citizens-table.svelte'
-	import { Block } from 'konsta/svelte'
-	import type { BuildingType, CitizenType } from '@ajustor/simulation'
+	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
+	
+	import type { BuildingType, PeopleType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -13,21 +12,20 @@
 		AccordionItem,
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
+	import { resourceNames } from '$lib/translations'
+	import PeopleTable from './datatables/people-table.svelte'
 
 	export let data: PageData
 
-	const translatedResourceName = {
-		food: 'Nouriture',
-		wood: 'Bois'
-	}
 	const resourceIcons = {
 		food: Carrot,
-		wood: FlameKindling
+		wood: FlameKindling,
+		stone: Cuboid
 	}
 </script>
 
-{#snippet citizensView(citizens: CitizenType[])}
-	<CitizensTable {citizens} />
+{#snippet citizensView(people: PeopleType[])}
+	<PeopleTable {people} />
 {/snippet}
 
 {#snippet buildingsView(buildings: BuildingType[])}
@@ -36,7 +34,7 @@
 
 <Button variant="ghost" href="/my-civilizations"><ArrowLeft />Retour</Button>
 
-<Block class="flex w-full flex-col gap-5">
+<div class="flex w-full flex-col gap-5">
 	<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
 	<span
 		>Votre civilisation vit depuis {~~(data.civilization.livedMonths / 12)} années et {~~(
@@ -44,39 +42,31 @@
 		)} mois</span
 	>
 	<Accordion class="w-full">
-		<AccordionItem value="citizens-table">
-			<AccordionTrigger>Citoyens:</AccordionTrigger>
+		<AccordionItem value="people-table">
+			<AccordionTrigger>Citoyens: ({data.civilization.people.length} au total)</AccordionTrigger>
 			<AccordionContent>
-				{@render citizensView(data.civilization.citizens)}
+				{@render citizensView(data.civilization.people)}
 			</AccordionContent>
 		</AccordionItem>
 		<AccordionItem value="buildings-table">
-			<AccordionTrigger>Bâtiments:</AccordionTrigger>
+			<AccordionTrigger
+				>Bâtiments: ({data.civilization.buildings.reduce((acc, { count }) => acc + count, 0)} au total)</AccordionTrigger
+			>
 			<AccordionContent>
 				{@render buildingsView(data.civilization.buildings)}
 			</AccordionContent>
 		</AccordionItem>
 	</Accordion>
-	<!-- <span> </span>
-	<span>
-		Bâtiments:
-		<ul class="list-inside list-disc">
-			{#each data.civilization.buildings as building}
-				<li>
-					{building.type}: avec une capacité de {building.capacity} citoyens
-				</li>
-			{/each}
-		</ul>
-	</span> -->
+
 	<span>
 		Ressources:
 		<ul class="list-inside list-disc">
 			{#each data.civilization.resources as resource}
 				<IconText
 					iconComponent={resourceIcons[resource.type]}
-					text="{translatedResourceName[resource.type]}: {resource.quantity}"
+					text="{resourceNames[resource.type]}: {resource.quantity}"
 				/>
 			{/each}
 		</ul>
 	</span>
-</Block>
+</div>

@@ -9,8 +9,8 @@ export class Farmer implements Work {
     return OccupationTypes.FARMER
   }
 
-  canWork(citizenAge: number): boolean {
-    return citizenAge > 4 && citizenAge < 70
+  canWork(personAge: number): boolean {
+    return personAge > 4 && personAge < 70
   }
 
   collectResources(world: World, count: number): boolean {

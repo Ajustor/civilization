@@ -9,22 +9,19 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import { type CitizenType, OccupationTypes, Gender } from '@ajustor/simulation'
+	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
+	import { OCCUPATIONS } from '$lib/translations'
+	import ChildDetails from './childDetails.svelte'
 
-	export let citizens: CitizenType[]
+	export let people: PeopleType[]
 
-	const table = createTable(readable(citizens))
+	const table = createTable(readable(people))
 
-	const GENRES = {
+	const GenderIcons = {
 		[Gender.FEMALE]: 'noto:female-sign',
 		[Gender.MALE]: 'noto:male-sign',
 		[Gender.UNKNOWN]: 'Inconnu'
-	}
-
-	const OCCUPATIONS = {
-		[OccupationTypes.FARMER]: 'Fermier',
-		[OccupationTypes.CARPENTER]: 'Charpentier'
 	}
 
 	const columns = table.createColumns([
@@ -39,7 +36,7 @@
 				if (!value) {
 					return ''
 				}
-				return createRender(Icon, { icon: GENRES[value] })
+				return createRender(Icon, { icon: GenderIcons[value] })
 			}
 		}),
 		table.column({
@@ -72,12 +69,16 @@
 		}),
 		table.column({
 			accessor: 'child',
-			header: 'Enfant a naitre',
+			header: 'Enfant à naître',
 			cell: ({ value }) => {
 				if (!value) {
 					return ''
 				}
-				return `nom: ${value.name}, occupation: ${OCCUPATIONS[value?.occupation ?? OccupationTypes.FARMER]}, genre: ${createRender(Icon, { icon:GENRES[value.gender]})}`
+				return createRender(ChildDetails, {
+					gender: value.gender,
+					name: value.name,
+					occupation: value.occupation
+				})
 			}
 		})
 	])
@@ -86,7 +87,7 @@
 </script>
 
 <div class="rounded-md border border-slate-100 bg-slate-200">
-	<Table>
+	<Table class="bg-neutral text-neutral-content">
 		<TableHeader {...$tableAttrs}>
 			{#each $headerRows as headerRow}
 				<Subscribe rowAttrs={headerRow.attrs()}>

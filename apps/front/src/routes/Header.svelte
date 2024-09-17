@@ -1,20 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import logo from '$lib/images/logo.png'
-	import {
-		Link,
-		List,
-		ListItem,
-		Navbar,
-		Page,
-		Panel,
-		Segmented,
-		SegmentedButton
-	} from 'konsta/svelte'
 	import { type User } from '../stores/user'
-	import { useMediaQuery } from 'svelte-breakpoints'
-	import type { Readable } from 'svelte/store'
-	import { Menu } from 'lucide-svelte'
 
 	export let user: User | null | undefined
 
@@ -22,57 +9,85 @@
 		{ url: '/rules', label: 'Les règles de la simulation' },
 		{ url: '/my-civilizations', label: 'Mes civilisations' }
 	]
-
-	$: activeButtonIndex = routes.findIndex(({ url }) => $page.url.pathname.includes(url)) ?? -1
-
-	const isMobile: Readable<boolean> = useMediaQuery('(max-width: 600px)')
-
-	let isPanelOpen = false
 </script>
 
-{#if $isMobile}
-	<Navbar>
-		<Link class="p-4" slot="left" href="/" navbar>
-			<img src={logo} class="w-24 min-w-24" alt="Logo du simulateur de civilisation" />
-		</Link>
-		<Link slot="right" onClick={() => (isPanelOpen = true)} navbar><Menu size="40" /></Link>
-	</Navbar>
-	<Panel side="right" opened={isPanelOpen} onBackdropClick={() => (isPanelOpen = false)}>
-		<Page>
-			<List>
-				{#each routes as route}
-					<ListItem href={route.url} title={route.label} onclick={() => (isPanelOpen = false)} />
-				{/each}
-				<ListItem
-					href="/me"
-					title={user?.id ? 'Mon compte' : 'Me connecter'}
-					onclick={() => (isPanelOpen = false)}
-				/>
-			</List>
-		</Page>
-	</Panel>
-{:else}
-	<Navbar>
-		<Link class="p-4" slot="left" href="/" navbar>
+<header>
+	<nav class="navbar justify-between">
+		<a class="navbar-start max-w-24 p-4" href="/">
 			<img src={logo} class="w-24" alt="Logo du simulateur de civilisation" />
-		</Link>
-		<Link slot="right" href="/me" navbar>
-			{#if user?.id}
-				<!-- content here -->
-				Mon compte
-			{:else}
-				Me connecter
-			{/if}
-		</Link>
-		<Segmented slot="title" {activeButtonIndex}>
+		</a>
+		<ul class="navbar-end hidden lg:flex">
 			{#each routes as route}
-				<SegmentedButton strong active={$page.url.pathname.includes(route.url)} href={route.url}>
-					{route.label}
-				</SegmentedButton>
+				<li class:active={$page.url.pathname.includes(route.url)}>
+					<a class="btn" href={route.url}>
+						{route.label}
+					</a>
+				</li>
 			{/each}
-		</Segmented>
-	</Navbar>
-{/if}
+			<li class:active={$page.url.pathname.includes('/me')}>
+				<a href="/me" class="btn min-w-20">
+					{#if user?.id}
+						<!-- content here -->
+						Mon compte
+					{:else}
+						Me connecter
+					{/if}
+				</a>
+			</li>
+		</ul>
+		<div class="dropdown dropdown-end navbar-end w-auto lg:hidden">
+			<div tabindex="0" role="button" class="btn btn-ghost">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-5 w-5"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 6h16M4 12h8m-8 6h16"
+					/>
+				</svg>
+			</div>
+			<ul
+				tabindex="-1"
+				class="menu menu-sm dropdown-content bg-base-200 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+			>
+				{#each routes as route}
+					<li aria-current={$page.url.pathname.includes(route.url) ? 'page' : null}>
+						<a class="btn" href={route.url}>
+							{route.label}
+						</a>
+					</li>
+				{/each}
+				<li aria-current={$page.url.pathname.includes('/me') ? 'page' : null}>
+					<a href="/me" class="btn navbar-end w-full text-center">
+						{#if user?.id}
+							<!-- content here -->
+							Mon compte
+						{:else}
+							Me connecter
+						{/if}
+					</a>
+				</li>
+			</ul>
+		</div>
+	</nav>
+</header>
 
 <style>
+	header {
+		@apply bg-base-200;
+	}
+
+	li[aria-current='page'] {
+		text-decoration: underline;
+	}
+
+	a:hover {
+		color: var(--color-theme-1);
+	}
 </style>

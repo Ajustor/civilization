@@ -1,8 +1,8 @@
-import { drizzle } from 'drizzle-orm/bun-sqlite'
-import { Database } from 'bun:sqlite'
+import { drizzle as tursoDrizzle } from 'drizzle-orm/libsql'
+import { createClient } from '@libsql/client'
 
-const sqlite = new Database('civ-simulator.sqlite')
+const url: string = Bun.env.LOCAL ? `file:civ-simulator.sqlite` : `${Bun.env.TURSO_URL}`
 
-export const db = drizzle(sqlite)
+const sqliteClient = createClient({ url, authToken: Bun.env.TURSO_TOKEN })
 
-
+export const db = tursoDrizzle(sqliteClient)

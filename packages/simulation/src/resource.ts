@@ -4,14 +4,13 @@ import type { ResourceType } from '.'
 
 export enum ResourceTypes {
   WOOD = 'wood',
-  FOOD = 'food'
+  FOOD = 'food',
+  STONE = 'stone',
 }
 
 export class Resource {
 
-  constructor(private _type: ResourceTypes, private _quantity: number) {
-
-  }
+  constructor(private _type: ResourceTypes, private _quantity: number) {}
 
   get type(): ResourceTypes {
     return this._type

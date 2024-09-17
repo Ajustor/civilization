@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1e89f4f4-2cbb-4615-b743-764a9bec752e",
-  "prevId": "2295424e-eaee-4556-a684-8c978ac79224",
+  "id": "9d1da8f5-5dcf-4e27-83cd-790726788b9b",
+  "prevId": "9d0a7360-82a9-441a-9d7b-23e877446710",
   "tables": {
     "civilizations": {
       "name": "civilizations",
@@ -21,6 +21,14 @@
           "notNull": true,
           "autoincrement": false
         },
+        "livedMonths": {
+          "name": "livedMonths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
         "buildings": {
           "name": "buildings",
           "type": "text",
@@ -28,8 +36,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "citizens": {
-          "name": "citizens",
+        "people": {
+          "name": "people",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -370,7 +378,9 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {}
+    "columns": {
+      "\"civilizations\".\"citizens\"": "\"civilizations\".\"people\""
+    }
   },
   "internal": {
     "indexes": {}
