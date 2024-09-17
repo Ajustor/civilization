@@ -9,15 +9,16 @@ import { usersCivilizationTable } from './db/schema/usersCivilizationsTable'
 import { usersTable } from './db/schema/users'
 import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
 import { worldsTable } from './db/schema/worldSchema'
+import { desc } from 'drizzle-orm'
 
-const topCivilizations = await db.select().from(civilizationTable)
+const topCivilizations = await db.select().from(civilizationTable).orderBy(desc(civilizationTable.livedMonths))
 
-await db.delete(worldsTable)
 await db.delete(worldsResourcesTable)
 await db.delete(usersCivilizationTable)
-await db.delete(civilizationTable)
 await db.delete(civilizationsResourcesTable)
 await db.delete(civilizationsWorldTable)
+await db.delete(civilizationTable)
+await db.delete(worldsTable)
 
 await db.insert(worldsTable).values([
   { name: 'The Holy kingdom', month: 0 }
@@ -51,4 +52,4 @@ const emailService = new EmailSender()
 const users = await db.select().from(usersTable)
 const emails = users.map(({ email }) => email)
 
-await emailService.sendBatch(emails, 'Oh non !', WorldDestructionEmailTemplate({ topCivilizationsNames: topCivilizations.sort((first, second) => second.livedMonths - first.livedMonths).map(({ name }) => name) }))
+await emailService.sendBatch(emails, 'Oh non !', WorldDestructionEmailTemplate({ topCivilizationsNames: topCivilizations.map(({ name }) => name) }))
