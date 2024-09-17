@@ -17,19 +17,26 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       name: 'monthPass',
       pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(15),
       async run() {
+        console.time('monthPass')
         const worldDbClient = new WorldsTable(db)
         const civilizationsDbClient = new CivilizationTable(db)
 
         const worlds = await worldDbClient.getAll()
         console.log('Worlds retrieved, start passing a month')
+        console.timeLog('monthPass', 'Worlds retrieved, start passing a month')
         for (const world of worlds) {
+          console.timeLog('monthPass', 'Retrieve civilizations')
           const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
           world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
-          world.passAMonth()
-          await civilizationsDbClient.saveAll(worldCivilizations)
-        }
+          console.timeLog('monthPass', 'Civilizations retrieved, pass a month')
 
-        console.log('Civilizations saved, save the worlds')
+          world.passAMonth()
+          console.timeLog('monthPass', 'Month has passed, save civilizations')
+          await civilizationsDbClient.saveAll(worldCivilizations)
+          console.timeLog('monthPass', 'Civilizations saved')
+        }
+        console.timeLog('monthPass', 'Civilizations saved, save the worlds')
+
         try {
           await worldDbClient.saveAll(worlds)
           console.log('A month has passed')

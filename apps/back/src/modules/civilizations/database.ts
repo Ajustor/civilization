@@ -181,12 +181,13 @@ export class CivilizationTable {
   }
 
   async saveAll(civilizations: Civilization[]) {
-    for (const civilization of civilizations) {
+    await Promise.all(civilizations.map(async (civilization) => {
       await this.client.update(civilizationTable).set({
         livedMonths: civilization.livedMonths,
         people: civilization.people.map((person) => person.formatToEntity()),
         buildings: civilization.buildings.map((building) => building.formatToType()),
       }).where(eq(civilizationTable.id, civilization.id))
+
       for (const civilizationResource of civilization.resources) {
         await this.client.update(civilizationsResourcesTable).set({
           quantity: civilizationResource.quantity,
@@ -197,7 +198,7 @@ export class CivilizationTable {
           )
         )
       }
-    }
+    }))
   }
 
   async delete(userId: string, civilizationId: string) {
