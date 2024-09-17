@@ -13,6 +13,7 @@ import { isWithinChance } from './utils'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
+const CARPENTER_RESOURCES_GET = 6
 
 export class Civilization {
     public id!: string
@@ -149,11 +150,11 @@ export class Civilization {
         if (woodResource?.quantity) {
             carpentersLoop: for (const carpenter of carpentersCitizens) {
                 if (!carpenter.isBuilding) {
-                    const successfullyCollectResource = carpenter.collectResource(world, 1)
+                    const successfullyCollectResource = carpenter.collectResource(world, CARPENTER_RESOURCES_GET)
                     if (!successfullyCollectResource) {
                         break carpentersLoop
                     }
-                    civilizationWood.increase(1)
+                    civilizationWood.increase(CARPENTER_RESOURCES_GET)
                 }
             }
         }
