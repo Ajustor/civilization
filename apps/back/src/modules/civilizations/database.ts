@@ -201,7 +201,7 @@ export class CivilizationTable {
       }
     }
     // Use the read db client is required here (system limit)
-    sqliteClient.batch(queries.map(({ params, ...rest }) => ({ ...rest, args: params })))
+    await sqliteClient.batch(queries.map(({ params, ...rest }) => ({ ...rest, args: params })))
   }
 
   async delete(userId: string, civilizationId: string) {
