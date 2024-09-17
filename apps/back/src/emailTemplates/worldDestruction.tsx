@@ -15,59 +15,80 @@ import {
   Row,
   Column,
 } from '@react-email/components'
-import { Civilization, CivilizationBuilder } from '@ajustor/simulation'
 
 interface WorldDestructionEmailTemplateProps {
-  topCivilizations: Civilization[]
+  topCivilizationsNames: string[]
 }
 
 export const WorldDestructionEmailTemplate = ({
-  topCivilizations,
-}: WorldDestructionEmailTemplateProps) => (
-  <Tailwind>
-    <Html>
-      <Head />
-      <Preview>Le monde est détruit !</Preview>
-      <Body>
-        <Container className='text-center'>
-          <Heading className='m-0'>Une catastrophe à eu lieu !</Heading>
-          <Text>
-            Le monde tel que vous le connaissiez a été drétruit, toutes les
-            civilisations ont été éradiquées !
-          </Text>
-          <Img
-            className='m-0 w-full'
-            src='https://media1.tenor.com/m/uGbfuGhzPh0AAAAC/sry-sorry.gif'
-            alt='Une météorite qui tombe'
-          />
-          <Hr />
-          <Section>
-            <Heading as='h2'>
-              Top 3 des civilisations les plus anciennes
-            </Heading>
-            {topCivilizations.map(({ name }, index) => (
-              <Row>
-                <Column>
-                  {index + 1} {name}
-                </Column>
-              </Row>
-            ))}
-          </Section>
-          <Text>
-            Vous pouvez en créer de nouvelles dans le nouveau monde qui vient de
-            naitre de cette destruction
-          </Text>
-        </Container>
-      </Body>
-    </Html>
-  </Tailwind>
-)
+  topCivilizationsNames,
+}: WorldDestructionEmailTemplateProps) => {
+  const civilizationsNamesTable = () => {
+    let result: string[][] = []
+    for (let i = 0; i < topCivilizationsNames.length; i++) {
+      result[~~(i / 3)] ??= []
+      result[~~(i / 3)].push(topCivilizationsNames[i])
+    }
+    return result
+  }
+  let offset = 1
+  return (
+    <Tailwind>
+      <Html>
+        <Head />
+        <Preview>Le monde est détruit !</Preview>
+        <Body>
+          <Container className='text-center'>
+            <Heading className='m-0'>Une catastrophe à eu lieu !</Heading>
+            <Text>
+              Le monde tel que vous le connaissiez a été drétruit, toutes les
+              civilisations ont été éradiquées !
+            </Text>
+            <Img
+              className='m-0 w-full'
+              src='https://media1.tenor.com/m/uGbfuGhzPh0AAAAC/sry-sorry.gif'
+              alt='Une météorite qui tombe sur la terre'
+            />
+            <Hr />
+            <Section>
+              <Heading as='h2'>
+                Civilisations de la plus ancienne à la plus récente
+              </Heading>
+              {civilizationsNamesTable().map(
+                ([firstName, secondName, thirdhName]) => (
+                  <Row>
+                    <Column>
+                      {offset++} - {firstName}
+                    </Column>
+                    <Column>
+                      {offset++} - {secondName}
+                    </Column>
+                    <Column>
+                      {offset++} - {thirdhName}
+                    </Column>
+                  </Row>
+                )
+              )}
+            </Section>
+            <Text>
+              Vous pouvez en créer de nouvelles dans le nouveau monde qui vient
+              de naitre de cette destruction
+            </Text>
+          </Container>
+        </Body>
+      </Html>
+    </Tailwind>
+  )
+}
 
 WorldDestructionEmailTemplate.PreviewProps = {
-  topCivilizations: [
-    new CivilizationBuilder().withName('Bernard').build(),
-    new CivilizationBuilder().withName('Yves').build(),
-    new CivilizationBuilder().withName('Paul').build(),
+  topCivilizationsNames: [
+    'Bernard',
+    'Yves',
+    'Paul',
+    'Jacques',
+    'Edouard',
+    'Pierre',
   ],
 } as WorldDestructionEmailTemplateProps
 
