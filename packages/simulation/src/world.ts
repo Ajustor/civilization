@@ -77,24 +77,24 @@ export class World {
     this.month++
     switch (this.season) {
       case 'spring': {
-        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.5)
-        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 1.1)
+        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 1.5))
+        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION * 1.1))
 
         break
       }
       case 'summer': {
-        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.75)
-        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 1.2)
+        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 1.75))
+        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION * 1.2))
         break
       }
       case 'automn': {
-        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 1.2)
-        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION)
+        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 1.2))
+        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION))
         break
       }
       case 'winter': {
-        this.increaseResource(ResourceTypes.FOOD, BASE_FOOD_GENERATION * 0.5)
-        this.increaseResource(ResourceTypes.WOOD, BASE_WOOD_GENERATION * 0.75)
+        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 0.5))
+        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION * 0.75))
         break
       }
     }
