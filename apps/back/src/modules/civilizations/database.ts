@@ -181,26 +181,23 @@ export class CivilizationTable {
   }
 
   async saveAll(civilizations: Civilization[]) {
-    const batch = []
     for (const civilization of civilizations) {
-      batch.push(this.client.update(civilizationTable).set({
+      await this.client.update(civilizationTable).set({
         livedMonths: civilization.livedMonths,
         people: civilization.people.map((person) => person.formatToEntity()),
         buildings: civilization.buildings.map((building) => building.formatToType()),
-      }).where(eq(civilizationTable.id, civilization.id)))
+      }).where(eq(civilizationTable.id, civilization.id))
       for (const civilizationResource of civilization.resources) {
-        batch.push(this.client.update(civilizationsResourcesTable).set({
+        await this.client.update(civilizationsResourcesTable).set({
           quantity: civilizationResource.quantity,
         }).where(
           and(
             eq(civilizationsResourcesTable.civilizationId, civilization.id),
             eq(civilizationsResourcesTable.resourceType, civilizationResource.type),
           )
-        ))
+        )
       }
     }
-
-    this.client.batch(batch)
   }
 
   async delete(userId: string, civilizationId: string) {
