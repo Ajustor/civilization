@@ -9,14 +9,14 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table'
-	import { type CitizenType, OccupationTypes, Gender } from '@ajustor/simulation'
+	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
 	import { OCCUPATIONS } from '$lib/translations'
 	import ChildDetails from './childDetails.svelte'
 
-	export let citizens: CitizenType[]
+	export let people: PeopleType[]
 
-	const table = createTable(readable(citizens))
+	const table = createTable(readable(people))
 
 	const GenderIcons = {
 		[Gender.FEMALE]: 'noto:female-sign',
@@ -69,7 +69,7 @@
 		}),
 		table.column({
 			accessor: 'child',
-			header: 'Enfant a naitre',
+			header: 'Enfant à naître',
 			cell: ({ value }) => {
 				if (!value) {
 					return ''

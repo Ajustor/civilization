@@ -1,4 +1,5 @@
 import type { Building, BuildingType } from '../types/building'
+
 import { BuildingTypes } from './enum'
 
 export class House implements Building {

@@ -1,4 +1,4 @@
-import { Citizen, CivilizationBuilder, Gender, OccupationTypes, Resource, ResourceTypes, formatCivilizations } from '@ajustor/simulation'
+import { CivilizationBuilder, Gender, OccupationTypes, People, Resource, ResourceTypes, formatCivilizations } from '@ajustor/simulation'
 import Elysia, { error, t } from 'elysia'
 import { names, uniqueNamesGenerator } from 'unique-names-generator'
 
@@ -45,17 +45,17 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
 
     const civilizationBuilder = new CivilizationBuilder()
 
-    const citizens = Array.from(Array(INITIAL_CITIZEN_NUMBER)).map((_, idx) => {
-      const citizen = new Citizen(
-        uniqueNamesGenerator({ dictionaries: [names] }),
-        INITIAL_CITIZEN_AGE,
-        idx % 2 === 0 ? Gender.FEMALE : Gender.MALE,
-        INITIAL_CITIZEN_LIFE
-      )
+    const people = Array.from(Array(INITIAL_CITIZEN_NUMBER)).map((_, idx) => {
+      const person = new People({
+        name: uniqueNamesGenerator({ dictionaries: [names] }),
+        month: INITIAL_CITIZEN_AGE,
+        gender: idx % 2 === 0 ? Gender.FEMALE : Gender.MALE,
+        lifeCounter: INITIAL_CITIZEN_LIFE
+      })
 
-      citizen.setOccupation(INITIAL_OCCUPATION_CHOICE[Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)])
+      person.setOccupation(INITIAL_OCCUPATION_CHOICE[Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)])
 
-      return citizen
+      return person
     })
 
     civilizationBuilder
@@ -65,7 +65,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
         new Resource(ResourceTypes.WOOD, INITIAL_CIVILIZATION_RESOURCES.WOOD),
         new Resource(ResourceTypes.STONE, INITIAL_CIVILIZATION_RESOURCES.STONE)
       )
-      .addCitizen(...citizens)
+      .addCitizen(...people)
 
     await civilizationDbClient.create(user.id as string, civilizationBuilder.build())
   }, {

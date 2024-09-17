@@ -1,13 +1,14 @@
-import { uniqueNamesGenerator, countries } from 'unique-names-generator'
-import { Citizen } from '../citizen/citizen'
-import { Resource } from '../resource'
-import { Civilization } from '../civilization'
+import { countries, uniqueNamesGenerator } from 'unique-names-generator'
+
 import type { Building } from '../types/building'
+import { Civilization } from '../civilization'
+import { People } from '../people/people'
+import { Resource } from '../resource'
 
 export class CivilizationBuilder {
   private id?: string
   private name: string
-  private citizens: Citizen[] = [];
+  private people: People[] = [];
   private resources: Resource[] = [];
   private buildings: Building[] = []
   private livedMonths: number
@@ -27,8 +28,8 @@ export class CivilizationBuilder {
     return this
   }
 
-  addCitizen(...citizens: Citizen[]): this {
-    this.citizens.push(...citizens)
+  addCitizen(...people: People[]): this {
+    this.people.push(...people)
     return this
   }
 
@@ -49,7 +50,7 @@ export class CivilizationBuilder {
 
   build(): Civilization {
     const civilization = new Civilization()
-    civilization.addCitizen(...this.citizens)
+    civilization.addPeople(...this.people)
     civilization.addResource(...this.resources)
     civilization.addBuilding(...this.buildings)
 

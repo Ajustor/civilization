@@ -49,6 +49,7 @@
     "clsx": "^2.1.1",
     "embla-carousel-svelte": "^8.2.1",
     "formsnap": "^1.0.1",
+    "gojs": "^3.0.11",
     "konsta": "^4.0.0",
     "lucide-svelte": "^0.439.0",
     "mode-watcher": "^0.4.1",

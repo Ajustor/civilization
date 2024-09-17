@@ -1,12 +1,14 @@
+import type { PeopleEntity, PeopleType } from '..'
+
 import { Carpenter } from './work/carpenter'
-import type { CitizenEntity } from '../types/citizen'
-// Citizen.ts
-import type { CitizenType } from '..'
 import { Farmer } from './work/farmer'
 import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
+import { Tree } from '../utils/tree/tree'
+// People.ts
 import type { Work } from './work/interface'
 import type { World } from '../world'
+import { v4 } from 'uuid'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
@@ -19,8 +21,35 @@ const EAT_FACTOR = {
 }
 
 const PREGNANCY_MONTHS = 9
+const MINIMUM_CONCEPTION_AGE = 16
+const MAXIMUM_CONCEPTION_AGE = 60
+const MINIMUM_CONCEPTION_HEALTH = 8
 
-export class Citizen {
+
+export type PeopleConstructorParams = {
+  name: string,
+  month: number,
+  gender: Gender,
+  lifeCounter: number
+  isBuilding?: boolean
+  buildingMonthsLeft?: number
+  pregnancyMonthsLeft?: number
+  lineage?: Lineage
+}
+
+// renommer
+export type Lineage = {
+  mother: {
+    id: string
+    lineage?: Lineage
+  }
+  father: {
+    id: string
+    lineage?: Lineage
+  }
+}
+export class People {
+  public id!: string
   name: string
   month: number
   work: Work | null = null
@@ -29,9 +58,22 @@ export class Citizen {
   buildingMonthsLeft: number
   pregnancyMonthsLeft: number
   gender: Gender
-  child: Citizen | null = null
+  child: People | null = null
+  lineage?: Lineage
 
-  constructor(name: string, month: number, gender: Gender, lifeCounter: number = 3, isBuilding = false, buildingMonthsLeft = 0, pregnancyMonthsLeft = 0) {
+  tree: Tree<string> | null = null
+
+  constructor({
+    name,
+    month,
+    gender,
+    lifeCounter = 3,
+    isBuilding = false,
+    buildingMonthsLeft  = 0,
+    pregnancyMonthsLeft = 0,
+    lineage
+  }: PeopleConstructorParams) {
+    this.id = v4()
     this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
@@ -39,6 +81,7 @@ export class Citizen {
     this.buildingMonthsLeft = buildingMonthsLeft
     this.gender = gender
     this.pregnancyMonthsLeft = pregnancyMonthsLeft
+    this.lineage = lineage
   }
 
   setOccupation(occupationType: OccupationTypes) {
@@ -88,11 +131,11 @@ export class Citizen {
     this.buildingMonthsLeft = 2
   }
 
-  canReproduce(): boolean {
-    return this.years > 16 && this.years < 60 && this.lifeCounter >= 8 && !this.child
+  canConceive(): boolean {
+    return this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
   }
 
-  addChildToBirth(child: Citizen) {
+  addChildToBirth(child: People) {
     this.child = child
     this.pregnancyMonthsLeft = PREGNANCY_MONTHS
   }
@@ -102,8 +145,50 @@ export class Citizen {
     this.pregnancyMonthsLeft = 0
   }
 
-  formatToEntity(): CitizenEntity {
+  buildLineageTree() {
+    this.tree = new Tree<string>(this.id, this.id)
+    if (this.lineage) {
+      this.addLineageInTree(this.lineage, this.id, 0)
+    }
+  }
+
+  private addLineageInTree({ father, mother }: Lineage, parentKey: string, parentLevel: number) {
+    const level = parentLevel + 1
+
+    this.tree?.insert({
+      child: {
+        key: father.id,
+        source: father.id,
+        level,
+      },
+      parent: {
+        key: parentKey,
+      }
+    })
+
+    this.tree?.insert({
+      child: {
+        key: mother.id,
+        source: mother.id,
+        level,
+      },
+      parent: {
+        key: parentKey,
+      }
+    })
+
+    if (father.lineage) {
+      this.addLineageInTree(father.lineage, father.id, level)
+    }
+
+    if (mother.lineage) {
+      this.addLineageInTree(mother.lineage, mother.id, level)
+    }
+  }
+
+  formatToEntity(): PeopleEntity {
     return {
+      id: this.id,
       buildingMonthsLeft: this.buildingMonthsLeft,
       isBuilding: this.isBuilding,
       lifeCounter: this.lifeCounter,
@@ -112,11 +197,12 @@ export class Citizen {
       occupation: this.work?.occupationType,
       gender: this.gender,
       pregnancyMonthsLeft: this.pregnancyMonthsLeft,
-      child: this.child?.formatToEntity() ?? null
+      child: this.child?.formatToEntity() ?? null,
+      ...(this.lineage && { lineage: this.lineage }),
     }
   }
 
-  formatToType(): CitizenType {
+  formatToType(): PeopleType {
     return { ...this.formatToEntity(), years: this.years }
   }
 

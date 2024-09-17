@@ -1,9 +1,10 @@
 import { Elysia, NotFoundError } from 'elysia'
-import { logger } from '@bogeychan/elysia-logger'
-import { cron, Patterns } from '@elysiajs/cron'
+import { Patterns, cron } from '@elysiajs/cron'
+
+import { CivilizationTable } from '../civilizations/database'
 import { WorldsTable } from './database'
 import { db } from '../../libs/database'
-import { CivilizationTable } from '../civilizations/database'
+import { logger } from '@bogeychan/elysia-logger'
 
 export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(logger())
@@ -23,7 +24,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         console.log('Worlds retrieved, start passing a month')
         for (const world of worlds) {
           const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
-          world.addCivilization(...worldCivilizations.filter((civilization) => civilization.citizens.length).sort(() => Math.random() - 0.5))
+          world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
           world.passAMonth()
           await civilizationsDbClient.saveAll(worldCivilizations)
         }

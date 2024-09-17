@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS `civilizations` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
+	`livedMonths` integer DEFAULT 0 NOT NULL,
 	`buildings` text NOT NULL,
 	`citizens` text NOT NULL
 );
@@ -25,7 +26,8 @@ CREATE TABLE IF NOT EXISTS `users` (
 	`id` text PRIMARY KEY NOT NULL,
 	`username` text NOT NULL,
 	`password` text NOT NULL,
-	`email` text NOT NULL
+	`email` text NOT NULL,
+	`authorizationKey` text
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS `users_civilizations` (

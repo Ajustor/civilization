@@ -1,8 +1,8 @@
-import { Citizen, Civilization, Resource, ResourceTypes, World } from '.'
+import { Civilization, People, Resource, ResourceTypes, World } from '.'
 import { input, select } from '@inquirer/prompts'
 
-import { Gender } from './citizen/enum'
-import { OccupationTypes } from './citizen/work/enum'
+import { Gender } from './people/enum'
+import { OccupationTypes } from './people/work/enum'
 
 const world = new World()
 
@@ -11,15 +11,15 @@ const myCivilization = new Civilization()
 
 world.addCivilization(myCivilization)
 
-const alice = new Citizen('Alice', 120, Gender.FEMALE, 3)
-const bob = new Citizen('Bob', 120, Gender.MALE, 3)
+const alice = new People({ name: 'Alice', month: 120, gender: Gender.FEMALE, lifeCounter: 3 })
+const bob = new People({ name: 'Bob', month: 120, gender: Gender.MALE, lifeCounter: 3 })
 
 alice.setOccupation(OccupationTypes.FARMER)
 bob.setOccupation(OccupationTypes.CARPENTER)
 
-// Adding some citizens
-myCivilization.addCitizen(alice)
-myCivilization.addCitizen(bob)
+// Adding some people
+myCivilization.addPeople(alice)
+myCivilization.addPeople(bob)
 
 // Adding some resources
 myCivilization.addResource(new Resource(ResourceTypes.FOOD, 5))
@@ -35,7 +35,7 @@ async function promptUser() {
   const command = await select(
     {
       message: 'Enter command:',
-      choices: [{ name: 'Next Year', value: 'next' }, { name: 'Display Status', value: 'year' }, { name: 'Adapt citizens', value: 'adapt' }, { name: 'Pass a few years', value: 'pass' }, { name: 'Quit', value: 'quit' }],
+      choices: [{ name: 'Next Year', value: 'next' }, { name: 'Display Status', value: 'year' }, { name: 'Adapt people', value: 'adapt' }, { name: 'Pass a few years', value: 'pass' }, { name: 'Quit', value: 'quit' }],
     }
   )
 
@@ -61,7 +61,7 @@ async function promptUser() {
     case 'quit':
       process.exit(0)
     case 'adapt':
-      myCivilization.adaptCitizen()
+      myCivilization.adaptPeopleJob()
       break
     case 'pass':
       if (Number.isNaN(numberOfYearsToPass)) {
