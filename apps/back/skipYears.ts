@@ -25,7 +25,6 @@ const worldDbClient = new WorldsTable(db)
 const civilizationsDbClient = new CivilizationTable(db)
 
 const worlds = await worldDbClient.getAll()
-console.log('Worlds retrieved, start passing a month')
 for (const world of worlds) {
 
   const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)

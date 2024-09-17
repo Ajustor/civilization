@@ -11,9 +11,9 @@ import { People } from './people/people'
 import type { World } from './world'
 import { isWithinChance } from './utils'
 
-const PREGNANCY_PROBABILITY = 60
+const PREGNANCY_PROBABILITY = 75
 const FARMER_RESOURCES_GET = 10
-const CARPENTER_RESOURCES_GET = 6
+const CARPENTER_RESOURCES_GET = 15
 
 export class Civilization {
     public id!: string
@@ -267,7 +267,7 @@ export class Civilization {
         for (const woman of women) {
 
             // A person SHOULD NOT be in a relationship with a direct ancestor
-            let eligibleMen = men.filter(({ id }) => ! woman.tree || !woman.tree.findByKey(id))
+            let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
 
             // A person SHOULD NOT be in a relationship with a child of his/her parent
             if (woman.lineage) {
@@ -297,7 +297,7 @@ export class Civilization {
             eligiblePeople.push([women[i], men[i]])
         }
 
-        if (eligiblePeople.length) {            
+        if (eligiblePeople.length) {
             for (const [mother, father] of eligiblePeople) {
 
                 if (!isWithinChance(PREGNANCY_PROBABILITY)) {

@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `civilizations` (
 	`name` text NOT NULL,
 	`livedMonths` integer DEFAULT 0 NOT NULL,
 	`buildings` text NOT NULL,
-	`people` text NOT NULL
+	`citizens` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS `civilizations_resources` (
