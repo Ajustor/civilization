@@ -48,7 +48,8 @@ export const authModule = new Elysia({ prefix: '/auth' })
     await emailSender.sendEmail(user.email, 'Mot de passe oublié', IForgetEmailTemplate({
       authorizationKey: user.authorizationKey ?? '',
       userId: user.id,
-      username: user.username
+      username: user.username,
+      frontUrl: Bun.env.frontUrl ?? ''
     }))
 
   }

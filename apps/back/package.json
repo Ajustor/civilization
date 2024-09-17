@@ -15,16 +15,18 @@
     "generate:migrations": "bunx drizzle-kit generate",
     "migration": "bun run migrations.ts",
     "populate": "bun run seed.ts",
-    "email:preview": "email -dir src/emailTemplates"
+    "email:preview": "email dev --dir ./src"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "react-email": "3.0.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "@ajustor/simulation": "1.0.0",
-    "@libsql/client": "^0.10.0"
+    "@libsql/client": "^0.10.0",
+    "@react-email/tailwind": "0.1.0"
   }
 }
