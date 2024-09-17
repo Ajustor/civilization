@@ -1,9 +1,10 @@
+import type { PeopleEntity, PeopleType } from '..'
+
 import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
 import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
-import type { PeopleEntity } from '../types/people'
-import type { PeopleType } from '..'
+import { Tree } from '../utils/tree/tree'
 // People.ts
 import type { Work } from './work/interface'
 import type { World } from '../world'
@@ -59,6 +60,8 @@ export class People {
   gender: Gender
   child: People | null = null
   lineage?: Lineage
+
+  tree: Tree<string> | null = null
 
   constructor({
     name,
@@ -140,6 +143,47 @@ export class People {
   giveBirth() {
     this.child = null
     this.pregnancyMonthsLeft = 0
+  }
+
+  buildLineageTree() {
+    this.tree = new Tree<string>(this.id, this.id)
+    if (this.lineage) {
+      this.addLineageInTree(this.lineage, this.id, 0)
+    }
+  }
+
+  private addLineageInTree({ father, mother }: Lineage, parentKey: string, parentLevel: number) {
+    const level = parentLevel + 1
+
+    this.tree?.insert({
+      child: {
+        key: father.id,
+        source: father.id,
+        level,
+      },
+      parent: {
+        key: parentKey,
+      }
+    })
+
+    this.tree?.insert({
+      child: {
+        key: mother.id,
+        source: mother.id,
+        level,
+      },
+      parent: {
+        key: parentKey,
+      }
+    })
+
+    if (father.lineage) {
+      this.addLineageInTree(father.lineage, father.id, level)
+    }
+
+    if (mother.lineage) {
+      this.addLineageInTree(mother.lineage, mother.id, level)
+    }
   }
 
   formatToEntity(): PeopleEntity {

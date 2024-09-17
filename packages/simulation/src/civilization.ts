@@ -259,8 +259,37 @@ export class Civilization {
         let eligiblePeople: [People, People][] = []
         const ableToConceivePeople = this._people.filter(person => person.canConceive())
 
+        ableToConceivePeople.forEach((person) => person.buildLineageTree())
+
         const women = ableToConceivePeople.filter(({ gender }) => gender === Gender.FEMALE)
-        const men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
+        let men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
+
+        for (const woman of women) {
+
+            // A person SHOULD NOT be in a relationship with a direct ancestor
+            let eligibleMen = men.filter(({ id }) => ! woman.tree || !woman.tree.findByKey(id))
+
+            // A person SHOULD NOT be in a relationship with a child of his/her parent
+            if (woman.lineage) {
+                eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndLevel(woman.lineage!.father.id, 1) && !tree.findByKeyAndLevel(woman.lineage!.mother.id, 1)))
+            }
+
+            // A person SHOULD NOT be in a relationship with a descendant of his/her grand-parent
+            if (woman.lineage) {
+                const grandParent = woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? []
+                if (grandParent.length) {
+                    eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel(grandParent[0], 2) && !tree.findByKeyAndMaxLevel(grandParent[1], 2)))
+                }
+            }
+
+            if (eligibleMen.length) {
+                const father = eligibleMen[Math.floor(Math.random() * eligibleMen.length)]
+                eligiblePeople.push([woman, father])
+
+                // TODO: check if we need to remove the father from the available men
+            }
+
+        }
 
         const smallestSize = Math.min(women.length, men.length)
 
