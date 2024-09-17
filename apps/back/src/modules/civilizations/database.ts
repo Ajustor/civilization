@@ -7,6 +7,7 @@ import { civilizationsResourcesTable } from '../../../db/schema/civilizationsRes
 import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
 import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
 import { worldsTable } from '../../../db/schema/worldSchema'
+import { sqliteClient } from '../../libs/database'
 
 export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity): Promise<Civilization> {
   const builder = new CivilizationBuilder()
@@ -181,23 +182,26 @@ export class CivilizationTable {
   }
 
   async saveAll(civilizations: Civilization[]) {
+    const queries: { params: any[], sql: string }[] = []
     for (const civilization of civilizations) {
-      await this.client.update(civilizationTable).set({
+      queries.push(this.client.update(civilizationTable).set({
         livedMonths: civilization.livedMonths,
         people: civilization.people.map((person) => person.formatToEntity()),
         buildings: civilization.buildings.map((building) => building.formatToType()),
-      }).where(eq(civilizationTable.id, civilization.id))
+      }).where(eq(civilizationTable.id, civilization.id)).toSQL())
       for (const civilizationResource of civilization.resources) {
-        await this.client.update(civilizationsResourcesTable).set({
+        queries.push(this.client.update(civilizationsResourcesTable).set({
           quantity: civilizationResource.quantity,
         }).where(
           and(
             eq(civilizationsResourcesTable.civilizationId, civilization.id),
             eq(civilizationsResourcesTable.resourceType, civilizationResource.type),
           )
-        )
+        ).toSQL())
       }
     }
+    // Use the read db client is required here (system limit)
+    sqliteClient.batch(queries.map(({ params, ...rest }) => ({ ...rest, args: params })))
   }
 
   async delete(userId: string, civilizationId: string) {
