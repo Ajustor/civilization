@@ -39,7 +39,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
 
         try {
           await worldDbClient.saveAll(worlds)
-          console.log('A month has passed')
+          console.timeEnd('A month has passed')
         } catch (error) {
           console.error(error)
         }
