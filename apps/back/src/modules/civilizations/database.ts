@@ -49,7 +49,7 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
       peopleBuilder.withChild(child)
     }
 
-    if(lineage) {
+    if (lineage) {
       peopleBuilder.withLineage(lineage)
     }
 

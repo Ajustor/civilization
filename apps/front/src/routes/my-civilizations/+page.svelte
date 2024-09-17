@@ -36,7 +36,6 @@
 		AlertDialogCancel,
 		AlertDialogAction
 	} from '$lib/components/ui/alert-dialog'
-	import { Block } from 'konsta/svelte'
 	import { type CivilizationType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import Cuboid from 'lucide-svelte/icons/cuboid'

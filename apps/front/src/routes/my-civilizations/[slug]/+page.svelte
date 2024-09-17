@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
 	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
-	
+
 	import type { BuildingType, PeopleType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
