@@ -9,7 +9,7 @@ import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 
 const INITIAL_CITIZEN_NUMBER = 6
-const INITIAL_CITIZEN_AGE = 12*16
+const INITIAL_CITIZEN_AGE = 12 * 16
 const INITIAL_CITIZEN_LIFE = 3
 const INITIAL_OCCUPATION_CHOICE = [OccupationTypes.CARPENTER, OccupationTypes.FARMER]
 const INITIAL_CIVILIZATION_RESOURCES = {

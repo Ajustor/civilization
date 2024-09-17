@@ -17,7 +17,6 @@
 	import { toast } from 'svelte-sonner'
 
 	import { newUserSchema } from '$lib/schemas/newUser'
-	import { Block } from 'konsta/svelte'
 
 	export let data: PageData
 

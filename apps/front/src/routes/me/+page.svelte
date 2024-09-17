@@ -14,7 +14,6 @@
 		FormLabel
 	} from '$lib/components/ui/form'
 	import { Input } from '$lib/components/ui/input'
-	import { Block } from 'konsta/svelte'
 
 	export let data: PageData
 
