@@ -7,12 +7,9 @@ import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 import { error } from '@sveltejs/kit'
 
 
-export const load: PageServerLoad = async ({ parent, url }) => {
-  const parentData = await parent()
+export const load: PageServerLoad = async () => {
 
-  const myCivilizations = await getMyCivilizations(parentData.authToken ?? '')
   return {
-    myCivilizations,
     civilizationCreationForm: await superValidate(zod(newCivilizationSchema))
   }
 }
