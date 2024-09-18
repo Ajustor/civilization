@@ -2,9 +2,9 @@ export const prerender = false
 import { Gender } from '@ajustor/simulation'
 import { getWorldsInfos } from '../services/api/world-api'
 import { arrayToMap } from '../utils/arrayToMap'
-import type { PageServerLoad } from './$types'
+import type { PageLoad } from './$types'
 
-export const load: PageServerLoad = async () => {
+export const load: PageLoad = async () => {
   const worlds = await getWorldsInfos()
   const aliveCivilizationsIndexedByWorldId = arrayToMap(worlds, ({ id }) => id, ({ civilizations }) => civilizations.filter(
     ({ people }) => people.length

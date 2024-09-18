@@ -4,16 +4,12 @@ import { createCivilization, getMyCivilizations } from '../../services/api/civil
 import type { Actions, PageServerLoad } from './$types'
 import { zod } from 'sveltekit-superforms/adapters'
 import { newCivilizationSchema } from '$lib/schemas/newCivilization'
-import { checkLogin } from '../../services/checkLogin'
 import { error } from '@sveltejs/kit'
 
 
-export const load: PageServerLoad = async ({ cookies, url }) => {
-  checkLogin(cookies, url)
+export const load: PageServerLoad = async () => {
 
-  const myCivilizations = await getMyCivilizations(cookies)
   return {
-    myCivilizations,
     civilizationCreationForm: await superValidate(zod(newCivilizationSchema))
   }
 }
@@ -27,8 +23,8 @@ export const actions: Actions = {
       })
     }
     try {
-      await createCivilization(cookies, form.data.name)
-      const myCivilizations = await getMyCivilizations(cookies)
+      await createCivilization(cookies.get('auth') ?? '', form.data.name)
+      const myCivilizations = await getMyCivilizations(cookies.get('auth') ?? '')
       message(form, { status: 'success', text: 'Votre civilisation a bien été créée' })
       return { form, myCivilizations }
     } catch (requestError) {

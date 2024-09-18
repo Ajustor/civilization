@@ -3,4 +3,4 @@ command = "bun run build"
 publish = "build"
 
 [context.production.environment]
-BACK_URL = "http://home.darthoit.eu:26064"
+PUBLIC_BACK_URL = "http://home.darthoit.eu:26064"

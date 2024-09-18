@@ -1,10 +1,9 @@
-import type { Cookies } from '@sveltejs/kit'
 import { client } from './client'
 
-export const getMyCivilizations = async (cookies: Cookies) => {
+export const getMyCivilizations = async (authToken: string) => {
   const { data: civilizationsInfos, error } = await client.civilizations.mine.get({
     headers: {
-      authorization: `Bearer ${cookies.get(('auth'))}`
+      authorization: `Bearer ${authToken}`
     }
   })
 
@@ -16,10 +15,10 @@ export const getMyCivilizations = async (cookies: Cookies) => {
   return civilizationsInfos.civilizations
 }
 
-export const getMyCivilizationFromId = async (cookies: Cookies, civilizationId: string) => {
+export const getMyCivilizationFromId = async (authToken: string, civilizationId: string) => {
   const { data: civilizationInfos, error } = await client.civilizations({ civilizationId }).get({
     headers: {
-      authorization: `Bearer ${cookies.get(('auth'))}`
+      authorization: `Bearer ${authToken}`
     }
   })
 
@@ -31,11 +30,11 @@ export const getMyCivilizationFromId = async (cookies: Cookies, civilizationId: 
   return civilizationInfos.civilization
 }
 
-export const createCivilization = async (cookies: Cookies, civilizationName: string) => {
+export const createCivilization = async (authToken: string, civilizationName: string) => {
   const { error } = await client.civilizations.post({ name: civilizationName },
     {
       headers: {
-        authorization: `Bearer ${cookies.get(('auth'))}`
+        authorization: `Bearer ${authToken}`
       }
     }
   )
@@ -46,11 +45,11 @@ export const createCivilization = async (cookies: Cookies, civilizationName: str
   }
 }
 
-export const deleteCivilization = async (cookies: Cookies, civilizationId: string) => {
+export const deleteCivilization = async (authToken: string, civilizationId: string) => {
   const { error } = await client.civilizations({ civilizationId }).delete({},
     {
       headers: {
-        authorization: `Bearer ${cookies.get(('auth'))}`
+        authorization: `Bearer ${authToken}`
       }
     }
   )
