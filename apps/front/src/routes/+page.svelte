@@ -83,7 +83,7 @@
 						<h2 class="card-title">Top 3 des civilisations les plus anciennes</h2>
 
 						<ol class="list-inside list-decimal">
-							{#each data.topCivilizationsIndexedByWorldId.get(world.id) as topCiv}
+							{#each data.topCivilizationsIndexedByWorldId.get(world.id) ?? [] as topCiv}
 								<li>{topCiv.name} avec {topCiv.livedMonths} mois vécu</li>
 							{:else}
 								Aucune civilisation n'est présente dans le monde
