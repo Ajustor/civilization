@@ -7,6 +7,7 @@ export const BASE_FOOD_GENERATION = 30_000_000
 export const BASE_WOOD_GENERATION = 15_000_000
 
 export type WorldInfos = {
+  id: string
   name: string
   resources: { type: ResourceTypes, quantity: number }[]
   month: number
@@ -106,6 +107,7 @@ export class World {
 
   public getInfos(): WorldInfos {
     return {
+      id: this.id,
       name: this.name,
       civilizations: formatCivilizations(this.civilizations),
       month: this.month % 12,

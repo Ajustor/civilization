@@ -56,19 +56,6 @@
 		{#each data.worlds as world}
 			<!-- content here -->
 			<Item title={world.name} class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-				{@const topCivs = () => {
-					const top = world.civilizations.sort(
-						(
-							{ livedMonths: firstCivilizationLivedMonths },
-							{ livedMonths: secondCivilizationLivedMonths }
-						) => secondCivilizationLivedMonths - firstCivilizationLivedMonths
-					)
-					return top.slice(0, 3) ?? []
-				}}
-				{@const aliveCivilizations = world.civilizations.filter(
-					({ people }) => people.length
-				).length}
-				{@const deadCivilizations = world.civilizations.length - aliveCivilizations}
 				<h2 class="text-center text-2xl md:col-span-2 lg:col-span-3">{world.name}</h2>
 				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 					<div class="card-body">
@@ -83,10 +70,11 @@
 					<div class="card-body">
 						<h2 class="card-title">Information sur les civilisations</h2>
 						<p>
-							Il y a actuellement {aliveCivilizations} civilisation en vie
+							Il y a actuellement {data.aliveCivilizationsIndexedByWorldId.get(world.id)} civilisation
+							en vie
 						</p>
 						<p>
-							et {deadCivilizations} civilisation mortes
+							et {data.deadCivilizationsIndexedByWorldId.get(world.id)} civilisation mortes
 						</p>
 					</div>
 				</div>
@@ -95,7 +83,7 @@
 						<h2 class="card-title">Top 3 des civilisations les plus anciennes</h2>
 
 						<ol class="list-inside list-decimal">
-							{#each topCivs() as topCiv}
+							{#each data.topCivilizationsIndexedByWorldId.get(world.id) as topCiv}
 								<li>{topCiv.name} avec {topCiv.livedMonths} mois vécu</li>
 							{:else}
 								Aucune civilisation n'est présente dans le monde
@@ -114,21 +102,10 @@
 						{/each}
 					</div>
 				</div>
-				{@const { men, women } = world.civilizations.reduce(
-					(count, { people }) => {
-						for (const person of people) {
-							if (person.gender === Gender.MALE) {
-								count.men++
-							}
-
-							if (person.gender === Gender.FEMALE) {
-								count.women++
-							}
-						}
-						return count
-					},
-					{ men: 0, women: 0 }
-				)}
+				{@const { men, women } = data.menAndWomenIndexedByWorldId.get(world.id) ?? {
+					men: 0,
+					women: 0
+				}}
 				<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
 					<div class="card-body">
 						<h2 class="card-title">Rapport homme/femme dans le monde</h2>
