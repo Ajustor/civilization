@@ -9,7 +9,11 @@ import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTab
 import { worldsTable } from '../../../db/schema/worldSchema'
 import { sqliteClient } from '../../libs/database'
 
-export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity): Promise<Civilization> {
+export type FieldsToRemove = {
+  lineage?: boolean
+}
+
+export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity, fieldsToRemove?: FieldsToRemove): Promise<Civilization> {
   const builder = new CivilizationBuilder()
   const civilizationResources = await dbClient.select().from(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
 
@@ -50,7 +54,7 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
       peopleBuilder.withChild(child)
     }
 
-    if (lineage) {
+    if (lineage && !fieldsToRemove?.lineage) {
       peopleBuilder.withLineage(lineage)
     }
 
@@ -65,8 +69,8 @@ export class CivilizationTable {
 
   }
 
-  private async buildCivilizations(...civilizations: CivilizationEntity[]): Promise<Civilization[]> {
-    return Promise.all(civilizations.map((civilization) => buildCivilization(this.client, civilization)))
+  private async buildCivilizations(fieldsToRemove: FieldsToRemove, ...civilizations: CivilizationEntity[]): Promise<Civilization[]> {
+    return Promise.all(civilizations.map((civilization) => buildCivilization(this.client, civilization, fieldsToRemove)))
   }
 
   async getAllByWorldId(worldId: string): Promise<Civilization[]> {
@@ -76,7 +80,7 @@ export class CivilizationTable {
       .from(civilizationsWorldTable)
       .where(eq(civilizationsWorldTable.worldId, worldId))
 
-    return Promise.all(civilizationIds.map(({ civilizationId }) => this.getById(civilizationId)))
+    return this.getByIds(civilizationIds.map(({ civilizationId }) => civilizationId))
   }
 
   async getByIds(civilizationIds: string[]): Promise<Civilization[]> {
@@ -85,7 +89,7 @@ export class CivilizationTable {
       .from(civilizationTable)
       .where(inArray(civilizationTable.id, civilizationIds))
 
-    return this.buildCivilizations(...civilizations)
+    return this.buildCivilizations({ lineage: true }, ...civilizations)
   }
 
   async getById(civilizationId: string): Promise<Civilization> {
@@ -102,7 +106,7 @@ export class CivilizationTable {
       .select()
       .from(civilizationTable)
 
-    return this.buildCivilizations(...civilizations)
+    return this.buildCivilizations({ lineage: true }, ...civilizations)
   }
 
   async getByUserId(userId: string): Promise<Civilization[]> {
@@ -126,7 +130,7 @@ export class CivilizationTable {
       .from(civilizationTable)
       .where(inArray(civilizationTable.id, civilizationsIds))
 
-    return this.buildCivilizations(...civilizations)
+    return this.buildCivilizations({ lineage: true }, ...civilizations)
   }
 
   async getByUserAndCivilizationId(userId: string, civilizationId: string): Promise<Civilization> {
