@@ -1,14 +1,12 @@
 import { passwordChangeSchema } from '$lib/schemas/passwordChanger'
 import { fail, superValidate } from 'sveltekit-superforms'
 import { changePassword, getUser } from '../../services/api/user-api'
-import { checkLogin } from '../../services/checkLogin'
 import type { User } from '../../stores/user'
 import type { Actions, PageServerLoad } from './$types'
 import { zod } from 'sveltekit-superforms/adapters'
 import { error } from '@sveltejs/kit'
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
-  checkLogin(cookies, url)
 
   const isLogged = !!cookies.get('auth')
   let user: User | null = null

@@ -19,5 +19,6 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
     url: url.pathname,
     isLogged,
     user,
+    authToken: cookies.get('auth')
   }
 }
