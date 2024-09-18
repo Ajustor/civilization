@@ -1,18 +1,13 @@
-import { Gender, OccupationTypes, PeopleEntity } from '@ajustor/simulation'
+import { BuildingType, BuildingTypes } from '@ajustor/simulation'
 import mongoose from 'mongoose'
 
 const { Schema } = mongoose
 
-const PeopleSchema = new Schema<PeopleEntity>({
-  name: String,
-  gender: Gender,
-  buildingMonthsLeft: Number,
-  id: String,
-  isBuilding: Boolean,
-  lifeCounter: Number,
-  month: Number,
-  occupation: OccupationTypes,
-  pregnancyMonthsLeft: Number,
+const BuildingSchema = new Schema<BuildingType>({
+  capacity: Number,
+  count: Number,
+  id: mongoose.Schema.Types.ObjectId,
+  type: BuildingTypes
 })
 
 // Schéma pour Civilization
@@ -34,12 +29,13 @@ const civilizationSchema = new Schema({
     default: 0
   },
   buildings: {
-    type: [{ type: BuildingType }],
+    type: [{ type: BuildingSchema }],
     required: true,
     default: []
   },
   people: {
-    type: [{ type: PeopleSchema }],
+    type: [{ type: Schema.Types.ObjectId }],
+    ref: 'People',
     required: true,
     default: []
   },
@@ -52,8 +48,3 @@ const civilizationSchema = new Schema({
 
 // Modèle Mongoose
 export const Civilization = mongoose.model('Civilization', civilizationSchema)
-
-
-const plop = await Civilization.find()
-
-plop.at(0)?.people.at(0)?.
