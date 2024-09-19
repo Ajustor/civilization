@@ -1,4 +1,4 @@
-import { BuildingType, BuildingTypes } from '@ajustor/simulation'
+import { BuildingType, BuildingTypes, ResourceType, ResourceTypes } from '@ajustor/simulation'
 import mongoose from 'mongoose'
 
 const { Schema } = mongoose
@@ -8,6 +8,11 @@ const BuildingSchema = new Schema<BuildingType>({
   count: Number,
   id: mongoose.Schema.Types.ObjectId,
   type: BuildingTypes
+})
+
+const ResourceSchema = new Schema<ResourceType>({
+  quantity: Number,
+  type: ResourceTypes
 })
 
 // Schéma pour Civilization
@@ -40,7 +45,9 @@ const civilizationSchema = new Schema({
     default: []
   },
   resources: {
-    type: [{}]
+    type: [{ type: ResourceSchema }],
+    required: true,
+    default: []
   }
 }, {
   timestamps: true
