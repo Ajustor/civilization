@@ -1,15 +1,10 @@
 import mongoose from 'mongoose'
+import { ResourceSchema } from './resourceSchema'
 
 const { Schema } = mongoose
 
 // Schéma pour World
 const worldSchema = new Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    index: true,
-    required: true,
-    auto: true,
-  },
   name: {
     type: String,
     unique: true,
@@ -19,11 +14,21 @@ const worldSchema = new Schema({
     type: Number,
     default: 0,
     required: true
+  },
+  resources: {
+    type: [ResourceSchema],
+    required: true,
+    default: []
+  },
+  civilizations: {
+    type: [{
+      type: mongoose.Schema.Types.ObjectId,
+    }],
+    ref: 'Civilization'
   }
 }, {
   timestamps: true
 })
 
-// Modèle Mongoose
-export const World = mongoose.model('World', worldSchema);
+export const WorldModel = mongoose.model('World', worldSchema);
 

@@ -9,7 +9,7 @@ import { logger } from '@bogeychan/elysia-logger'
 export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(logger())
   .decorate({
-    worldDbClient: new WorldsTable(db),
+    worldDbClient: new WorldsTable(),
     civilizationsDbClient: new CivilizationTable(db)
   })
   .use(
@@ -18,7 +18,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(15),
       async run() {
         console.time('monthPass')
-        const worldDbClient = new WorldsTable(db)
+        const worldDbClient = new WorldsTable()
         const civilizationsDbClient = new CivilizationTable(db)
 
         const worlds = await worldDbClient.getAll()

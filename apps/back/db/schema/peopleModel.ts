@@ -22,4 +22,4 @@ const PeopleSchema = new Schema({
   }
 })
 
-export const People = model('People', PeopleSchema)
+export const PeopleModel = model('People', PeopleSchema)

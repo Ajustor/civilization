@@ -28,6 +28,7 @@ services:
       - mongo
 
   mongo:
+    container_name: civilizations_mongo
     image: mongo
     restart: always
     environment:

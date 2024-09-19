@@ -1,43 +1,40 @@
+import mongoose from 'mongoose'
+import { WorldModel } from './db/schema/worldModel'
 import { ResourceTypes } from '@ajustor/simulation'
-import { civilizationTable } from './db/schema/civilizations'
-import { civilizationsResourcesTable } from './db/schema/civilizationsResourcesTable'
-import { civilizationsWorldTable } from './db/schema/civilizationsWorldsTable'
-import { db } from './src/libs/database'
-import { usersCivilizationTable } from './db/schema/usersCivilizationsTable'
-import { worldsResourcesTable } from './db/schema/worldsResourcesTable'
-import { worldsTable } from './db/schema/worldSchema'
 
-await db.delete(worldsTable)
-await db.delete(worldsResourcesTable)
-await db.delete(usersCivilizationTable)
-await db.delete(civilizationTable)
-await db.delete(civilizationsResourcesTable)
-await db.delete(civilizationsWorldTable)
+async function seed(): Promise<void> {
+  await WorldModel.deleteMany()
+  const newWorld = await WorldModel.create({
+    name: 'The Holy kingdom',
+    month: 0,
+    resources: [
+      {
+        resourceType: ResourceTypes.FOOD,
+        quantity: 10000
+      },
+      {
+        resourceType: ResourceTypes.WOOD,
+        quantity: 5000
+      },
+      {
+        resourceType: ResourceTypes.STONE,
+        quantity: 5000
+      }
+    ]
+  })
 
-await db.insert(worldsTable).values([
-  { name: 'The Holy kingdom', month: 0 }
-])
+  console.log('World inserted')
 
-const worlds = await db.select().from(worldsTable)
+}
 
-await db.insert(worldsResourcesTable).values(worlds.flatMap(({ id }) => {
-  return [
-    {
-      worldId: id,
-      resourceType: ResourceTypes.FOOD,
-      quantity: 10000
-    },
-    {
-      worldId: id,
-      resourceType: ResourceTypes.WOOD,
-      quantity: 5000
-    },
-    {
-      worldId: id,
-      resourceType: ResourceTypes.STONE,
-      quantity: 5000
-    }
-  ]
-}))
+try {
+  await mongoose.connect('mongodb://root:example@mongo:27017/')
 
-console.log(`Seeding complete.`)
+  console.log('MongoDB Connected')
+
+  await seed()
+
+  process.exit(0)
+} catch (e) {
+  console.error(e.message)
+}

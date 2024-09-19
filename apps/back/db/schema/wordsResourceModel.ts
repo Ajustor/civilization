@@ -5,12 +5,6 @@ const { Schema } = mongoose
 
 // Schéma pour WorldsResources
 const worldsResourcesSchema = new Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    index: true,
-    required: true,
-    auto: true,
-  },
   worldId: {
     type: Schema.Types.ObjectId,
     ref: 'World', // Référence au modèle World
