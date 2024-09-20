@@ -23,6 +23,7 @@ export * from './builders'
 export * from './formatters'
 
 type PeopleType = PeopleEntity & {
+  id: string,
   years: number
 }
 type CivilizationEntity = typeof Civilization

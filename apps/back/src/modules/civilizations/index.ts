@@ -4,7 +4,6 @@ import { names, uniqueNamesGenerator } from 'unique-names-generator'
 
 import { CivilizationTable } from './database'
 import { authorization } from '../../libs/handlers/authorization'
-import { db } from '../../libs/database'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 
@@ -21,7 +20,7 @@ const INITIAL_CIVILIZATION_RESOURCES = {
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
   .use(jwtMiddleware)
-  .decorate({ civilizationDbClient: new CivilizationTable(db) })
+  .decorate({ civilizationDbClient: new CivilizationTable() })
   .get('', async ({ civilizationDbClient, log }) => {
     const civilizations = await civilizationDbClient.getAll()
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
@@ -33,6 +32,9 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   })
   .get('/:civilizationId', async ({ user, civilizationDbClient, params: { civilizationId } }) => {
     const civilization = await civilizationDbClient.getByUserAndCivilizationId(user.id, civilizationId)
+    if (!civilization) {
+      return { civilization: undefined }
+    }
     return { civilization: formatCivilizations([civilization])[0] }
   })
   .post('', async ({ civilizationDbClient, body, log, user }) => {

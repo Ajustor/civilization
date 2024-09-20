@@ -3,10 +3,12 @@ import mongoose from 'mongoose'
 
 const { Schema } = mongoose
 
-export const ResourceSchema = new Schema({
+const ResourceSchema = new Schema({
   quantity: Number,
   resourceType: {
     type: String,
     enum: ResourceTypes
   }
 })
+
+export { ResourceSchema }

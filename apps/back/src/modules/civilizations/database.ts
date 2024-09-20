@@ -1,30 +1,22 @@
-import { BuildingTypes, Civilization, CivilizationBuilder, Gender, House, PeopleBuilder, Resource } from '@ajustor/simulation'
-import { CivilizationEntity, civilizationTable } from '../../../db/schema/civilizations'
-import { and, count, eq, inArray } from 'drizzle-orm'
+import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, Gender, House, PeopleBuilder, Resource, ResourceTypes } from '@ajustor/simulation'
 
-import { LibSQLDatabase } from 'drizzle-orm/libsql'
-import { civilizationsResourcesTable } from '../../../db/schema/civilizationsResourcesTable'
-import { civilizationsWorldTable } from '../../../db/schema/civilizationsWorldsTable'
-import { usersCivilizationTable } from '../../../db/schema/usersCivilizationsTable'
-import { worldsTable } from '../../../db/schema/worldSchema'
-import { sqliteClient } from '../../libs/database'
+import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
 
-export type FieldsToRemove = {
-  lineage?: boolean
-}
+type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
-export async function buildCivilization(dbClient: LibSQLDatabase, civilization: CivilizationEntity, fieldsToRemove?: FieldsToRemove): Promise<Civilization> {
+type MongoCivilizationType = CivilizationType & { resources: { quantity: number, resourceType: ResourceTypes }[], buildings: MongoBuildingType[] }
+
+const civilizationMapper = (civilization: MongoCivilizationType): Civilization => {
   const builder = new CivilizationBuilder()
-  const civilizationResources = await dbClient.select().from(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilization.id))
 
-  for (const civilizationResource of civilizationResources) {
+  for (const civilizationResource of civilization.resources) {
     const resource = new Resource(civilizationResource.resourceType, civilizationResource.quantity)
     builder.addResource(resource)
   }
 
 
   for (const building of civilization.buildings) {
-    if (building.type === BuildingTypes.HOUSE) {
+    if (building.buildingType === BuildingTypes.HOUSE) {
       const house = new House(building.capacity ?? 0)
       house.count = building.count
 
@@ -54,7 +46,7 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
       peopleBuilder.withChild(child)
     }
 
-    if (lineage && !fieldsToRemove?.lineage) {
+    if (lineage) {
       peopleBuilder.withLineage(lineage)
     }
 
@@ -64,174 +56,166 @@ export async function buildCivilization(dbClient: LibSQLDatabase, civilization: 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
 }
 
+
+export type FieldsToRemove = {
+  lineage?: boolean
+}
+
 export class CivilizationTable {
-  constructor(private readonly client: LibSQLDatabase) {
+  constructor() {
 
-  }
-
-  private async buildCivilizations(fieldsToRemove: FieldsToRemove, ...civilizations: CivilizationEntity[]): Promise<Civilization[]> {
-    return Promise.all(civilizations.map((civilization) => buildCivilization(this.client, civilization, fieldsToRemove)))
   }
 
   async getAllByWorldId(worldId: string): Promise<Civilization[]> {
-    const civilizationIds = await this.client.select({
-      civilizationId: civilizationsWorldTable.civilizationId
-    })
-      .from(civilizationsWorldTable)
-      .where(eq(civilizationsWorldTable.worldId, worldId))
+    const worldWithCivilizations = await WorldModel.findOne({ _id: worldId }).populate<{ civilizations: MongoCivilizationType[] }>({
+      path: 'civilizations',
+      populate: {
+        path: 'people',
+      }
+    }).exec()
 
-    return this.getByIds(civilizationIds.map(({ civilizationId }) => civilizationId))
+    if (!worldWithCivilizations?.civilizations?.length) {
+      return []
+    }
+
+    console.log(worldWithCivilizations)
+
+    return worldWithCivilizations.civilizations.map(civilizationMapper)
   }
 
   async getByIds(civilizationIds: string[]): Promise<Civilization[]> {
-    const civilizations = await this.client
-      .select()
-      .from(civilizationTable)
-      .where(inArray(civilizationTable.id, civilizationIds))
+    const civilizations = await CivilizationModel.find<MongoCivilizationType>({ _id: { $in: civilizationIds } }).populate('people')
 
-    return this.buildCivilizations({ lineage: true }, ...civilizations)
+    return civilizations.map(civilizationMapper)
   }
 
   async getById(civilizationId: string): Promise<Civilization> {
-    const [civilization] = await this.client
-      .select()
-      .from(civilizationTable)
-      .where(eq(civilizationTable.id, civilizationId))
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId).populate('people')
 
-    return buildCivilization(this.client, civilization)
+    if (!civilization) {
+      throw new Error('It look like your civilization disapear')
+    }
+
+    return civilizationMapper(civilization)
   }
 
   async getAll(): Promise<Civilization[]> {
-    const civilizations = await this.client
-      .select()
-      .from(civilizationTable)
+    const civilizations = await CivilizationModel.find<MongoCivilizationType>().populate('people')
 
-    return this.buildCivilizations({ lineage: true }, ...civilizations)
+    return civilizations.map(civilizationMapper)
   }
 
   async getByUserId(userId: string): Promise<Civilization[]> {
-    const userCivilizationsIds = await this.client
-      .select()
-      .from(usersCivilizationTable)
-      .where(
-        eq(usersCivilizationTable.userId, userId),
-      )
-
-    const civilizationsIds = userCivilizationsIds.reduce<string[]>((ids, { civilizationId }) => {
-      if (civilizationId) {
-        return [...ids, civilizationId]
+    const user = await UserModel.findOne({ _id: userId }).populate<{ civilizations: MongoCivilizationType[] }>(
+      {
+        path: 'civilizations',
+        model: CivilizationModel,
+        populate: {
+          path: 'people',
+          model: PersonModel
+        }
       }
-      return ids
-    }, [])
+    )
 
-
-    const civilizations = await this.client
-      .select()
-      .from(civilizationTable)
-      .where(inArray(civilizationTable.id, civilizationsIds))
-
-    return this.buildCivilizations({ lineage: true }, ...civilizations)
-  }
-
-  async getByUserAndCivilizationId(userId: string, civilizationId: string): Promise<Civilization> {
-    const [{ value }] = await this.client
-      .select({ value: count(usersCivilizationTable.id) })
-      .from(usersCivilizationTable)
-      .where(
-        and(
-          eq(usersCivilizationTable.userId, userId),
-          eq(usersCivilizationTable.civilizationId, civilizationId),
-        )
-      )
-
-    if (!value) {
-      throw new Error(`No civilization found for this user with id ${civilizationId}`)
+    if (!user?.civilizations?.length) {
+      return []
     }
 
-    const [civilization] = await this.client
-      .select()
-      .from(civilizationTable)
-      .where(eq(civilizationTable.id, civilizationId))
+    return user.civilizations.map(civilizationMapper)
+  }
 
-    return buildCivilization(this.client, civilization)
+  async getByUserAndCivilizationId(userId: string, civilizationId: string): Promise<Civilization | undefined> {
+    const user = await UserModel.findOne({ _id: userId }).populate<{ civilizations: MongoCivilizationType[] }>({
+      path: 'civilizations',
+      model: CivilizationModel,
+      populate: {
+        path: 'people',
+        model: PersonModel
+      }
+    })
+
+    const civilization = user?.civilizations.find(({ id }) => id === civilizationId)
+
+    if (!civilization) {
+      return undefined
+    }
+
+    return civilizationMapper(civilization)
   }
 
 
   async create(userId: string, civilization: Civilization) {
-    const [createdCivilization] = await this.client.insert(civilizationTable).values({
-      people: civilization.people.map((person) => person.formatToEntity()),
-      buildings: civilization.buildings.map((building) => building.formatToType()),
-      name: civilization.name
-    }).returning({ id: civilizationTable.id })
-
-    await this.client.insert(usersCivilizationTable).values({
-      civilizationId: createdCivilization.id,
-      userId
-    })
-
-    for (const civilizationResource of civilization.resources) {
-      await this.client.insert(civilizationsResourcesTable).values({
-        resourceType: civilizationResource.type,
-        quantity: civilizationResource.quantity,
-        civilizationId: createdCivilization.id
-      })
+    const user = await UserModel.findOne({ _id: userId })
+    const newPeople = []
+    for (const person of civilization.people) {
+      const newPerson = await PersonModel.create(person.formatToEntity())
+      newPeople.push(newPerson._id)
     }
-
-    const [world] = await this.client.select().from(worldsTable)
-
-    await this.client.insert(civilizationsWorldTable).values({
-      civilizationId: createdCivilization.id,
-      worldId: world.id,
+    const newCivilization = await CivilizationModel.create({
+      ...civilization,
+      resources: civilization.resources.map(({ type, quantity }) => ({ resourceType: type, quantity })),
+      people: newPeople
     })
+
+    user?.civilizations.push(newCivilization._id)
+    user?.save()
+    const world = await WorldModel.findOne()
+
+    world?.civilizations.push(newCivilization._id)
+    world?.save()
   }
 
   async saveAll(civilizations: Civilization[]) {
-    const queries: { params: any[], sql: string }[] = []
-    for (const civilization of civilizations) {
-      queries.push(this.client.update(civilizationTable).set({
-        livedMonths: civilization.livedMonths,
-        people: civilization.people.map((person) => person.formatToEntity()),
-        buildings: civilization.buildings.map((building) => building.formatToType()),
-      }).where(eq(civilizationTable.id, civilization.id)).toSQL())
-      for (const civilizationResource of civilization.resources) {
-        queries.push(this.client.update(civilizationsResourcesTable).set({
-          quantity: civilizationResource.quantity,
-        }).where(
-          and(
-            eq(civilizationsResourcesTable.civilizationId, civilization.id),
-            eq(civilizationsResourcesTable.resourceType, civilizationResource.type),
-          )
-        ).toSQL())
+    await Promise.all(civilizations.map(async (civilization) => {
+      const oldCivilization = await CivilizationModel.findOne({ _id: civilization.id })
+
+      if (!oldCivilization) {
+        throw new Error('Your civilization disapear from our data')
       }
-    }
-    // Use the read db client is required here (system limit)
-    await sqliteClient.batch(queries.map(({ params, ...rest }) => ({ ...rest, args: params })))
+
+      const alivePeople = oldCivilization.people.filter((id) => civilization.people.some(({ id: alivePeopleId }) => id.toString() === alivePeopleId))
+      const deadPeople = oldCivilization.people.filter((id) => !alivePeople.includes(id))
+      await PersonModel.deleteMany({ _id: { $in: deadPeople } })
+
+      await Promise.all(civilization.people.map(async (person) => {
+        if (!person.id) {
+          const newPerson = await PersonModel.create(person.formatToEntity())
+          alivePeople.push(newPerson._id)
+        } else {
+          await PersonModel.findOneAndUpdate({ _id: person.id }, person.formatToEntity())
+        }
+      }))
+
+      await CivilizationModel.findOneAndUpdate({ _id: civilization.id }, {
+        buildings: civilization.buildings.map(({ count, getType, capacity }) => ({ capacity, count, buildingType: getType() })),
+        livedMonths: civilization.livedMonths,
+        resources: civilization.resources.map(({ type, quantity }) => ({ resourceType: type, quantity })),
+        people: alivePeople
+      })
+    }))
   }
 
   async delete(userId: string, civilizationId: string) {
-    const [civilizationLink] = await this.client
-      .select()
-      .from(usersCivilizationTable)
-      .where(
-        and(
-          eq(usersCivilizationTable.userId, userId),
-          eq(usersCivilizationTable.civilizationId, civilizationId)
-        )
-      )
+    const user = await UserModel.findOne({ _id: userId }).populate<{ civilizations: CivilizationType[] }>({
+      path: 'civilizations',
+      populate: {
+        path: 'people',
+      }
+    })
 
-    if (!civilizationLink) {
+    const civilizationToDelete = user?.civilizations.find(({ id }) => id === civilizationId)
+
+    if (!user?.civilizations?.length || !civilizationToDelete) {
       throw new Error('No civilization found')
     }
 
-    await this.client.delete(civilizationsResourcesTable).where(eq(civilizationsResourcesTable.civilizationId, civilizationId))
-    await this.client.delete(civilizationsWorldTable).where(eq(civilizationsWorldTable.civilizationId, civilizationId))
-    await this.client.delete(usersCivilizationTable).where(eq(usersCivilizationTable.civilizationId, civilizationId))
-    await this.client.delete(civilizationTable).where(eq(civilizationTable.id, civilizationId))
+    await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
+
   }
 
   async exist(civilizationName: string): Promise<boolean> {
-    const [{ value }] = await this.client.select({ value: count(civilizationTable.id) }).from(civilizationTable).where(eq(civilizationTable.name, civilizationName))
+    const exists = await CivilizationModel.exists({ name: civilizationName })
 
-    return value !== 0
+    return !!exists?._id
   }
 }

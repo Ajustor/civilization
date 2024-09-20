@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
-import { WorldModel } from './db/schema/worldModel'
 import { ResourceTypes } from '@ajustor/simulation'
+import { WorldModel } from './src/libs/database/models'
 
 async function seed(): Promise<void> {
   await WorldModel.deleteMany()

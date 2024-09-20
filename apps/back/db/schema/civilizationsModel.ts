@@ -1,23 +1,19 @@
-import { BuildingType, BuildingTypes } from '@ajustor/simulation'
-import mongoose from 'mongoose'
+import { BuildingTypes } from '@ajustor/simulation'
+import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
+import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../src/libs/database/models'
 
-const { Schema } = mongoose
 
-const BuildingSchema = new Schema<BuildingType>({
+const BuildingSchema = new Schema({
   capacity: Number,
   count: Number,
-  id: mongoose.Schema.Types.ObjectId,
-  type: BuildingTypes
+  buildingType: {
+    type: String,
+    enum: BuildingTypes
+  }
 })
 
 const civilizationSchema = new Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    index: true,
-    required: true,
-    auto: true,
-  },
   name: {
     type: String,
     required: true,
@@ -34,8 +30,7 @@ const civilizationSchema = new Schema({
     default: []
   },
   people: {
-    type: [{ type: Schema.Types.ObjectId }],
-    ref: 'People',
+    type: [{ type: Schema.Types.ObjectId, ref: 'People', }],
     required: true,
     default: []
   },
@@ -48,4 +43,18 @@ const civilizationSchema = new Schema({
   timestamps: true
 })
 
-export const CivilizationModel = mongoose.model('Civilization', civilizationSchema)
+
+civilizationSchema.pre('deleteOne', async function () {
+  const { _id: id } = this.getQuery()
+  const civilization = await CivilizationModel.findById(id).populate('people')
+
+  if (!civilization) {
+    throw new Error('It seams to have a big issue')
+  }
+
+  await PersonModel.deleteMany({ _id: { $in: civilization.people.map(({ id }) => id) } })
+  await WorldModel.updateMany({}, { $pull: { civilizations: id } })
+  await UserModel.updateMany({}, { $pull: { civilizations: id } })
+})
+
+export { civilizationSchema }

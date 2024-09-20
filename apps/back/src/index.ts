@@ -10,7 +10,7 @@ import { version } from '../package.json'
 import { worldModule } from './modules/world'
 import mongoose from 'mongoose'
 
-mongoose.connect('mongodb://root:example@mongo:27017/')
+mongoose.connect(Bun.env.mongoConnectString ?? '')
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
 
 const app = new Elysia()

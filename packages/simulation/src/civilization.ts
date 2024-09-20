@@ -11,13 +11,13 @@ import { People } from './people/people'
 import type { World } from './world'
 import { isWithinChance } from './utils'
 
-const PREGNANCY_PROBABILITY = 75
+const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
-const CARPENTER_RESOURCES_GET = 15
+const CARPENTER_RESOURCES_GET = 20
 
 export class Civilization {
     public id!: string
-    name = uniqueNamesGenerator({ dictionaries: [countries] })
+    public name = uniqueNamesGenerator({ dictionaries: [countries] })
     private _people: People[]
     private _resources: Resource[]
     private _livedMonths: number = 0
@@ -166,8 +166,10 @@ export class Civilization {
 
             for (const person of people) {
                 const eatFactor = person.eatFactor
-                if (civilizationFood.quantity >= eatFactor && person.lifeCounter < 50) {
-                    person.increaseLife(1)
+                if (civilizationFood.quantity >= eatFactor) {
+                    if (person.lifeCounter < 50) {
+                        person.increaseLife(1)
+                    }
                     civilizationFood.decrease(eatFactor)
                 } else {
                     person.decreaseLife()

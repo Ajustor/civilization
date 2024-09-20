@@ -14,6 +14,7 @@
 	} from '$lib/components/ui/accordion'
 	import { resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
+	import PeopleTree from './datatables/PeopleTree.svelte'
 
 	export let data: PageData
 

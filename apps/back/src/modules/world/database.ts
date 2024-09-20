@@ -1,5 +1,5 @@
 import { World, WorldBuilder, Resource, ResourceTypes } from '@ajustor/simulation'
-import { WorldModel } from '../../../db/schema/worldModel'
+import { WorldModel } from '../../libs/database/models'
 
 export type GetOptions = {
   populate: {

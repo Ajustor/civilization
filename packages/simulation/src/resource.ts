@@ -10,7 +10,7 @@ export enum ResourceTypes {
 
 export class Resource {
 
-  constructor(private _type: ResourceTypes, private _quantity: number) {}
+  constructor(private _type: ResourceTypes, private _quantity: number) { }
 
   get type(): ResourceTypes {
     return this._type

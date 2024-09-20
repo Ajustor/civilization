@@ -1,10 +1,7 @@
-import mongoose from 'mongoose'
+import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
 
-const { Schema } = mongoose
-
-// Schéma pour World
-const worldSchema = new Schema({
+export const worldSchema = new Schema({
   name: {
     type: String,
     unique: true,
@@ -20,15 +17,13 @@ const worldSchema = new Schema({
     required: true,
     default: []
   },
-  civilizations: {
-    type: [{
-      type: mongoose.Schema.Types.ObjectId,
-    }],
+  civilizations: [{
+    type: Schema.Types.ObjectId,
     ref: 'Civilization'
-  }
+  }]
+
 }, {
   timestamps: true
 })
 
-export const WorldModel = mongoose.model('World', worldSchema);
 

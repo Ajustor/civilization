@@ -1,6 +1,5 @@
 import Elysia, { NotFoundError, t } from 'elysia'
 import { UsersTable } from '../users/database'
-import { db } from '../../libs/database'
 import { jwtMiddleware } from '../../libs/jwt'
 import { authorization } from '../../libs/handlers/authorization'
 import { addDays } from 'date-fns'
@@ -12,7 +11,7 @@ export const authModule = new Elysia({ prefix: '/auth' })
   .use(jwtMiddleware)
   .use(logger())
   .use(emailSender)
-  .decorate({ userDbClient: new UsersTable(db) })
+  .decorate({ userDbClient: new UsersTable() })
   .post('', async ({ jwt, body, set, cookie: { auth }, userDbClient }) => {
     const user = await userDbClient.getAuthUser({ ...body })
     if (!user) {

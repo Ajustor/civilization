@@ -3,23 +3,22 @@ import { Patterns, cron } from '@elysiajs/cron'
 
 import { CivilizationTable } from '../civilizations/database'
 import { WorldsTable } from './database'
-import { db } from '../../libs/database'
 import { logger } from '@bogeychan/elysia-logger'
 
 export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(logger())
   .decorate({
     worldDbClient: new WorldsTable(),
-    civilizationsDbClient: new CivilizationTable(db)
+    civilizationsDbClient: new CivilizationTable()
   })
   .use(
     cron({
       name: 'monthPass',
-      pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(15),
+      pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(1),
       async run() {
         console.time('monthPass')
         const worldDbClient = new WorldsTable()
-        const civilizationsDbClient = new CivilizationTable(db)
+        const civilizationsDbClient = new CivilizationTable()
 
         const worlds = await worldDbClient.getAll()
         console.log('Worlds retrieved, start passing a month')
