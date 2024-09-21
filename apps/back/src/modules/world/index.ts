@@ -1,9 +1,10 @@
-import { Elysia, NotFoundError } from 'elysia'
+import { Elysia, NotFoundError, t } from 'elysia'
 import { Patterns, cron } from '@elysiajs/cron'
 
 import { CivilizationTable } from '../civilizations/database'
 import { WorldsTable } from './database'
 import { logger } from '@bogeychan/elysia-logger'
+import { Gender } from '@ajustor/simulation'
 
 export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(logger())
@@ -61,4 +62,61 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
 
     const worldInfos = worlds.map((world) => world.getInfos())
     return worldInfos
+  })
+  .get('/:worldId/stats', async ({ log, worldDbClient, civilizationsDbClient, params: { worldId }, query: { withAliveCount, withDeadCount, withMenAndWomenRatio, withTopCivilizations } }) => {
+    const world = await worldDbClient.getById(worldId)
+
+    if (!world) {
+      throw new NotFoundError('No world found')
+    }
+
+    const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
+    world.addCivilization(...worldCivilizations)
+
+    const worldInfos = world.getInfos()
+
+    const aliveCivilizations = world.civilizations.filter(
+      ({ people }) => people.length
+    ).length
+
+    const deadCivilizations = world.civilizations.length - aliveCivilizations
+
+    const menAndWomen = worldInfos.civilizations.reduce(
+      (count, { people }) => {
+        for (const person of people) {
+          if (person.gender === Gender.MALE) {
+            count.men++
+          }
+
+          if (person.gender === Gender.FEMALE) {
+            count.women++
+          }
+        }
+        return count
+      },
+      { men: 0, women: 0 }
+    )
+
+    const topCivilizations = worldInfos.civilizations.sort(
+      (
+        { livedMonths: firstCivilizationLivedMonths },
+        { livedMonths: secondCivilizationLivedMonths }
+      ) => secondCivilizationLivedMonths - firstCivilizationLivedMonths
+    ).slice(0, 3).map(({ name, livedMonths }) => ({ name, livedMonths }))
+
+    console.log(aliveCivilizations, deadCivilizations, topCivilizations, menAndWomen)
+
+    return {
+      ...(withAliveCount && { aliveCivilizations }),
+      ...(withDeadCount && { deadCivilizations }),
+      ...(withTopCivilizations && { topCivilizations }),
+      ...(withMenAndWomenRatio && { menAndWomen })
+    }
+  }, {
+    query: t.Optional(t.Object({
+      withAliveCount: t.Optional(t.Boolean()),
+      withDeadCount: t.Optional(t.Boolean()),
+      withTopCivilizations: t.Optional(t.Boolean()),
+      withMenAndWomenRatio: t.Optional(t.Boolean()),
+    }))
   })

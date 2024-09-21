@@ -25,7 +25,7 @@ const seasons = {
 export class World {
   id: string
   private resources: Resource[] = []
-  private civilizations: Civilization[] = []
+  private _civilizations: Civilization[] = []
 
   constructor(private readonly name = 'The world', private month = 1) {
     this.id = ''
@@ -36,8 +36,12 @@ export class World {
     return currentSeason ?? ''
   }
 
+  get civilizations(): Civilization[] {
+    return this._civilizations
+  }
+
   public addCivilization(...civilizations: Civilization[]) {
-    this.civilizations.push(...civilizations)
+    this._civilizations.push(...civilizations)
   }
 
   public getYear(): number {
@@ -100,7 +104,7 @@ export class World {
       }
     }
 
-    for (const civilization of this.civilizations) {
+    for (const civilization of this._civilizations) {
       civilization.passAMonth(this)
     }
   }
@@ -109,7 +113,7 @@ export class World {
     return {
       id: this.id,
       name: this.name,
-      civilizations: formatCivilizations(this.civilizations),
+      civilizations: formatCivilizations(this._civilizations),
       month: this.month % 12,
       resources: this.resources.map((resource) => ({
         type: resource.type,

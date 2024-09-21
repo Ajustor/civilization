@@ -78,8 +78,6 @@ export class CivilizationTable {
       return []
     }
 
-    console.log(worldWithCivilizations)
-
     return worldWithCivilizations.civilizations.map(civilizationMapper)
   }
 
