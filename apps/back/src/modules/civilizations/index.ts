@@ -27,11 +27,11 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   })
   .use(authorization('Actions on civilization require auth'))
   .get('/mine', async ({ user, civilizationDbClient }) => {
-    const civilizations = await civilizationDbClient.getByUserId(user.id)
+    const civilizations = await civilizationDbClient.getByUserId(user.id, { people: true })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
   .get('/:civilizationId', async ({ user, civilizationDbClient, params: { civilizationId } }) => {
-    const civilization = await civilizationDbClient.getByUserAndCivilizationId(user.id, civilizationId)
+    const civilization = await civilizationDbClient.getByUserAndCivilizationId(user.id, civilizationId, { people: true })
     if (!civilization) {
       return { civilization: undefined }
     }

@@ -26,7 +26,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         console.timeLog('monthPass', 'Worlds retrieved, start passing a month')
         for (const world of worlds) {
           console.timeLog('monthPass', 'Retrieve civilizations')
-          const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
+          const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id, { people: true })
           world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
           console.timeLog('monthPass', 'Civilizations retrieved, pass a month')
 
@@ -70,7 +70,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       throw new NotFoundError('No world found')
     }
 
-    const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
+    const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id, { people: true })
     world.addCivilization(...worldCivilizations)
 
     const worldInfos = world.getInfos()

@@ -1,4 +1,4 @@
-import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, Gender, House, PeopleBuilder, Resource, ResourceTypes } from '@ajustor/simulation'
+import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, Gender, House, PeopleBuilder, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
 
 import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
 
@@ -6,7 +6,7 @@ type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
 type MongoCivilizationType = CivilizationType & { resources: { quantity: number, resourceType: ResourceTypes }[], buildings: MongoBuildingType[] }
 
-const civilizationMapper = (civilization: MongoCivilizationType): Civilization => {
+const civilizationMapper = (civilization: MongoCivilizationType, populate?: CivilizationPopulate): Civilization => {
   const builder = new CivilizationBuilder()
 
   for (const civilizationResource of civilization.resources) {
@@ -24,41 +24,44 @@ const civilizationMapper = (civilization: MongoCivilizationType): Civilization =
     }
   }
 
-  builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
-    const peopleBuilder = new PeopleBuilder()
-      .withId(id)
-      .withGender(gender)
-      .withMonth(month)
-      .withName(name)
-      .withLifeCounter(lifeCounter)
-      .withIsBuilding(isBuilding)
-      .withBuildingMonthsLeft(buildingMonthsLeft)
+  if (populate?.people) {
+    builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
+      const peopleBuilder = new PeopleBuilder()
+        .withId(id)
+        .withGender(gender)
+        .withMonth(month)
+        .withName(name)
+        .withLifeCounter(lifeCounter)
+        .withIsBuilding(isBuilding)
+        .withBuildingMonthsLeft(buildingMonthsLeft)
 
-    if (occupation) {
-      peopleBuilder.withOccupation(occupation)
-    }
+      if (occupation) {
+        peopleBuilder.withOccupation(occupation)
+      }
 
-    if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
-      peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
-    }
+      if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
+        peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
+      }
 
-    if (child && gender === Gender.FEMALE) {
-      peopleBuilder.withChild(child)
-    }
+      if (child && gender === Gender.FEMALE) {
+        peopleBuilder.withChild(child)
+      }
 
-    if (lineage) {
-      peopleBuilder.withLineage(lineage)
-    }
+      if (lineage) {
+        peopleBuilder.withLineage(lineage)
+      }
 
-    return peopleBuilder.build()
-  }))
+      return peopleBuilder.build()
+    }))
+  }
+
 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
 }
 
 
-export type FieldsToRemove = {
-  lineage?: boolean
+export type CivilizationPopulate = {
+  people: boolean
 }
 
 export class CivilizationTable {
@@ -66,25 +69,38 @@ export class CivilizationTable {
 
   }
 
-  async getAllByWorldId(worldId: string): Promise<Civilization[]> {
-    const worldWithCivilizations = await WorldModel.findOne({ _id: worldId }).populate<{ civilizations: MongoCivilizationType[] }>({
-      path: 'civilizations',
-      populate: {
-        path: 'people',
-      }
-    }).exec()
+  async getAllByWorldId(worldId: string, populate?: CivilizationPopulate): Promise<Civilization[]> {
+    const world = await WorldModel.findOne({ _id: worldId })
 
-    if (!worldWithCivilizations?.civilizations?.length) {
+    if (!world) {
       return []
     }
 
-    return worldWithCivilizations.civilizations.map(civilizationMapper)
+    const civilizationsRequest = CivilizationModel.find<MongoCivilizationType>({ _id: { $in: world.civilizations } })
+
+    if (populate?.people) {
+      civilizationsRequest.populate<{ people: PeopleEntity }>('people')
+    }
+
+    const civilizations = await civilizationsRequest
+
+    if (!civilizations?.length) {
+      return []
+    }
+
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
-  async getByIds(civilizationIds: string[]): Promise<Civilization[]> {
-    const civilizations = await CivilizationModel.find<MongoCivilizationType>({ _id: { $in: civilizationIds } }).populate('people')
+  async getByIds(civilizationIds: string[], populate?: CivilizationPopulate): Promise<Civilization[]> {
+    const civilizationRequest = CivilizationModel.find<MongoCivilizationType>({ _id: { $in: civilizationIds } })
 
-    return civilizations.map(civilizationMapper)
+    if (populate?.people) {
+      civilizationRequest.populate('people')
+    }
+
+    const civilizations = await civilizationRequest
+
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
   async getById(civilizationId: string): Promise<Civilization> {
@@ -97,48 +113,56 @@ export class CivilizationTable {
     return civilizationMapper(civilization)
   }
 
-  async getAll(): Promise<Civilization[]> {
-    const civilizations = await CivilizationModel.find<MongoCivilizationType>().populate('people')
+  async getAll(populate?: CivilizationPopulate): Promise<Civilization[]> {
+    const civilizationsRequest = CivilizationModel.find<MongoCivilizationType>()
 
-    return civilizations.map(civilizationMapper)
+    if (populate?.people) {
+      civilizationsRequest.populate('people')
+    }
+
+    const civilizations = await civilizationsRequest
+
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
-  async getByUserId(userId: string): Promise<Civilization[]> {
-    const user = await UserModel.findOne({ _id: userId }).populate<{ civilizations: MongoCivilizationType[] }>(
-      {
-        path: 'civilizations',
-        model: CivilizationModel,
-        populate: {
-          path: 'people',
-          model: PersonModel
-        }
-      }
-    )
+  async getByUserId(userId: string, populate?: CivilizationPopulate): Promise<Civilization[]> {
+    const user = await UserModel.findOne({ _id: userId })
 
-    if (!user?.civilizations?.length) {
+    if (!user) {
       return []
     }
 
-    return user.civilizations.map(civilizationMapper)
-  }
+    const civilizationRequest = CivilizationModel.find<MongoCivilizationType>({ _id: { $in: user.civilizations } })
 
-  async getByUserAndCivilizationId(userId: string, civilizationId: string): Promise<Civilization | undefined> {
-    const user = await UserModel.findOne({ _id: userId }).populate<{ civilizations: MongoCivilizationType[] }>({
-      path: 'civilizations',
-      model: CivilizationModel,
-      populate: {
-        path: 'people',
-        model: PersonModel
-      }
-    })
-
-    const civilization = user?.civilizations.find(({ id }) => id === civilizationId)
-
-    if (!civilization) {
-      return undefined
+    if (populate?.people) {
+      civilizationRequest.populate('people')
     }
 
-    return civilizationMapper(civilization)
+    const civilizations = await civilizationRequest
+
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
+  }
+
+  async getByUserAndCivilizationId(userId: string, civilizationId: string, populate?: CivilizationPopulate): Promise<Civilization | undefined> {
+    const user = await UserModel.findOne({ _id: userId })
+
+    if (!user) {
+      return
+    }
+
+    const civilizationRequest = CivilizationModel.findOne<MongoCivilizationType>({ _id: civilizationId })
+
+    if (populate?.people) {
+      civilizationRequest.populate('people')
+    }
+
+    const civilization = await civilizationRequest
+
+    if (!civilization) {
+      return
+    }
+
+    return civilizationMapper(civilization, populate)
   }
 
 
