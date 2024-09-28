@@ -4,9 +4,8 @@ import { BuildingTypes } from './enum'
 
 export class House implements Building {
   capacity: number
-  count: number = 0
 
-  constructor(capacity: number) {
+  constructor(capacity: number, public count = 0) {
     this.capacity = capacity
   }
 

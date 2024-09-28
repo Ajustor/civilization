@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "start": "bun run src/demo.ts",
-    "build": "bun build src/index.ts --outdir dist"
+    "build": "bun build src/index.ts --outdir dist",
+    "test": "test"
   },
   "dependencies": {
     "@inquirer/prompts": "^5.5.0",
