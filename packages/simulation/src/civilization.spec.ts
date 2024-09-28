@@ -12,7 +12,6 @@ describe('Civilization', () => {
   // Civilization initializes with default values
   it('should initialize with default values when instantiated', () => {
     const civilization = new Civilization()
-    expect(civilization.id).toBeUndefined()
     expect(civilization.name).toBeDefined()
     expect(civilization.people).toEqual([])
     expect(civilization.resources).toEqual([])

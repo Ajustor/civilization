@@ -10,23 +10,27 @@ import { OccupationTypes } from './people/work/enum'
 import { People } from './people/people'
 import type { World } from './world'
 import { isWithinChance } from './utils'
+import { v4 } from 'uuid'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
 const CARPENTER_RESOURCES_GET = 20
 
 export class Civilization {
-    public id!: string
+    public id = v4()
     public name = uniqueNamesGenerator({ dictionaries: [countries] })
     private _people: People[]
     private _resources: Resource[]
     private _livedMonths: number = 0
     private _buildings: Building[]
 
-    constructor() {
+    constructor(name?: string) {
         this._people = []
         this._resources = []
         this._buildings = []
+        if (name) {
+            this.name = name
+        }
     }
 
     nobodyAlive(): boolean {
