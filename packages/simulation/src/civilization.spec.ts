@@ -137,6 +137,6 @@ describe('Civilization', () => {
     civilization.addPeople(person2, person1)
     civilization.passAMonth(world)
 
-    expect(civilization.people).toBe([])
+    expect(civilization.people).toStrictEqual([])
   })
 })
