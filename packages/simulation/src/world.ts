@@ -27,7 +27,7 @@ export class World {
   private resources: Resource[] = []
   private _civilizations: Civilization[] = []
 
-  constructor(private readonly name = 'The world', private month = 1) {
+  constructor(private readonly name = 'The world', private month = 0) {
     this.id = ''
   }
 

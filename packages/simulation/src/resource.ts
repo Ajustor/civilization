@@ -1,5 +1,3 @@
-// Resource.ts
-
 import type { ResourceType } from '.'
 
 export enum ResourceTypes {

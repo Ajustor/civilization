@@ -1,7 +1,9 @@
 import { Civilization } from './civilization'
 import { formatCivilizations } from './formatters'
+import { Gender } from './people/enum'
+import { People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
-import { World } from './world'
+import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION, World } from './world'
 
 describe('World', () => {
 
@@ -99,37 +101,156 @@ describe('World', () => {
     expect(mockResource.quantity).toBe(initialQuantity - 50)
   })
 
-  // Passing a month updates the month and resources based on the season
-  it('should update month and resources based on season when passing a month', () => {
+  it('should return the good year', () => {
     const world = new World()
-    const civilization = new Civilization()
-    world.addCivilization(civilization)
-    const decreaseSpy = jest.spyOn(world, 'decreaseResource')
-    const increaseSpy = jest.spyOn(world, 'increaseResource')
 
-    world.passAMonth()
-    const { month } = world.getInfos()
+    world['month'] = 12
+    expect(world.getYear()).toBe(1)
+  })
 
-    expect(month).toBe(2)
-    expect(decreaseSpy).toHaveBeenCalledTimes(0)
-    expect(increaseSpy).toHaveBeenCalledTimes(2)
+  describe('should return the season corresponding', () => {
+    it('should return spring', () => {
+      const world = new World()
+      expect(world.season).toBe('spring')
+    })
+    it('should return summer', () => {
+      const world = new World()
+      world['month'] = 3
+      expect(world.season).toBe('summer')
+    })
+    it('should return automn', () => {
+      const world = new World()
+      world['month'] = 6
+      expect(world.season).toBe('automn')
+    })
+    it('should return winter', () => {
+      const world = new World()
+      world['month'] = 9
+      expect(world.season).toBe('winter')
+    })
+
+    it('should return a void string', () => {
+      const world = new World()
+      world['month'] = -1
+      expect(world.season).toBe('')
+    })
+  })
+
+  // Passing a month updates the month and resources based on the season
+  describe('should update month and resources based on season when passing a month', () => {
+    it('spring', () => {
+      const world = new World()
+      const civilization = new Civilization()
+      world.addCivilization(civilization)
+      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockWood = new Resource(ResourceTypes.WOOD, 100)
+      world.addResource(mockFood, mockWood)
+
+      const decreaseSpy = jest.spyOn(world, 'decreaseResource')
+      const increaseSpy = jest.spyOn(world, 'increaseResource')
+
+      world.passAMonth()
+      const { month } = world.getInfos()
+
+      expect(month).toBe(1)
+      expect(decreaseSpy).toHaveBeenCalledTimes(0)
+      expect(increaseSpy).toHaveBeenCalledTimes(2)
+      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.5))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.1))
+    })
+
+    it('summer', () => {
+      const world = new World()
+      const civilization = new Civilization()
+      world.addCivilization(civilization)
+      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockWood = new Resource(ResourceTypes.WOOD, 100)
+      world.addResource(mockFood, mockWood)
+
+      const decreaseSpy = jest.spyOn(world, 'decreaseResource')
+      const increaseSpy = jest.spyOn(world, 'increaseResource')
+      world['month'] = 2
+      world.passAMonth()
+      const { month } = world.getInfos()
+
+      expect(month).toBe(3)
+      expect(decreaseSpy).toHaveBeenCalledTimes(0)
+      expect(increaseSpy).toHaveBeenCalledTimes(2)
+      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.75))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.2))
+    })
+
+    it('automn', () => {
+      const world = new World()
+      const civilization = new Civilization()
+      world.addCivilization(civilization)
+      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockWood = new Resource(ResourceTypes.WOOD, 100)
+      world.addResource(mockFood, mockWood)
+
+      const decreaseSpy = jest.spyOn(world, 'decreaseResource')
+      const increaseSpy = jest.spyOn(world, 'increaseResource')
+      world['month'] = 5
+      world.passAMonth()
+      const { month } = world.getInfos()
+
+      expect(month).toBe(6)
+      expect(decreaseSpy).toHaveBeenCalledTimes(0)
+      expect(increaseSpy).toHaveBeenCalledTimes(2)
+      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.2))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION))
+    })
+
+    it('winter', () => {
+      const world = new World()
+      const civilization = new Civilization()
+      world.addCivilization(civilization)
+      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockWood = new Resource(ResourceTypes.WOOD, 100)
+      world.addResource(mockFood, mockWood)
+
+      const decreaseSpy = jest.spyOn(world, 'decreaseResource')
+      const increaseSpy = jest.spyOn(world, 'increaseResource')
+      world['month'] = 8
+      world.passAMonth()
+      const { month } = world.getInfos()
+
+      expect(month).toBe(9)
+      expect(decreaseSpy).toHaveBeenCalledTimes(0)
+      expect(increaseSpy).toHaveBeenCalledTimes(2)
+      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 0.5))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 0.75))
+    })
   })
 
   // Getting world information returns the correct formatted data
   it('should return formatted world information', () => {
     const world = new World()
+    const worldFood = new Resource(ResourceTypes.FOOD, 5000)
+    const worldWood = new Resource(ResourceTypes.WOOD, 2000)
+    world.addResource(worldFood, worldWood)
     const civilization1 = new Civilization('Civilization 1')
     civilization1.id = 'civilizationId'
-    civilization1.addResource(new Resource(ResourceTypes.FOOD, 500))
-    civilization1.addResource(new Resource(ResourceTypes.WOOD, 200))
+    const food = new Resource(ResourceTypes.FOOD, 500)
+    const wood = new Resource(ResourceTypes.WOOD, 200)
+    civilization1.addResource(food)
+    civilization1.addResource(wood)
     world.addCivilization(civilization1)
 
     const expectedInfos = {
       id: '',
       name: 'The world',
-      civilizations: [{ name: 'Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', resources: [{ type: 'food', quantity: 500 }, { type: 'wood', quantity: 200 }] }],
-      month: 1,
-      resources: [],
+      civilizations: [{
+        name: 'Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', resources: [
+          food.formatToType(),
+          wood.formatToType()
+        ]
+      }],
+      month: 0,
+      resources: [
+        worldFood.formatToType(),
+        worldWood.formatToType()
+      ],
       year: 0
     }
 
@@ -202,5 +323,25 @@ describe('World', () => {
     const formattedCivilizations = formatCivilizations([civilization1, civilization2])
 
     expect(world.getInfos().civilizations).toEqual(formattedCivilizations)
+  })
+
+  it('should pass a month on civilizations', () => {
+    const world = new World()
+
+    const worldFood = new Resource(ResourceTypes.FOOD, 5000)
+    const worldWood = new Resource(ResourceTypes.WOOD, 2000)
+    world.addResource(worldFood, worldWood)
+    const civilization1 = new Civilization('Civilization 1')
+    civilization1.addPeople(new People({ name: 'Yves', month: 200, lifeCounter: 49, gender: Gender.MALE }))
+
+    civilization1.addResource(new Resource(ResourceTypes.FOOD, 10))
+    world.addCivilization(civilization1)
+
+    world.passAMonth()
+
+    for (const civilization of world.civilizations) {
+      expect(civilization.livedMonths).toBe(1)
+      expect(civilization.people.every(({ lifeCounter }) => lifeCounter === 49)).toBeTruthy()
+    }
   })
 })
