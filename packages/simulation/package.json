@@ -14,7 +14,8 @@
     "start": "bun run src/demo.ts",
     "build": "bun build src/index.ts --outdir dist",
     "test": "jest",
-    "coverage": "jest --coverage"
+    "coverage": "jest --coverage",
+    "stryker": "stryker run"
   },
   "dependencies": {
     "@inquirer/prompts": "^5.5.0",
