@@ -168,6 +168,9 @@ export class CivilizationTable {
 
   async create(userId: string, civilization: Civilization) {
     const user = await UserModel.findOne({ _id: userId })
+    if (!user) {
+      throw new Error('No user found for this id')
+    }
     const newPeople = []
     for (const person of civilization.people) {
       const newPerson = await PersonModel.create(person.formatToEntity())
@@ -179,8 +182,10 @@ export class CivilizationTable {
       people: newPeople
     })
 
-    user?.civilizations.push(newCivilization._id)
-    user?.save()
+    user.civilizations ??= []
+
+    user.civilizations.push(newCivilization._id)
+    user.save()
     const world = await WorldModel.findOne()
 
     world?.civilizations.push(newCivilization._id)
