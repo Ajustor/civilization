@@ -1,0 +1,48 @@
+services:
+  front:
+    container_name: civilizations_front
+    image: oven/bun:slim
+    user: bun
+    ports:
+      - "8080:8080"
+    working_dir: /home/bun/app/apps/front
+    volumes:
+      - .:/home/bun/app:cached
+    command: bun dev
+    networks:
+      - civilizations
+
+  back:
+    container_name: civilizations_back
+    image: oven/bun:slim
+    user: bun
+    ports:
+      - "3000:3000"
+    working_dir: /home/bun/app/apps/back
+    volumes:
+      - .:/home/bun/app:cached
+    command: bun dev
+    networks:
+      - civilizations
+    depends_on:
+      - mongo
+
+  mongo:
+    container_name: civilizations_mongo
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+    networks:
+      - civilizations
+    volumes:
+      - mongo:/data/db
+
+networks:
+  civilizations:
+
+volumes:
+  mongo:

@@ -1,8 +1,5 @@
-import { worldsTable } from '../../../db/schema/worldSchema'
-import { worldsResourcesTable } from '../../../db/schema/worldsResourcesTable'
-import { and, eq } from 'drizzle-orm'
-import { World, WorldBuilder, Resource } from '@ajustor/simulation'
-import { LibSQLDatabase } from 'drizzle-orm/libsql'
+import { World, WorldBuilder, Resource, ResourceTypes } from '@ajustor/simulation'
+import { WorldModel } from '../../libs/database/models'
 
 export type GetOptions = {
   populate: {
@@ -11,14 +8,28 @@ export type GetOptions = {
 }
 
 export class WorldsTable {
-  constructor(private readonly client: LibSQLDatabase) {
+  constructor() {
 
   }
 
+  async getById(worldId: string): Promise<World> {
+    const world = await WorldModel.findOne({ _id: worldId })
+
+    if (!world) {
+      throw new Error('No world found for that id')
+    }
+
+    const builder = new WorldBuilder()
+    builder.withName(world.name).withId(world.id).startingMonth(world.month)
+
+    builder.addResource(...world.resources.map(({ quantity, resourceType }) => new Resource(resourceType as ResourceTypes, quantity ?? 0)))
+
+
+    return builder.build()
+  }
+
   async getAll(): Promise<World[]> {
-    const worlds = await this.client
-      .select()
-      .from(worldsTable)
+    const worlds = await WorldModel.find()
 
     const results: World[] = []
 
@@ -26,8 +37,7 @@ export class WorldsTable {
       const builder = new WorldBuilder()
       builder.withName(world.name).withId(world.id).startingMonth(world.month)
 
-      const worldResources = await this.client.select().from(worldsResourcesTable).where(eq(worldsResourcesTable.worldId, world.id)).groupBy(worldsResourcesTable.worldId, worldsResourcesTable.resourceType)
-      builder.addResource(...worldResources.map(({ quantity, resourceType }) => new Resource(resourceType, quantity)))
+      builder.addResource(...world.resources.map(({ quantity, resourceType }) => new Resource(resourceType as ResourceTypes, quantity ?? 0)))
 
       results.push(builder.build())
     }
@@ -39,19 +49,8 @@ export class WorldsTable {
     for (const world of worlds) {
       const { month, resources, year } = world.getInfos()
 
-      for (const resource of resources) {
-        await this.client.update(worldsResourcesTable).set({
-          quantity: resource.quantity
-        }).where(and(
-          eq(worldsResourcesTable.worldId, world.id),
-          eq(worldsResourcesTable.resourceType, resource.type),
-        ))
-      }
-
       console.log('Saving world to database')
-      await this.client.update(worldsTable).set({
-        month: month + (year * 12),
-      }).where(eq(worldsTable.id, world.id))
+      await WorldModel.updateOne({ _id: world.id }, { month: month + (year * 12), resources: resources.map(({ type, quantity }) => ({ resourceType: type, quantity })) })
     }
   }
 }

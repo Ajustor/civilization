@@ -8,7 +8,6 @@ import { Tree } from '../utils/tree/tree'
 // People.ts
 import type { Work } from './work/interface'
 import type { World } from '../world'
-import { v4 } from 'uuid'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
@@ -23,7 +22,7 @@ const EAT_FACTOR = {
 const PREGNANCY_MONTHS = 9
 const MINIMUM_CONCEPTION_AGE = 16
 const MAXIMUM_CONCEPTION_AGE = 60
-const MINIMUM_CONCEPTION_HEALTH = 8
+const MINIMUM_CONCEPTION_HEALTH = 30
 
 
 export type PeopleConstructorParams = {
@@ -69,11 +68,10 @@ export class People {
     gender,
     lifeCounter = 3,
     isBuilding = false,
-    buildingMonthsLeft  = 0,
+    buildingMonthsLeft = 0,
     pregnancyMonthsLeft = 0,
     lineage
   }: PeopleConstructorParams) {
-    this.id = v4()
     this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
@@ -188,7 +186,6 @@ export class People {
 
   formatToEntity(): PeopleEntity {
     return {
-      id: this.id,
       buildingMonthsLeft: this.buildingMonthsLeft,
       isBuilding: this.isBuilding,
       lifeCounter: this.lifeCounter,
@@ -203,7 +200,7 @@ export class People {
   }
 
   formatToType(): PeopleType {
-    return { ...this.formatToEntity(), years: this.years }
+    return { ...this.formatToEntity(), years: this.years, id: this.id, }
   }
 
   get eatFactor(): number {

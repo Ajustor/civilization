@@ -1,6 +1,5 @@
 import Elysia, { NotFoundError, t } from 'elysia'
 import { UsersTable } from './database'
-import { db } from '../../libs/database'
 import { logger } from '@bogeychan/elysia-logger'
 import { authorization } from '../../libs/handlers/authorization'
 import { NewUserEmailTemplate } from '../../emailTemplates/newUser'
@@ -10,7 +9,7 @@ export const usersModule = new Elysia({ prefix: '/users' })
   .use(logger())
   .use(emailSender)
   .decorate({
-    userDbClient: new UsersTable(db),
+    userDbClient: new UsersTable(),
   }).get('', async ({ userDbClient }) => {
     const users = await userDbClient.getAll()
     return users.map(({ password, ...user }) => user)

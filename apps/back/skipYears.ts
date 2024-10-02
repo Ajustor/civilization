@@ -1,7 +1,7 @@
 import { CivilizationTable } from './src/modules/civilizations/database'
 import { WorldsTable } from './src/modules/world/database'
-import { db } from './src/libs/database'
 import { parseArgs } from "util"
+import './src/libs/database'
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -21,13 +21,13 @@ if (!values.years) {
 console.log(`Prepare passing ${values.years} years`)
 
 
-const worldDbClient = new WorldsTable(db)
-const civilizationsDbClient = new CivilizationTable(db)
+const worldDbClient = new WorldsTable()
+const civilizationsDbClient = new CivilizationTable()
 
 const worlds = await worldDbClient.getAll()
 for (const world of worlds) {
 
-  const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
+  const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id, { people: true })
   world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
   for (let i = 0; i < +values.years * 12; i++) {
     console.log(`Passing a month ${i}/${+values.years * 12 - 1}`)
@@ -40,6 +40,8 @@ console.log('Civilizations saved, save the worlds')
 try {
   await worldDbClient.saveAll(worlds)
   console.log('A month has passed')
+  process.exit(0)
 } catch (error) {
   console.error(error)
+  process.exit(1)
 }

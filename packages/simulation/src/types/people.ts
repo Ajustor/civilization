@@ -2,8 +2,7 @@ import type { Gender } from '../people/enum'
 import type { Lineage } from '../people/people'
 import type { OccupationTypes } from '../people/work/enum'
 
-export type PeopleEntity = {
-  id: string
+export interface PeopleEntity {
   name: string
   month: number
   occupation?: OccupationTypes

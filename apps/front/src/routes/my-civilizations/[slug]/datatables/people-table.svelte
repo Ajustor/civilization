@@ -13,6 +13,7 @@
 	import Icon from '@iconify/svelte'
 	import { OCCUPATIONS } from '$lib/translations'
 	import ChildDetails from './childDetails.svelte'
+	import PeopleTableActions from './people-table-actions.svelte'
 
 	export let people: PeopleType[]
 
@@ -81,6 +82,18 @@
 				})
 			}
 		})
+		// table.column({
+		// 	accessor: ({ id }) => id,
+		// 	header: 'Action sur le citoyen',
+		// 	cell: ({ value }) => {
+		// 		return createRender(PeopleTableActions, { id: value, people })
+		// 	},
+		// 	plugins: {
+		// 		sort: {
+		// 			disable: true
+		// 		}
+		// 	}
+		// })
 	])
 
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)

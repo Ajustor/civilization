@@ -1,5 +1,3 @@
-// Resource.ts
-
 import type { ResourceType } from '.'
 
 export enum ResourceTypes {
@@ -10,7 +8,17 @@ export enum ResourceTypes {
 
 export class Resource {
 
-  constructor(private _type: ResourceTypes, private _quantity: number) {}
+  constructor(private _type: ResourceTypes, private _quantity: number) {
+    if (!Object.values(ResourceTypes).includes(_type)) {
+      throw new Error('Resource not implemented')
+    }
+
+    if (isNaN(_quantity)) {
+      throw new Error('Quantity is not a number')
+    }
+
+    this._quantity = Math.max(_quantity, 0)
+  }
 
   get type(): ResourceTypes {
     return this._type
@@ -25,11 +33,7 @@ export class Resource {
   }
 
   decrease(quantity: number): void {
-    if (this._quantity - quantity < 0) {
-      this._quantity = 0
-      return
-    }
-    this._quantity -= quantity
+    this._quantity = Math.max(this._quantity - quantity, 0)
   }
 
   formatToType(): ResourceType {
