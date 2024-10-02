@@ -2,6 +2,7 @@ import { client } from './client'
 
 export async function getWorldsInfos() {
   const { data: worldInfos, error } = await client.worlds.get()
+  console.log(worldInfos, error)
 
   if (error) {
     console.error(error)

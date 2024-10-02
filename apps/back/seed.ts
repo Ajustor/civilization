@@ -28,7 +28,8 @@ async function seed(): Promise<void> {
 }
 
 try {
-  await mongoose.connect('mongodb://root:example@mongo:27017/')
+  mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
+  await mongoose.connect(Bun.env.mongoConnectString ?? '')
 
   console.log('MongoDB Connected')
 

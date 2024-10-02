@@ -33,6 +33,8 @@ export class WorldsTable {
 
     const results: World[] = []
 
+    console.log('LOL', worlds)
+
     for (const world of worlds) {
       const builder = new WorldBuilder()
       builder.withName(world.name).withId(world.id).startingMonth(world.month)
