@@ -335,13 +335,9 @@ export class Civilization {
   }
 
   private birthAwaitingBabies() {
-    const awaitingMothers = this._people.filter(({ pregnancyMonthsLeft, child }) => pregnancyMonthsLeft === 0 && child)
+    const awaitingMothers = this._people.filter<People & { child: People }>((person): person is People & { child: People } => !!(person.pregnancyMonthsLeft === 0 && person.child))
 
     for (const mother of awaitingMothers) {
-      if (!mother.child) {
-        continue
-      }
-
       this.addPeople(mother.child)
       mother.giveBirth()
     }

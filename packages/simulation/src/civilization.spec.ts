@@ -1,3 +1,5 @@
+jest.mock('./utils', () => ({ isWithinChance: jest.fn().mockReturnValue(true) }))
+import { PeopleBuilder } from './builders'
 import { BuildingTypes } from './buildings/enum'
 import { House } from './buildings/house'
 import { Civilization } from './civilization'
@@ -138,5 +140,78 @@ describe('Civilization', () => {
     civilization.passAMonth(world)
 
     expect(civilization.people).toStrictEqual([])
+  })
+
+  describe('civilization pass a month', () => {
+    it('should remove all dead people', () => {
+      const person1 = new People({ name: 'Alice', gender: Gender.FEMALE, lifeCounter: 0, month: 0 })
+      const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })
+
+      civilization.addPeople(person2, person1)
+      civilization.passAMonth(world)
+
+      expect(civilization.people).toStrictEqual([])
+    })
+
+    it('should create new born', () => {
+      const child = new PeopleBuilder().withGender(Gender.MALE).withOccupation(OccupationTypes.CARPENTER).withName('Patrique').build()
+      const person1 = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Carole')
+        .withOccupation(OccupationTypes.FARMER)
+        .withChild(child)
+        .withPregnancyMonthsLeft(0)
+        .build()
+
+      const decreaseSpy = jest.spyOn(person1, 'giveBirth')
+
+      civilization.addPeople(person1)
+      civilization.passAMonth(world)
+
+      expect(person1.canConceive()).toBe(true)
+      expect(decreaseSpy).toHaveBeenCalled()
+
+      for (const person of civilization.people) {
+        expect(person.child).toBe(null)
+      }
+    })
+
+    it('should set mother pregnant', () => {
+      const person1 = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Carole')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p1')
+        .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
+        .build()
+      const person2 = new PeopleBuilder()
+        .withGender(Gender.MALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Yves')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p2')
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+        .build()
+
+      civilization.addPeople(person1, person2)
+      civilization.addBuilding(new House(4, 1))
+      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.passAMonth(world)
+      const child = person1.child
+
+      expect(person1.lifeCounter).toBe(12)
+      expect(person2.lifeCounter).toBe(12)
+      expect(child).toBeDefined()
+      expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
+      expect(child?.work).toBeDefined()
+      expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+      expect(child?.gender).toBeDefined()
+      expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
+    })
   })
 })

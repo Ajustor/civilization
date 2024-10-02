@@ -51,8 +51,6 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
     const worlds = await worldDbClient.getAll()
 
-    console.log('LENGTH')
-
     if (!worlds.length) {
       throw new NotFoundError('No worlds found')
     }
@@ -61,8 +59,6 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
       world.addCivilization(...worldCivilizations)
     }
-
-    console.log('MAIS NIQUE', worlds)
 
     const worldInfos = worlds.map((world) => world.getInfos())
     return worldInfos
