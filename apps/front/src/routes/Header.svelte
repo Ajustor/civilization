@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import logo from '$lib/images/logo.png'
+	import logo from '$lib/images/logo.webp'
 	import { type User } from '../stores/user'
 
 	export let user: User | null | undefined
