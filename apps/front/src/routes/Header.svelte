@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import logo from '$lib/images/logo.webp'
+	import logo from '$lib/images/logo.webp?enhanced'
 	import { type User } from '../stores/user'
 
 	export let user: User | null | undefined
@@ -14,7 +14,7 @@
 <header>
 	<nav class="navbar justify-between">
 		<a class="navbar-start max-w-24 p-4" href="/">
-			<img src={logo} class="w-24" alt="Logo du simulateur de civilisation" />
+			<enhanced:img src={logo} sizes="min(64px, 100%)" alt="Logo du simulateur de civilisation" />
 		</a>
 		<ul class="navbar-end hidden lg:flex">
 			{#each routes as route}
