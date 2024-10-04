@@ -285,18 +285,11 @@ export class Civilization {
       }
 
       if (eligibleMen.length) {
-        const father = eligibleMen[Math.floor(Math.random() * eligibleMen.length)]
+        const father = eligibleMen[Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)]
         eligiblePeople.push([woman, father])
 
         // TODO: check if we need to remove the father from the available men
       }
-
-    }
-
-    const smallestSize = Math.min(women.length, men.length)
-
-    for (let i = 0; i < smallestSize; i++) {
-      eligiblePeople.push([women[i], men[i]])
     }
 
     if (eligiblePeople.length) {
@@ -311,7 +304,7 @@ export class Civilization {
         const newPerson = new People({
           name: uniqueNamesGenerator({ dictionaries: [names] }),
           month: 0,
-          gender: genders[Math.floor(Math.random() * genders.length)],
+          gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
           lifeCounter: 2,
           lineage: {
             mother: {
@@ -324,7 +317,7 @@ export class Civilization {
             }
           }
         })
-        newPerson.setOccupation(occupations[Math.floor(Math.random() * occupations.length)])
+        newPerson.setOccupation(occupations[Math.min(Math.floor(Math.random() * occupations.length), occupations.length - 1)])
 
         mother.addChildToBirth(newPerson)
 

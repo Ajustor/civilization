@@ -34,12 +34,26 @@ export class CivilizationBuilder {
   }
 
   addResource(...resources: Resource[]): this {
-    this.resources.push(...resources)
+    for (const resource of resources) {
+      const foundResources = this.resources.find(({ type }) => type === resource.type)
+      if (foundResources) {
+        foundResources.increase(resource.quantity)
+      } else {
+        this.resources.push(resource)
+      }
+    }
     return this
   }
 
   addBuilding(...buildings: Building[]): this {
-    this.buildings.push(...buildings)
+    for (const building of buildings) {
+      const foundBuilding = this.buildings.find((existingBuilding) => existingBuilding.getType() === building.getType())
+      if (foundBuilding) {
+        foundBuilding.count++
+      } else {
+        this.buildings.push(building)
+      }
+    }
     return this
   }
 
@@ -64,6 +78,13 @@ export class CivilizationBuilder {
     if (this.name) {
       civilization.name = this.name
     }
+
+    this.people = []
+    this.resources = []
+    this.buildings = []
+    this.name = ''
+    this.livedMonths = 0
+    this.id = ''
 
     return civilization
   }
