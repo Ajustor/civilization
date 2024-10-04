@@ -14,7 +14,7 @@ const occupations = {
   [OccupationTypes.FARMER]: Farmer
 }
 
-const EAT_FACTOR = {
+export const EAT_FACTOR = {
   [OccupationTypes.CARPENTER]: 3,
   [OccupationTypes.FARMER]: 2,
 }

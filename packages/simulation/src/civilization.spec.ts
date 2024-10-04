@@ -1,18 +1,27 @@
-jest.mock('./utils', () => ({ isWithinChance: jest.fn().mockReturnValue(true) }))
+const isWithinChance = jest.fn()
+
+jest.mock('./utils', () => ({ isWithinChance }))
+
 import { PeopleBuilder } from './builders'
 import { BuildingTypes } from './buildings/enum'
 import { House } from './buildings/house'
 import { Civilization } from './civilization'
 import { Gender } from './people/enum'
-import { People } from './people/people'
+import { EAT_FACTOR, People } from './people/people'
+import { Carpenter } from './people/work/carpenter'
+import { Farmer } from './people/work/farmer'
 import { OccupationTypes } from './people/work/enum'
 import { Resource, ResourceTypes } from './resource'
 import { World } from './world'
+
+
 
 describe('Civilization', () => {
 
   let civilization: Civilization
   let world: World
+
+  const mockMath = Object.create(global.Math)
 
   beforeEach(() => {
 
@@ -178,7 +187,121 @@ describe('Civilization', () => {
       }
     })
 
-    it('should set mother pregnant', () => {
+    describe('should set mother pregnant', () => {
+      it('mother and father has no link', () => {
+        isWithinChance.mockReturnValue(true)
+        const person1 = new PeopleBuilder()
+          .withGender(Gender.FEMALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Carole')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p1')
+          .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
+          .build()
+        const person2 = new PeopleBuilder()
+          .withGender(Gender.MALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Yves')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p2')
+          .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+          .build()
+
+        civilization.addPeople(person1, person2)
+        civilization.addBuilding(new House(4, 1))
+        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.passAMonth(world)
+        const child = person1.child
+
+        expect(person1.lifeCounter).toBe(25)
+        expect(person2.lifeCounter).toBe(25)
+        expect(child).toBeDefined()
+        expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
+        expect(child?.work).toBeDefined()
+        expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+        expect(child?.gender).toBeDefined()
+        expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
+      })
+
+      it('mother has no lineage', () => {
+        isWithinChance.mockReturnValue(true)
+        const person1 = new PeopleBuilder()
+          .withGender(Gender.FEMALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Carole')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p1')
+          .build()
+        const person2 = new PeopleBuilder()
+          .withGender(Gender.MALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Yves')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p2')
+          .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+          .build()
+
+        civilization.addPeople(person1, person2)
+        civilization.addBuilding(new House(4, 1))
+        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.passAMonth(world)
+        const child = person1.child
+
+        expect(person1.lifeCounter).toBe(25)
+        expect(person2.lifeCounter).toBe(25)
+        expect(child).toBeDefined()
+        expect(child?.lineage).toStrictEqual({ mother: { id: person1.id }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
+        expect(child?.work).toBeDefined()
+        expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+        expect(child?.gender).toBeDefined()
+        expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
+      })
+
+      it('father has no lineage', () => {
+        isWithinChance.mockReturnValue(true)
+        const person1 = new PeopleBuilder()
+          .withGender(Gender.FEMALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Carole')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p1')
+          .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
+          .build()
+        const person2 = new PeopleBuilder()
+          .withGender(Gender.MALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Yves')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p2')
+          .build()
+
+        civilization.addPeople(person1, person2)
+        civilization.addBuilding(new House(4, 1))
+        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.passAMonth(world)
+        const child = person1.child
+
+        expect(person1.lifeCounter).toBe(25)
+        expect(person2.lifeCounter).toBe(25)
+        expect(child).toBeDefined()
+        expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id } })
+        expect(child?.work).toBeDefined()
+        expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+        expect(child?.gender).toBeDefined()
+        expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
+      })
+    })
+
+    it('should set mother pregnant with a female carpenter child', () => {
+      mockMath.random = () => 0
+      global.Math = mockMath
+      isWithinChance.mockReturnValue(true)
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
         .withLifeCounter(50)
@@ -204,14 +327,245 @@ describe('Civilization', () => {
       civilization.passAMonth(world)
       const child = person1.child
 
-      expect(person1.lifeCounter).toBe(12)
-      expect(person2.lifeCounter).toBe(12)
+      expect(person1.lifeCounter).toBe(25)
+      expect(person2.lifeCounter).toBe(25)
       expect(child).toBeDefined()
       expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
       expect(child?.work).toBeDefined()
-      expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+      expect(child!.work).toBeInstanceOf(Carpenter)
       expect(child?.gender).toBeDefined()
-      expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
+      expect(child!.gender).toBe(Gender.FEMALE)
+    })
+
+    it('should set mother pregnant with a male farmer child', () => {
+      mockMath.random = () => 1
+      global.Math = mockMath
+      isWithinChance.mockReturnValue(true)
+      const person1 = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Carole')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p1')
+        .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
+        .build()
+      const person2 = new PeopleBuilder()
+        .withGender(Gender.MALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Yves')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p2')
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+        .build()
+
+      civilization.addPeople(person1, person2)
+      civilization.addBuilding(new House(4, 1))
+      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.passAMonth(world)
+      const child = person1.child
+
+      expect(person1.lifeCounter).toBe(25)
+      expect(person2.lifeCounter).toBe(25)
+      expect(child).toBeDefined()
+      expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
+      expect(child?.work).toBeDefined()
+      expect(child!.work).toBeInstanceOf(Farmer)
+      expect(child?.gender).toBeDefined()
+      expect(child!.gender).toBe(Gender.MALE)
+    })
+
+    it('should not set mother pregnant', () => {
+      isWithinChance.mockReturnValue(false)
+      const person1 = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Carole')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p1')
+        .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
+        .build()
+      const person2 = new PeopleBuilder()
+        .withGender(Gender.MALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Yves')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p2')
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+        .build()
+
+      civilization.addPeople(person1, person2)
+      civilization.addBuilding(new House(4, 1))
+      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.passAMonth(world)
+      const child = person1.child
+
+      expect(person1.lifeCounter).toBe(50)
+      expect(person2.lifeCounter).toBe(50)
+      expect(child).toBeFalsy()
+    })
+
+    it('should not set mother pregnant because other male is her brother', () => {
+      isWithinChance.mockReturnValue(true)
+      const person1 = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Carole')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p1')
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'nope' } })
+        .build()
+      const person2 = new PeopleBuilder()
+        .withGender(Gender.MALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Yves')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p2')
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+        .build()
+
+      civilization.addPeople(person1, person2)
+      civilization.addBuilding(new House(4, 1))
+      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.passAMonth(world)
+      const child = person1.child
+
+      expect(person1.lifeCounter).toBe(50)
+      expect(person2.lifeCounter).toBe(50)
+      expect(child).toBeFalsy()
+    })
+
+    it('should not set mother pregnant because other male is her uncle', () => {
+      isWithinChance.mockReturnValue(true)
+      const person1 = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Carole')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p1')
+        .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+        .build()
+      const person2 = new PeopleBuilder()
+        .withGender(Gender.MALE)
+        .withLifeCounter(50)
+        .withMonth(240)
+        .withName('Yves')
+        .withOccupation(OccupationTypes.FARMER)
+        .withId('p2')
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+        .build()
+
+      civilization.addPeople(person1, person2)
+      civilization.addBuilding(new House(4, 1))
+      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.passAMonth(world)
+      const child = person1.child
+
+      expect(person1.lifeCounter).toBe(50)
+      expect(person2.lifeCounter).toBe(50)
+      expect(child).toBeFalsy()
+    })
+
+    describe('Resource consumption', () => {
+      it('Should eat food', () => {
+        const person1 = new PeopleBuilder()
+          .withGender(Gender.FEMALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Carole')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p1')
+          .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+          .build()
+        const person2 = new PeopleBuilder()
+          .withGender(Gender.MALE)
+          .withLifeCounter(50)
+          .withMonth(240)
+          .withName('Yves')
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p2')
+          .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+          .build()
+
+        civilization.addPeople(person1, person2)
+        civilization.addBuilding(new House(4, 1))
+        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.passAMonth(world)
+
+        expect(civilization.getResource(ResourceTypes.FOOD).quantity).toBe(100 - civilization.people.reduce((acc, person) => EAT_FACTOR[person.work!.occupationType] + acc, 0))
+      })
+
+      describe('wood consumption', () => {
+        it('Should use wood in winter', () => {
+          const person1 = new PeopleBuilder()
+            .withGender(Gender.FEMALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Carole')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p1')
+            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+            .build()
+          const person2 = new PeopleBuilder()
+            .withGender(Gender.MALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Yves')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p2')
+            .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+            .build()
+
+          world['month'] = 9
+
+          civilization.addPeople(person1, person2)
+          civilization.addBuilding(new House(4, 1))
+          civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.passAMonth(world)
+
+          expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(100 - 3 * civilization.people.length)
+        })
+
+        it('Should use wood in automn', () => {
+          const person1 = new PeopleBuilder()
+            .withGender(Gender.FEMALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Carole')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p1')
+            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+            .build()
+          const person2 = new PeopleBuilder()
+            .withGender(Gender.MALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Yves')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p2')
+            .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+            .build()
+
+          world['month'] = 6
+
+          civilization.addPeople(person1, person2)
+          civilization.addBuilding(new House(4, 1))
+          civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.passAMonth(world)
+
+          expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(100 - 2 * civilization.people.length)
+        })
+      })
+
+
     })
   })
 })
