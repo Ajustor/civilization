@@ -9,7 +9,7 @@ import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 export const load: PageLoad = async ({ parent, fetch }) => {
   const parentData = await parent()
 
-  const myCivilizations = await getMyCivilizations(parentData.authToken ?? '')
+  const myCivilizations = getMyCivilizations(parentData.authToken ?? '')
   return {
     myCivilizations,
     civilizationCreationForm: await superValidate(zod(newCivilizationSchema))

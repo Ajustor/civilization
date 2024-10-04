@@ -199,23 +199,29 @@
 
 <div class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
 	{@render createCivilizationDialog()}
-	{#if data.myCivilizations.length}
-		<Root
-			opts={{
-				slidesToScroll: 'auto'
-			}}
-			class="w-full"
-		>
-			<Content class="w-full md:w-1/2 lg:w-1/3">
-				{#each data.myCivilizations as civilization}
-					<!-- content here -->
-					<Item>
-						{@render civilizationInformations(civilization)}
-					</Item>
-				{/each}
-			</Content>
-			<Previous variant="ghost" />
-			<Next variant="ghost" />
-		</Root>
-	{/if}
+	{#await data.myCivilizations}
+		<span class="loading loading-infinity loading-lg"></span>
+	{:then myCivilizations}
+		{#if myCivilizations.length}
+			<Root
+				opts={{
+					slidesToScroll: 'auto'
+				}}
+				class="w-full"
+			>
+				<Content class="w-full md:w-1/2 lg:w-1/3">
+					{#each myCivilizations as civilization}
+						<!-- content here -->
+						<Item>
+							{@render civilizationInformations(civilization)}
+						</Item>
+					{/each}
+				</Content>
+				<Previous variant="ghost" />
+				<Next variant="ghost" />
+			</Root>
+		{/if}
+	{:catch error}
+		{error}
+	{/await}
 </div>
