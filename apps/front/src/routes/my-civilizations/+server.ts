@@ -1,3 +1,4 @@
+export const prerender = false
 import { json } from '@sveltejs/kit'
 import { deleteCivilization, getMyCivilizations } from '../../services/api/civilization-api.js'
 

@@ -11,6 +11,10 @@ const unprotectedRoutes = [
 
 export const handle: Handle = async ({ event, resolve }) => {
 
+  if (unprotectedRoutes.includes(event.url.pathname)) {
+    return resolve(event)
+  }
+
   let isLogged = true
   const user = await getUser(event.cookies).catch((error) => {
     console.error(error)

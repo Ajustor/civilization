@@ -2,7 +2,7 @@
 	import type { PageData } from './$types'
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
-	import { Button, buttonVariants } from '$lib/components/ui/button'
+	import { Button } from '$lib/components/ui/button'
 	import { Carrot, FlameKindling, Landmark, PersonStanding, Plus, Trash } from 'lucide-svelte'
 	import {
 		Dialog,

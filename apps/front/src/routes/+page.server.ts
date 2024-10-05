@@ -1,4 +1,4 @@
-export const prerender = true
+export const prerender = false
 import { getWorldsInfos } from '../services/api/world-api'
 import type { PageServerLoad } from './$types'
 

@@ -11,7 +11,7 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
     try {
       user = await getUser(cookies)
     } catch (error) {
-      console.error(error)
+      console.error('An error occured in the layout', ...error)
     }
   }
 
