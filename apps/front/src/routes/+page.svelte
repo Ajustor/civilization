@@ -2,7 +2,7 @@
 	import type { PageData } from './$types'
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
-	import { Gender, getSeason } from '@ajustor/simulation'
+	import { getSeason } from '@ajustor/simulation'
 	import Doughnut from '$lib/components/charts/Doughnut.svelte'
 	import { Carrot, FlameKindling, Cuboid } from 'lucide-svelte'
 	import IconText from '$lib/components/IconText/icon-text.svelte'

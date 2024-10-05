@@ -1,13 +1,25 @@
 <script lang="ts">
-	import { Chart, type ChartData } from 'chart.js/auto'
+	import {
+		Chart as ChartJS,
+		Title,
+		Tooltip,
+		Legend,
+		ArcElement,
+		CategoryScale,
+		type ChartData,
+		DoughnutController,
+		Colors
+	} from 'chart.js'
 	import { onMount } from 'svelte'
 
 	export let data: ChartData<'doughnut'>
 
+	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, DoughnutController, Colors)
+
 	let chart: HTMLCanvasElement
 
 	onMount(() => {
-		new Chart(chart, {
+		new ChartJS(chart, {
 			type: 'doughnut',
 			data,
 			options: {

@@ -168,8 +168,12 @@ export class CivilizationTable {
 
   async create(userId: string, civilization: Civilization) {
     const user = await UserModel.findOne({ _id: userId })
+    const world = await WorldModel.findOne()
     if (!user) {
       throw new Error('No user found for this id')
+    }
+    if (!world) {
+      throw new Error('No world exist in the simulation')
     }
     const newPeople = []
     for (const person of civilization.people) {
@@ -186,10 +190,9 @@ export class CivilizationTable {
 
     user.civilizations.push(newCivilization._id)
     user.save()
-    const world = await WorldModel.findOne()
-
-    world?.civilizations.push(newCivilization._id)
-    world?.save()
+    world.civilizations ??= []
+    world.civilizations.push(newCivilization._id)
+    world.save()
   }
 
   async saveAll(civilizations: Civilization[]) {
