@@ -15,7 +15,6 @@ import { opentelemetry } from '@elysiajs/opentelemetry'
 
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
-import { compression } from 'elysia-compress'
 
 
 mongoose.connect(Bun.env.mongoConnectString ?? '')
@@ -26,7 +25,7 @@ const app = new Elysia()
   .use(logger())
   .use(swagger({ version }))
   .use(jwtMiddleware)
-  .use(compression())
+  // .use(compression())
   .use(
     opentelemetry({
       spanProcessors: [
