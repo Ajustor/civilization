@@ -32,7 +32,8 @@
 
 		new FamilyTree(tree, {
 			nodeBinding: {
-				field_0: 'name'
+				field_0: 'name',
+				field_1: 'gender'
 			},
 			nodes: baseTree
 		})

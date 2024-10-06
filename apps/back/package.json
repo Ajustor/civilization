@@ -26,8 +26,11 @@
   },
   "dependencies": {
     "@ajustor/simulation": "1.0.0",
+    "@elysiajs/opentelemetry": "^1.1.5",
+    "@elysiajs/stream": "^1.1.0",
     "@libsql/client": "^0.10.0",
     "@react-email/tailwind": "0.1.0",
+    "elysia-compress": "^1.2.1",
     "mongodb": "^6.9.0",
     "mongoose": "^8.6.3"
   }

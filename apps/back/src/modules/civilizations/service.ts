@@ -6,7 +6,7 @@ type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
 type MongoCivilizationType = CivilizationType & { resources: { quantity: number, resourceType: ResourceTypes }[], buildings: MongoBuildingType[] }
 
-const civilizationMapper = (civilization: MongoCivilizationType, populate?: CivilizationPopulate): Civilization => {
+const civilizationMapper = (civilization: MongoCivilizationType): Civilization => {
   const builder = new CivilizationBuilder()
 
   for (const civilizationResource of civilization.resources) {
@@ -24,7 +24,7 @@ const civilizationMapper = (civilization: MongoCivilizationType, populate?: Civi
     }
   }
 
-  if (populate?.people) {
+  if (civilization.people.length) {
     builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
       const peopleBuilder = new PeopleBuilder()
         .withId(id)
@@ -64,7 +64,7 @@ export type CivilizationPopulate = {
   people: boolean
 }
 
-export class CivilizationTable {
+export class CivilizationService {
   constructor() {
 
   }
@@ -88,7 +88,7 @@ export class CivilizationTable {
       return []
     }
 
-    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
+    return civilizations.map((civilization) => civilizationMapper(civilization))
   }
 
   async getByIds(civilizationIds: string[], populate?: CivilizationPopulate): Promise<Civilization[]> {
@@ -100,7 +100,7 @@ export class CivilizationTable {
 
     const civilizations = await civilizationRequest
 
-    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
+    return civilizations.map((civilization) => civilizationMapper(civilization))
   }
 
   async getById(civilizationId: string): Promise<Civilization> {
@@ -122,7 +122,7 @@ export class CivilizationTable {
 
     const civilizations = await civilizationsRequest
 
-    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
+    return civilizations.map((civilization) => civilizationMapper(civilization))
   }
 
   async getByUserId(userId: string, populate?: CivilizationPopulate): Promise<Civilization[]> {
@@ -140,7 +140,7 @@ export class CivilizationTable {
 
     const civilizations = await civilizationRequest
 
-    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
+    return civilizations.map((civilization) => civilizationMapper(civilization))
   }
 
   async getByUserAndCivilizationId(userId: string, civilizationId: string, populate?: CivilizationPopulate): Promise<Civilization | undefined> {
@@ -162,7 +162,7 @@ export class CivilizationTable {
       return
     }
 
-    return civilizationMapper(civilization, populate)
+    return civilizationMapper(civilization)
   }
 
 

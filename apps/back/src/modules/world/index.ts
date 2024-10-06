@@ -1,7 +1,7 @@
 import { Elysia, NotFoundError, t } from 'elysia'
 import { Patterns, cron } from '@elysiajs/cron'
 
-import { CivilizationTable } from '../civilizations/database'
+import { CivilizationService } from '../civilizations/service'
 import { WorldsTable } from './database'
 import { logger } from '@bogeychan/elysia-logger'
 import { Gender } from '@ajustor/simulation'
@@ -10,7 +10,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .use(logger())
   .decorate({
     worldDbClient: new WorldsTable(),
-    civilizationsDbClient: new CivilizationTable()
+    civilizationsDbClient: new CivilizationService()
   })
   .use(
     cron({
@@ -19,7 +19,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       async run() {
         console.time('monthPass')
         const worldDbClient = new WorldsTable()
-        const civilizationsDbClient = new CivilizationTable()
+        const civilizationsDbClient = new CivilizationService()
 
         const worlds = await worldDbClient.getAll()
         console.log('Worlds retrieved, start passing a month')

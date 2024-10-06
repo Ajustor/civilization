@@ -9,6 +9,14 @@ import { usersModule } from './modules/users'
 import { version } from '../package.json'
 import { worldModule } from './modules/world'
 import mongoose from 'mongoose'
+import { peopleModule } from './modules/people'
+
+import { opentelemetry } from '@elysiajs/opentelemetry'
+
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
+import { compression } from 'elysia-compress'
+
 
 mongoose.connect(Bun.env.mongoConnectString ?? '')
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
@@ -18,12 +26,22 @@ const app = new Elysia()
   .use(logger())
   .use(swagger({ version }))
   .use(jwtMiddleware)
-  // .use(compression())
+  .use(compression())
+  .use(
+    opentelemetry({
+      spanProcessors: [
+        new BatchSpanProcessor(
+          new OTLPTraceExporter()
+        )
+      ]
+    })
+  )
   .get('', () => `api-version: ${version}`)
   .use(worldModule)
   .use(authModule)
   .use(usersModule)
   .use(civilizationModule)
+  .use(peopleModule)
 
 
 app.listen(process.env.APP_PORT!)

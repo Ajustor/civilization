@@ -11,13 +11,19 @@
 	} from '$lib/components/ui/table'
 	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
+	import { addPagination, addSortBy } from 'svelte-headless-table/plugins'
 	import { OCCUPATIONS } from '$lib/translations'
 	import ChildDetails from './childDetails.svelte'
 	import PeopleTableActions from './people-table-actions.svelte'
+	import { Button } from '$lib/components/ui/button'
+	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte'
 
 	export let people: PeopleType[]
 
-	const table = createTable(readable(people))
+	const table = createTable(readable(people), {
+		sort: addSortBy(),
+		page: addPagination()
+	})
 
 	const GenderIcons = {
 		[Gender.FEMALE]: 'noto:female-sign',
@@ -96,7 +102,9 @@
 		// })
 	])
 
-	const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
+	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
+		table.createViewModel(columns)
+	const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page
 </script>
 
 <div class="rounded-md border border-slate-100 bg-slate-200">
@@ -106,9 +114,22 @@
 				<Subscribe rowAttrs={headerRow.attrs()}>
 					<TableRow>
 						{#each headerRow.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()}>
+							<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
 								<TableHead {...attrs}>
-									<Render of={cell.render()} />
+									{#if props.sort.disabled}
+										<Render of={cell.render()} />
+									{:else}
+										<Button variant="ghost" on:click={props.sort.toggle}>
+											<Render of={cell.render()} />
+											{#if props.sort.order === 'asc'}
+												<ArrowUp class="ml-2 h-4 w-4" />
+											{:else if props.sort.order === 'desc'}
+												<ArrowDown class="ml-2 h-4 w-4" />
+											{:else}
+												<ArrowUpDown class="ml-2 h-4 w-4" />
+											{/if}
+										</Button>
+									{/if}
 								</TableHead>
 							</Subscribe>
 						{/each}
@@ -132,4 +153,22 @@
 			{/each}
 		</TableBody>
 	</Table>
+	<div class="flex items-center justify-center space-x-4 py-4">
+		<Button
+			variant="outline"
+			size="sm"
+			on:click={() => ($pageIndex = $pageIndex - 1)}
+			disabled={!$hasPreviousPage}
+		>
+			Précédent
+		</Button>
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={!$hasNextPage}
+			on:click={() => ($pageIndex = $pageIndex + 1)}
+		>
+			Suivant
+		</Button>
+	</div>
 </div>

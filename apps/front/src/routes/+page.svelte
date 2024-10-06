@@ -33,15 +33,15 @@
 		align: 'center',
 		slidesToScroll: 'auto'
 	}}
-	class="w-full"
+	class="w-full overflow-hidden"
 	bind:api
 >
-	<Content class="w-full">
+	<Content class="ml-0 mr-0 w-full">
 		{#await data.worlds then worlds}
 			<!-- promise was fulfilled -->
 			{#each worlds as world}
 				<!-- content here -->
-				<Item title={world.name} class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+				<Item title={world.name} class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-2 lg:grid-cols-3">
 					<h2 class="text-center text-2xl md:col-span-2 lg:col-span-3">{world.name}</h2>
 					<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 						<div class="card-body">

@@ -1,4 +1,4 @@
-import { CivilizationTable } from './src/modules/civilizations/database'
+import { CivilizationService } from './src/modules/civilizations/service'
 import { WorldsTable } from './src/modules/world/database'
 import { parseArgs } from "util"
 import './src/libs/database'
@@ -22,7 +22,7 @@ console.log(`Prepare passing ${values.years} years`)
 
 
 const worldDbClient = new WorldsTable()
-const civilizationsDbClient = new CivilizationTable()
+const civilizationsDbClient = new CivilizationService()
 
 const worlds = await worldDbClient.getAll()
 for (const world of worlds) {

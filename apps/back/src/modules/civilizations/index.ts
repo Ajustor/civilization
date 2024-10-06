@@ -2,7 +2,7 @@ import { CivilizationBuilder, Gender, OccupationTypes, People, Resource, Resourc
 import Elysia, { error, t } from 'elysia'
 import { names, uniqueNamesGenerator } from 'unique-names-generator'
 
-import { CivilizationTable } from './database'
+import { CivilizationService } from './service'
 import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
@@ -20,26 +20,26 @@ const INITIAL_CIVILIZATION_RESOURCES = {
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
   .use(jwtMiddleware)
-  .decorate({ civilizationDbClient: new CivilizationTable() })
-  .get('', async ({ civilizationDbClient, log }) => {
-    const civilizations = await civilizationDbClient.getAll()
+  .decorate({ civilizationService: new CivilizationService() })
+  .get('', async ({ civilizationService, log }) => {
+    const civilizations = await civilizationService.getAll({ people: true })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
   .use(authorization('Actions on civilization require auth'))
-  .get('/mine', async ({ user, civilizationDbClient }) => {
-    const civilizations = await civilizationDbClient.getByUserId(user.id, { people: true })
+  .get('/mine', async ({ user, civilizationService }) => {
+    const civilizations = await civilizationService.getByUserId(user.id, { people: true })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
-  .get('/:civilizationId', async ({ user, civilizationDbClient, params: { civilizationId } }) => {
-    const civilization = await civilizationDbClient.getByUserAndCivilizationId(user.id, civilizationId, { people: true })
+  .get('/:civilizationId', async ({ user, civilizationService, params: { civilizationId } }) => {
+    const civilization = await civilizationService.getByUserAndCivilizationId(user.id, civilizationId)
     if (!civilization) {
       return { civilization: undefined }
     }
     return { civilization: formatCivilizations([civilization])[0] }
   })
-  .post('', async ({ civilizationDbClient, body, log, user }) => {
+  .post('', async ({ civilizationService, body, log, user }) => {
 
-    const civilizationWithThatNameExist = await civilizationDbClient.exist(body.name)
+    const civilizationWithThatNameExist = await civilizationService.exist(body.name)
     if (civilizationWithThatNameExist) {
       log.error('Conflict a civilization with that name already exist')
       throw error(409, 'A civilization with that name already exist')
@@ -69,12 +69,12 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       )
       .addCitizen(...people)
 
-    await civilizationDbClient.create(user.id as string, civilizationBuilder.build())
+    await civilizationService.create(user.id as string, civilizationBuilder.build())
   }, {
     body: t.Object({
       name: t.String({ minLength: 3 })
     })
   })
-  .delete('/:civilizationId', async ({ civilizationDbClient, params: { civilizationId }, user }) => {
-    await civilizationDbClient.delete(user.id as string, civilizationId)
+  .delete('/:civilizationId', async ({ civilizationService, params: { civilizationId }, user }) => {
+    await civilizationService.delete(user.id as string, civilizationId)
   })

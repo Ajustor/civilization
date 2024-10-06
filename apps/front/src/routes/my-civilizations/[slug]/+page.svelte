@@ -15,6 +15,8 @@
 	import { resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import PeopleTree from './datatables/PeopleTree.svelte'
+	import { getPeopleFromCivilization } from '../../../services/api/people-api'
+	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
 	export let data: PageData
 
@@ -25,8 +27,15 @@
 	}
 </script>
 
-{#snippet citizensView(people: PeopleType[])}
-	<PeopleTable {people} />
+{#snippet citizensView(civilizationId: string)}
+	{#await callGetPeople(civilizationId)}
+		<span class="loading loading-infinity loading-lg"></span>
+	{:then { people }}
+		<!-- getPeopleFromCivilization() was fulfilled -->
+		<PeopleTable {people} />
+	{:catch error}
+		{error}
+	{/await}
 {/snippet}
 
 {#snippet buildingsView(buildings: BuildingType[])}
@@ -46,7 +55,7 @@
 		<AccordionItem value="people-table">
 			<AccordionTrigger>Citoyens: ({data.civilization.people.length} au total)</AccordionTrigger>
 			<AccordionContent>
-				{@render citizensView(data.civilization.people)}
+				{@render citizensView(data.civilization.id)}
 			</AccordionContent>
 		</AccordionItem>
 		<AccordionItem value="buildings-table">
