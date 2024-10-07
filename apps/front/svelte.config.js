@@ -1,6 +1,8 @@
 import adapter from '@sveltejs/adapter-netlify'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 
+const generateSW = process.env.GENERATE_SW === 'true'
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
@@ -15,6 +17,9 @@ const config = {
 			edge: false,
 			split: true
 		}),
+		files: {
+			serviceWorker: 'src/prompt-sw.ts'
+		},
 		serviceWorker: {
 			register: false
 		}

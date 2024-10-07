@@ -1,16 +1,26 @@
 <script lang="ts">
 	import { useRegisterSW } from 'virtual:pwa-register/svelte'
 
+	// replaced dynamically
+	const buildDate = __DATE__
+
 	const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW({
-		onRegistered(swr) {
-			console.log(`SW registered: ${swr}`)
+		onRegistered(r) {
+			if (__RELOAD_SW__) {
+				r &&
+					setInterval(() => {
+						console.log('Checking for sw update')
+						r.update()
+					}, 20000 /* 20s for testing purposes */)
+			} else {
+				console.log(`SW Registered: ${r}`)
+			}
 		},
 		onRegisterError(error) {
 			console.log('SW registration error', error)
 		}
 	})
-
-	function close() {
+	const close = () => {
 		offlineReady.set(false)
 		needRefresh.set(false)
 	}
@@ -34,7 +44,14 @@
 	</div>
 {/if}
 
+<div class="pwa-date">
+	{buildDate}
+</div>
+
 <style>
+	.pwa-date {
+		visibility: hidden;
+	}
 	.pwa-toast {
 		position: fixed;
 		right: 0;
@@ -43,7 +60,7 @@
 		padding: 12px;
 		border: 1px solid #8885;
 		border-radius: 4px;
-		z-index: 1;
+		z-index: 2;
 		text-align: left;
 		box-shadow: 3px 4px 5px 0 #8885;
 		background-color: white;
