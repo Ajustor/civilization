@@ -17,6 +17,9 @@ const config = {
 		}),
 		serviceWorker: {
 			register: false
+		},
+		files: {
+			serviceWorker: 'src/prompt-sw.ts'
 		}
 	}
 }

@@ -8,8 +8,10 @@
 	import { fly } from 'svelte/transition'
 	import { page } from '$app/stores'
 	import { toast } from 'svelte-sonner'
-	import { onMount } from 'svelte'
+	import { pwaInfo } from 'virtual:pwa-info'
 	import ReloadPrompt from '$lib/components/ReloadPrompt.svelte'
+
+	$: webManifest = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
 	export let data: LayoutData
 
@@ -24,7 +26,11 @@
 	})
 </script>
 
-<ReloadPrompt />
+<svelte:head>
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html webManifest}
+</svelte:head>
+
 <Toaster richColors />
 
 <div class="app">
@@ -42,6 +48,10 @@
 		{/key}
 	</main>
 </div>
+
+{#await import('$lib/components/ReloadPrompt.svelte') then { default: ReloadPrompt }}
+	<ReloadPrompt />
+{/await}
 
 <style>
 	.app {
