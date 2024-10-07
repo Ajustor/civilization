@@ -9,7 +9,7 @@
 	import { page } from '$app/stores'
 	import { toast } from 'svelte-sonner'
 	import { onMount } from 'svelte'
-	import { pwaInfo } from 'virtual:pwa-info'
+//	import { pwaInfo } from 'virtual:pwa-info'
 
 	export let data: LayoutData
 
@@ -23,7 +23,7 @@
 		}
 	})
 
-	onMount(async () => {
+/*	onMount(async () => {
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register')
 			registerSW({
@@ -41,7 +41,7 @@
 				}
 			})
 		}
-	})
+	})*/
 
 	$: webManifest = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 </script>
