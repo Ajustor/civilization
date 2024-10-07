@@ -15,8 +15,6 @@
 	import { resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import PeopleTree from './datatables/PeopleTree.svelte'
-	import { getPeopleFromCivilization } from '../../../services/api/people-api'
-	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
 	export let data: PageData
 
@@ -30,7 +28,7 @@
 {#snippet citizensView()}
 	{#await data.lazy.people}
 		<span class="loading loading-infinity loading-lg"></span>
-	{:then { people }}
+	{:then people}
 		<!-- getPeopleFromCivilization() was fulfilled -->
 		<PeopleTable {people} />
 	{:catch error}
