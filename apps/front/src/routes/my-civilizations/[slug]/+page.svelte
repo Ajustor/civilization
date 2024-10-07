@@ -27,8 +27,8 @@
 	}
 </script>
 
-{#snippet citizensView(civilizationId: string)}
-	{#await callGetPeople(civilizationId)}
+{#snippet citizensView()}
+	{#await data.lazy.people}
 		<span class="loading loading-infinity loading-lg"></span>
 	{:then { people }}
 		<!-- getPeopleFromCivilization() was fulfilled -->
@@ -55,7 +55,7 @@
 		<AccordionItem value="people-table">
 			<AccordionTrigger>Citoyens: ({data.civilization.people.length} au total)</AccordionTrigger>
 			<AccordionContent>
-				{@render citizensView(data.civilization.id)}
+				{@render citizensView()}
 			</AccordionContent>
 		</AccordionItem>
 		<AccordionItem value="buildings-table">

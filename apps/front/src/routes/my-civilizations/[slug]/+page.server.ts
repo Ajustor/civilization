@@ -2,6 +2,7 @@ export const prerender = false
 import { getMyCivilizationFromId } from '../../../services/api/civilization-api'
 import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
+import { getPeopleFromCivilization } from '../../../services/api/people-api'
 
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
@@ -14,5 +15,8 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 
   return {
     civilization,
+    lazy: {
+      people: getPeopleFromCivilization(cookies.get('auth') ?? '', params.slug)
+    }
   }
 }
