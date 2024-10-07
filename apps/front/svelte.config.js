@@ -14,7 +14,10 @@ const config = {
 		adapter: adapter({
 			edge: false,
 			split: true
-		})
+		}),
+		serviceWorker: {
+			register: false
+		}
 	}
 }
 
