@@ -4,6 +4,8 @@ import { enhancedImages } from '@sveltejs/enhanced-img'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 
+const generateSW = process.env.GENERATE_SW === 'true'
+
 export default defineConfig({
 	server: {
 		host: '0.0.0.0',
@@ -18,8 +20,9 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			srcDir: './src',
-			strategies: 'injectManifest',
-			filename: 'prompt-sw.ts',
+			strategies: generateSW ? 'generateSW' : 'injectManifest',
+			// you don't need to do this if you're using generateSW strategy in your app
+			filename: generateSW ? undefined : 'prompt-sw.ts',
 			manifest: {
 				short_name: 'Civilisations',
 				name: 'Civilisations',
@@ -47,22 +50,6 @@ export default defineConfig({
 					},
 				],
 			},
-			injectManifest: {
-				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
-			},
-			workbox: {
-				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
-			},
-			devOptions: {
-				enabled: true,
-				suppressWarnings: process.env.SUPPRESS_WARNING === 'true',
-				type: 'module',
-				navigateFallback: '/',
-			},
-			// if you have shared info in svelte config file put in a separate module and use it also here
-			kit: {
-				includeVersionFile: true,
-			}
 		}),
 	]
 })

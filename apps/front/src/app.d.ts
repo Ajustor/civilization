@@ -7,6 +7,7 @@ declare global {
 
 	declare const __DATE__: string
 	declare const __RELOAD_SW__: boolean
+	declare const PUBLIC_BACK_URL: string
 
 	namespace App {
 		// interface Error {}

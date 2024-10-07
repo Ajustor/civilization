@@ -9,7 +9,6 @@
 	import { page } from '$app/stores'
 	import { toast } from 'svelte-sonner'
 	import { pwaInfo } from 'virtual:pwa-info'
-	import ReloadPrompt from '$lib/components/ReloadPrompt.svelte'
 
 	$: webManifest = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
@@ -26,6 +25,8 @@
 	})
 </script>
 
+<!-- svelte-ignore reactive_declaration_non_reactive_property -->
+<!-- svelte-ignore reactive_declaration_non_reactive_property -->
 <svelte:head>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html webManifest}
