@@ -55,6 +55,22 @@ export default defineConfig({
 					},
 				],
 			},
+			injectManifest: {
+				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
+			},
+			workbox: {
+				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
+			},
+			devOptions: {
+				enabled: true,
+				suppressWarnings: process.env.SUPPRESS_WARNING === 'true',
+				type: 'module',
+				navigateFallback: '/',
+			},
+			// if you have shared info in svelte config file put in a separate module and use it also here
+			kit: {
+				includeVersionFile: true,
+			}
 		}),
 	]
 })
