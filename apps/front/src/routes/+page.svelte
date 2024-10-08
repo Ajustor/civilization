@@ -52,45 +52,61 @@
 							</p>
 						</div>
 					</div>
-					<div class="card bg-neutral text-neutral-content rounded shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title">Information sur les civilisations</h2>
-							{#await getWorldStats(world.id, { withAliveCount: true })}
-								<span class="loading loading-infinity loading-lg"></span>
-							{:then { aliveCivilizations }}
-								<p>
-									Il y a actuellement {aliveCivilizations} civilisation en vie
-								</p>
-							{/await}
-							{#await getWorldStats(world.id, { withDeadCount: true })}
-								<span class="loading loading-infinity loading-lg"></span>
-							{:then { deadCivilizations }}
-								<p>
-									et {deadCivilizations} civilisation mortes
-								</p>
-							{/await}
-						</div>
-					</div>
-					<div class="card bg-neutral text-neutral-content rounded shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title">Top 3 des civilisations les plus anciennes</h2>
+					{#await data.lazy.get(world.id)}
+						<span class="loading loading-infinity loading-lg"></span>
+					{:then worldStats}
+						{#if worldStats}
+							<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+								<div class="card-body">
+									<h2 class="card-title">Information sur les civilisations</h2>
+									<p>
+										Il y a actuellement {worldStats.aliveCivilizations} civilisation en vie
+									</p>
+									<p>
+										et {worldStats.deadCivilizations} civilisation mortes
+									</p>
+								</div>
+							</div>
+							<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+								<div class="card-body">
+									<h2 class="card-title">Top 3 des civilisations les plus anciennes</h2>
+									{#if worldStats.topCivilizations}
+										<ol class="list-inside list-decimal">
+											{#each worldStats.topCivilizations as topCiv}
+												<li>{topCiv.name} avec {topCiv.livedMonths} mois vécu</li>
+											{:else}
+												Aucune civilisation n'est présente dans le monde
+											{/each}
+										</ol>
+									{/if}
+								</div>
+							</div>
+							<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
+								<div class="card-body">
+									<h2 class="card-title">Rapport homme/femme dans le monde</h2>
 
-							{#await getWorldStats(world.id, { withTopCivilizations: true })}
-								<span class="loading loading-infinity loading-lg"></span>
-							{:then { topCivilizations }}
-								{#if topCivilizations}
-									<ol class="list-inside list-decimal">
-										{#each topCivilizations as topCiv}
-											<li>{topCiv.name} avec {topCiv.livedMonths} mois vécu</li>
-										{:else}
-											Aucune civilisation n'est présente dans le monde
-										{/each}
-									</ol>
-								{/if}
-							{/await}
-						</div>
-					</div>
-					<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+									{#if worldStats.menAndWomen}
+										{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
+											<Doughnut
+												data={{
+													labels: ['Hommes', 'Femmes'],
+													datasets: [
+														{
+															data: [worldStats.menAndWomen.men, worldStats.menAndWomen.women]
+														}
+													]
+												}}
+											/>
+										{/await}
+									{/if}
+								</div>
+							</div>
+						{/if}
+					{/await}
+
+					<div
+						class="card bg-neutral text-neutral-content col-start-1 row-start-2 rounded shadow-xl"
+					>
 						<div class="card-body">
 							<h2 class="card-title">Les ressources du monde</h2>
 							{#each world.resources as resource}
@@ -99,29 +115,6 @@
 									text="{resourceNames[resource.type]}: {resource.quantity} restante"
 								/>
 							{/each}
-						</div>
-					</div>
-					<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
-						<div class="card-body">
-							<h2 class="card-title">Rapport homme/femme dans le monde</h2>
-							{#await getWorldStats(world.id, { withMenAndWomenRatio: true })}
-								<span class="loading loading-infinity loading-lg"></span>
-							{:then { menAndWomen }}
-								{#if menAndWomen}
-									{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
-										<Doughnut
-											data={{
-												labels: ['Hommes', 'Femmes'],
-												datasets: [
-													{
-														data: [menAndWomen.men, menAndWomen.women]
-													}
-												]
-											}}
-										/>
-									{/await}
-								{/if}
-							{/await}
 						</div>
 					</div>
 				</Item>

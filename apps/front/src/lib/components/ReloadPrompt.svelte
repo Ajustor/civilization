@@ -34,13 +34,13 @@
 			{#if $offlineReady}
 				<span> L'application est prête </span>
 			{:else}
-				<span> Du nouveau contenus est disponnible ! </span>
+				<span> Du nouveau contenus est disponible ! </span>
 			{/if}
 		</div>
 		{#if $needRefresh}
 			<button on:click={() => updateServiceWorker(true)}> Rafraichir </button>
 		{/if}
-		<button on:click={close}> Close </button>
+		<button on:click={close}> Fermer </button>
 	</div>
 {/if}
 

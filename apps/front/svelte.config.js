@@ -17,11 +17,11 @@ const config = {
 			edge: false,
 			split: true
 		}),
-		files: {
-			serviceWorker: 'src/prompt-sw.ts'
-		},
 		serviceWorker: {
 			register: false
+		},
+		files: {
+			serviceWorker: generateSW ? undefined : 'src/prompt-sw.ts'
 		}
 	}
 }
