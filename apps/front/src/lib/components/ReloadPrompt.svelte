@@ -1,20 +1,13 @@
 <script lang="ts">
 	import { useRegisterSW } from 'virtual:pwa-register/svelte'
-
-	// replaced dynamically
-	const buildDate = __DATE__
-
-	const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW({
+	const { needRefresh, updateServiceWorker, offlineReady } = useRegisterSW({
 		onRegistered(r) {
-			if (__RELOAD_SW__) {
-				r &&
-					setInterval(() => {
-						console.log('Checking for sw update')
-						r.update()
-					}, 20000 /* 20s for testing purposes */)
-			} else {
-				console.log(`SW Registered: ${r}`)
-			}
+			// uncomment following code if you want check for updates
+			// r && setInterval(() => {
+			//    console.log('Checking for sw update')
+			//    r.update()
+			// }, 20000 /* 20s for testing purposes */)
+			console.log(`SW Registered: ${r}`)
 		},
 		onRegisterError(error) {
 			console.log('SW registration error', error)
@@ -24,7 +17,6 @@
 		offlineReady.set(false)
 		needRefresh.set(false)
 	}
-
 	$: toast = $offlineReady || $needRefresh
 </script>
 
@@ -32,26 +24,19 @@
 	<div class="pwa-toast" role="alert">
 		<div class="message">
 			{#if $offlineReady}
-				<span> App ready to work offline </span>
+				<span>L'application est prète</span>
 			{:else}
-				<span> New content available, click on reload button to update. </span>
+				<span> Du nouveau contenus est disponnible, rafraichissez pour le voir ! </span>
 			{/if}
 		</div>
 		{#if $needRefresh}
-			<button on:click={() => updateServiceWorker(true)}> Reload </button>
+			<button on:click={() => updateServiceWorker(true)}> Recharger </button>
 		{/if}
-		<button on:click={close}> Close </button>
+		<button on:click={close}> Fermer </button>
 	</div>
 {/if}
 
-<div class="pwa-date">
-	{buildDate}
-</div>
-
 <style>
-	.pwa-date {
-		visibility: hidden;
-	}
 	.pwa-toast {
 		position: fixed;
 		right: 0;

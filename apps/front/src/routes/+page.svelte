@@ -108,8 +108,8 @@
 								<span class="loading loading-infinity loading-lg"></span>
 							{:then { menAndWomen }}
 								{#if menAndWomen}
-									{#await import('$lib/components/charts/Doughnut.svelte') then Doughnut}
-										<Doughnut.default
+									{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
+										<Doughnut
 											data={{
 												labels: ['Hommes', 'Femmes'],
 												datasets: [
