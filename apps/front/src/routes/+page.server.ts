@@ -14,10 +14,12 @@ export const load: PageServerLoad = async () => {
 
   return {
     worlds,
-    lazy: worlds.reduce((acc, world) => {
+    lazy: {
+        worldsStats: worlds.reduce((acc, world) => {
       acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
       return acc
     }, new Map<string, Promise<WorldStats>>())
+    }
   }
 }
 
