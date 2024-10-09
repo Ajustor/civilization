@@ -1,4 +1,5 @@
 export const prerender = false
+export const ssr = true
 
 import { getUser } from '../services/api/user-api'
 import { type User } from '../stores/user'
