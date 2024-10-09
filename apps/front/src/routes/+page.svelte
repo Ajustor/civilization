@@ -7,7 +7,6 @@
 	import { Carrot, FlameKindling, Cuboid } from 'lucide-svelte'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import { resourceNames, seasonsTranslations } from '$lib/translations'
-	import { getWorldStats } from '../services/api/world-api'
 
 	export let data: PageData
 
@@ -52,7 +51,7 @@
 							</p>
 						</div>
 					</div>
-					{#await data.lazy.get(world.id)}
+					{#await data.lazy.worldsStats.get(world.id)}
 						<span class="loading loading-infinity loading-lg"></span>
 					{:then worldStats}
 						{#if worldStats}
