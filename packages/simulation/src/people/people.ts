@@ -1,21 +1,25 @@
-import type { PeopleEntity, PeopleType } from '..'
+import type { Civilization, PeopleEntity, PeopleType } from '..'
 
 import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
 import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
 import { Tree } from '../utils/tree/tree'
+import { isUpgradedWork, Work } from './work/interface'
 // People.ts
-import type { Work } from './work/interface'
+import type { UpgradedWork } from './work/interface'
 import type { World } from '../world'
+import { WoodCutter } from './work/woodCutter'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
-  [OccupationTypes.FARMER]: Farmer
+  [OccupationTypes.FARMER]: Farmer,
+  [OccupationTypes.WOOD_CUTTER]: WoodCutter
 }
 
 export const EAT_FACTOR = {
   [OccupationTypes.CARPENTER]: 3,
+  [OccupationTypes.WOOD_CUTTER]: 3,
   [OccupationTypes.FARMER]: 2,
 }
 
@@ -51,7 +55,7 @@ export class People {
   public id!: string
   name: string
   month: number
-  work: Work | null = null
+  work: Work | UpgradedWork | null = null
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
@@ -121,7 +125,30 @@ export class People {
       return false
     }
 
-    return this.work?.collectResources(world, amount) ?? false
+    if (!this.work) {
+      return false
+    }
+
+    if (!isUpgradedWork(this.work)) {
+      return this.work.collectResources(world, amount) ?? false
+    }
+    return false
+  }
+
+  produceResources(civilization: Civilization, amount: number): boolean {
+    if (!this.work?.canWork(this.years) && !this.isBuilding) {
+      return false
+    }
+
+    if (!this.work) {
+      return false
+    }
+
+    if (isUpgradedWork(this.work)) {
+      return this.work.produceResources(civilization, amount)
+    }
+
+    return false
   }
 
   startBuilding(): void {

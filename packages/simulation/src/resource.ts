@@ -4,6 +4,7 @@ export enum ResourceTypes {
   WOOD = 'wood',
   FOOD = 'food',
   STONE = 'stone',
+  PLANK = 'plank'
 }
 
 export class Resource {

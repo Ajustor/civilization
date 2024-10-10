@@ -212,6 +212,8 @@ export class Civilization {
     this.createNewPeople()
     this.birthAwaitingBabies()
 
+    // Manage upgradedWorks
+
     if (!this.nobodyAlive()) {
       this.livedMonths++
     }
@@ -300,7 +302,7 @@ export class Civilization {
           continue
         }
 
-        const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
+        const occupations = [OccupationTypes.WOOD_CUTTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.WOOD_CUTTER, father.work?.occupationType ?? OccupationTypes.FARMER]
         const genders = [Gender.FEMALE, Gender.MALE]
         const newPerson = new People({
           name: uniqueNamesGenerator({ dictionaries: [names] }),
