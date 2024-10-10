@@ -205,11 +205,12 @@ export class Civilization {
 
     // Age all people
     this._people.forEach(person => person.ageOneMonth())
-    this.removeDeadPeople()
-    this.createNewPeople()
-    this.birthAwaitingBabies()
     this.buildNewHouses()
     this.checkHabitations()
+    this.removeDeadPeople()
+
+    this.createNewPeople()
+    this.birthAwaitingBabies()
 
     if (!this.nobodyAlive()) {
       this.livedMonths++
