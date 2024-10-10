@@ -1,10 +1,9 @@
 import { ResourceTypes } from '../resource'
 import type { Building, BuildingType, ConstructionCost } from '../types/building'
-
 import { BuildingTypes } from './enum'
 
-export class House implements Building {
-  capacity: number
+export class Farm implements Building {
+  capacity?: number | undefined
 
   constructor(capacity: number, public count = 0) {
     this.capacity = capacity
@@ -12,11 +11,12 @@ export class House implements Building {
 
   public static constructionCosts: ConstructionCost[] = [{
     resource: ResourceTypes.WOOD,
-    amount: 15
+    amount: 10
   }]
 
-  getType() {
-    return BuildingTypes.HOUSE
+
+  getType(): BuildingTypes {
+    return BuildingTypes.FARM
   }
 
   formatToType(): BuildingType {
@@ -24,7 +24,6 @@ export class House implements Building {
       capacity: this.capacity,
       type: this.getType(),
       count: this.count
-      // residents: this.residents.map((resident) => resident.formatToEntity()),
     }
   }
 }
