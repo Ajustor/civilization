@@ -192,6 +192,7 @@ export class People {
       month: this.month,
       name: this.name,
       occupation: this.work?.occupationType,
+      retired: this.work?.isRetired(this.years) ?? false,
       gender: this.gender,
       pregnancyMonthsLeft: this.pregnancyMonthsLeft,
       child: this.child?.formatToEntity() ?? null,
