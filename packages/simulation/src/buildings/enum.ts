@@ -1,3 +1,5 @@
 export enum BuildingTypes {
-  HOUSE = 'House'
+  HOUSE = 'house',
+  FARM = 'farm',
+  KILN = 'kiln'
 }
