@@ -2,7 +2,7 @@
   "name": "@ajustor/civ-api",
   "version": "0.0.1",
   "type": "module",
-  "module": "src/index.ts",
+  "module": "dist/index.js",
   "main": "dist/index.js",
   "types": "src/index.ts",
   "files": [
@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "bun build src/index.ts --minify --target=bun --outdir=dist",
-    "start": "NODE_ENV=production bun src/index.ts",
+    "start": "NODE_ENV=production bun dist/index.js",
     "generate:migrations": "bunx drizzle-kit generate",
     "migration": "bun run migrations.ts",
     "populate": "bun run seed.ts",
