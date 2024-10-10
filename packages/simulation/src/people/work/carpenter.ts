@@ -1,9 +1,11 @@
 import { OccupationTypes } from './enum'
 import { ResourceTypes } from '../../resource'
-import type { Work } from './interface'
-import type { World } from '../../world'
+import type { UpgradedWork } from './interface'
+import { Civilization, Resource } from '../..'
 
-export class Carpenter implements Work {
+const RESOURCES_PRODUCED = 5
+
+export class Carpenter implements UpgradedWork {
 
   public RETIREMENT_AGE = 60
 
@@ -19,13 +21,14 @@ export class Carpenter implements Work {
     return personAge >= 12 && personAge < this.RETIREMENT_AGE
   }
 
-  collectResources(world: World, count: number): boolean {
-    const resource = world.getResource(ResourceTypes.WOOD)
-    if (resource) {
-      if (resource.quantity >= count) {
-        resource.decrease(count)
-        return true
-      }
+  produceResources(civilization: Civilization): boolean {
+    const resource = civilization.getResource(ResourceTypes.WOOD)
+    if (resource?.quantity) {
+      resource.decrease(1)
+      const plank = civilization.getResource(ResourceTypes.PLANK) ?? new Resource(ResourceTypes.PLANK, 0)
+      plank.increase(RESOURCES_PRODUCED)
+      civilization.addResource(plank)
+      return true
     }
     return false
   }
