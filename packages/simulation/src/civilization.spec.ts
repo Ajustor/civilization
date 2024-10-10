@@ -2,19 +2,18 @@ const isWithinChance = jest.fn()
 
 jest.mock('./utils', () => ({ isWithinChance }))
 
-import { PeopleBuilder } from './builders'
-import { BuildingTypes } from './buildings/enum'
-import { House } from './buildings/house'
-import { Civilization } from './civilization'
-import { Gender } from './people/enum'
 import { EAT_FACTOR, People } from './people/people'
-import { Carpenter } from './people/work/carpenter'
-import { Farmer } from './people/work/farmer'
-import { OccupationTypes } from './people/work/enum'
 import { Resource, ResourceTypes } from './resource'
+
+import { BuildingTypes } from './buildings/enum'
+import { Carpenter } from './people/work/carpenter'
+import { Civilization } from './civilization'
+import { Farmer } from './people/work/farmer'
+import { Gender } from './people/enum'
+import { House } from './buildings/house'
+import { OccupationTypes } from './people/work/enum'
+import { PeopleBuilder } from './builders'
 import { World } from './world'
-
-
 
 describe('Civilization', () => {
 
@@ -92,7 +91,7 @@ describe('Civilization', () => {
   })
 
   // Constructing a building decreases the required resources
-  it('should decrease required resources when constructing a building', () => {
+  it('should decrease required resources when building something', () => {
     civilization.addResource(new Resource(ResourceTypes.WOOD, 20))
     civilization.constructBuilding(BuildingTypes.HOUSE, 4)
     const woodResource = civilization.getResource(ResourceTypes.WOOD)

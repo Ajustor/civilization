@@ -5,12 +5,18 @@ import type { World } from '../../world'
 
 export class Farmer implements Work {
 
+  public RETIREMENT_AGE = 70
+
   get occupationType() {
     return OccupationTypes.FARMER
   }
 
+  isRetired(personAge: number): boolean {
+    return personAge >= this.RETIREMENT_AGE
+  }
+
   canWork(personAge: number): boolean {
-    return personAge > 4 && personAge < 70
+    return personAge > 4 && personAge < this.RETIREMENT_AGE
   }
 
   collectResources(world: World, count: number): boolean {

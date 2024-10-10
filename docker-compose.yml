@@ -17,7 +17,7 @@ services:
     image: oven/bun:slim
     user: bun
     ports:
-      - "3000:3000"
+      - "${DOCKER_BACK_EXTERNAL_PORT}:3000"
     working_dir: /home/bun/app/apps/back
     volumes:
       - .:/home/bun/app:cached
