@@ -24,7 +24,7 @@ for (const world of worlds) {
     ...worldCivilizations.filter((civilization) => civilization.people.length),
   )
   console.timeLog('monthPass', 'Civilizations retrieved, pass a month')
-
+  const event = world.nextEvent
   await world.passAMonth()
   for (const civilization of world.civilizations) {
     const { people, livedMonths, resources, id: civilizationId } = civilization
@@ -36,10 +36,9 @@ for (const world of worlds) {
         }
 
         if (people.gender === Gender.FEMALE) {
+          acc.women++
           if (people.child) {
             acc.pregnantWomen++
-          } else {
-            acc.women++
           }
         }
         return acc
@@ -49,6 +48,7 @@ for (const world of worlds) {
 
     await CivilizationStatsModel.create({
       month: livedMonths,
+      event,
       resources: resources.map((resource) => ({
         ...resource.formatToType(),
         resourceType: resource.type,

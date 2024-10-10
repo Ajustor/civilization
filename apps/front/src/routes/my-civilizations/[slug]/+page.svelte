@@ -4,6 +4,7 @@
 	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
 
 	import {
+		Resource,
 		ResourceTypes,
 		type BuildingType,
 		type OccupationTypes,
@@ -17,7 +18,7 @@
 		AccordionItem,
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
-	import { OCCUPATIONS, resourceNames } from '$lib/translations'
+	import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import { callGetPeople, callGetPeopleStream } from '../../../services/sveltekit-api/people'
 
@@ -25,12 +26,6 @@
 
 	let pageIndex = 0
 	let pageSize = 10
-
-	const resourceIcons = {
-		food: Carrot,
-		wood: FlameKindling,
-		stone: Cuboid
-	}
 
 	const stringToColour = function (str: string) {
 		let hash = 0
@@ -63,7 +58,9 @@
 	const RESOURCES_INDEXES = {
 		[ResourceTypes.FOOD]: 0,
 		[ResourceTypes.WOOD]: 1,
-		[ResourceTypes.STONE]: 2
+		[ResourceTypes.STONE]: 2,
+		[ResourceTypes.PLANK]: 3,
+		[ResourceTypes.CHARCOAL]: 4
 	}
 </script>
 

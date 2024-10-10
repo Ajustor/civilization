@@ -1,4 +1,4 @@
-import type { PeopleEntity, PeopleType } from '..'
+import type { Civilization, PeopleEntity, PeopleType } from '..'
 
 import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
@@ -6,20 +6,37 @@ import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
 import { Retired } from './work/retired'
 import { Tree } from '../utils/tree/tree'
-import type { Work } from './work/interface'
+import { isCollectWork, type Work } from './work/interface'
+// People.ts
+import type { UpgradedWork } from './work/interface'
 import type { World } from '../world'
 import { isWithinChance } from '../utils'
+import { WoodCutter } from './work/woodCutter'
+import { CharcoalBurner } from './work/charcoalBurner'
+import { Gatherer } from './work/gatherer'
+import { Child } from './work/child'
+import { Miner } from './work/miner'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
   [OccupationTypes.FARMER]: Farmer,
   [OccupationTypes.RETIRED]: Retired,
+  [OccupationTypes.WOODCUTTER]: WoodCutter,
+  [OccupationTypes.CHARCOAL_BURNER]: CharcoalBurner,
+  [OccupationTypes.GATHERER]: Gatherer,
+  [OccupationTypes.CHILD]: Child,
+  [OccupationTypes.MINER]: Miner,
 }
 
 export const EAT_FACTOR = {
+  [OccupationTypes.MINER]: 3,
   [OccupationTypes.CARPENTER]: 3,
-  [OccupationTypes.FARMER]: 2,
+  [OccupationTypes.FARMER]: 3,
+  [OccupationTypes.CHARCOAL_BURNER]: 3,
+  [OccupationTypes.WOODCUTTER]: 2,
+  [OccupationTypes.GATHERER]: 2,
   [OccupationTypes.RETIRED]: 1,
+  [OccupationTypes.CHILD]: 1,
 }
 
 export const MINIMUM_CONCEPTION_AGE = 16
@@ -33,9 +50,11 @@ const DEATH_RATE_AFTER_EXPECTANCY = 20
 
 export const MAX_LIFE = 12
 
+export const MINIMAL_AGE_TO_WORK = 12
+
 export type PeopleConstructorParams = {
-  month: number,
-  gender: Gender,
+  month: number
+  gender: Gender
   lifeCounter: number
   isBuilding?: boolean
   buildingMonthsLeft?: number
@@ -58,7 +77,7 @@ export type Lineage = {
 export class People {
   public id!: string
   month: number
-  work: Work | null = null
+  work: Work | UpgradedWork | null = null
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
@@ -67,6 +86,7 @@ export class People {
   child: People | null = null
   lineage?: Lineage
   numberOfChild: number
+  public hasWork: boolean = false
 
   tree: Tree<string> | null = null
 
@@ -78,7 +98,7 @@ export class People {
     buildingMonthsLeft = 0,
     pregnancyMonthsLeft = 0,
     lineage,
-    numberOfChild = 0
+    numberOfChild = 0,
   }: PeopleConstructorParams) {
     this.month = month
     this.lifeCounter = lifeCounter
@@ -121,28 +141,60 @@ export class People {
   }
 
   isAlive(): boolean {
-    return this.lifeCounter > 0 && (this.years < LIFE_EXPECTANCY || !isWithinChance(DEATH_RATE_AFTER_EXPECTANCY))
+    return (
+      this.lifeCounter > 0 &&
+      (this.years < LIFE_EXPECTANCY ||
+        !isWithinChance(DEATH_RATE_AFTER_EXPECTANCY))
+    )
   }
 
-  collectResource(world: World, amount: number): boolean {
+  collectResource(world: World, civilization: Civilization): boolean {
     if (!this.work?.canWork(this.years) && !this.isBuilding) {
       return false
     }
 
-    return this.work?.collectResources(world, amount) ?? false
+    if (!this.work) {
+      return false
+    }
+
+    if (isCollectWork(this.work)) {
+      return this.work.collectResources(world, civilization) ?? false
+    }
+    return false
   }
 
-  startBuilding(): void {
+  startBuilding(buildingMonthsLeft = 2): void {
     this.isBuilding = true
-    this.buildingMonthsLeft = 2
+    this.buildingMonthsLeft = buildingMonthsLeft
   }
 
   canConceive(): boolean {
-    return this.numberOfChild <= MAX_NUMBER_OF_CHILD && this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
+    return (
+      this.numberOfChild <= MAX_NUMBER_OF_CHILD &&
+      this.years > MINIMUM_CONCEPTION_AGE &&
+      this.years < MAXIMUM_CONCEPTION_AGE &&
+      this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH &&
+      !this.child
+    )
   }
 
   canRetire(): boolean {
     return this.work?.canRetire(this.years) ?? false
+  }
+
+  canWork(): boolean {
+    return (
+      !this.hasWork &&
+      !this.isBuilding &&
+      (this.work?.canWork(this.years) ?? false)
+    )
+  }
+
+  canUpgradeWork(): boolean {
+    return (
+      this.years >= MINIMAL_AGE_TO_WORK &&
+      (this.work?.canUpgrade(this.years) ?? false)
+    )
   }
 
   addChildToBirth(child: People) {
@@ -163,7 +215,11 @@ export class People {
     }
   }
 
-  private addLineageInTree({ father, mother }: Lineage, parentKey: string, parentLevel: number) {
+  private addLineageInTree(
+    { father, mother }: Lineage,
+    parentKey: string,
+    parentLevel: number,
+  ) {
     const level = parentLevel + 1
 
     if (father) {
@@ -175,7 +231,7 @@ export class People {
         },
         parent: {
           key: parentKey,
-        }
+        },
       })
     }
 
@@ -188,7 +244,7 @@ export class People {
         },
         parent: {
           key: parentKey,
-        }
+        },
       })
     }
 
@@ -207,11 +263,17 @@ export class People {
       result.push(this.lineage.father.id, this.lineage.mother.id)
 
       if (this.lineage.father.lineage) {
-        result.push(this.lineage.father.lineage.father.id, this.lineage.father.lineage.mother.id)
+        result.push(
+          this.lineage.father.lineage.father.id,
+          this.lineage.father.lineage.mother.id,
+        )
       }
 
       if (this.lineage.mother.lineage) {
-        result.push(this.lineage.mother.lineage.father.id, this.lineage.mother.lineage.mother.id)
+        result.push(
+          this.lineage.mother.lineage.father.id,
+          this.lineage.mother.lineage.mother.id,
+        )
       }
     }
 
@@ -234,11 +296,12 @@ export class People {
   }
 
   formatToType(): PeopleType {
-    return { ...this.formatToEntity(), years: this.years, id: this.id, }
+    return { ...this.formatToEntity(), years: this.years, id: this.id }
   }
 
   get eatFactor(): number {
-    return this.work?.canWork(this.years) ? EAT_FACTOR[this.work.occupationType] : 1
+    return this.work?.canWork(this.years)
+      ? EAT_FACTOR[this.work.occupationType]
+      : 1
   }
-
 }

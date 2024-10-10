@@ -1,11 +1,12 @@
 import { OccupationTypes } from './enum'
-import { ResourceTypes } from '../../resource'
-import type { Work } from './interface'
-import type { World } from '../../world'
+import type { UpgradedWork } from './interface'
 
-export const FARMER_REQUIRED_AGE = 4
+export const FARMER_REQUIRED_AGE = 21
 
-export class Farmer implements Work {
+export class Farmer implements UpgradedWork {
+  canUpgrade(personAge: number): boolean {
+    return personAge > FARMER_REQUIRED_AGE
+  }
 
   public RETIREMENT_AGE = 70
 
@@ -18,17 +19,6 @@ export class Farmer implements Work {
   }
 
   canWork(personAge: number): boolean {
-    return personAge >= FARMER_REQUIRED_AGE && personAge < this.RETIREMENT_AGE
-  }
-
-  collectResources(world: World, count: number): boolean {
-    const resource = world.getResource(ResourceTypes.FOOD)
-    if (resource) {
-      if (resource.quantity >= count) {
-        resource.decrease(count)
-        return true
-      }
-    }
-    return false
+    return personAge < this.RETIREMENT_AGE
   }
 }

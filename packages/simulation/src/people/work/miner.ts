@@ -1,19 +1,17 @@
 import { OccupationTypes } from './enum'
-import type { UpgradedWork } from './interface'
+import { UpgradedWork } from './interface'
 
-const MINIMAL_AGE_TO_UPGRADE = 21
+const MINIMAL_AGE_TO_UPGRADE = 25
 
-export class Carpenter implements UpgradedWork {
+export class Miner implements UpgradedWork {
   canUpgrade(personAge: number): boolean {
     return personAge >= MINIMAL_AGE_TO_UPGRADE
   }
 
-  public RETIREMENT_AGE = 60
-
-  get occupationType() {
-    return OccupationTypes.CARPENTER
+  public RETIREMENT_AGE = 50
+  get occupationType(): OccupationTypes {
+    return OccupationTypes.MINER
   }
-
   canRetire(personAge: number): boolean {
     return personAge >= this.RETIREMENT_AGE
   }
