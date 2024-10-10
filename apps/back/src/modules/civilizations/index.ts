@@ -11,10 +11,10 @@ import {
 import Elysia, { error, t } from 'elysia'
 
 import { CivilizationService } from './service'
+import { PeopleService } from '../people/service'
 import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
-import { PeopleService } from '../people/service'
 
 const INITIAL_CITIZEN_NUMBER = 40
 const INITIAL_CITIZEN_AGE = 12 * 16
@@ -24,7 +24,7 @@ const INITIAL_OCCUPATION_CHOICE = [
   OccupationTypes.GATHERER,
 ]
 const INITIAL_CIVILIZATION_RESOURCES = {
-  FOOD: 400,
+  RAW_FOOD: 400,
   WOOD: 100,
   STONE: 0,
 }
@@ -101,7 +101,10 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       civilizationBuilder
         .withName(body.name)
         .addResource(
-          new Resource(ResourceTypes.FOOD, INITIAL_CIVILIZATION_RESOURCES.FOOD),
+          new Resource(
+            ResourceTypes.RAW_FOOD,
+            INITIAL_CIVILIZATION_RESOURCES.RAW_FOOD,
+          ),
           new Resource(ResourceTypes.WOOD, INITIAL_CIVILIZATION_RESOURCES.WOOD),
           new Resource(
             ResourceTypes.STONE,

@@ -4,14 +4,14 @@ describe('Resource', () => {
 
   // Creating a Resource instance with valid type and quantity
   it('should create a Resource instance with valid type and quantity', () => {
-    const resource = new Resource(ResourceTypes.FOOD, 100)
-    expect(resource.type).toBe(ResourceTypes.FOOD)
+    const resource = new Resource(ResourceTypes.RAW_FOOD, 100)
+    expect(resource.type).toBe(ResourceTypes.RAW_FOOD)
     expect(resource.quantity).toBe(100)
   })
 
   // Decreasing the quantity of a Resource instance to exactly zero
   it('should decrease the quantity to zero when the decrease amount equals the current quantity', () => {
-    const resource = new Resource(ResourceTypes.FOOD, 50)
+    const resource = new Resource(ResourceTypes.RAW_FOOD, 50)
     resource.decrease(50)
     expect(resource.quantity).toBe(0)
   })
@@ -55,8 +55,8 @@ describe('Resource', () => {
 
   // Creating a Resource instance with a negative quantity
   it('should create a Resource instance with negative quantity set to 0', () => {
-    const resource = new Resource(ResourceTypes.FOOD, -50)
-    expect(resource.type).toBe(ResourceTypes.FOOD)
+    const resource = new Resource(ResourceTypes.RAW_FOOD, -50)
+    expect(resource.type).toBe(ResourceTypes.RAW_FOOD)
     expect(resource.quantity).toBe(0)
   })
 
@@ -93,7 +93,7 @@ describe('Resource', () => {
   it('should validate constructor parameters for type safety when creating a Resource instance', () => {
     const invalidResource = 'invalidType' as ResourceTypes
     const createResourceWithInvalidType = () => new Resource(invalidResource, 100)
-    const createResourceWithInvalidQuantity = () => new Resource(ResourceTypes.FOOD, 'invalidQuantity' as unknown as number)
+    const createResourceWithInvalidQuantity = () => new Resource(ResourceTypes.RAW_FOOD, 'invalidQuantity' as unknown as number)
 
     expect(createResourceWithInvalidType).toThrow('Resource not implemented')
     expect(createResourceWithInvalidQuantity).toThrow('Quantity is not a number')

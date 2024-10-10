@@ -49,7 +49,7 @@ describe('CivilizationBuilder', () => {
   // Correctly adds multiple Resources to the Civilization
   it('should add multiple Resources to the Civilization', () => {
     const builder = new CivilizationBuilder()
-    const resource1 = new Resource(ResourceTypes.FOOD, 100)
+    const resource1 = new Resource(ResourceTypes.RAW_FOOD, 100)
     const resource2 = new Resource(ResourceTypes.WOOD, 50)
 
     const civilization = builder
@@ -112,7 +112,7 @@ describe('CivilizationBuilder', () => {
     const builder = new CivilizationBuilder()
 
     const person = new People({ gender: Gender.FEMALE, lifeCounter: 100, month: 120 })
-    const resource = new Resource(ResourceTypes.FOOD, 10)
+    const resource = new Resource(ResourceTypes.RAW_FOOD, 10)
     const building = new House(2)
 
     builder.addCitizen(person).addResource(resource).addBuilding(building)
@@ -159,7 +159,7 @@ describe('CivilizationBuilder', () => {
       .withName('Test Civilization')
       .withLivedMonths(12)
       .addCitizen(new People({ gender: Gender.FEMALE, lifeCounter: 100, month: 120 }))
-      .addResource(new Resource(ResourceTypes.FOOD, 10))
+      .addResource(new Resource(ResourceTypes.RAW_FOOD, 10))
       .addBuilding(new House(4))
       .withId('123')
       .build()
@@ -170,7 +170,7 @@ describe('CivilizationBuilder', () => {
   // Builds a Civilization with all specified attributes correctly assigned
   it('should build a Civilization with specified attributes correctly assigned', () => {
     const people = [new People({ gender: Gender.FEMALE, lifeCounter: 100, month: 120 }), new People({ gender: Gender.MALE, lifeCounter: 100, month: 120 })]
-    const resources = [new Resource(ResourceTypes.FOOD, 200), new Resource(ResourceTypes.WOOD, 200)]
+    const resources = [new Resource(ResourceTypes.RAW_FOOD, 200), new Resource(ResourceTypes.WOOD, 200)]
     const buildings = [new House(4)]
 
     const builder = new CivilizationBuilder()

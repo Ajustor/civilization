@@ -9,7 +9,7 @@ export class RatInvasion implements WorldEvent {
   actions({ civilizations }: Required<ActionInput>): void {
     
     for (const civilization of civilizations) {
-      const food = civilization.getResource(ResourceTypes.FOOD)
+      const food = civilization.getResource(ResourceTypes.RAW_FOOD)
 
       if (food.quantity) {
         food.decrease(food.quantity-100)

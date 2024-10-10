@@ -25,6 +25,7 @@ import { Sawmill } from './buildings/sawmill'
 import { Farm } from './buildings/farm'
 import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
+import { Campfire } from './buildings/campfire'
 
 const PREGNANCY_PROBABILITY = 60
 const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
@@ -37,6 +38,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.KILN]: Kiln,
   [BuildingTypes.HOUSE]: House,
   [BuildingTypes.SAWMILL]: Sawmill,
+  [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.MINE]: Mine,
 }
 
@@ -44,11 +46,12 @@ const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
   [BuildingTypes.MINE]: [ResourceTypes.STONE],
 }
 
-const EXTRACTIONS_BUILDINGS = [
-  BuildingTypes.MINE
-]
+const EXTRACTIONS_BUILDINGS = [BuildingTypes.MINE]
 
-export const isExtractionBuilding = (building: Building): building is AbstractExtractionBuilding => EXTRACTIONS_BUILDINGS.includes(building.getType())
+export const isExtractionBuilding = (
+  building: Building,
+): building is AbstractExtractionBuilding =>
+  EXTRACTIONS_BUILDINGS.includes(building.getType())
 
 export class Civilization {
   public id = v4()
@@ -135,6 +138,13 @@ export class Civilization {
   get farm(): Farm | undefined {
     return this.buildings.find<Farm>(
       (building): building is Farm => building.getType() === BuildingTypes.FARM,
+    )
+  }
+
+  get campfire(): Campfire | undefined {
+    return this.buildings.find<Campfire>(
+      (building): building is Campfire =>
+        building.getType() === BuildingTypes.CAMPFIRE,
     )
   }
 
@@ -282,23 +292,32 @@ export class Civilization {
     world: World,
     people: People[],
   ): Promise<void> {
-    const civilizationFood = this.getResource(ResourceTypes.FOOD)
+    const civilizationFood = this.getResource(ResourceTypes.RAW_FOOD)
+    const civilizationCookedFood = this.getResource(ResourceTypes.COOKED_FOOD)
     const civilizationWood = this.getResource(ResourceTypes.WOOD)
     const civilizationCharcoal = this.getResource(ResourceTypes.CHARCOAL)
 
     const foodPromise = new Promise((resolve) => {
       // Handle food consumption and life counter
-      if (civilizationFood) {
-        for (const person of people) {
+      for (const person of people) {
+        if (civilizationCookedFood) {
           const eatFactor = person.eatFactor
-          if (civilizationFood.quantity >= eatFactor) {
+          if (civilizationCookedFood.quantity >= eatFactor) {
+            civilizationCookedFood.decrease(eatFactor)
             person.increaseLife(1)
-
-            civilizationFood.decrease(eatFactor)
-          } else {
-            person.decreaseLife(4)
+            continue
           }
         }
+
+        if (civilizationFood) {
+          const eatFactor = person.eatFactor * 2
+          if (civilizationFood.quantity >= eatFactor) {
+            civilizationFood.decrease(eatFactor)
+            continue
+          }
+        }
+
+        person.decreaseLife(4)
       }
       resolve(null)
     })
@@ -382,7 +401,7 @@ export class Civilization {
     this.adaptPeopleJob()
     this.buildNewBuilding()
 
-    this.checkHabitations()
+    this.checkHousing()
 
     this.removeDeadPeople()
 
@@ -393,7 +412,10 @@ export class Civilization {
     // Allow only half people to be child
     const children = this.getPeopleWithOccupation(OccupationTypes.CHILD)
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
-    if (activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION && children.length < adults.length / 2) {
+    if (
+      activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
+      children.length < adults.length / 2
+    ) {
       await this.createNewPeople()
     }
 
@@ -405,7 +427,6 @@ export class Civilization {
     if (!this.nobodyAlive()) {
       this.livedMonths++
     }
-
   }
 
   private useProductionBuilding(building: ProductionBuilding) {
@@ -515,13 +536,16 @@ export class Civilization {
     if (this.farm) {
       this.useProductionBuilding(this.farm)
     }
+
+    if (this.campfire) {
+      this.useProductionBuilding(this.campfire)
+    }
   }
 
   private buildNewBuilding() {
     this.buildNewHouses()
     // TODO: create a new function to determine if building is full
     if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-
       this.buildNew(
         BuildingTypes.KILN,
         Kiln.constructionCosts,
@@ -606,9 +630,10 @@ export class Civilization {
     workerRequiredToBuild: WorkerRequiredToBuild[],
     timeToBuild: number,
   ) {
-    const canBuild = constructionCosts.every(
-      (cost) => this.getResource(cost.resource).quantity >= cost.amount,
-    ) || !constructionCosts.length
+    const canBuild =
+      constructionCosts.every(
+        (cost) => this.getResource(cost.resource).quantity >= cost.amount,
+      ) || !constructionCosts.length
     if (!canBuild) {
       return
     }
@@ -649,7 +674,7 @@ export class Civilization {
     this.constructBuilding(buildingType)
   }
 
-  private checkHabitations() {
+  private checkHousing() {
     let lastCitizenWithoutHouseIndex = 0
     if (this.houses) {
       lastCitizenWithoutHouseIndex = House.capacity * this.houses.count - 1
@@ -669,12 +694,10 @@ export class Civilization {
 
     const workersCanUpgrade = this.getWorkersWhoCanUpgrade()
     for (const worker of workersCanUpgrade) {
-      const hasChanceToEvolve = worker.work?.occupationType === OccupationTypes.CHILD || isWithinChance(CHANCE_TO_EVOLVE)
-      if (
-        hasChanceToEvolve &&
-        worker.work &&
-        worker.canUpgradeWork()
-      ) {
+      const hasChanceToEvolve =
+        worker.work?.occupationType === OccupationTypes.CHILD ||
+        isWithinChance(CHANCE_TO_EVOLVE)
+      if (hasChanceToEvolve && worker.work && worker.canUpgradeWork()) {
         const newPossibleOccupations =
           OCCUPATION_TREE[worker.work.occupationType] ?? []
 
@@ -682,7 +705,10 @@ export class Civilization {
           continue
         }
 
-        const selectedNewOccupation = getRandomInt(0, newPossibleOccupations.length - 1)
+        const selectedNewOccupation = getRandomInt(
+          0,
+          newPossibleOccupations.length - 1,
+        )
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
         if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
           worker.setOccupation(newOccupation)
@@ -775,9 +801,7 @@ export class Civilization {
                 },
               },
             })
-            newPerson.setOccupation(
-              OccupationTypes.CHILD
-            )
+            newPerson.setOccupation(OccupationTypes.CHILD)
 
             mother.addChildToBirth(newPerson)
 

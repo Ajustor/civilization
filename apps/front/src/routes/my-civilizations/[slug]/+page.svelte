@@ -3,7 +3,13 @@
 	import type { PageData } from './$types'
 	import { ArrowLeft } from 'lucide-svelte'
 
-	import { ResourceTypes, type BuildingType, type OccupationTypes } from '@ajustor/simulation'
+	import {
+		Resource,
+		ResourceTypes,
+		type BuildingType,
+		type OccupationTypes,
+		type PeopleType
+	} from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -61,7 +67,7 @@
 {#snippet citizensView()}
 	{#await data.lazy.people}
 		<div
-			class="skeleton w-100 flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
+			class="w-100 skeleton flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
 		></div>
 	{:then people}
 		<!-- getPeopleFromCivilization() was fulfilled -->
@@ -103,14 +109,16 @@
 	<div class="grid grid-cols-1 gap-4 pl-0">
 		{#await data.lazy.stats.civilization}
 			<div
-				class="skeleton card bg-neutral text-neutral-content h-16 w-1/2 rounded shadow-xl md:col-span-2"
+				class="card skeleton h-16 w-1/2 rounded bg-neutral text-neutral-content shadow-xl md:col-span-2"
 			></div>
 		{:then civilizationStats}
 			{@const resources = civilizationStats.map(({ resources }) => resources)}
 			{@const peoples = civilizationStats.map(({ people }) => people)}
-			{@const labels = civilizationStats.map(({ month, event }) => `Mois: ${month}${event ? ` (${eventsName[event]})`: ''}`)}
+			{@const labels = civilizationStats.map(
+				({ month, event }) => `Mois: ${month}${event ? ` (${eventsName[event]})` : ''}`
+			)}
 			{#if resources.length}
-				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+				<div class="card rounded bg-neutral text-neutral-content shadow-xl">
 					<div class="card-body">
 						<h2 class="card-title">Progression des ressources</h2>
 						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
@@ -144,7 +152,7 @@
 			{/if}
 
 			{#if peoples.length}
-				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+				<div class="card rounded bg-neutral text-neutral-content shadow-xl">
 					<div class="card-body">
 						<h2 class="card-title">Progression de la population</h2>
 						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
@@ -177,10 +185,10 @@
 	<div class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-3 lg:grid-cols-4">
 		{#await data.lazy.stats.peopleRatio}
 			<div
-				class="skeleton card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2"
+				class="card skeleton rounded bg-neutral text-neutral-content shadow-xl md:col-span-2"
 			></div>
 		{:then peopleRatio}
-			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
+			<div class="card rounded bg-neutral text-neutral-content shadow-xl md:col-span-2">
 				<div class="card-body">
 					<h2 class="card-title">Rapport homme/femme dans la civilisation</h2>
 					{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
@@ -205,10 +213,10 @@
 
 		{#await data.lazy.stats.jobs}
 			<div
-				class="skeleton card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2"
+				class="card skeleton rounded bg-neutral text-neutral-content shadow-xl md:col-span-2"
 			></div>
 		{:then jobs}
-			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
+			<div class="card rounded bg-neutral text-neutral-content shadow-xl md:col-span-2">
 				<div class="card-body">
 					<h2 class="card-title">Répartition des métiers dans la civilisation</h2>
 					{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}

@@ -24,7 +24,7 @@ describe('World', () => {
   // Adding resources updates the resources list
   it('should update resources list when adding resources', () => {
     const world = new World()
-    const resource1 = new Resource(ResourceTypes.FOOD, 100)
+    const resource1 = new Resource(ResourceTypes.RAW_FOOD, 100)
     const resource2 = new Resource(ResourceTypes.WOOD, 50)
 
     world.addResource(resource1, resource2)
@@ -55,7 +55,7 @@ describe('World', () => {
 
   // Getting resources returns the correct list of resources
   it('should return correct list of resources when getResources is called', () => {
-    const resource1 = new Resource(ResourceTypes.FOOD, 100)
+    const resource1 = new Resource(ResourceTypes.RAW_FOOD, 100)
     const resource2 = new Resource(ResourceTypes.WOOD, 200)
     const world = new World()
     world.addResource(resource1, resource2)
@@ -68,11 +68,11 @@ describe('World', () => {
   // Getting a specific resource by type returns the correct resource
   it('should return correct resource when getResource is called with a valid type', () => {
     const world = new World()
-    const foodResource = new Resource(ResourceTypes.FOOD, 100)
+    const foodResource = new Resource(ResourceTypes.RAW_FOOD, 100)
     const woodResource = new Resource(ResourceTypes.WOOD, 200)
     world.addResource(foodResource, woodResource)
 
-    const retrievedFoodResource = world.getResource(ResourceTypes.FOOD)
+    const retrievedFoodResource = world.getResource(ResourceTypes.RAW_FOOD)
     const retrievedWoodResource = world.getResource(ResourceTypes.WOOD)
 
     expect(retrievedFoodResource).toBe(foodResource)
@@ -82,22 +82,22 @@ describe('World', () => {
   // Increasing a resource updates its quantity correctly
   it('should increase resource quantity correctly', () => {
     const world = new World()
-    const resource = new Resource(ResourceTypes.FOOD, 100)
+    const resource = new Resource(ResourceTypes.RAW_FOOD, 100)
     world.addResource(resource)
 
-    world.increaseResource(ResourceTypes.FOOD, 50)
+    world.increaseResource(ResourceTypes.RAW_FOOD, 50)
 
-    expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(150)
+    expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(150)
   })
 
   // Decreasing a resource updates its quantity correctly
   it('should update resource quantity correctly when decreasing', () => {
     const world = new World()
-    const mockResource = new Resource(ResourceTypes.FOOD, 100)
+    const mockResource = new Resource(ResourceTypes.RAW_FOOD, 100)
     world.addResource(mockResource)
 
     const initialQuantity = mockResource.quantity
-    world.decreaseResource(ResourceTypes.FOOD, 50)
+    world.decreaseResource(ResourceTypes.RAW_FOOD, 50)
 
     expect(mockResource.quantity).toBe(initialQuantity - 50)
   })
@@ -143,7 +143,7 @@ describe('World', () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
-      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
       const mockWood = new Resource(ResourceTypes.WOOD, 100)
       world.addResource(mockFood, mockWood)
 
@@ -156,7 +156,7 @@ describe('World', () => {
       expect(month).toBe(1)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.5))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.5))
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.1))
     })
 
@@ -164,7 +164,7 @@ describe('World', () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
-      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
       const mockWood = new Resource(ResourceTypes.WOOD, 100)
       world.addResource(mockFood, mockWood)
 
@@ -177,7 +177,7 @@ describe('World', () => {
       expect(month).toBe(3)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.75))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.75))
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.2))
     })
 
@@ -185,7 +185,7 @@ describe('World', () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
-      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
       const mockWood = new Resource(ResourceTypes.WOOD, 100)
       world.addResource(mockFood, mockWood)
 
@@ -198,7 +198,7 @@ describe('World', () => {
       expect(month).toBe(6)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.2))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.2))
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION))
     })
 
@@ -206,7 +206,7 @@ describe('World', () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
-      const mockFood = new Resource(ResourceTypes.FOOD, 100)
+      const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
       const mockWood = new Resource(ResourceTypes.WOOD, 100)
       world.addResource(mockFood, mockWood)
 
@@ -219,7 +219,7 @@ describe('World', () => {
       expect(month).toBe(9)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 0.5))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 0.5))
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 0.75))
     })
   })
@@ -227,12 +227,12 @@ describe('World', () => {
   // Getting world information returns the correct formatted data
   it('should return formatted world information', () => {
     const world = new World()
-    const worldFood = new Resource(ResourceTypes.FOOD, 5000)
+    const worldFood = new Resource(ResourceTypes.RAW_FOOD, 5000)
     const worldWood = new Resource(ResourceTypes.WOOD, 2000)
     world.addResource(worldFood, worldWood)
     const civilization1 = new Civilization('FORMATTED Civilization 1')
     civilization1.id = 'civilizationId'
-    const food = new Resource(ResourceTypes.FOOD, 500)
+    const food = new Resource(ResourceTypes.RAW_FOOD, 500)
     const wood = new Resource(ResourceTypes.WOOD, 200)
     civilization1.addResource(food)
     civilization1.addResource(wood)
@@ -264,7 +264,7 @@ describe('World', () => {
     const world = new World()
     const decreaseSpy = jest.spyOn(Resource.prototype, 'decrease')
 
-    world.decreaseResource(ResourceTypes.FOOD, 10)
+    world.decreaseResource(ResourceTypes.RAW_FOOD, 10)
 
     expect(decreaseSpy).not.toHaveBeenCalled()
   })
@@ -307,7 +307,7 @@ describe('World', () => {
   // Adding multiple resources at once updates the resources list correctly
   it('should update resources list when adding multiple resources', () => {
     const world = new World()
-    const resource1 = new Resource(ResourceTypes.FOOD, 100)
+    const resource1 = new Resource(ResourceTypes.RAW_FOOD, 100)
     const resource2 = new Resource(ResourceTypes.WOOD, 50)
 
     world.addResource(resource1, resource2)
@@ -330,13 +330,13 @@ describe('World', () => {
   it('should pass a month on civilizations', async () => {
     const world = new World()
 
-    const worldFood = new Resource(ResourceTypes.FOOD, 5000)
+    const worldFood = new Resource(ResourceTypes.RAW_FOOD, 5000)
     const worldWood = new Resource(ResourceTypes.WOOD, 2000)
     world.addResource(worldFood, worldWood)
     const civilization1 = new Civilization('Civilization 1')
     civilization1.addPeople(new People({ month: 200, lifeCounter: 12, gender: Gender.MALE }))
 
-    civilization1.addResource(new Resource(ResourceTypes.FOOD, 10))
+    civilization1.addResource(new Resource(ResourceTypes.RAW_FOOD, 10))
     world.addCivilization(civilization1)
 
     await world.passAMonth()
