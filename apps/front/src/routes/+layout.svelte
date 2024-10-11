@@ -26,7 +26,6 @@
 </script>
 
 <!-- svelte-ignore reactive_declaration_non_reactive_property -->
-<!-- svelte-ignore reactive_declaration_non_reactive_property -->
 <svelte:head>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html webManifest}
