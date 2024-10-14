@@ -7,9 +7,10 @@ import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 import { error } from '@sveltejs/kit'
 
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ cookies }) => {
 
   return {
+    myCivilizations: getMyCivilizations(cookies.get('auth') ?? ''),
     civilizationCreationForm: await superValidate(zod(newCivilizationSchema))
   }
 }

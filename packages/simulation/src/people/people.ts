@@ -4,24 +4,26 @@ import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
 import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
+import { Retired } from './work/retired'
 import { Tree } from '../utils/tree/tree'
-// People.ts
 import type { Work } from './work/interface'
 import type { World } from '../world'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
-  [OccupationTypes.FARMER]: Farmer
+  [OccupationTypes.FARMER]: Farmer,
+  [OccupationTypes.RETIRED]: Retired,
 }
 
 export const EAT_FACTOR = {
   [OccupationTypes.CARPENTER]: 3,
   [OccupationTypes.FARMER]: 2,
+  [OccupationTypes.RETIRED]: 1,
 }
 
 const PREGNANCY_MONTHS = 9
 const MINIMUM_CONCEPTION_AGE = 16
-const MAXIMUM_CONCEPTION_AGE = 60
+const MAXIMUM_CONCEPTION_AGE = 50
 const MINIMUM_CONCEPTION_HEALTH = 30
 
 
@@ -131,6 +133,10 @@ export class People {
 
   canConceive(): boolean {
     return this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
+  }
+
+  canRetire(): boolean {
+    return this.work?.canRetire(this.years) ?? false
   }
 
   addChildToBirth(child: People) {

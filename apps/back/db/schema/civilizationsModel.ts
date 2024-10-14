@@ -45,16 +45,16 @@ const civilizationSchema = new Schema({
 
 
 civilizationSchema.pre('deleteOne', async function () {
-  const { _id: id } = this.getQuery()
-  const civilization = await CivilizationModel.findById(id).populate('people')
+  const { _id: civilizationId } = this.getQuery()
+  const civilization = await CivilizationModel.findById(civilizationId).populate('people')
 
   if (!civilization) {
     throw new Error('It seams to have a big issue')
   }
 
   await PersonModel.deleteMany({ _id: { $in: civilization.people.map(({ id }) => id) } })
-  await WorldModel.updateMany({}, { $pull: { civilizations: id } })
-  await UserModel.updateMany({}, { $pull: { civilizations: id } })
+  await WorldModel.updateMany({}, { $pull: { civilizations: civilizationId } })
+  await UserModel.updateMany({}, { $pull: { civilizations: civilizationId } })
 })
 
 export { civilizationSchema }
