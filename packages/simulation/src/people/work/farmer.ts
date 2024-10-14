@@ -11,7 +11,7 @@ export class Farmer implements Work {
     return OccupationTypes.FARMER
   }
 
-  isRetired(personAge: number): boolean {
+  canRetire(personAge: number): boolean {
     return personAge >= this.RETIREMENT_AGE
   }
 

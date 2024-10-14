@@ -6,7 +6,6 @@ export interface PeopleEntity {
   name: string
   month: number
   occupation?: OccupationTypes
-  retired?: boolean
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number

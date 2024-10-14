@@ -140,6 +140,21 @@ describe('Civilization', () => {
     expect(carpenters).toContain(mockCarpenter)
   })
 
+  it('should retrieve people without a specific occupation correctly', () => {
+    const mockFarmer = new People({ name: 'Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 0 })
+    const mockCarpenter = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
+
+    mockFarmer.setOccupation(OccupationTypes.FARMER)
+    mockCarpenter.setOccupation(OccupationTypes.CARPENTER)
+    civilization.addPeople(mockFarmer, mockCarpenter)
+
+    const notFarmers = civilization.getPeopleWithoutOccupation(OccupationTypes.FARMER)
+    const notCarpenters = civilization.getPeopleWithoutOccupation(OccupationTypes.CARPENTER)
+
+    expect(notCarpenters).toContain(mockFarmer)
+    expect(notFarmers).toContain(mockCarpenter)
+  })
+
   it('should remove all dead people', () => {
     const person1 = new People({ name: 'Alice', gender: Gender.FEMALE, lifeCounter: 0, month: 0 })
     const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })
@@ -151,6 +166,47 @@ describe('Civilization', () => {
   })
 
   describe('civilization pass a month', () => {
+
+    it('Should return all workers who can retire', () => {
+      const person1 = new People({ name: 'Carpenter Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
+      const person2 = new People({ name: 'Farmer Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
+      const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
+      const person4 = new People({ name: 'Carpenter Baby Bob', gender: Gender.MALE, lifeCounter: 50, month: 100 })
+
+      person1.setOccupation(OccupationTypes.CARPENTER)
+      person2.setOccupation(OccupationTypes.FARMER)
+      person3.setOccupation(OccupationTypes.FARMER)
+      person4.setOccupation(OccupationTypes.CARPENTER)
+
+      civilization.addPeople(person1, person2, person3, person4)
+
+      const people = civilization.getWorkersWhoCanRetire()
+
+      expect(people.length).toBe(2)
+      expect(people.map(({ name }) => name)).toStrictEqual(['Carpenter Alice', 'Farmer Bob'])
+    })
+
+
+    it('Should change occupation of people who can retire', () => {
+      const person1 = new People({ name: 'Carpenter Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
+      const person2 = new People({ name: 'Farmer Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
+      const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
+      const person4 = new People({ name: 'Carpenter Baby Bob', gender: Gender.MALE, lifeCounter: 50, month: 100 })
+
+      person1.setOccupation(OccupationTypes.CARPENTER)
+      person2.setOccupation(OccupationTypes.FARMER)
+      person3.setOccupation(OccupationTypes.FARMER)
+      person4.setOccupation(OccupationTypes.CARPENTER)
+
+      civilization.addPeople(person1, person2, person3, person4)
+      civilization.passAMonth(world)
+
+      const retired = civilization.getPeopleWithOccupation(OccupationTypes.RETIRED)
+      expect(civilization.people.length).toBe(4)
+      expect(retired.length).toBe(2)
+      expect(retired.map(({ name }) => name)).toStrictEqual(['Carpenter Alice', 'Farmer Bob'])
+    })
+
     it('should remove all dead people', () => {
       const person1 = new People({ name: 'Alice', gender: Gender.FEMALE, lifeCounter: 0, month: 0 })
       const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })

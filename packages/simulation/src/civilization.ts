@@ -3,7 +3,6 @@ import { countries, names, uniqueNamesGenerator } from 'unique-names-generator'
 
 import type { Building } from './types/building'
 import { BuildingTypes } from './buildings/enum'
-import { Farmer } from './people/work/farmer'
 import { Gender } from './people/enum'
 import { House } from './buildings/house'
 import { OccupationTypes } from './people/work/enum'
@@ -102,6 +101,14 @@ export class Civilization {
 
   getPeopleWithOccupation(occupation: OccupationTypes): People[] {
     return this._people.filter(({ work: peopleJob }) => peopleJob && occupation === peopleJob.occupationType)
+  }
+
+  getPeopleWithoutOccupation(occupation: OccupationTypes): People[] {
+    return this._people.filter(({ work: peopleJob }) => peopleJob && occupation !== peopleJob.occupationType)
+  }
+
+  getWorkersWhoCanRetire(): People[] {
+    return this._people.filter((worker) => worker.canRetire()) 
   }
 
   addPeople(...people: People[]): void {
@@ -205,6 +212,7 @@ export class Civilization {
 
     // Age all people
     this._people.forEach(person => person.ageOneMonth())
+    this.adaptPeopleJob()
     this.buildNewHouses()
     this.checkHabitations()
     this.removeDeadPeople()
@@ -245,14 +253,11 @@ export class Civilization {
 
 
   public adaptPeopleJob() {
-    const farmerCount = this.getPeopleWithOccupation(OccupationTypes.FARMER).length
-    const oldCarpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER)
 
-    if (farmerCount < oldCarpenters.length) {
-      for (let i = 0; i > oldCarpenters.length / 2; i++) {
-        oldCarpenters[i].setOccupation(OccupationTypes.FARMER)
-        oldCarpenters[i].work = new Farmer()
-      }
+    const workers = this.getWorkersWhoCanRetire()
+
+    for (const citizen of workers) {
+      citizen.setOccupation(OccupationTypes.RETIRED)
     }
   }
 

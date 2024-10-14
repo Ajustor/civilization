@@ -3,7 +3,7 @@ import type { OccupationTypes } from './enum'
 
 export interface Work {
   get occupationType(): OccupationTypes
-  isRetired(personAge: number): boolean
+  canRetire(personAge: number): boolean
   collectResources(world: World, count: number): boolean
   canWork(personAge: number): boolean
 }
