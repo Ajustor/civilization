@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@ajustor/civ-api": "workspace:*",
+    "@ajustor/simulation": "workspace:*",
     "@fontsource/fira-mono": "^5.0.14",
     "@iconify/svelte": "^4.0.2",
     "@neoconfetti/svelte": "^2.2.1",
