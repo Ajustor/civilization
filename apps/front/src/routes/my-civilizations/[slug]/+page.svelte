@@ -3,7 +3,7 @@
 	import type { PageData } from './$types'
 	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
 
-	import type { BuildingType, PeopleType } from '@ajustor/simulation'
+	import type { BuildingType, OccupationTypes, PeopleType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -12,7 +12,7 @@
 		AccordionItem,
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
-	import { resourceNames } from '$lib/translations'
+	import { OCCUPATIONS, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import PeopleTree from './datatables/PeopleTree.svelte'
 
@@ -22,6 +22,19 @@
 		food: Carrot,
 		wood: FlameKindling,
 		stone: Cuboid
+	}
+
+	const stringToColour = function (str: string) {
+		let hash = 0
+		for (let i = 0; i < str.length; i++) {
+			hash = str.charCodeAt(i) + ((hash << 5) - hash)
+		}
+		let colour = '#'
+		for (let i = 0; i < 3; i++) {
+			const value = (hash >> (i * 8)) & 0xff
+			colour += ('00' + value.toString(16)).substr(-2)
+		}
+		return colour
 	}
 </script>
 
@@ -77,4 +90,48 @@
 			{/each}
 		</ul>
 	</span>
+
+	{#await data.lazy.stats then stats}
+		<!-- promise was fulfilled -->
+		<div class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-3 lg:grid-cols-4">
+			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
+				<div class="card-body">
+					<h2 class="card-title">Rapport homme/femme dans la civilisation</h2>
+					{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
+						<Doughnut
+							data={{
+								labels: ['Hommes', 'Femmes'],
+								datasets: [
+									{
+										data: [stats.menAndWomen.men, stats.menAndWomen.women]
+									}
+								]
+							}}
+						/>
+					{/await}
+				</div>
+			</div>
+
+			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
+				<div class="card-body">
+					<h2 class="card-title">Répartition des métiers dans la civilisation</h2>
+					{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
+						<Doughnut
+							data={{
+								labels: Object.keys(stats.jobs).map(
+									(key: string) => OCCUPATIONS[key as OccupationTypes]
+								),
+								datasets: [
+									{
+										data: Object.values(stats.jobs),
+										backgroundColor: Object.keys(stats.jobs).map((key) => stringToColour(key))
+									}
+								]
+							}}
+						/>
+					{/await}
+				</div>
+			</div>
+		</div>
+	{/await}
 </div>

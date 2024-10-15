@@ -1,7 +1,6 @@
 <script context="module">
-  export const hydrate = 'visible'; // ou 'visible' pour hydrater seulement quand l'élément est visible
+	export const hydrate = 'visible' // ou 'visible' pour hydrater seulement quand l'élément est visible
 </script>
-
 
 <script lang="ts">
 	import {
