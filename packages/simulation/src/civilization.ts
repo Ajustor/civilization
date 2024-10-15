@@ -21,6 +21,7 @@ export class Civilization {
   private _resources: Resource[]
   private _livedMonths: number = 0
   private _buildings: Building[]
+  private _citizensCount: number = 0
 
   constructor(public name = uniqueNamesGenerator({ dictionaries: [countries] })) {
     this._people = []
@@ -30,6 +31,14 @@ export class Civilization {
 
   nobodyAlive(): boolean {
     return this._people.length === 0
+  }
+
+  get citizensCount(): number {
+    return this._people.length || this._citizensCount
+  }
+
+  set citizensCount(citizenCount: number) {
+    this._citizensCount = citizenCount
   }
 
   get livedMonths(): number {
@@ -108,7 +117,7 @@ export class Civilization {
   }
 
   getWorkersWhoCanRetire(): People[] {
-    return this._people.filter((worker) => worker.canRetire()) 
+    return this._people.filter((worker) => worker.canRetire())
   }
 
   addPeople(...people: People[]): void {

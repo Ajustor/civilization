@@ -12,6 +12,7 @@ export class CivilizationBuilder {
   private resources: Resource[] = [];
   private buildings: Building[] = []
   private livedMonths: number
+  private citizenCount: number = 0
 
   constructor() {
     this.name = uniqueNamesGenerator({ dictionaries: [countries] })
@@ -30,6 +31,11 @@ export class CivilizationBuilder {
 
   addCitizen(...people: People[]): this {
     this.people.push(...people)
+    return this
+  }
+
+  withCitizensCount(citizenCount: number): this {
+    this.citizenCount = citizenCount
     return this
   }
 
@@ -69,6 +75,7 @@ export class CivilizationBuilder {
     civilization.addBuilding(...this.buildings)
 
     civilization.livedMonths = this.livedMonths
+    civilization.citizensCount ||= this.citizenCount
 
     if (this.id) {
       civilization.id = this.id
@@ -85,6 +92,7 @@ export class CivilizationBuilder {
     this.name = ''
     this.livedMonths = 0
     this.id = ''
+    this.citizenCount = 0
 
     return civilization
   }

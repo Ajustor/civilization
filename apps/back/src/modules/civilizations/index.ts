@@ -27,7 +27,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   })
   .use(authorization('Actions on civilization require auth'))
   .get('/mine', async ({ user, civilizationService }) => {
-    const civilizations = await civilizationService.getByUserId(user.id, { people: true })
+    const civilizations = await civilizationService.getByUserId(user.id, { people: false })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }
   })
   .get('/:civilizationId', async ({ user, civilizationService, params: { civilizationId } }) => {

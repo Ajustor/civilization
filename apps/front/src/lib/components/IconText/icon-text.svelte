@@ -1,6 +1,6 @@
 <script lang="ts">
 	export let iconComponent
-	export let text: string | number
+	export let text: string | number | undefined
 </script>
 
 <div class="flex items-center">

@@ -51,7 +51,7 @@
 	>
 	<Accordion class="w-full">
 		<AccordionItem value="people-table">
-			<AccordionTrigger>Citoyens: ({data.civilization.people.length} au total)</AccordionTrigger>
+			<AccordionTrigger>Citoyens: ({data.civilization.citizensCount} au total)</AccordionTrigger>
 			<AccordionContent>
 				{@render citizensView()}
 			</AccordionContent>

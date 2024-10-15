@@ -6,7 +6,8 @@ export type CivilizationType = {
   id: string
   name: string
   livedMonths: number
-  people: PeopleType[],
+  people?: PeopleType[],
   resources: ResourceType[],
-  buildings: BuildingType[]
+  buildings: BuildingType[],
+  citizensCount?: number
 }

@@ -4,9 +4,9 @@ import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../lib
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
-type MongoCivilizationType = CivilizationType & { resources: { quantity: number, resourceType: ResourceTypes }[], buildings: MongoBuildingType[] }
+export type MongoCivilizationType = CivilizationType & { resources: { quantity: number, resourceType: ResourceTypes }[], buildings: MongoBuildingType[] }
 
-const civilizationMapper = (civilization: MongoCivilizationType): Civilization => {
+export const civilizationMapper = (civilization: MongoCivilizationType, populate?: CivilizationPopulate): Civilization => {
   const builder = new CivilizationBuilder()
 
   for (const civilizationResource of civilization.resources) {
@@ -24,7 +24,7 @@ const civilizationMapper = (civilization: MongoCivilizationType): Civilization =
     }
   }
 
-  if (civilization.people.length) {
+  if (populate?.people && civilization.people) {
     builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
       const peopleBuilder = new PeopleBuilder()
         .withId(id)
@@ -55,8 +55,7 @@ const civilizationMapper = (civilization: MongoCivilizationType): Civilization =
     }))
   }
 
-
-  return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
+  return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).withCitizensCount(civilization.people?.length ?? 0).build()
 }
 
 
@@ -88,7 +87,7 @@ export class CivilizationService {
       return []
     }
 
-    return civilizations.map((civilization) => civilizationMapper(civilization))
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
   async getByIds(civilizationIds: string[], populate?: CivilizationPopulate): Promise<Civilization[]> {
@@ -100,7 +99,7 @@ export class CivilizationService {
 
     const civilizations = await civilizationRequest
 
-    return civilizations.map((civilization) => civilizationMapper(civilization))
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
   async getById(civilizationId: string): Promise<Civilization> {
@@ -110,7 +109,7 @@ export class CivilizationService {
       throw new Error('It look like your civilization disapear')
     }
 
-    return civilizationMapper(civilization)
+    return civilizationMapper(civilization, { people: true })
   }
 
   async getAll(populate?: CivilizationPopulate): Promise<Civilization[]> {
@@ -122,7 +121,7 @@ export class CivilizationService {
 
     const civilizations = await civilizationsRequest
 
-    return civilizations.map((civilization) => civilizationMapper(civilization))
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
   async getByUserId(userId: string, populate?: CivilizationPopulate): Promise<Civilization[]> {
@@ -140,7 +139,7 @@ export class CivilizationService {
 
     const civilizations = await civilizationRequest
 
-    return civilizations.map((civilization) => civilizationMapper(civilization))
+    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
   async getByUserAndCivilizationId(userId: string, civilizationId: string, populate?: CivilizationPopulate): Promise<Civilization | undefined> {
@@ -162,7 +161,7 @@ export class CivilizationService {
       return
     }
 
-    return civilizationMapper(civilization)
+    return civilizationMapper(civilization, populate)
   }
 
 

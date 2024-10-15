@@ -83,6 +83,10 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
 
     const menAndWomen = worldInfos.civilizations.reduce(
       (count, { people }) => {
+        if (!people) {
+          return count
+        }
+
         for (const person of people) {
           if (person.gender === Gender.MALE) {
             count.men++
