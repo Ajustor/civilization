@@ -8,6 +8,7 @@ import { Retired } from './work/retired'
 import { Tree } from '../utils/tree/tree'
 import type { Work } from './work/interface'
 import type { World } from '../world'
+import { isWithinChance } from '../utils'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
@@ -26,6 +27,8 @@ const MINIMUM_CONCEPTION_AGE = 16
 const MAXIMUM_CONCEPTION_AGE = 50
 const MINIMUM_CONCEPTION_HEALTH = 30
 
+export const LIFE_EXPECTANCY = 85
+const DEATH_RATE_AFTER_EXPECTANCY = 20
 
 export type PeopleConstructorParams = {
   name: string,
@@ -115,7 +118,7 @@ export class People {
   }
 
   isAlive(): boolean {
-    return this.lifeCounter > 0 && this.years < 90
+    return this.lifeCounter > 0 && (this.years < LIFE_EXPECTANCY || !isWithinChance(DEATH_RATE_AFTER_EXPECTANCY))
   }
 
   collectResource(world: World, amount: number): boolean {

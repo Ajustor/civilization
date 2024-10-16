@@ -2,7 +2,7 @@ const isWithinChance = jest.fn()
 
 jest.mock('./utils', () => ({ isWithinChance }))
 
-import { EAT_FACTOR, People } from './people/people'
+import { EAT_FACTOR, LIFE_EXPECTANCY, People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 
 import { BuildingTypes } from './buildings/enum'
@@ -208,13 +208,29 @@ describe('Civilization', () => {
     })
 
     it('should remove all dead people', () => {
+      isWithinChance.mockReturnValue(true)
+      
       const person1 = new People({ name: 'Alice', gender: Gender.FEMALE, lifeCounter: 0, month: 0 })
       const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })
+      const person3 = new People({ name: 'Old Bob', gender: Gender.MALE, lifeCounter: 12, month: LIFE_EXPECTANCY*12 + 3 })
 
-      civilization.addPeople(person2, person1)
+      civilization.addPeople(person2, person1, person3)
       civilization.passAMonth(world)
 
       expect(civilization.people).toStrictEqual([])
+    })
+
+    it('should remove all dead people except the old ones who are defying death', () => {
+      isWithinChance.mockReturnValue(false)
+      
+      const person1 = new People({ name: 'Old Alice ', gender: Gender.FEMALE, lifeCounter:12, month: LIFE_EXPECTANCY * 12 + 10 })
+      const person2 = new People({ name: 'Sick Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })
+      const person3 = new People({ name: 'Old Bob', gender: Gender.MALE, lifeCounter: 12, month: LIFE_EXPECTANCY*12 + 3 })
+
+      civilization.addPeople(person2, person1, person3)
+      civilization.passAMonth(world)
+
+      expect(civilization.people).toStrictEqual([person1, person3])
     })
 
     it('should create new born', () => {
