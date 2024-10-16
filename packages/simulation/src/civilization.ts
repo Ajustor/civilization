@@ -12,6 +12,7 @@ import { isWithinChance } from './utils'
 import { v4 } from 'uuid'
 import { OCCUPATION_TREE } from './technology/occupationTree'
 import { random } from './utils/random'
+import { Kiln } from './buildings/kiln'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
@@ -262,6 +263,7 @@ export class Civilization {
 
   private buildNewBuilding() {
     this.buildNewHouses()
+    this.buildNewKiln()
   }
 
   private buildNewHouses() {
@@ -279,6 +281,21 @@ export class Civilization {
 
       housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
     } while (housesTotalCapacity < this._people.length && houseBuildRequirement.every(({ resource, amount }) => this.getResource(resource)?.quantity >= amount))
+  }
+
+  private buildNewKiln() {
+    const canBuild = Kiln.constructionCosts.every((cost) => this.getResource(cost.resource).quantity >= cost.amount)
+    if (!canBuild) {
+      return
+    }
+
+    const carpenter = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
+    if (!carpenter) {
+      return
+    }
+
+    carpenter.startBuilding()
+    this.constructBuilding(BuildingTypes.KILN, 4)
   }
 
   private checkHabitations() {

@@ -2,7 +2,7 @@ import { ResourceTypes } from '../resource'
 import { Building, BuildingType, ConstructionCost } from '../types/building'
 import { BuildingTypes } from './enum'
 
-export class CharcoalWorks implements Building {
+export class Kiln implements Building {
   constructor(public readonly capacity: number, public readonly count: number) { }
 
   public static constructionCosts: ConstructionCost[] = [{
@@ -14,7 +14,7 @@ export class CharcoalWorks implements Building {
   }]
 
   getType(): BuildingTypes {
-    return BuildingTypes.CHARCOAL_WORKS
+    return BuildingTypes.KILN
   }
 
   formatToType(): BuildingType {
