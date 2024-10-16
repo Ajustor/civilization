@@ -237,14 +237,18 @@ export class Civilization {
   private buildNewHouses() {
     const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
-    const housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+    let housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
 
-    if (this._people.length > housesTotalCapacity && civilizationWood.quantity >= 15) {
+    while (this._people.length > housesTotalCapacity && civilizationWood.quantity >= 15) {
       const carpenter = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
-      if (carpenter) {
-        carpenter.startBuilding()
-        this.constructBuilding(BuildingTypes.HOUSE, 4)
+
+      if (!carpenter) {
+        break
       }
+
+      carpenter.startBuilding()
+      this.constructBuilding(BuildingTypes.HOUSE, 4)
+      housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
     }
   }
 

@@ -241,7 +241,7 @@ describe('World', () => {
       id: '',
       name: 'The world',
       civilizations: [{
-        name: 'Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', resources: [
+        name: 'Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
           food.formatToType(),
           wood.formatToType()
         ]
