@@ -1,9 +1,21 @@
 import { ResourceTypes } from '../resource'
-import { Building, BuildingType, ConstructionCost } from '../types/building'
+import { BuildingType, ConstructionCost, ProductionBuilding } from '../types/building'
 import { BuildingTypes } from './enum'
 
-export class Kiln implements Building {
+export class Kiln implements ProductionBuilding {
   constructor(public readonly capacity: number, public readonly count: number) { }
+
+  inputResources = [
+    {
+      resource: ResourceTypes.WOOD,
+      amount: 5
+    }
+  ]
+
+  outputResources = [{
+    resource: ResourceTypes.CHARCOAL,
+    amount: 10
+  }]
 
   public static constructionCosts: ConstructionCost[] = [{
     resource: ResourceTypes.STONE,
@@ -21,7 +33,7 @@ export class Kiln implements Building {
     return {
       capacity: this.capacity,
       type: this.getType(),
-      count: this.count
+      count: this.count,
     }
   }
 }
