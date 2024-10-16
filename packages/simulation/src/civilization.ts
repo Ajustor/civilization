@@ -10,6 +10,8 @@ import { People } from './people/people'
 import type { World } from './world'
 import { isWithinChance } from './utils'
 import { v4 } from 'uuid'
+import { OCCUPATION_TREE } from './technology/occupationTree'
+import { random } from './utils/random'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
@@ -119,6 +121,10 @@ export class Civilization {
 
   getWorkersWhoCanRetire(): People[] {
     return this._people.filter((worker) => worker.canRetire())
+  }
+
+  getWorkersWhoCanUpgrade(): People[] {
+    return this._people.filter((worker) => worker.work && OCCUPATION_TREE[worker.work.occupationType]?.length)
   }
 
   addPeople(...people: People[]): void {
@@ -254,7 +260,6 @@ export class Civilization {
     }
   }
 
-
   private buildNewBuilding() {
     this.buildNewHouses()
   }
@@ -295,6 +300,18 @@ export class Civilization {
 
     for (const citizen of workers) {
       citizen.setOccupation(OccupationTypes.RETIRED)
+    }
+
+    const workersCanUpgrade = this.getWorkersWhoCanUpgrade()
+
+    for (const worker of workersCanUpgrade) {
+      if (isWithinChance(25) && worker.work) {
+        const newPossibleOccupations = OCCUPATION_TREE[worker.work.occupationType] ?? []
+        const newOccupation = newPossibleOccupations[random(0, newPossibleOccupations.length - 1)]
+        if (newOccupation) {
+          worker.setOccupation(newOccupation)
+        }
+      }
     }
   }
 

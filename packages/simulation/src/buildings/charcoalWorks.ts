@@ -8,6 +8,9 @@ export class CharcoalWorks implements Building {
   public static constructionCosts: ConstructionCost[] = [{
     resource: ResourceTypes.STONE,
     amount: 15
+  }, {
+    resource: ResourceTypes.PLANK,
+    amount: 5
   }]
 
   getType(): BuildingTypes {
