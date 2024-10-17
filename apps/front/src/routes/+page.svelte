@@ -58,8 +58,6 @@
 					{:then worldsStats}
 						{@const worldStatsPromise = worldsStats.get(world.id)}
 						{#await worldStatsPromise then worldStats}
-							plop: {worldStats}
-
 							{#if worldStats}
 								<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 									<div class="card-body">
