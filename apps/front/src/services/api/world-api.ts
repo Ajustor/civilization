@@ -7,7 +7,6 @@ type WorldStats = {
   topCivilizations?: { name: string, livedMonths: number }[]
 }
 
-
 export async function getWorldsInfos() {
   const { data: worldInfos, error } = await client.worlds.get()
 
