@@ -64,6 +64,28 @@ export class CivilizationService {
     return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
+  async getAllRawByWorldId(worldId: string, populate?: CivilizationPopulate): Promise<MongoCivilizationType[]> {
+    const world = await WorldModel.findOne({ _id: worldId })
+
+    if (!world) {
+      return []
+    }
+
+    const civilizationsRequest = CivilizationModel.find<MongoCivilizationType>({ _id: { $in: world.civilizations } })
+
+    if (populate?.people) {
+      civilizationsRequest.populate<{ people: PeopleEntity }>('people')
+    }
+
+    const civilizations = await civilizationsRequest
+
+    if (!civilizations?.length) {
+      return []
+    }
+
+    return civilizations
+  }
+
   async getByIds(civilizationIds: string[], populate?: CivilizationPopulate): Promise<Civilization[]> {
     const civilizationRequest = CivilizationModel.find<MongoCivilizationType>({ _id: { $in: civilizationIds } })
 
