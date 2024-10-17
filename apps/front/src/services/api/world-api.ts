@@ -21,10 +21,12 @@ export async function getWorldsInfos() {
 
 export async function getWorldsStats() {
   const worlds = await getWorldsInfos()
-  return worlds.reduce((acc, world) => {
-    acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
-    return acc
-  }, new Map<string, Promise<WorldStats>>())
+  const worldsStats = new Map<string, WorldStats>()
+
+  for (const world of worlds) {
+    worldsStats.set(world.id, await getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
+  }
+  return worldsStats
 }
 
 export async function getWorldStats(worldId: string, query: {
