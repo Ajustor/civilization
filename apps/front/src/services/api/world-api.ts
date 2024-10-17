@@ -26,6 +26,7 @@ export async function getWorldsStats() {
   for (const world of worlds) {
     console.log('Getting world stats for world', { name: world.name, id: world.id })
     worldsStats.set(world.id, await getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
+    console.log('World data retrieved', worldsStats.get(world.id))
   }
   return worldsStats
 }

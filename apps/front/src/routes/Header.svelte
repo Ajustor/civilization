@@ -2,7 +2,9 @@
 	import { page } from '$app/stores'
 	import logo from '$lib/images/logo.webp?enhanced'
 	import { type User } from '../stores/user'
+	import { injectSpeedInsights } from '@vercel/speed-insights'
 
+	injectSpeedInsights()
 	export let user: User | null | undefined
 
 	const routes: { url: string; label: string }[] = [
