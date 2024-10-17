@@ -106,7 +106,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         { livedMonths: firstCivilizationLivedMonths },
         { livedMonths: secondCivilizationLivedMonths }
       ) => secondCivilizationLivedMonths - firstCivilizationLivedMonths
-    ).slice(0, 3).map(({ name, livedMonths }) => ({ name, livedMonths }))
+    ).map(({ name, livedMonths }) => ({ name, livedMonths }))
 
     return {
       ...(withAliveCount && { aliveCivilizations }),

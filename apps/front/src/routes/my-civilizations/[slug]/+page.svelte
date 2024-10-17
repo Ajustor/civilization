@@ -15,6 +15,7 @@
 	import { OCCUPATIONS, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import PeopleTree from './datatables/PeopleTree.svelte'
+	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
 	export let data: PageData
 
@@ -23,6 +24,9 @@
 		wood: FlameKindling,
 		stone: Cuboid
 	}
+
+	let pageIndex = 0
+	let pageSize = 10
 
 	const stringToColour = function (str: string) {
 		let hash = 0
@@ -36,14 +40,35 @@
 		}
 		return colour
 	}
+
+	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
+		const oldPeople = await data.lazy.people
+		pageIndex = newPageIndex
+		pageSize = newPageSize
+		data.lazy.people = new Promise(async (resolve) => {
+			try {
+				const { people } = await callGetPeople(data.civilization.id, pageIndex, pageSize)
+				resolve(people)
+			} catch (error) {
+				console.error(error)
+				resolve(oldPeople)
+			}
+		})
+	}
 </script>
 
 {#snippet citizensView()}
 	{#await data.lazy.people}
-		<span class="loading loading-infinity loading-lg"></span>
+		<span class="skeleton rounded-md border border-slate-100 bg-slate-200"></span>
 	{:then people}
 		<!-- getPeopleFromCivilization() was fulfilled -->
-		<PeopleTable {people} />
+		<PeopleTable
+			{people}
+			totalPeople={data.civilization.citizensCount ?? 0}
+			updateData={retrievePeople}
+			{pageIndex}
+			{pageSize}
+		/>
 	{:catch error}
 		{error}
 	{/await}

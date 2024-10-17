@@ -27,3 +27,21 @@ export const getCivilizationPeopleStats = async (authToken: string, civilization
 
   return stats
 }
+
+export const getPeopleFromCivilizationPaginated = async (authToken: string, civilizationId: string, { page, count }: { page: number, count: number }) => {
+  const { data: people, error } = await client.people({ civilizationId }).paginated.get({
+    query: {
+      page,
+      count
+    },
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return people
+}
