@@ -19,10 +19,16 @@
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte'
 
 	export let people: PeopleType[]
+	export let totalPeople: number
+	export let updateData: CallableFunction
 
 	const table = createTable(readable(people), {
 		sort: addSortBy(),
-		page: addPagination()
+		page: addPagination({
+			initialPageIndex: 0,
+			serverSide: true,
+			serverItemCount: readable(totalPeople)
+		})
 	})
 
 	const GenderIcons = {
@@ -102,9 +108,14 @@
 		// })
 	])
 
+	const getNewPagination = (pageIndex: number, pageSize: number) => {
+		console.log(pageIndex, pageSize)
+		updateData(pageIndex, pageSize)
+	}
+
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
 		table.createViewModel(columns)
-	const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page
+	const { hasNextPage, hasPreviousPage, pageIndex, pageSize, pageCount } = pluginStates.page
 </script>
 
 <div class="rounded-md border border-slate-100 bg-slate-200">
@@ -157,18 +168,32 @@
 		<Button
 			variant="outline"
 			size="sm"
-			on:click={() => ($pageIndex = $pageIndex - 1)}
+			on:click={() => {
+				$pageIndex = $pageIndex - 1
+				getNewPagination($pageIndex, $pageSize)
+			}}
 			disabled={!$hasPreviousPage}
 		>
 			Précédent
 		</Button>
+		{$pageIndex + 1}/{$pageCount}
 		<Button
 			variant="outline"
 			size="sm"
 			disabled={!$hasNextPage}
-			on:click={() => ($pageIndex = $pageIndex + 1)}
+			on:click={() => {
+				$pageIndex = $pageIndex + 1
+				getNewPagination($pageIndex, $pageSize)
+			}}
 		>
 			Suivant
 		</Button>
+		<!-- <select bind:value={$pageSize} class="select w-full max-w-xs">
+			<option disabled>Nombre d'éléments par page</option>
+			<option value={10}>10</option>
+			<option value={25}>25</option>
+			<option value={50}>50</option>
+			<option value={100}>100</option>
+		</select> -->
 	</div>
 </div>

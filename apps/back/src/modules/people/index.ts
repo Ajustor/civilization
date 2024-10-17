@@ -17,8 +17,8 @@ export const peopleModule = new Elysia({ prefix: '/people' })
   .get('/:civilizationId', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId))
   .get('/:civilizationId/paginated', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId), {
     query: t.Optional(t.Object({
-      count: t.Number().default(10),
-      page: t.Number().default(0)
+      count: t.Number({ default: 10 }),
+      page: t.Number({ default: 0 })
     }))
   })
   .get('/:civilizationId/stats', async ({ peopleService, params: { civilizationId } }) => {

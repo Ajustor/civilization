@@ -1,5 +1,13 @@
 import { client } from './client'
 
+type WorldStats = {
+  aliveCivilizations?: number,
+  deadCivilizations?: number,
+  menAndWomen?: { men: number, women: number },
+  topCivilizations?: { name: string, livedMonths: number }[]
+}
+
+
 export async function getWorldsInfos() {
   const { data: worldInfos, error } = await client.worlds.get()
 
@@ -9,6 +17,14 @@ export async function getWorldsInfos() {
   }
 
   return worldInfos
+}
+
+export async function getWorldsStats() {
+  const worlds = await getWorldsInfos()
+  return worlds.reduce((acc, world) => {
+    acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
+    return acc
+  }, new Map<string, Promise<WorldStats>>())
 }
 
 export async function getWorldStats(worldId: string, query: {

@@ -15,6 +15,7 @@
 	import { OCCUPATIONS, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import PeopleTree from './datatables/PeopleTree.svelte'
+	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
 	export let data: PageData
 
@@ -36,6 +37,11 @@
 		}
 		return colour
 	}
+
+	const retrievePeople = async (pageIndex: number, pageSize: number) => {
+		const response = await callGetPeople(data.civilization.id, pageIndex, pageSize)
+		console.log(response)
+	}
 </script>
 
 {#snippet citizensView()}
@@ -43,7 +49,11 @@
 		<span class="loading loading-infinity loading-lg"></span>
 	{:then people}
 		<!-- getPeopleFromCivilization() was fulfilled -->
-		<PeopleTable {people} />
+		<PeopleTable
+			{people}
+			totalPeople={data.civilization.citizensCount ?? 0}
+			updateData={retrievePeople}
+		/>
 	{:catch error}
 		{error}
 	{/await}

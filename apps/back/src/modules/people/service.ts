@@ -1,5 +1,5 @@
 import { Gender, People, PeopleBuilder, PeopleType } from '@ajustor/simulation'
-import { civilizationMapper, CivilizationService, MongoCivilizationType } from '../civilizations/service'
+import { CivilizationService, MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 
 export const peopleMapper = (people: PeopleType[]): People[] => {
@@ -40,12 +40,13 @@ export class PeopleService {
   }
 
   public async getPeopleFromCivilization(civilizationId: string, withLineage = false): Promise<PeopleType[]> {
-    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId).populate('people', '-lineage')
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId)
     if (!civilization) {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    return civilizationMapper(civilization, { people: true }).people.map((person) => {
+    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }, !withLineage ? '-lineage' : undefined)
+    return peopleMapper(people).map((person) => {
       const formatedPerson = person.formatToType()
 
       if (!withLineage) {
@@ -62,12 +63,12 @@ export class PeopleService {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).limit(count).skip(page * count)
+    console.log('MAIS LOL', count, page)
+
+    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).skip(page * count).limit(count)
 
     return peopleMapper(people).map((person) => {
       const formatedPerson = person.formatToType()
-
-
       return formatedPerson
     })
   }

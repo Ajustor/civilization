@@ -51,9 +51,25 @@
 							</p>
 						</div>
 					</div>
-					{#await data.lazy.worldsStats.get(world.id)}
-						<span class="loading loading-infinity loading-lg"></span>
-					{:then worldStats}
+					{#await data.lazy.worldsStats}
+						<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+							<div class="card-body">
+								<div class="skeleton h-32 w-32"></div>
+							</div>
+						</div>
+						<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+							<div class="card-body">
+								<div class="skeleton h-32 w-32"></div>
+							</div>
+						</div>
+						<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
+							<div class="card-body">
+								<div class="skeleton h-32 w-32"></div>
+							</div>
+						</div>
+					{:then worldsStats}
+						{@const worldStatsPromise = worldsStats.get(world.id)}
+					  {#await worldStatsPromise then worldStats}
 						{#if worldStats}
 							<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 								<div class="card-body">
@@ -68,7 +84,7 @@
 							</div>
 							<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 								<div class="card-body">
-									<h2 class="card-title">Top 3 des civilisations les plus anciennes</h2>
+									<h2 class="card-title">Classement des civilisations</h2>
 									{#if worldStats.topCivilizations}
 										<ol class="list-inside list-decimal">
 											{#each worldStats.topCivilizations as topCiv}
@@ -101,6 +117,7 @@
 								</div>
 							</div>
 						{/if}
+						{/await}
 					{/await}
 
 					<div
