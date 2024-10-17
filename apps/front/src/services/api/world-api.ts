@@ -30,7 +30,7 @@ export async function getWorldsMenAndWomenRatio() {
   const worlds = await getWorldsInfos()
   const worldsMenAndWomenRatio = new Map<string, { men: number, women: number }>()
   for (const world of worlds) {
-    const { menAndWomen } = await getWorldStats(world.id, { withMenAndWomenRatio: true })
+    const { menAndWomen } = await getWorldStats(world.id, { withMenAndWomenRatio: false })
     if (menAndWomen) {
       worldsMenAndWomenRatio.set(world.id, menAndWomen)
     }
