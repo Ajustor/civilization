@@ -7,7 +7,6 @@ type WorldStats = {
   topCivilizations?: { name: string, livedMonths: number }[]
 }
 
-
 export async function getWorldsInfos() {
   const { data: worldInfos, error } = await client.worlds.get()
 
@@ -21,14 +20,10 @@ export async function getWorldsInfos() {
 
 export async function getWorldsStats() {
   const worlds = await getWorldsInfos()
-  const worldsStats = new Map<string, WorldStats>()
-
-  for (const world of worlds) {
-    console.log('Getting world stats for world', { name: world.name, id: world.id })
-    worldsStats.set(world.id, await getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
-    console.log('World data retrieved', worldsStats.get(world.id))
-  }
-  return worldsStats
+  return worlds.reduce((acc, world) => {
+    acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
+    return acc
+  }, new Map<string, Promise<WorldStats>>())
 }
 
 export async function getWorldStats(worldId: string, query: {
