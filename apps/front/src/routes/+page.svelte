@@ -57,6 +57,7 @@
 						<div class="card skeleton h-32 w-32 rounded shadow-lg md:col-span-2"></div>
 					{:then worldsStats}
 						{@const worldStats = worldsStats.get(world.id)}
+						plop: {worldStats}
 						{#if worldStats}
 							<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 								<div class="card-body">
