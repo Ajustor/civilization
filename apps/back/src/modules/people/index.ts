@@ -1,4 +1,4 @@
-import Elysia, { NotFoundError } from 'elysia'
+import Elysia, { NotFoundError, t } from 'elysia'
 import { authorization } from '../../libs/handlers/authorization'
 import { logger } from '@bogeychan/elysia-logger'
 import { jwtMiddleware } from '../../libs/jwt'
@@ -15,6 +15,12 @@ export const peopleModule = new Elysia({ prefix: '/people' })
   .decorate({ peopleService })
   .use(authorization('You must connect to check people'))
   .get('/:civilizationId', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId))
+  .get('/:civilizationId/paginated', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId), {
+    query: t.Optional(t.Object({
+      count: t.Number().default(10),
+      page: t.Number().default(0)
+    }))
+  })
   .get('/:civilizationId/stats', async ({ peopleService, params: { civilizationId } }) => {
     const peoples = await peopleService.getPeopleFromCivilization(civilizationId)
     if (!peoples) {

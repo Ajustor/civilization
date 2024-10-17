@@ -1,6 +1,7 @@
-import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, Gender, House, PeopleBuilder, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
+import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
 
 import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
+import { peopleMapper } from '../people/service'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -25,34 +26,7 @@ export const civilizationMapper = (civilization: MongoCivilizationType, populate
   }
 
   if (populate?.people && civilization.people) {
-    builder.addCitizen(...civilization.people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
-      const peopleBuilder = new PeopleBuilder()
-        .withId(id)
-        .withGender(gender)
-        .withMonth(month)
-        .withName(name)
-        .withLifeCounter(lifeCounter)
-        .withIsBuilding(isBuilding)
-        .withBuildingMonthsLeft(buildingMonthsLeft)
-
-      if (occupation) {
-        peopleBuilder.withOccupation(occupation)
-      }
-
-      if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
-        peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
-      }
-
-      if (child && gender === Gender.FEMALE) {
-        peopleBuilder.withChild(child)
-      }
-
-      if (lineage) {
-        peopleBuilder.withLineage(lineage)
-      }
-
-      return peopleBuilder.build()
-    }))
+    builder.addCitizen(...peopleMapper(civilization.people))
   }
 
   return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).withCitizensCount(civilization.people?.length ?? 0).build()
