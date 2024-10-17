@@ -40,7 +40,7 @@ export class PeopleService {
   }
 
   public async getPeopleFromCivilization(civilizationId: string, withLineage = false): Promise<PeopleType[]> {
-    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId)
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
@@ -58,14 +58,12 @@ export class PeopleService {
   }
 
   public async getPeopleFromCivilizationPaginated(civilizationId: string, count: number, page: number): Promise<PeopleType[]> {
-    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId)
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    console.log('MAIS LOL', count, page)
-
-    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).skip(page * count).limit(count)
+    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('month').skip(page * count).limit(count)
 
     return peopleMapper(people).map((person) => {
       const formatedPerson = person.formatToType()

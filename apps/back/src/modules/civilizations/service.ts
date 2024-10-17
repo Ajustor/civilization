@@ -29,9 +29,7 @@ export const civilizationMapper = (civilization: MongoCivilizationType, populate
     builder.addCitizen(...peopleMapper(civilization.people))
   }
 
-  builder.withCitizensCount(civilization.people?.length ?? 0)
-
-  return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).build()
+  return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).withCitizensCount(civilization.people?.length ?? 0).build()
 }
 
 

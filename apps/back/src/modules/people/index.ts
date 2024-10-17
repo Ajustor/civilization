@@ -15,10 +15,12 @@ export const peopleModule = new Elysia({ prefix: '/people' })
   .decorate({ peopleService })
   .use(authorization('You must connect to check people'))
   .get('/:civilizationId', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId))
-  .get('/:civilizationId/paginated', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId), {
+  .get('/:civilizationId/paginated', ({ peopleService, params: { civilizationId }, query: {
+    page = 0, count = 10
+  } }) => peopleService.getPeopleFromCivilizationPaginated(civilizationId, count, page), {
     query: t.Optional(t.Object({
-      count: t.Number({ default: 10 }),
-      page: t.Number({ default: 0 })
+      count: t.Number({ minimum: 0 }),
+      page: t.Number({ minimum: 0 })
     }))
   })
   .get('/:civilizationId/stats', async ({ peopleService, params: { civilizationId } }) => {

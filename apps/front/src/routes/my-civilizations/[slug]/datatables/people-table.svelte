@@ -21,11 +21,14 @@
 	export let people: PeopleType[]
 	export let totalPeople: number
 	export let updateData: CallableFunction
+	export let pageIndex: number
+	export let pageSize: number
 
 	const table = createTable(readable(people), {
 		sort: addSortBy(),
 		page: addPagination({
-			initialPageIndex: 0,
+			initialPageIndex: pageIndex,
+			initialPageSize: pageSize,
 			serverSide: true,
 			serverItemCount: readable(totalPeople)
 		})
@@ -109,13 +112,12 @@
 	])
 
 	const getNewPagination = (pageIndex: number, pageSize: number) => {
-		console.log(pageIndex, pageSize)
 		updateData(pageIndex, pageSize)
 	}
 
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
 		table.createViewModel(columns)
-	const { hasNextPage, hasPreviousPage, pageIndex, pageSize, pageCount } = pluginStates.page
+	const { hasNextPage, hasPreviousPage, pageCount } = pluginStates.page
 </script>
 
 <div class="rounded-md border border-slate-100 bg-slate-200">
@@ -169,21 +171,19 @@
 			variant="outline"
 			size="sm"
 			on:click={() => {
-				$pageIndex = $pageIndex - 1
-				getNewPagination($pageIndex, $pageSize)
+				getNewPagination(pageIndex - 1, pageSize)
 			}}
 			disabled={!$hasPreviousPage}
 		>
 			Précédent
 		</Button>
-		{$pageIndex + 1}/{$pageCount}
+		{pageIndex + 1}/{$pageCount}
 		<Button
 			variant="outline"
 			size="sm"
 			disabled={!$hasNextPage}
 			on:click={() => {
-				$pageIndex = $pageIndex + 1
-				getNewPagination($pageIndex, $pageSize)
+				getNewPagination(pageIndex + 1, pageSize)
 			}}
 		>
 			Suivant
