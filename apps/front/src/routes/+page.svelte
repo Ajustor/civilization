@@ -54,7 +54,6 @@
 					{#await data.lazy.worldsStats}
 						<div class="card skeleton rounded shadow-xl"></div>
 						<div class="card skeleton rounded shadow-xl"></div>
-						<div class="card skeleton h-32 w-32 rounded shadow-lg md:col-span-2"></div>
 					{:then worldsStats}
 						{@const worldStatsPromise = worldsStats.get(world.id)}
 						{#await worldStatsPromise then worldStats}
@@ -84,24 +83,30 @@
 										{/if}
 									</div>
 								</div>
+							{/if}
+						{/await}
+
+						{#await data.lazy.menAndWomenRatio}
+							<div class="card skeleton h-32 w-32 rounded shadow-lg md:col-span-2"></div>
+						{:then menAndWomenRatioIndexedByWorlds}
+							{@const menAndWomenRatio = menAndWomenRatioIndexedByWorlds.get(world.id)}
+							{#if menAndWomenRatio}
 								<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
 									<div class="card-body">
 										<h2 class="card-title">Rapport homme/femme dans le monde</h2>
 
-										{#if worldStats.menAndWomen}
-											{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
-												<Doughnut
-													data={{
-														labels: ['Hommes', 'Femmes'],
-														datasets: [
-															{
-																data: [worldStats.menAndWomen.men, worldStats.menAndWomen.women]
-															}
-														]
-													}}
-												/>
-											{/await}
-										{/if}
+										{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
+											<Doughnut
+												data={{
+													labels: ['Hommes', 'Femmes'],
+													datasets: [
+														{
+															data: [menAndWomenRatio.men, menAndWomenRatio.women]
+														}
+													]
+												}}
+											/>
+										{/await}
 									</div>
 								</div>
 							{/if}

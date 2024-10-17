@@ -63,7 +63,7 @@ export class PeopleService {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('month').skip(page * count).limit(count)
+    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id').skip(page * count).limit(count)
 
     return peopleMapper(people).map((person) => {
       const formatedPerson = person.formatToType()

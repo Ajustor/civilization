@@ -21,9 +21,21 @@ export async function getWorldsInfos() {
 export async function getWorldsStats() {
   const worlds = await getWorldsInfos()
   return worlds.reduce((acc, world) => {
-    acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withMenAndWomenRatio: true, withTopCivilizations: true }))
+    acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withTopCivilizations: true }))
     return acc
   }, new Map<string, Promise<WorldStats>>())
+}
+
+export async function getWorldsMenAndWomenRatio() {
+  const worlds = await getWorldsInfos()
+  const worldsMenAndWomenRatio = new Map<string, { men: number, women: number }>()
+  for (const world of worlds) {
+    const { menAndWomen } = await getWorldStats(world.id, { withMenAndWomenRatio: true })
+    if (menAndWomen) {
+      worldsMenAndWomenRatio.set(world.id, menAndWomen)
+    }
+  }
+  return worldsMenAndWomenRatio
 }
 
 export async function getWorldStats(worldId: string, query: {
