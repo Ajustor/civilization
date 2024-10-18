@@ -242,7 +242,7 @@ export class CivilizationService {
       }
 
       console.timeLog(civilization.name, 'Deleting dead people')
-      PersonModel.deleteMany({ _id: { $in: deadPeople } })
+      await PersonModel.deleteMany({ _id: { $in: deadPeople } })
 
       console.timeLog(civilization.name, `Start saving alive people for civilization`)
       await Promise.all(civilization.people.map(async (person) => {
