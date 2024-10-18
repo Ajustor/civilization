@@ -68,8 +68,6 @@ export class CivilizationService {
       return []
     }
 
-    console.log('TON SOUCIS EST APRES')
-
     return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }
 
