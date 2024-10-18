@@ -1,7 +1,7 @@
 import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
 
 import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
-import { peopleMapper } from '../people/service'
+import { personMapper } from '../people/service'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -9,6 +9,10 @@ export type MongoCivilizationType = CivilizationType & { resources: { quantity: 
 
 export const civilizationMapper = (civilization: MongoCivilizationType, populate?: CivilizationPopulate): Civilization => {
   const builder = new CivilizationBuilder()
+    .withId(civilization.id)
+    .withLivedMonths(civilization.livedMonths)
+    .withName(civilization.name)
+    .withCitizensCount(civilization.people?.length ?? 0)
 
   for (const civilizationResource of civilization.resources) {
     const resource = new Resource(civilizationResource.resourceType, civilizationResource.quantity)
@@ -26,10 +30,13 @@ export const civilizationMapper = (civilization: MongoCivilizationType, populate
   }
 
   if (populate?.people && civilization.people) {
-    builder.addCitizen(...peopleMapper(civilization.people))
+    for (const person of civilization.people) {
+      builder.addCitizen(personMapper(person))
+    }
   }
 
-  return builder.withId(civilization.id).withLivedMonths(civilization.livedMonths).withName(civilization.name).withCitizensCount(civilization.people?.length ?? 0).build()
+
+  return builder.build()
 }
 
 
@@ -60,6 +67,8 @@ export class CivilizationService {
     if (!civilizations?.length) {
       return []
     }
+
+    console.log('TON SOUCIS EST APRES')
 
     return civilizations.map((civilization) => civilizationMapper(civilization, populate))
   }

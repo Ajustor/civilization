@@ -66,6 +66,52 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     const worldInfos = worlds.map((world) => world.getInfos())
     return worldInfos
   })
+  .get('/:worldId/aliveCivilizationsCount', async ({ log, worldDbClient, civilizationsDbClient, params: { worldId } }) => {
+    const world = await worldDbClient.getById(worldId)
+
+    if (!world) {
+      throw new NotFoundError('No world found')
+    }
+
+    const worldCivilizations = await civilizationsDbClient.getAllRawByWorldId(world.id, { people: false })
+
+    const aliveCivilizationsCount = worldCivilizations.filter(
+      ({ people }) => people?.length
+    ).length
+    return aliveCivilizationsCount
+  })
+  .get('/:worldId/deadCivilizationsCount', async ({ log, worldDbClient, civilizationsDbClient, params: { worldId } }) => {
+    const world = await worldDbClient.getById(worldId)
+
+    if (!world) {
+      throw new NotFoundError('No world found')
+    }
+
+    const worldCivilizations = await civilizationsDbClient.getAllRawByWorldId(world.id, { people: false })
+
+    const deadCivilizationsCount = worldCivilizations.filter(
+      ({ people }) => !people?.length
+    ).length
+    return deadCivilizationsCount
+  })
+  .get('/:worldId/topCivilizations', async ({ log, worldDbClient, worldService, params: { worldId } }) => {
+    const world = await worldDbClient.getById(worldId)
+
+    if (!world) {
+      throw new NotFoundError('No world found')
+    }
+
+    return worldService.topCivilizations(worldId)
+  })
+  .get('/:worldId/menAndWomenRatio', async ({ log, worldDbClient, worldService, params: { worldId } }) => {
+    const world = await worldDbClient.getById(worldId)
+
+    if (!world) {
+      throw new NotFoundError('No world found')
+    }
+
+    return worldService.getWorldMenAndWomen(worldId)
+  })
   .get('/:worldId/stats', async ({ log, worldDbClient, worldService, civilizationsDbClient, params: { worldId }, query: { withAliveCount, withDeadCount, withMenAndWomenRatio, withTopCivilizations } }) => {
     const world = await worldDbClient.getById(worldId)
 

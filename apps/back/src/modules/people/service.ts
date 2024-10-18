@@ -2,35 +2,32 @@ import { Gender, People, PeopleBuilder, PeopleType } from '@ajustor/simulation'
 import { CivilizationService, MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 
-export const peopleMapper = (people: PeopleType[]): People[] => {
-  return people.map(({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }) => {
-    const peopleBuilder = new PeopleBuilder()
-      .withId(id)
-      .withGender(gender)
-      .withMonth(month)
-      .withName(name)
-      .withLifeCounter(lifeCounter)
-      .withIsBuilding(isBuilding)
-      .withBuildingMonthsLeft(buildingMonthsLeft)
+export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }: PeopleType): People => {
+  const peopleBuilder = new PeopleBuilder()
+    .withId(id)
+    .withGender(gender)
+    .withMonth(month)
+    .withName(name)
+    .withLifeCounter(lifeCounter)
+    .withIsBuilding(isBuilding)
+    .withBuildingMonthsLeft(buildingMonthsLeft)
 
-    if (occupation) {
-      peopleBuilder.withOccupation(occupation)
-    }
+  if (occupation) {
+    peopleBuilder.withOccupation(occupation)
+  }
 
-    if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
-      peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
-    }
+  if (pregnancyMonthsLeft && gender === Gender.FEMALE) {
+    peopleBuilder.withPregnancyMonthsLeft(pregnancyMonthsLeft)
+  }
 
-    if (child && gender === Gender.FEMALE) {
-      peopleBuilder.withChild(child)
-    }
+  if (child && gender === Gender.FEMALE) {
+    peopleBuilder.withChild(child)
+  }
 
-    if (lineage) {
-      peopleBuilder.withLineage(lineage)
-    }
-
-    return peopleBuilder.build()
-  })
+  if (lineage) {
+    peopleBuilder.withLineage(lineage)
+  }
+  return peopleBuilder.build()
 }
 
 export class PeopleService {
@@ -45,16 +42,19 @@ export class PeopleService {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }, !withLineage ? '-lineage' : undefined)
-    return peopleMapper(people).map((person) => {
-      const formatedPerson = person.formatToType()
+    const rawPeople = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }, !withLineage ? '-lineage' : undefined)
+    const formatedPeople = []
+    for (const rawPerson of rawPeople) {
+      const formatedPerson = personMapper(rawPerson).formatToType()
 
       if (!withLineage) {
         delete formatedPerson.lineage
       }
 
-      return formatedPerson
-    })
+      formatedPeople.push(formatedPerson)
+    }
+
+    return formatedPeople
   }
 
   public async getPeopleFromCivilizationPaginated(civilizationId: string, count: number, page: number): Promise<PeopleType[]> {
@@ -63,12 +63,17 @@ export class PeopleService {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const people = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id').skip(page * count).limit(count)
+    const rawPeople = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id').skip(page * count).limit(count)
 
-    return peopleMapper(people).map((person) => {
-      const formatedPerson = person.formatToType()
-      return formatedPerson
-    })
+    const formatedPeople = []
+    for (const rawPerson of rawPeople) {
+      const formatedPerson = personMapper(rawPerson).formatToType()
+
+
+      formatedPeople.push(formatedPerson)
+    }
+
+    return formatedPeople
   }
 
 }

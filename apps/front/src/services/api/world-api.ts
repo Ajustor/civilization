@@ -1,10 +1,10 @@
 import { client } from './client'
 
 type WorldStats = {
-  aliveCivilizations?: number,
-  deadCivilizations?: number,
-  menAndWomen?: { men: number, women: number },
-  topCivilizations?: { name: string, livedMonths: number }[]
+  aliveCivilizations?: Promise<number>,
+  deadCivilizations?: Promise<number>,
+  menAndWomen?: Promise<{ men: number, women: number }>,
+  topCivilizations?: Promise<{ name: string, livedMonths: number }[]>
 }
 
 export async function getWorldsInfos() {
@@ -21,9 +21,14 @@ export async function getWorldsInfos() {
 export async function getWorldsStats() {
   const worlds = await getWorldsInfos()
   return worlds.reduce((acc, world) => {
-    acc.set(world.id, getWorldStats(world.id, { withAliveCount: true, withDeadCount: true, withTopCivilizations: true }))
+    acc.set(world.id, {
+      aliveCivilizations: getAliveCivilizationsCount(world.id),
+      deadCivilizations: getDeadCivilizationsCount(world.id),
+      topCivilizations: getTopCivilizations(world.id),
+      menAndWomen: getMenAndWmenRatio(world.id)
+    })
     return acc
-  }, new Map<string, Promise<WorldStats>>())
+  }, new Map<string, WorldStats>())
 }
 
 export async function getWorldsMenAndWomenRatio() {
@@ -36,6 +41,42 @@ export async function getWorldsMenAndWomenRatio() {
     }
   }
   return worldsMenAndWomenRatio
+}
+
+async function getMenAndWmenRatio(worldId: string) {
+  const { data: aliveCivilizationsCount, error } = await client.worlds({ worldId }).menAndWomenRatio.get()
+  if (error) {
+    console.error(error)
+    throw error
+  }
+  return aliveCivilizationsCount
+}
+
+async function getAliveCivilizationsCount(worldId: string) {
+  const { data: aliveCivilizationsCount, error } = await client.worlds({ worldId }).aliveCivilizationsCount.get()
+  if (error) {
+    console.error(error)
+    throw error
+  }
+  return aliveCivilizationsCount
+}
+
+async function getDeadCivilizationsCount(worldId: string) {
+  const { data: deadCivilizationsCount, error } = await client.worlds({ worldId }).deadCivilizationsCount.get()
+  if (error) {
+    console.error(error)
+    throw error
+  }
+  return deadCivilizationsCount
+}
+
+async function getTopCivilizations(worldId: string) {
+  const { data: topCivilizations, error } = await client.worlds({ worldId }).topCivilizations.get()
+  if (error) {
+    console.error(error)
+    throw error
+  }
+  return topCivilizations
 }
 
 export async function getWorldStats(worldId: string, query: {

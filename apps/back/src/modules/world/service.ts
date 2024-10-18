@@ -8,10 +8,9 @@ export class WorldService {
   }
 
   public async getWorldMenAndWomen(worldId: string) {
-
     const worldCivilizations = await this.civilizationService.getAllByWorldId(worldId, { people: true })
 
-    return worldCivilizations.reduce(
+    const ratio = worldCivilizations.reduce(
       (count, { people }) => {
         if (!people) {
           return count
@@ -30,10 +29,11 @@ export class WorldService {
       },
       { men: 0, women: 0 }
     )
+    return ratio
   }
 
   public async topCivilizations(worldId: string) {
-    const worldCivilizations = await this.civilizationService.getAllByWorldId(worldId, { people: true })
+    const worldCivilizations = await this.civilizationService.getAllByWorldId(worldId, { people: false })
 
     return worldCivilizations.sort(
       (

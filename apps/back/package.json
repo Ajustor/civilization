@@ -27,6 +27,7 @@
   "dependencies": {
     "@ajustor/simulation": "1.0.0",
     "@elysiajs/opentelemetry": "^1.1.5",
+    "@elysiajs/server-timing": "^1.1.0",
     "@elysiajs/stream": "^1.1.0",
     "@libsql/client": "^0.10.0",
     "@react-email/tailwind": "0.1.0",

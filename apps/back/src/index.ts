@@ -15,12 +15,14 @@ import { opentelemetry } from '@elysiajs/opentelemetry'
 
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
+import { serverTiming } from '@elysiajs/server-timing'
 
 
 mongoose.connect(Bun.env.mongoConnectString ?? '')
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
 
 const app = new Elysia()
+  .use(serverTiming())
   .use(cors())
   .use(logger())
   .use(swagger({ version }))

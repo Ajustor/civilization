@@ -70,7 +70,9 @@ export class CivilizationBuilder {
 
   build(): Civilization {
     const civilization = new Civilization()
-    civilization.addPeople(...this.people)
+    for (const person of this.people) {
+      civilization.addPeople(person)
+    }
     civilization.addResource(...this.resources)
     civilization.addBuilding(...this.buildings)
 
