@@ -5,9 +5,10 @@ import { CivilizationService } from '../civilizations/service'
 import { WorldsTable } from './database'
 import { logger } from '@bogeychan/elysia-logger'
 import { WorldService } from './service'
+import { PeopleService } from '../people/service'
 
 const worldDbClientInstance = new WorldsTable()
-const civilizationsDbClientInstance = new CivilizationService()
+const civilizationsDbClientInstance = new CivilizationService(new PeopleService())
 const worldServiceInstance = new WorldService(worldDbClientInstance, civilizationsDbClientInstance)
 
 export const worldModule = new Elysia({ prefix: '/worlds' })

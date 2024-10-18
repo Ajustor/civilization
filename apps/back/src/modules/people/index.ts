@@ -3,11 +3,9 @@ import { authorization } from '../../libs/handlers/authorization'
 import { logger } from '@bogeychan/elysia-logger'
 import { jwtMiddleware } from '../../libs/jwt'
 import { PeopleService } from './service'
-import { CivilizationService } from '../civilizations/service'
 import { OccupationTypes } from '@ajustor/simulation'
 
-const civilizationService = new CivilizationService()
-const peopleService = new PeopleService(civilizationService)
+const peopleService = new PeopleService()
 
 export const peopleModule = new Elysia({ prefix: '/people' })
   .use(logger())

@@ -1,5 +1,5 @@
 import { Gender, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
-import { CivilizationService, MongoCivilizationType } from '../civilizations/service'
+import { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 
 export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }: PeopleType): People => {
@@ -32,7 +32,7 @@ export const personMapper = ({ id, name, gender, month, lifeCounter, occupation,
 
 export class PeopleService {
 
-  constructor(private readonly civilizationService: CivilizationService) {
+  constructor() {
 
   }
 

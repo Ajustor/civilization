@@ -1,7 +1,7 @@
 import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
 
 import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
-import { personMapper } from '../people/service'
+import { PeopleService, personMapper } from '../people/service'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -45,7 +45,7 @@ export type CivilizationPopulate = {
 }
 
 export class CivilizationService {
-  constructor() {
+  constructor(private readonly peopleService: PeopleService) {
 
   }
 
@@ -91,6 +91,24 @@ export class CivilizationService {
     }
 
     return civilizations
+  }
+
+  async countGenderForWorld(worldId: string): Promise<{ men: number, women: number }> {
+    const world = await WorldModel.findOne({ _id: worldId })
+
+    if (!world) {
+      return { men: 0, women: 0 }
+    }
+
+    const menAndWomen = { men: 0, women: 0 }
+
+    for (const civilizationId of world.civilizations) {
+      const { men, women } = await this.peopleService.countGenders(civilizationId.toString())
+      menAndWomen.men += men
+      menAndWomen.women += women
+    }
+
+    return menAndWomen
   }
 
   async getByIds(civilizationIds: string[], populate?: CivilizationPopulate): Promise<Civilization[]> {

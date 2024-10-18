@@ -6,6 +6,7 @@ import { CivilizationService } from './service'
 import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
+import { PeopleService } from '../people/service'
 
 const INITIAL_CITIZEN_NUMBER = 6
 const INITIAL_CITIZEN_AGE = 12 * 16
@@ -17,10 +18,12 @@ const INITIAL_CIVILIZATION_RESOURCES = {
   STONE: 0,
 }
 
+const civilizationServiceInstance = new CivilizationService(new PeopleService())
+
 export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
   .use(jwtMiddleware)
-  .decorate({ civilizationService: new CivilizationService() })
+  .decorate({ civilizationService: civilizationServiceInstance })
   .get('', async ({ civilizationService, log }) => {
     const civilizations = await civilizationService.getAll({ people: true })
     return { count: civilizations.length, civilizations: formatCivilizations(civilizations) }

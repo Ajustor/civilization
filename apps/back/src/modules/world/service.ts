@@ -1,4 +1,3 @@
-import { Gender } from '@ajustor/simulation'
 import { WorldsTable } from './database'
 import { CivilizationService } from '../civilizations/service'
 
@@ -8,28 +7,7 @@ export class WorldService {
   }
 
   public async getWorldMenAndWomen(worldId: string) {
-    const worldCivilizations = await this.civilizationService.getAllRawByWorldId(worldId, { people: true })
-
-    const ratio = worldCivilizations.reduce(
-      (count, { people }) => {
-        if (!people) {
-          return count
-        }
-
-        for (const person of people) {
-          if (person.gender === Gender.MALE) {
-            count.men++
-          }
-
-          if (person.gender === Gender.FEMALE) {
-            count.women++
-          }
-        }
-        return count
-      },
-      { men: 0, women: 0 }
-    )
-    return ratio
+    return this.civilizationService.countGenderForWorld(worldId)
   }
 
   public async topCivilizations(worldId: string) {
