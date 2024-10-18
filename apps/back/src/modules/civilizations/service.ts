@@ -216,7 +216,8 @@ export class CivilizationService {
   }
 
   async saveAll(civilizations: Civilization[]) {
-    await Promise.all(civilizations.map(async (civilization) => {
+
+    for (const civilization of civilizations) {
       const oldCivilization = await CivilizationModel.findOne({ _id: civilization.id })
 
       if (!oldCivilization) {
@@ -227,14 +228,16 @@ export class CivilizationService {
       const deadPeople = oldCivilization.people.filter((id) => !alivePeople.includes(id))
       await PersonModel.deleteMany({ _id: { $in: deadPeople } })
 
-      await Promise.all(civilization.people.map(async (person) => {
+      console.log(`Start saving people for civilization ${civilization.name}`)
+      for (const person of civilization.people) {
         if (!person.id) {
           const newPerson = await PersonModel.create(person.formatToEntity())
           alivePeople.push(newPerson._id)
         } else {
           await PersonModel.findOneAndUpdate({ _id: person.id }, person.formatToEntity())
         }
-      }))
+      }
+      console.log('People saved')
 
       await CivilizationModel.findOneAndUpdate({ _id: civilization.id }, {
         buildings: civilization.buildings.map(({ count, getType, capacity }) => ({ capacity, count, buildingType: getType() })),
@@ -242,7 +245,8 @@ export class CivilizationService {
         resources: civilization.resources.map(({ type, quantity }) => ({ resourceType: type, quantity })),
         people: alivePeople
       })
-    }))
+
+    }
   }
 
   async delete(userId: string, civilizationId: string) {

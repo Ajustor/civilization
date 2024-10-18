@@ -59,7 +59,7 @@
 
 {#snippet citizensView()}
 	{#await data.lazy.people}
-		<span class="skeleton w-100 h-3/5 rounded-md border border-slate-100 bg-slate-200"></span>
+		<div class="skeleton w-100 h-3/5 rounded-md border border-slate-100 bg-slate-200"></div>
 	{:then people}
 		<!-- getPeopleFromCivilization() was fulfilled -->
 		<PeopleTable
