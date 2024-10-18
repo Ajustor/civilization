@@ -85,6 +85,14 @@ export class PeopleService {
     return formatedPeople
   }
 
+  public async countPeople(civilizationId: string): Promise<number> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+    return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments()
+  }
+
   public async countGenders(civilizationId: string): Promise<{ men: number, women: number }> {
     const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {
