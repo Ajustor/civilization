@@ -23,8 +23,6 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       name: 'monthPass',
       pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(15),
       async run() {
-        console.time('monthPass')
-
         const worlds = await worldDbClientInstance.getAll()
         console.timeLog('monthPass', 'Worlds retrieved')
         for (const world of worlds) {
@@ -46,10 +44,8 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         } catch (error) {
           console.error(error)
         }
-
       }
-    }
-    )
+    })
   )
   .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
     const worlds = await worldDbClient.getAll()
