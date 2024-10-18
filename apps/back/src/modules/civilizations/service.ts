@@ -218,17 +218,20 @@ export class CivilizationService {
   async saveAll(civilizations: Civilization[]) {
 
     for (const civilization of civilizations) {
+      console.log(`Saving civilization ${civilization.name}`)
       const oldCivilization = await CivilizationModel.findOne({ _id: civilization.id })
 
       if (!oldCivilization) {
         throw new Error('Your civilization disapear from our data')
       }
 
+      console.log('Calculate dead/alive people')
       const alivePeople = oldCivilization.people.filter((id) => civilization.people.some(({ id: alivePeopleId }) => id.toString() === alivePeopleId))
       const deadPeople = oldCivilization.people.filter((id) => !alivePeople.includes(id))
+      console.log('Deleting dead people')
       await PersonModel.deleteMany({ _id: { $in: deadPeople } })
 
-      console.log(`Start saving people for civilization ${civilization.name}`)
+      console.log(`Start saving alive people for civilization ${civilization.name}`)
       for (const person of civilization.people) {
         if (!person.id) {
           const newPerson = await PersonModel.create(person.formatToEntity())
@@ -237,7 +240,7 @@ export class CivilizationService {
           await PersonModel.findOneAndUpdate({ _id: person.id }, person.formatToEntity())
         }
       }
-      console.log('People saved')
+      console.log('People saved save civilization')
 
       await CivilizationModel.findOneAndUpdate({ _id: civilization.id }, {
         buildings: civilization.buildings.map(({ count, getType, capacity }) => ({ capacity, count, buildingType: getType() })),
@@ -245,7 +248,7 @@ export class CivilizationService {
         resources: civilization.resources.map(({ type, quantity }) => ({ resourceType: type, quantity })),
         people: alivePeople
       })
-
+      console.log(`Civilization ${civilization.name} is saved`)
     }
   }
 

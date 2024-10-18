@@ -26,8 +26,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         console.time('monthPass')
 
         const worlds = await worldDbClientInstance.getAll()
-        console.log('Worlds retrieved, start passing a month')
-        console.timeLog('monthPass', 'Worlds retrieved, start passing a month')
+        console.timeLog('monthPass', 'Worlds retrieved')
         for (const world of worlds) {
           console.timeLog('monthPass', 'Retrieve civilizations')
           const worldCivilizations = await civilizationsDbClientInstance.getAllByWorldId(world.id, { people: true })
