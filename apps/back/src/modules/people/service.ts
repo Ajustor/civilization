@@ -1,4 +1,4 @@
-import { Gender, People, PeopleBuilder, PeopleType } from '@ajustor/simulation'
+import { Gender, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
 import { CivilizationService, MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 
@@ -57,6 +57,15 @@ export class PeopleService {
     return formatedPeople
   }
 
+  public async getRawPeopleFromCivilization(civilizationId: string, withLineage = false): Promise<PeopleEntity[]> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    return PersonModel.find<PeopleEntity>({ _id: { $in: civilization.people } }, !withLineage ? '-lineage' : undefined)
+  }
+
   public async getPeopleFromCivilizationPaginated(civilizationId: string, count: number, page: number): Promise<PeopleType[]> {
     const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {
@@ -74,6 +83,26 @@ export class PeopleService {
     }
 
     return formatedPeople
+  }
+
+  public async countGenders(civilizationId: string): Promise<{ men: number, women: number }> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    const men = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ gender: Gender.MALE })
+    const women = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ gender: Gender.FEMALE })
+    return { men, women }
+  }
+
+  public async countPregnant(civilizationId: string): Promise<number> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ child: { $ne: null } })
   }
 
 }

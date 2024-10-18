@@ -8,7 +8,7 @@ export class WorldService {
   }
 
   public async getWorldMenAndWomen(worldId: string) {
-    const worldCivilizations = await this.civilizationService.getAllByWorldId(worldId, { people: true })
+    const worldCivilizations = await this.civilizationService.getAllRawByWorldId(worldId, { people: true })
 
     const ratio = worldCivilizations.reduce(
       (count, { people }) => {
