@@ -228,6 +228,7 @@ export class CivilizationService {
       const deadPeople = oldCivilization.people.filter((id) => !alivePeople.includes(id))
       await PersonModel.deleteMany({ _id: { $in: deadPeople } })
 
+      console.log(`Start saving people for civilization ${civilization.name}`)
       for (const person of civilization.people) {
         if (!person.id) {
           const newPerson = await PersonModel.create(person.formatToEntity())
@@ -236,6 +237,7 @@ export class CivilizationService {
           await PersonModel.findOneAndUpdate({ _id: person.id }, person.formatToEntity())
         }
       }
+      console.log('People saved')
 
       await CivilizationModel.findOneAndUpdate({ _id: civilization.id }, {
         buildings: civilization.buildings.map(({ count, getType, capacity }) => ({ capacity, count, buildingType: getType() })),
