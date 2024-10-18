@@ -6,7 +6,8 @@ const unprotectedRoutes = [
   '/login',
   '/rules',
   '/register',
-  '/i-forgot'
+  '/i-forgot',
+  '/favicon.ico'
 ]
 
 export const handle: Handle = async ({ event, resolve }) => {
