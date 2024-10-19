@@ -8,3 +8,12 @@ export const callGetPeople = async (civilizationId: string, pageIndex: number, p
 
   return response.json()
 }
+
+
+export const callGetPeopleStream = async (civilizationId: string) => {
+  const response = await fetch(`/my-civilizations/${civilizationId}/peoples?${new URLSearchParams({ civilizationId })}`, {
+    method: 'GET',
+  })
+
+  return response.body?.getReader()
+}

@@ -85,6 +85,19 @@ export class PeopleService {
     return formatedPeople
   }
 
+  public async* getPeopleStreamFromCivilization(civilizationId: string, batchSize: number) {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    const cursor = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }, '-lineage').lean().batchSize(batchSize).cursor()
+
+    for (let rawPerson = await cursor.next(); rawPerson !== null; rawPerson = await cursor.next()) {
+      yield personMapper(rawPerson as unknown as PeopleType).formatToType()
+    }
+  }
+
   public async countPeople(civilizationId: string): Promise<number> {
     const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {

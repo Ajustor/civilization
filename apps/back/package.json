@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/through2": "^2.0.41",
     "react-email": "3.0.1"
   },
   "peerDependencies": {
@@ -33,6 +34,7 @@
     "@react-email/tailwind": "0.1.0",
     "elysia-compress": "^1.2.1",
     "mongodb": "^6.9.0",
-    "mongoose": "^8.6.3"
+    "mongoose": "^8.6.3",
+    "through2": "^4.0.2"
   }
 }
