@@ -31,6 +31,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
 
           worldWorker.addEventListener('close', () => {
             console.log('Process ended')
+            worldWorker.terminate()
             resolve(null)
           })
         })
