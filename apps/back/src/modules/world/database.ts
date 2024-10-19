@@ -49,8 +49,9 @@ export class WorldsTable {
     for (const world of worlds) {
       const { month, resources, year } = world.getInfos()
 
-      console.log('Saving world to database')
+      console.time('worldSave')
       await WorldModel.updateOne({ _id: world.id }, { month: month + (year * 12), resources: resources.map(({ type, quantity }) => ({ resourceType: type, quantity })) })
+      console.timeEnd('worldSave')
     }
   }
 }

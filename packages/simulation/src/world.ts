@@ -78,7 +78,7 @@ export class World {
     this.resources.push(...resources)
   }
 
-  passAMonth(): void {
+  async passAMonth(): Promise<void> {
     this.month++
     switch (this.season) {
       case 'spring': {
@@ -104,9 +104,7 @@ export class World {
       }
     }
 
-    for (const civilization of this._civilizations) {
-      civilization.passAMonth(this)
-    }
+    await Promise.all(this._civilizations.map((civilization) => civilization.passAMonth(this)))
   }
 
   public getInfos(): WorldInfos {

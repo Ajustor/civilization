@@ -141,7 +141,85 @@ export class Civilization {
     }
   }
 
-  passAMonth(world: World): void {
+  private collectResource(workers: People[], resource: Resource | undefined, amountOfResourceCollected: number, world: World): Promise<number> {
+    return new Promise((resolve) => {
+      let collectedResources = 0
+      if (resource?.quantity) {
+        for (const farmer of workers) {
+          const successfullyCollectResource = farmer.collectResource(world, amountOfResourceCollected)
+          if (!successfullyCollectResource) {
+            return resolve(collectedResources)
+          }
+          collectedResources += amountOfResourceCollected
+        }
+      }
+
+      resolve(collectedResources)
+    })
+  }
+
+  private async resourceConsumption(world: World, people: People[]): Promise<void> {
+    const civilizationFood = this.getResource(ResourceTypes.FOOD)
+    const civilizationWood = this.getResource(ResourceTypes.WOOD)
+
+    const foodPromise = new Promise((resolve) => {
+      // Handle food consumption and life counter
+      if (civilizationFood) {
+
+        for (const person of people) {
+          const eatFactor = person.eatFactor
+          if (civilizationFood.quantity >= eatFactor) {
+            if (person.lifeCounter < 50) {
+              person.increaseLife(1)
+            }
+            civilizationFood.decrease(eatFactor)
+          } else {
+            person.decreaseLife()
+          }
+        }
+      }
+      resolve(null)
+
+    })
+
+    const heatPromise = new Promise((resolve) => {
+      // Handle wood consumption
+
+      if (civilizationWood) {
+        let requiredWoodQuantity = 0
+
+        switch (world.season) {
+          case 'winter':
+            requiredWoodQuantity = 3
+            break
+          case 'automn':
+            requiredWoodQuantity = 2
+            break
+        }
+
+        if (!requiredWoodQuantity) {
+          resolve(null)
+        }
+
+        for (const person of people) {
+          if (civilizationWood.quantity >= requiredWoodQuantity) {
+            civilizationWood.decrease(requiredWoodQuantity)
+          } else {
+            person.decreaseLife()
+          }
+        }
+      }
+      resolve(null)
+    })
+
+    await Promise.all([
+      foodPromise,
+      heatPromise
+    ])
+  }
+
+
+  async passAMonth(world: World): Promise<void> {
     // Handle resource collection
     const foodResource = world.getResource(ResourceTypes.FOOD)
     const woodResource = world.getResource(ResourceTypes.WOOD)
@@ -152,77 +230,24 @@ export class Civilization {
     const farmers = this.getPeopleWithOccupation(OccupationTypes.FARMER)
     const carpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER)
 
-    if (foodResource?.quantity) {
+    const [foodCollected, woodCollected] = await Promise.all([
+      this.collectResource(farmers, foodResource, FARMER_RESOURCES_GET, world),
+      this.collectResource(carpenters, woodResource, CARPENTER_RESOURCES_GET, world),
+    ])
 
-      farmerLoop: for (const farmer of farmers) {
-        const successfullyCollectResource = farmer.collectResource(world, FARMER_RESOURCES_GET)
-        if (!successfullyCollectResource) {
-          break farmerLoop
-        }
-        civilizationFood.increase(FARMER_RESOURCES_GET)
-      }
-    }
-
-    if (woodResource?.quantity) {
-      carpentersLoop: for (const carpenter of carpenters) {
-        if (!carpenter.isBuilding) {
-          const successfullyCollectResource = carpenter.collectResource(world, CARPENTER_RESOURCES_GET)
-          if (!successfullyCollectResource) {
-            break carpentersLoop
-          }
-          civilizationWood.increase(CARPENTER_RESOURCES_GET)
-        }
-      }
-    }
+    civilizationFood.increase(foodCollected)
+    civilizationWood.increase(woodCollected)
 
     const people = this.people.toSorted((firstPerson, secondPerson) => secondPerson.years - firstPerson.years).toSorted((person) => person.work?.canWork(person.years) ? 1 : -1)
 
-    // Handle food consumption and life counter
-    if (civilizationFood) {
-
-      for (const person of people) {
-        const eatFactor = person.eatFactor
-        if (civilizationFood.quantity >= eatFactor) {
-          if (person.lifeCounter < 50) {
-            person.increaseLife(1)
-          }
-          civilizationFood.decrease(eatFactor)
-        } else {
-          person.decreaseLife()
-        }
-      }
-    }
-
-    // Handle wood consumption
-    woodConsumptionLoop: if (civilizationWood) {
-      let requiredWoodQuantity = 0
-
-      switch (world.season) {
-        case 'winter':
-          requiredWoodQuantity = 3
-          break
-        case 'automn':
-          requiredWoodQuantity = 2
-          break
-      }
-
-      if (!requiredWoodQuantity) {
-        break woodConsumptionLoop
-      }
-
-      for (const person of people) {
-        if (civilizationWood.quantity >= requiredWoodQuantity) {
-          civilizationWood.decrease(requiredWoodQuantity)
-        } else {
-          person.decreaseLife()
-        }
-      }
-    }
+    await this.resourceConsumption(world, people)
 
     // Age all people
     this._people.forEach(person => person.ageOneMonth())
-    this.adaptPeopleJob()
-    this.buildNewHouses()
+    await Promise.all([
+      this.adaptPeopleJob(),
+      this.buildNewHouses()
+    ])
     this.checkHabitations()
     this.removeDeadPeople()
 
@@ -235,21 +260,25 @@ export class Civilization {
   }
 
   private buildNewHouses() {
-    const civilizationWood = this.getResource(ResourceTypes.WOOD)
+    return new Promise((resolve) => {
+      const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
-    let housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+      let housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
 
-    while (this._people.length > housesTotalCapacity && civilizationWood.quantity >= 15) {
-      const carpenter = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
+      while (this._people.length > housesTotalCapacity && civilizationWood.quantity >= 15) {
+        const carpenter = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
 
-      if (!carpenter) {
-        break
+        if (!carpenter) {
+          return resolve(null)
+        }
+
+        carpenter.startBuilding()
+        this.constructBuilding(BuildingTypes.HOUSE, 4)
+        housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
       }
 
-      carpenter.startBuilding()
-      this.constructBuilding(BuildingTypes.HOUSE, 4)
-      housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
-    }
+      resolve(null)
+    })
   }
 
   private checkHabitations() {
@@ -266,12 +295,14 @@ export class Civilization {
 
 
   public adaptPeopleJob() {
+    return new Promise((resolve) => {
+      const workers = this.getWorkersWhoCanRetire()
 
-    const workers = this.getWorkersWhoCanRetire()
-
-    for (const citizen of workers) {
-      citizen.setOccupation(OccupationTypes.RETIRED)
-    }
+      for (const citizen of workers) {
+        citizen.setOccupation(OccupationTypes.RETIRED)
+      }
+      resolve(null)
+    })
   }
 
   private createNewPeople() {
@@ -305,8 +336,9 @@ export class Civilization {
 
       if (eligibleMen.length) {
         const father = eligibleMen[Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)]
-        eligiblePeople.push([woman, father])
-
+        if (father) {
+          eligiblePeople.push([woman, father])
+        }
         // TODO: check if we need to remove the father from the available men
       }
     }
