@@ -1,5 +1,5 @@
 import { Elysia, NotFoundError, t } from 'elysia'
-import { Patterns, cron } from '@elysiajs/cron'
+// import { Patterns, cron } from '@elysiajs/cron'
 
 import { CivilizationService } from '../civilizations/service'
 import { WorldsTable } from './database'
@@ -18,7 +18,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     worldService: worldServiceInstance,
     civilizationsDbClient: civilizationsDbClientInstance
   })
-  .use(
+ /* .use(
     cron({
       name: 'monthPass',
       pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(15),
@@ -37,7 +37,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
         })
       }
     })
-  )
+  )*/
   .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
     const worlds = await worldDbClient.getAll()
 
