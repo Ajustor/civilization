@@ -162,33 +162,37 @@ export class People {
   private addLineageInTree({ father, mother }: Lineage, parentKey: string, parentLevel: number) {
     const level = parentLevel + 1
 
-    this.tree?.insert({
-      child: {
-        key: father.id,
-        source: father.id,
-        level,
-      },
-      parent: {
-        key: parentKey,
-      }
-    })
+    if (father) {
+      this.tree?.insert({
+        child: {
+          key: father.id,
+          source: father.id,
+          level,
+        },
+        parent: {
+          key: parentKey,
+        }
+      })
+    }
 
-    this.tree?.insert({
-      child: {
-        key: mother.id,
-        source: mother.id,
-        level,
-      },
-      parent: {
-        key: parentKey,
-      }
-    })
+    if (mother) {
+      this.tree?.insert({
+        child: {
+          key: mother.id,
+          source: mother.id,
+          level,
+        },
+        parent: {
+          key: parentKey,
+        }
+      })
+    }
 
-    if (father.lineage) {
+    if (father?.lineage) {
       this.addLineageInTree(father.lineage, father.id, level)
     }
 
-    if (mother.lineage) {
+    if (mother?.lineage) {
       this.addLineageInTree(mother.lineage, mother.id, level)
     }
   }

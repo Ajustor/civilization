@@ -15,7 +15,8 @@
 	import { OCCUPATIONS, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import PeopleTree from './datatables/PeopleTree.svelte'
-	import { callGetPeople } from '../../../services/sveltekit-api/people'
+	import { callGetPeople, callGetPeopleStream } from '../../../services/sveltekit-api/people'
+	import { onMount } from 'svelte'
 
 	export let data: PageData
 
@@ -24,9 +25,6 @@
 		wood: FlameKindling,
 		stone: Cuboid
 	}
-
-	let pageIndex = 0
-	let pageSize = 10
 
 	const stringToColour = function (str: string) {
 		let hash = 0
@@ -41,37 +39,60 @@
 		return colour
 	}
 
-	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
-		const oldPeople = await data.lazy.people
-		pageIndex = newPageIndex
-		pageSize = newPageSize
-		data.lazy.people = new Promise(async (resolve) => {
-			try {
-				const { people } = await callGetPeople(data.civilization.id, pageIndex, pageSize)
-				resolve(people)
-			} catch (error) {
-				console.error(error)
-				resolve(oldPeople)
+	let people: PeopleType[] = []
+
+	async function fetchPeoples() {
+		const reader = await callGetPeopleStream(data.civilization.id)
+		const decoder = new TextDecoder()
+
+		let chunkData: string = ''
+
+		if (reader) {
+			while (true) {
+				const { done, value } = await reader.read()
+				if (done) {
+					break
+				}
+
+				// Décoder et analyser chaque morceau reçu comme un objet JSON
+				const chunkText = decoder.decode(value)
+				const lines = chunkText.split('\n\n\n')
+				const jsonData = lines.reduce<PeopleType[]>((jsonData, line) => {
+					if (!line) {
+						return jsonData
+					}
+
+					chunkData += line
+
+					try {
+						const parsedData = JSON.parse(chunkData)
+						chunkData = ''
+						return [...jsonData, ...parsedData]
+					} catch (error) {
+						return jsonData
+					}
+				}, [])
+				people = [...people, ...jsonData]
 			}
-		})
+		}
 	}
+
+	onMount(async () => {
+		await fetchPeoples()
+	})
 </script>
 
 {#snippet citizensView()}
-	{#await data.lazy.people}
-		<div class="skeleton w-100 h-3/5 rounded-md border border-slate-100 bg-slate-200"></div>
-	{:then people}
+	{#if people.length !== data.civilization.citizensCount}
+		<div
+			class="skeleton w-100 flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
+		>
+			Chargement des personnes {people.length} / {data.civilization.citizensCount}
+		</div>
+	{:else}
 		<!-- getPeopleFromCivilization() was fulfilled -->
-		<PeopleTable
-			{people}
-			totalPeople={data.civilization.citizensCount ?? 0}
-			updateData={retrievePeople}
-			{pageIndex}
-			{pageSize}
-		/>
-	{:catch error}
-		{error}
-	{/await}
+		<PeopleTable {people} />
+	{/if}
 {/snippet}
 
 {#snippet buildingsView(buildings: BuildingType[])}

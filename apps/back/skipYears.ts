@@ -2,6 +2,7 @@ import { CivilizationService } from './src/modules/civilizations/service'
 import { WorldsTable } from './src/modules/world/database'
 import { parseArgs } from "util"
 import './src/libs/database'
+import { PeopleService } from './src/modules/people/service'
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -22,7 +23,7 @@ console.log(`Prepare passing ${values.years} years`)
 
 
 const worldDbClient = new WorldsTable()
-const civilizationsDbClient = new CivilizationService()
+const civilizationsDbClient = new CivilizationService(new PeopleService())
 
 const worlds = await worldDbClient.getAll()
 for (const world of worlds) {
@@ -31,7 +32,7 @@ for (const world of worlds) {
   world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
   for (let i = 0; i < +values.years * 12; i++) {
     console.log(`Passing a month ${i}/${+values.years * 12 - 1}`)
-    world.passAMonth()
+    await world.passAMonth()
   }
   await civilizationsDbClient.saveAll(worldCivilizations)
 }

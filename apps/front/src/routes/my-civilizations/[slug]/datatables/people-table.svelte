@@ -19,19 +19,10 @@
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte'
 
 	export let people: PeopleType[]
-	export let totalPeople: number
-	export let updateData: CallableFunction
-	export let pageIndex: number
-	export let pageSize: number
 
 	const table = createTable(readable(people), {
 		sort: addSortBy(),
-		page: addPagination({
-			initialPageIndex: pageIndex,
-			initialPageSize: pageSize,
-			serverSide: true,
-			serverItemCount: readable(totalPeople)
-		})
+		page: addPagination()
 	})
 
 	const GenderIcons = {
@@ -111,13 +102,9 @@
 		// })
 	])
 
-	const getNewPagination = (pageIndex: number, pageSize: number) => {
-		updateData(pageIndex, pageSize)
-	}
-
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
 		table.createViewModel(columns)
-	const { hasNextPage, hasPreviousPage, pageCount } = pluginStates.page
+	const { hasNextPage, hasPreviousPage, pageCount, pageIndex } = pluginStates.page
 </script>
 
 <div class="rounded-md border border-slate-100 bg-slate-200">
@@ -170,21 +157,16 @@
 		<Button
 			variant="outline"
 			size="sm"
-			on:click={() => {
-				getNewPagination(pageIndex - 1, pageSize)
-			}}
+			on:click={() => ($pageIndex = $pageIndex - 1)}
 			disabled={!$hasPreviousPage}
 		>
 			Précédent
 		</Button>
-		{pageIndex + 1}/{$pageCount}
 		<Button
 			variant="outline"
 			size="sm"
 			disabled={!$hasNextPage}
-			on:click={() => {
-				getNewPagination(pageIndex + 1, pageSize)
-			}}
+			on:click={() => ($pageIndex = $pageIndex + 1)}
 		>
 			Suivant
 		</Button>

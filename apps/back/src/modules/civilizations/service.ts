@@ -1,7 +1,8 @@
-import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
+import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, People, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
 
 import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
+import { arrayToMap } from '../../utils'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -227,31 +228,40 @@ export class CivilizationService {
         throw new Error('Your civilization disapear from our data')
       }
 
-
       console.timeLog(civilization.name, 'Calculate dead/alive people')
       const alivePeople = []
       const deadPeople = []
+      const peoplesToUpdate = []
+      const { peopleToCreate, existingPeople } = civilization.people.reduce<{ peopleToCreate: People[], existingPeople: People[] }>((acc, people) => {
+        if (people.id) {
+          acc.existingPeople.push(people)
+        } else {
+          acc.peopleToCreate.push(people)
+        }
+        return acc
+      }, { peopleToCreate: [], existingPeople: [] })
+      const peopleIndexedById = arrayToMap(existingPeople, ({ id }) => id)
 
       for (const person of oldCivilization.people) {
-        const isAlive = civilization.people.some(({ id: alivePeopleId }) => person.toString() === alivePeopleId)
+        const isAlive = peopleIndexedById.has(person.toString())
         if (isAlive) {
           alivePeople.push(person)
+          const personToUpdate = peopleIndexedById.get(person.toString())
+          if (personToUpdate) {
+            peoplesToUpdate.push(PersonModel.findOneAndUpdate({ _id: person }, personToUpdate.formatToEntity()))
+          }
         } else {
-          deadPeople.push(person)
+          deadPeople.push(PersonModel.deleteOne({ _id: person }).exec())
         }
       }
 
-      console.timeLog(civilization.name, 'Deleting dead people')
-      await PersonModel.deleteMany({ _id: { $in: deadPeople } })
+      console.timeLog(civilization.name, 'Deleting dead people and update people')
+      await Promise.all([...deadPeople, ...peoplesToUpdate])
 
-      console.timeLog(civilization.name, `Start saving alive people for civilization`)
-      await Promise.all(civilization.people.map(async (person) => {
-        if (!person.id) {
-          const newPerson = await PersonModel.create(person.formatToEntity())
-          alivePeople.push(newPerson._id)
-        } else {
-          await PersonModel.findOneAndUpdate({ _id: person.id }, person.formatToEntity())
-        }
+      console.timeLog(civilization.name, `Start saving new people for civilization`)
+      await Promise.all(peopleToCreate.map(async (person) => {
+        const newPerson = await PersonModel.create(person.formatToEntity())
+        alivePeople.push(newPerson._id)
       }))
       console.timeLog(civilization.name, 'People saved save civilization')
 

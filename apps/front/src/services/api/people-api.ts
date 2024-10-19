@@ -45,3 +45,17 @@ export const getPeopleFromCivilizationPaginated = async (authToken: string, civi
 
   return people
 }
+
+export const getPeopleStreamFromCivilization = async (authToken: string, civilizationId: string) => {
+  const { data: peopleStream, error } = await client.people({ civilizationId }).stream.get({
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return peopleStream
+}
