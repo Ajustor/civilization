@@ -340,6 +340,7 @@ export class Civilization {
 
     console.time(`createNewPeople-${this.name}`)
 
+    // Temporary fix to avoid 6min of work
     if (women.length > NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE) {
       women.length = NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE
     }
