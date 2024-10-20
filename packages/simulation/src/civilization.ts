@@ -14,6 +14,7 @@ import { v4 } from 'uuid'
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
 const CARPENTER_RESOURCES_GET = 20
+const NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE = 100
 
 export class Civilization {
   public id = v4()
@@ -340,6 +341,10 @@ export class Civilization {
     console.time(`createNewPeople-${this.name}`)
     console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
+    if (women.length > NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE) {
+      women.length = NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE
+    }
+
     await Promise.all(women.map((woman) => new Promise((resolve) => {
       let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
 
@@ -350,9 +355,9 @@ export class Civilization {
 
       // A person SHOULD NOT be in a relationship with a descendant of his/her grand-parent
       if (woman.lineage) {
-        const grandParent = new Set(woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? [])
-        if (grandParent.size) {
-          eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel([...grandParent][0], 2) && !tree.findByKeyAndMaxLevel([...grandParent][1], 2)))
+        const grandParent = woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? []
+        if (grandParent.length) {
+          eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel(grandParent[0], 2) && !tree.findByKeyAndMaxLevel(grandParent[1], 2)))
         }
       }
 
