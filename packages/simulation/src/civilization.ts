@@ -341,12 +341,15 @@ export class Civilization {
     console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
     for (const woman of women) {
+      console.time(`prepareEligible-${this.name}`)
       let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
+      console.timeLog(`prepareEligible-${this.name}`, 'Men filtered')
 
       // A person SHOULD NOT be in a relationship with a child of his/her parent
       if (woman.lineage) {
         eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndLevel(woman.lineage!.father.id, 1) && !tree.findByKeyAndLevel(woman.lineage!.mother.id, 1)))
       }
+      console.timeLog(`prepareEligible-${this.name}`, 'Men filtered not woman\'s parent')
 
       // A person SHOULD NOT be in a relationship with a descendant of his/her grand-parent
       if (woman.lineage) {
@@ -356,6 +359,8 @@ export class Civilization {
         }
       }
 
+      console.timeLog(`prepareEligible-${this.name}`, 'Men filtered not woman\'s great parent')
+
       if (eligibleMen.length) {
         const father = eligibleMen[Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)]
         if (father) {
@@ -363,6 +368,7 @@ export class Civilization {
         }
         // TODO: check if we need to remove the father from the available men
       }
+      console.timeEnd(`prepareEligible-${this.name}`)
     }
 
     console.timeLog(`createNewPeople-${this.name}`, 'Eligible people ready')
