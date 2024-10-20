@@ -339,8 +339,8 @@ export class Civilization {
 
     console.time(`createNewPeople-${this.name}`)
     console.timeLog(`createNewPeople-${this.name}`, 'Prepare eligible people')
-    await Promise.all(women.map((woman) => new Promise((resolve) => {
-      // A person SHOULD NOT be in a relationship with a direct ancestor
+
+    for (const woman of women) {
       let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
 
       // A person SHOULD NOT be in a relationship with a child of his/her parent
@@ -363,9 +363,7 @@ export class Civilization {
         }
         // TODO: check if we need to remove the father from the available men
       }
-
-      resolve(null)
-    })))
+    }
 
     console.timeLog(`createNewPeople-${this.name}`, 'Eligible people ready')
 
