@@ -270,12 +270,10 @@ export class Civilization {
 
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Dead people removed')
 
-    await Promise.all([
-      this.createNewPeople(),
-      this.birthAwaitingBabies()
-    ])
-
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was created/birth')
+    await this.createNewPeople()
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was created')
+    await this.birthAwaitingBabies()
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was birth')
 
     if (!this.nobodyAlive()) {
       this.livedMonths++
