@@ -48,6 +48,10 @@ export class World {
     return ~~(this.month / 12)
   }
 
+  public getMonth(): number {
+    return this.month
+  }
+
   public getName(): string {
     return this.name
   }

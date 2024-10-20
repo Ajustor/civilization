@@ -47,10 +47,9 @@ export class WorldsTable {
 
   async saveAll(worlds: World[]) {
     for (const world of worlds) {
-      const { month, resources, year } = world.getInfos()
 
       console.time('worldSave')
-      await WorldModel.updateOne({ _id: world.id }, { month: month + (year * 12), resources: resources.map(({ type, quantity }) => ({ resourceType: type, quantity })) })
+      await WorldModel.updateOne({ _id: world.id }, { month: world.getMonth(), resources: world.getResources().map(({ type, quantity }) => ({ resourceType: type, quantity })) })
       console.timeEnd('worldSave')
     }
   }
