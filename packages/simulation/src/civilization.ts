@@ -320,15 +320,12 @@ export class Civilization {
   }
 
 
-  public adaptPeopleJob() {
-    return new Promise((resolve) => {
-      const workers = this.getWorkersWhoCanRetire()
-
-      for (const citizen of workers) {
-        citizen.setOccupation(OccupationTypes.RETIRED)
-      }
+  public async adaptPeopleJob() {
+    const workers = this.getWorkersWhoCanRetire()
+    await Promise.all(workers.map((citizen) => new Promise((resolve) => {
+      citizen.setOccupation(OccupationTypes.RETIRED)
       resolve(null)
-    })
+    })))
   }
 
   private async createNewPeople() {
@@ -420,13 +417,13 @@ export class Civilization {
       mother.giveBirth()
     }
 
-    await Promise.all([
+    await Promise.all(
       awaitingMothers.map((mother) => new Promise((resolve) => {
         this.addPeople(mother.child)
         mother.giveBirth()
         resolve(null)
       }))
-    ])
+    )
   }
 
   private removeDeadPeople() {
