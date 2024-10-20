@@ -338,7 +338,7 @@ export class Civilization {
     let men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
 
     console.time(`createNewPeople-${this.name}`)
-    console.timeLog(`createNewPeople-${this.name}`, 'Prepare eligible people')
+    console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
     for (const woman of women) {
       let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
