@@ -373,40 +373,43 @@ export class Civilization {
       return
     }
 
-    await Promise.all(eligiblePeople.map(([mother, father]) => new Promise((resolve) => {
-      if (!isWithinChance(PREGNANCY_PROBABILITY)) {
-        return resolve(null)
-      }
+    return new Promise((resolve) => {
 
-      const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
-      const genders = [Gender.FEMALE, Gender.MALE]
-      const newPerson = new People({
-        name: uniqueNamesGenerator({ dictionaries: [names] }),
-        month: 0,
-        gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
-        lifeCounter: 2,
-        lineage: {
-          mother: {
-            id: mother.id,
-            ...(mother.lineage && { lineage: { mother: { id: mother.lineage.mother.id }, father: { id: mother.lineage.father.id } } })
-          },
-          father: {
-            id: father.id,
-            ...(father.lineage && { lineage: { mother: { id: father.lineage.mother.id }, father: { id: father.lineage.father.id } } })
+      if (eligiblePeople.length) {
+        for (const [mother, father] of eligiblePeople) {
+
+          if (!isWithinChance(PREGNANCY_PROBABILITY)) {
+            continue
           }
+
+          const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
+          const genders = [Gender.FEMALE, Gender.MALE]
+          const newPerson = new People({
+            name: uniqueNamesGenerator({ dictionaries: [names] }),
+            month: 0,
+            gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
+            lifeCounter: 2,
+            lineage: {
+              mother: {
+                id: mother.id,
+                ...(mother.lineage && { lineage: { mother: { id: mother.lineage.mother.id }, father: { id: mother.lineage.father.id } } })
+              },
+              father: {
+                id: father.id,
+                ...(father.lineage && { lineage: { mother: { id: father.lineage.mother.id }, father: { id: father.lineage.father.id } } })
+              }
+            }
+          })
+          newPerson.setOccupation(occupations[Math.min(Math.floor(Math.random() * occupations.length), occupations.length - 1)])
+
+          mother.addChildToBirth(newPerson)
+
+          mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
+          father.lifeCounter = Math.floor(father.lifeCounter / 2)
         }
-      })
-      newPerson.setOccupation(occupations[Math.min(Math.floor(Math.random() * occupations.length), occupations.length - 1)])
-
-      mother.addChildToBirth(newPerson)
-
-      mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
-      father.lifeCounter = Math.floor(father.lifeCounter / 2)
-
+      }
       resolve(null)
     })
-    ))
-
   }
 
   private async birthAwaitingBabies() {
