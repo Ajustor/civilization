@@ -221,6 +221,7 @@ export class Civilization {
 
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
+    console.time(`CivilizationPassAMonth-${this.name}`)
     const foodResource = world.getResource(ResourceTypes.FOOD)
     const woodResource = world.getResource(ResourceTypes.WOOD)
 
@@ -230,33 +231,56 @@ export class Civilization {
     const farmers = this.getPeopleWithOccupation(OccupationTypes.FARMER)
     const carpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER)
 
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Base data retrieved from civilization')
+
+
     const [foodCollected, woodCollected] = await Promise.all([
       this.collectResource(farmers, foodResource, FARMER_RESOURCES_GET, world),
       this.collectResource(carpenters, woodResource, CARPENTER_RESOURCES_GET, world),
     ])
 
+
     civilizationFood.increase(foodCollected)
     civilizationWood.increase(woodCollected)
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Resources collected')
 
     const people = this.people.toSorted((firstPerson, secondPerson) => secondPerson.years - firstPerson.years).toSorted((person) => person.work?.canWork(person.years) ? 1 : -1)
 
     await this.resourceConsumption(world, people)
 
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Resources consomed by people')
+
+
     // Age all people
     this._people.forEach(person => person.ageOneMonth())
+
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Everybody has agged')
+
     await Promise.all([
       this.adaptPeopleJob(),
       this.buildNewHouses()
     ])
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted and new houses builded')
+
     this.checkHabitations()
+
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'People without houses get cold')
+
     this.removeDeadPeople()
+
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Dead people removed')
 
     this.createNewPeople()
     this.birthAwaitingBabies()
 
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was created/birth')
+
     if (!this.nobodyAlive()) {
       this.livedMonths++
     }
+
+    console.timeEnd(`CivilizationPassAMonth-${this.name}`)
+
   }
 
   private buildNewHouses() {
