@@ -337,6 +337,8 @@ export class Civilization {
     const women = ableToConceivePeople.filter(({ gender }) => gender === Gender.FEMALE)
     let men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
 
+    console.time(`createNewPeople-${this.name}`)
+    console.timeLog(`createNewPeople-${this.name}`, 'Prepare eligible people')
     await Promise.all(women.map((woman) => new Promise((resolve) => {
       // A person SHOULD NOT be in a relationship with a direct ancestor
       let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
@@ -365,10 +367,14 @@ export class Civilization {
       resolve(null)
     })))
 
+    console.timeLog(`createNewPeople-${this.name}`, 'Eligible people ready')
+
     if (!eligiblePeople.length) {
+      console.timeEnd(`createNewPeople-${this.name}`)
       return
     }
 
+    console.timeLog(`createNewPeople-${this.name}`, 'Start making babies')
     await Promise.all(eligiblePeople.map(([mother, father]) => new Promise((resolve) => {
       if (!isWithinChance(PREGNANCY_PROBABILITY)) {
         return resolve(null)
@@ -400,15 +406,16 @@ export class Civilization {
       father.lifeCounter = Math.floor(father.lifeCounter / 2)
       resolve(null)
     })))
+    console.timeEnd(`createNewPeople-${this.name}`)
   }
 
   private async birthAwaitingBabies() {
-    const awaitingMothers = this._people.filter<People & { child: People }>((person): person is People & { child: People } => !!(person.pregnancyMonthsLeft === 0 && person.child))
+    console.time(`birthAwaitingBabies-${this.name}`)
 
-    for (const mother of awaitingMothers) {
-      this.addPeople(mother.child)
-      mother.giveBirth()
-    }
+    console.timeLog(`birthAwaitingBabies-${this.name}`, 'Prepare mother to give birth')
+
+    const awaitingMothers = this._people.filter<People & { child: People }>((person): person is People & { child: People } => !!(person.pregnancyMonthsLeft === 0 && person.child))
+    console.timeLog(`birthAwaitingBabies-${this.name}`, 'Mothers ready')
 
     await Promise.all(
       awaitingMothers.map((mother) => new Promise((resolve) => {
@@ -417,6 +424,8 @@ export class Civilization {
         resolve(null)
       }))
     )
+    console.timeLog(`birthAwaitingBabies-${this.name}`, 'Mothers gave birth')
+    console.timeEnd(`birthAwaitingBabies-${this.name}`)
   }
 
   private removeDeadPeople() {
