@@ -339,11 +339,11 @@ export class Civilization {
     let men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
 
     console.time(`createNewPeople-${this.name}`)
-    console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
     if (women.length > NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE) {
       women.length = NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE
     }
+    console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
     await Promise.all(women.map((woman) => new Promise((resolve) => {
       let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
