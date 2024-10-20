@@ -87,7 +87,6 @@
 		<div
 			class="skeleton w-100 flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
 		>
-			Chargement des personnes
 			<progress class="progress w-56" value={people.length} max={data.civilization.citizensCount}
 			></progress>
 		</div>

@@ -350,9 +350,9 @@ export class Civilization {
 
       // A person SHOULD NOT be in a relationship with a descendant of his/her grand-parent
       if (woman.lineage) {
-        const grandParent = woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? []
-        if (grandParent.length) {
-          eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel(grandParent[0], 2) && !tree.findByKeyAndMaxLevel(grandParent[1], 2)))
+        const grandParent = new Set(woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? [])
+        if (grandParent.size) {
+          eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel([...grandParent][0], 2) && !tree.findByKeyAndMaxLevel([...grandParent][1], 2)))
         }
       }
 
