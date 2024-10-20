@@ -233,6 +233,9 @@ export class CivilizationService {
       const deadPeople = []
       const peoplesToUpdate = []
       const { peopleToCreate, existingPeople } = civilization.people.reduce<{ peopleToCreate: People[], existingPeople: People[] }>((acc, people) => {
+        if (!people) {
+          return acc
+        }
         if (people.id) {
           acc.existingPeople.push(people)
         } else {
