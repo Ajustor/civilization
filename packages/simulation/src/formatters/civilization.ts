@@ -7,7 +7,7 @@ export function formatCivilizations(civilizations: Civilization[]): Civilization
     id: civilization.id,
     livedMonths: civilization.livedMonths,
     citizensCount: civilization.citizensCount,
-    people: civilization.people?.map((person) => person.formatToType()),
+    people: civilization.people?.filter((person) => person).map((person) => person.formatToType()),
     resources: civilization.resources.map((resource) => resource.formatToType()),
     buildings: civilization.buildings.map((building) => building.formatToType())
   }))
