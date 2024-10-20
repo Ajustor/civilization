@@ -15,7 +15,8 @@
     "generate:migrations": "bunx drizzle-kit generate",
     "migration": "bun run migrations.ts",
     "populate": "bun run seed.ts",
-    "email:preview": "email dev --dir ./src"
+    "email:preview": "email dev --dir ./src",
+    "passAMonth": "bun run src/cron/passAMonth.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

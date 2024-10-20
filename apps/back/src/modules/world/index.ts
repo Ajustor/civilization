@@ -1,5 +1,4 @@
 import { Elysia, NotFoundError, t } from 'elysia'
-// import { Patterns, cron } from '@elysiajs/cron'
 
 import { CivilizationService } from '../civilizations/service'
 import { WorldsTable } from './database'
@@ -18,26 +17,6 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     worldService: worldServiceInstance,
     civilizationsDbClient: civilizationsDbClientInstance
   })
- /* .use(
-    cron({
-      name: 'monthPass',
-      pattern: Bun.env.CRON_TIME ?? Patterns.everyMinutes(15),
-      async run() {
-        return new Promise((resolve) => {
-          const worldWorker = new Worker(`${import.meta.dir}/threads/world`)
-
-          console.log('Start passing a month')
-          worldWorker.postMessage({})
-
-          worldWorker.addEventListener('close', () => {
-            console.log('Process ended')
-            worldWorker.terminate()
-            resolve(null)
-          })
-        })
-      }
-    })
-  )*/
   .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
     const worlds = await worldDbClient.getAll()
 
