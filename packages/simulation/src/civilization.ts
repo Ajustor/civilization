@@ -270,8 +270,10 @@ export class Civilization {
 
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Dead people removed')
 
-    this.createNewPeople()
-    this.birthAwaitingBabies()
+    await Promise.all([
+      this.createNewPeople(),
+      this.birthAwaitingBabies()
+    ])
 
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was created/birth')
 
@@ -329,7 +331,7 @@ export class Civilization {
     })
   }
 
-  private createNewPeople() {
+  private async createNewPeople() {
     // Handle pregnancy
 
     let eligiblePeople: [People, People][] = []
@@ -367,48 +369,61 @@ export class Civilization {
       }
     }
 
-    if (eligiblePeople.length) {
-      for (const [mother, father] of eligiblePeople) {
-
-        if (!isWithinChance(PREGNANCY_PROBABILITY)) {
-          continue
-        }
-
-        const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
-        const genders = [Gender.FEMALE, Gender.MALE]
-        const newPerson = new People({
-          name: uniqueNamesGenerator({ dictionaries: [names] }),
-          month: 0,
-          gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
-          lifeCounter: 2,
-          lineage: {
-            mother: {
-              id: mother.id,
-              ...(mother.lineage && { lineage: { mother: { id: mother.lineage.mother.id }, father: { id: mother.lineage.father.id } } })
-            },
-            father: {
-              id: father.id,
-              ...(father.lineage && { lineage: { mother: { id: father.lineage.mother.id }, father: { id: father.lineage.father.id } } })
-            }
-          }
-        })
-        newPerson.setOccupation(occupations[Math.min(Math.floor(Math.random() * occupations.length), occupations.length - 1)])
-
-        mother.addChildToBirth(newPerson)
-
-        mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
-        father.lifeCounter = Math.floor(father.lifeCounter / 2)
-      }
+    if (!eligiblePeople.length) {
+      return
     }
+
+    await Promise.all(eligiblePeople.map(([mother, father]) => new Promise((resolve) => {
+      if (!isWithinChance(PREGNANCY_PROBABILITY)) {
+        return resolve(null)
+      }
+
+      const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
+      const genders = [Gender.FEMALE, Gender.MALE]
+      const newPerson = new People({
+        name: uniqueNamesGenerator({ dictionaries: [names] }),
+        month: 0,
+        gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
+        lifeCounter: 2,
+        lineage: {
+          mother: {
+            id: mother.id,
+            ...(mother.lineage && { lineage: { mother: { id: mother.lineage.mother.id }, father: { id: mother.lineage.father.id } } })
+          },
+          father: {
+            id: father.id,
+            ...(father.lineage && { lineage: { mother: { id: father.lineage.mother.id }, father: { id: father.lineage.father.id } } })
+          }
+        }
+      })
+      newPerson.setOccupation(occupations[Math.min(Math.floor(Math.random() * occupations.length), occupations.length - 1)])
+
+      mother.addChildToBirth(newPerson)
+
+      mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
+      father.lifeCounter = Math.floor(father.lifeCounter / 2)
+
+      resolve(null)
+    })
+    ))
+
   }
 
-  private birthAwaitingBabies() {
+  private async birthAwaitingBabies() {
     const awaitingMothers = this._people.filter<People & { child: People }>((person): person is People & { child: People } => !!(person.pregnancyMonthsLeft === 0 && person.child))
 
     for (const mother of awaitingMothers) {
       this.addPeople(mother.child)
       mother.giveBirth()
     }
+
+    await Promise.all([
+      awaitingMothers.map((mother) => new Promise((resolve) => {
+        this.addPeople(mother.child)
+        mother.giveBirth()
+        resolve(null)
+      }))
+    ])
   }
 
   private removeDeadPeople() {
