@@ -334,19 +334,17 @@ export class Civilization {
     let eligiblePeople: [People, People][] = []
     const ableToConceivePeople = this._people.filter(person => person.canConceive())
 
-    ableToConceivePeople.forEach((person) => person.buildLineageTree())
-
     const women = ableToConceivePeople.filter(({ gender }) => gender === Gender.FEMALE)
-    let men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
+    const men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
 
     console.time(`createNewPeople-${this.name}`)
-    console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
+    console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women with ${men.length} men`)
 
     if (!women.length) {
       return
     }
 
-    await Promise.all(women.map((woman) => new Promise((resolve) => {
+    for (const woman of women) {
       const womanLineage = woman.getDirectLineage()
       const eligibleMen = men.filter((man) => {
         const manLineage = man.getDirectLineage()
@@ -363,8 +361,7 @@ export class Civilization {
         }
         // TODO: check if we need to remove the father from the available men
       }
-      resolve(null)
-    })))
+    }
 
     console.timeLog(`createNewPeople-${this.name}`, 'Eligible people ready')
 
