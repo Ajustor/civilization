@@ -167,6 +167,7 @@ describe('Civilization', () => {
 
   describe('civilization pass a month', () => {
 
+
     it('Should return all workers who can retire', () => {
       const person1 = new People({ name: 'Carpenter Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
       const person2 = new People({ name: 'Farmer Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
@@ -188,6 +189,7 @@ describe('Civilization', () => {
 
 
     it('Should change occupation of people who can retire', async () => {
+      civilization.name = 'retirePeople'
       const person1 = new People({ name: 'Carpenter Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
       const person2 = new People({ name: 'Farmer Alice', gender: Gender.FEMALE, lifeCounter: 50, month: 721 })
       const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
@@ -208,11 +210,12 @@ describe('Civilization', () => {
     })
 
     it('should remove all dead people', async () => {
+      civilization.name = 'removeDead'
       isWithinChance.mockReturnValue(true)
-      
+
       const person1 = new People({ name: 'Alice', gender: Gender.FEMALE, lifeCounter: 0, month: 0 })
       const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })
-      const person3 = new People({ name: 'Old Bob', gender: Gender.MALE, lifeCounter: 12, month: LIFE_EXPECTANCY*12 + 3 })
+      const person3 = new People({ name: 'Old Bob', gender: Gender.MALE, lifeCounter: 12, month: LIFE_EXPECTANCY * 12 + 3 })
 
       civilization.addPeople(person2, person1, person3)
       await civilization.passAMonth(world)
@@ -221,11 +224,12 @@ describe('Civilization', () => {
     })
 
     it('should remove all dead people except the old ones who are defying death', async () => {
+      civilization.name = 'defyingDeath'
       isWithinChance.mockReturnValue(false)
-      
-      const person1 = new People({ name: 'Old Alice ', gender: Gender.FEMALE, lifeCounter:12, month: LIFE_EXPECTANCY * 12 + 10 })
+
+      const person1 = new People({ name: 'Old Alice ', gender: Gender.FEMALE, lifeCounter: 12, month: LIFE_EXPECTANCY * 12 + 10 })
       const person2 = new People({ name: 'Sick Bob', gender: Gender.MALE, lifeCounter: 0, month: 0 })
-      const person3 = new People({ name: 'Old Bob', gender: Gender.MALE, lifeCounter: 12, month: LIFE_EXPECTANCY*12 + 3 })
+      const person3 = new People({ name: 'Old Bob', gender: Gender.MALE, lifeCounter: 12, month: LIFE_EXPECTANCY * 12 + 3 })
 
       civilization.addPeople(person2, person1, person3)
       await civilization.passAMonth(world)
@@ -234,6 +238,7 @@ describe('Civilization', () => {
     })
 
     it('should create new born', async () => {
+      civilization.name = 'createNewBorn'
       const child = new PeopleBuilder().withGender(Gender.MALE).withOccupation(OccupationTypes.CARPENTER).withName('Patrique').build()
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
@@ -260,6 +265,7 @@ describe('Civilization', () => {
 
     describe('should set mother pregnant', () => {
       it('mother and father has no link', async () => {
+        civilization.name = 'setPregnantNoLink'
         isWithinChance.mockReturnValue(true)
         const person1 = new PeopleBuilder()
           .withGender(Gender.FEMALE)
@@ -297,6 +303,8 @@ describe('Civilization', () => {
       })
 
       it('mother has no lineage', async () => {
+        civilization.name = 'setPregnantNoLineageForMother'
+
         isWithinChance.mockReturnValue(true)
         const person1 = new PeopleBuilder()
           .withGender(Gender.FEMALE)
@@ -333,6 +341,8 @@ describe('Civilization', () => {
       })
 
       it('father has no lineage', async () => {
+        civilization.name = 'setPregnantNoLineageForFather'
+
         isWithinChance.mockReturnValue(true)
         const person1 = new PeopleBuilder()
           .withGender(Gender.FEMALE)
@@ -370,6 +380,7 @@ describe('Civilization', () => {
     })
 
     it('should set mother pregnant with a female carpenter child', async () => {
+      civilization.name = 'setPregnantWithFemaleCarpenter'
       mockMath.random = () => 0
       global.Math = mockMath
       isWithinChance.mockReturnValue(true)
@@ -409,6 +420,7 @@ describe('Civilization', () => {
     })
 
     it('should set mother pregnant with a male farmer child', async () => {
+      civilization.name = 'setPregnantWithMaleFarmer'
       mockMath.random = () => 1
       global.Math = mockMath
       isWithinChance.mockReturnValue(true)
@@ -448,6 +460,7 @@ describe('Civilization', () => {
     })
 
     it('should not set mother pregnant', async () => {
+      civilization.name = 'notSetPregnant'
       isWithinChance.mockReturnValue(false)
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
@@ -480,6 +493,8 @@ describe('Civilization', () => {
     })
 
     it('should not set mother pregnant because other male is her brother', async () => {
+      civilization.name = 'notSetPregnantBrotherCase'
+
       isWithinChance.mockReturnValue(true)
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
@@ -512,6 +527,8 @@ describe('Civilization', () => {
     })
 
     it('should not set mother pregnant because other male is her uncle', async () => {
+      civilization.name = 'notSetPregnantUncleCase'
+
       isWithinChance.mockReturnValue(true)
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
@@ -520,7 +537,7 @@ describe('Civilization', () => {
         .withName('Carole')
         .withOccupation(OccupationTypes.FARMER)
         .withId('p1')
-        .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+        .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
         .build()
       const person2 = new PeopleBuilder()
         .withGender(Gender.MALE)
@@ -552,7 +569,7 @@ describe('Civilization', () => {
           .withName('Carole')
           .withOccupation(OccupationTypes.FARMER)
           .withId('p1')
-          .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+          .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
           .build()
         const person2 = new PeopleBuilder()
           .withGender(Gender.MALE)
@@ -561,7 +578,6 @@ describe('Civilization', () => {
           .withName('Yves')
           .withOccupation(OccupationTypes.FARMER)
           .withId('p2')
-          .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
           .build()
 
         civilization.addPeople(person1, person2)
@@ -581,7 +597,7 @@ describe('Civilization', () => {
             .withName('Carole')
             .withOccupation(OccupationTypes.FARMER)
             .withId('p1')
-            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
             .build()
           const person2 = new PeopleBuilder()
             .withGender(Gender.MALE)
@@ -612,7 +628,7 @@ describe('Civilization', () => {
             .withName('Carole')
             .withOccupation(OccupationTypes.FARMER)
             .withId('p1')
-            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
             .build()
           const person2 = new PeopleBuilder()
             .withGender(Gender.MALE)

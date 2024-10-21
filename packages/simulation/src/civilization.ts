@@ -352,7 +352,7 @@ export class Civilization {
 
     await Promise.all(women.map((woman) => new Promise((resolve) => {
       console.log("on y est")
-      let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.getAllTreeNodes().map(({ source }) => source).includes(id))
+      let eligibleMen = men.filter((man) => !woman.tree || !woman.tree.getAllTreeNodes().map(({ source }) => source).includes(man.id))
 
       eligibleMen = eligibleMen.filter((man) => !man.tree || !man.tree.getAllTreeNodes().map(({ source }) => source).includes(woman.id))
       // A person SHOULD NOT be in a relationship with a child of his/her parent
@@ -371,7 +371,8 @@ export class Civilization {
       //}
 
       if (eligibleMen.length) {
-        const father = eligibleMen[Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)]
+        const randomMan = Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)
+        const father = eligibleMen[randomMan]
         if (father) {
           eligiblePeople.push([woman, father])
         }

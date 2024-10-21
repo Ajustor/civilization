@@ -88,23 +88,25 @@ export class Tree<T> {
   }
 
 
-  filterAllByLevel(level: number): TreeNode<T>[] {  
-      const results: TreeNode<T>[] = []
-      for (const treeNode of this.preOrderTraversal()) {
-        if (treeNode.nodeLevel === level) {
-          results.push(treeNode)
-        }
+  filterAllByLevel(level: number): TreeNode<T>[] {
+    const results: TreeNode<T>[] = []
+    for (const treeNode of this.preOrderTraversal()) {
+      if (treeNode.nodeLevel === level) {
+        results.push(treeNode)
       }
-      return results
+    }
+    return results
   }
-  
+
 
 
   getAllTreeNodes(): TreeNode<T>[] {
     const results: TreeNode<T>[] = []
+    console.log('on get all tree nodes')
     for (const treeNode of this.preOrderTraversal()) {
       results.push(treeNode)
     }
+    console.log('retourning this')
     return results
   }
 
