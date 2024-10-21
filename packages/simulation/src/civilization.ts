@@ -335,7 +335,7 @@ export class Civilization {
     const ableToConceivePeople = this._people.filter(person => person.canConceive())
 
     const women = ableToConceivePeople.filter(({ gender }) => gender === Gender.FEMALE)
-    const men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
+    const men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE).toSorted(() => Math.random() - 0.5)
 
     console.time(`createNewPeople-${this.name}`)
     console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women with ${men.length} men`)
@@ -343,24 +343,24 @@ export class Civilization {
     if (!women.length) {
       return
     }
-
+    let womenCounter = 0
     for (const woman of women) {
+      console.timeLog(`createNewPeople-${this.name}`, `${womenCounter++} over ${women.length}`)
+
       const womanLineage = woman.getDirectLineage()
-      const eligibleMen = men.filter((man) => {
+      const eligibleManIndex = men.findIndex((man) => {
         const manLineage = man.getDirectLineage()
         const manAndWomanIntersection = hasElementInCommon(womanLineage, manLineage)
 
         return !manAndWomanIntersection
       })
+      const [eligibleMan] = men.splice(eligibleManIndex, 1)
 
-      if (eligibleMen.length) {
-        const randomMan = Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)
-        const father = eligibleMen[randomMan]
-        if (father) {
-          eligiblePeople.push([woman, father])
-        }
-        // TODO: check if we need to remove the father from the available men
+      if (eligibleMan) {
+        eligiblePeople.push([woman, eligibleMan])
       }
+      // TODO: check if we need to remove the father from the available men
+
     }
 
     console.timeLog(`createNewPeople-${this.name}`, 'Eligible people ready')
