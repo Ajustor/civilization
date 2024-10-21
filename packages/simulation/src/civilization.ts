@@ -346,21 +346,29 @@ export class Civilization {
     }
     console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
-    await Promise.all(women.map((woman) => new Promise((resolve) => {
-      let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
+    if (!women.length) {
+      return
+    }
 
+    await Promise.all(women.map((woman) => new Promise((resolve) => {
+      console.log("on y est")
+      let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.getAllTreeNodes().map(({ source }) => source).includes(id))
+
+      eligibleMen = eligibleMen.filter((man) => !man.tree || !man.tree.getAllTreeNodes().map(({ source }) => source).includes(woman.id))
       // A person SHOULD NOT be in a relationship with a child of his/her parent
-      if (woman.lineage) {
-        eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndLevel(woman.lineage!.father.id, 1) && !tree.findByKeyAndLevel(woman.lineage!.mother.id, 1)))
-      }
+      //if (woman.lineage) {
+      //  eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndLevel(woman.lineage!.father.id, 1) && !tree.findByKeyAndLevel(woman.lineage!.mother.id, 1)))
+      //}
 
       // A person SHOULD NOT be in a relationship with a descendant of his/her grand-parent
-      if (woman.lineage) {
-        const grandParent = woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? []
-        if (grandParent.length) {
-          eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel(grandParent[0], 2) && !tree.findByKeyAndMaxLevel(grandParent[1], 2)))
-        }
-      }
+      //if (woman.lineage) {
+      //  console.log("lineage")
+      //  const grandParent = woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? []
+      //  console.log(grandParent)
+      //  if (grandParent.length) {
+      //    eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel(grandParent[0], 2) && !tree.findByKeyAndMaxLevel(grandParent[1], 2)))
+      //  }
+      //}
 
       if (eligibleMen.length) {
         const father = eligibleMen[Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)]
