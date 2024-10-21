@@ -10,7 +10,7 @@ import { People } from './people/people'
 import type { World } from './world'
 import { isWithinChance } from './utils'
 import { v4 } from 'uuid'
-import { intersect } from './utils/array'
+import { hasElementInCommon } from './utils/array'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
@@ -347,12 +347,12 @@ export class Civilization {
     }
 
     await Promise.all(women.map((woman) => new Promise((resolve) => {
-      const womanLineage = woman.tree?.getAllTreeNodes()?.map(({ source }) => source) ?? []
+      const womanLineage = woman.getDirectLineage()
       const eligibleMen = men.filter((man) => {
-        const manLineage = man.tree?.getAllTreeNodes()?.map(({ source }) => source) ?? []
-        const manAndWomanIntersection = intersect(womanLineage, manLineage)
+        const manLineage = man.getDirectLineage()
+        const manAndWomanIntersection = hasElementInCommon(womanLineage, manLineage)
 
-        return !manAndWomanIntersection.length
+        return !manAndWomanIntersection
       })
 
       if (eligibleMen.length) {
