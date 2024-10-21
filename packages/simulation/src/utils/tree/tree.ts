@@ -102,11 +102,9 @@ export class Tree<T> {
 
   getAllTreeNodes(): TreeNode<T>[] {
     const results: TreeNode<T>[] = []
-    console.log('on get all tree nodes')
     for (const treeNode of this.preOrderTraversal()) {
       results.push(treeNode)
     }
-    console.log('retourning this')
     return results
   }
 

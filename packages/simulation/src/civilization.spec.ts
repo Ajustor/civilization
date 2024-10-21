@@ -526,7 +526,7 @@ describe('Civilization', () => {
       expect(child).toBeFalsy()
     })
 
-    it('should not set mother pregnant because other male is her uncle', async () => {
+    it('should not set mother pregnant because other male is her father', async () => {
       civilization.name = 'notSetPregnantUncleCase'
 
       isWithinChance.mockReturnValue(true)
@@ -546,7 +546,7 @@ describe('Civilization', () => {
         .withName('Yves')
         .withOccupation(OccupationTypes.FARMER)
         .withId('p2')
-        .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+        .withLineage({ mother: { id: 'mother' }, father: { id: 'p1' } })
         .build()
 
       civilization.addPeople(person1, person2)
@@ -569,7 +569,6 @@ describe('Civilization', () => {
           .withName('Carole')
           .withOccupation(OccupationTypes.FARMER)
           .withId('p1')
-          .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
           .build()
         const person2 = new PeopleBuilder()
           .withGender(Gender.MALE)
@@ -597,7 +596,6 @@ describe('Civilization', () => {
             .withName('Carole')
             .withOccupation(OccupationTypes.FARMER)
             .withId('p1')
-            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
             .build()
           const person2 = new PeopleBuilder()
             .withGender(Gender.MALE)
@@ -606,7 +604,6 @@ describe('Civilization', () => {
             .withName('Yves')
             .withOccupation(OccupationTypes.FARMER)
             .withId('p2')
-            .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
             .build()
 
           world['month'] = 9
@@ -628,7 +625,6 @@ describe('Civilization', () => {
             .withName('Carole')
             .withOccupation(OccupationTypes.FARMER)
             .withId('p1')
-            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
             .build()
           const person2 = new PeopleBuilder()
             .withGender(Gender.MALE)
@@ -637,7 +633,6 @@ describe('Civilization', () => {
             .withName('Yves')
             .withOccupation(OccupationTypes.FARMER)
             .withId('p2')
-            .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
             .build()
 
           world['month'] = 6
