@@ -138,7 +138,7 @@ describe('World', () => {
 
   // Passing a month updates the month and resources based on the season
   describe('should update month and resources based on season when passing a month', () => {
-    it('spring', () => {
+    it('spring', async () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
@@ -149,7 +149,7 @@ describe('World', () => {
       const decreaseSpy = jest.spyOn(world, 'decreaseResource')
       const increaseSpy = jest.spyOn(world, 'increaseResource')
 
-      world.passAMonth()
+      await world.passAMonth()
       const { month } = world.getInfos()
 
       expect(month).toBe(1)
@@ -159,7 +159,7 @@ describe('World', () => {
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.1))
     })
 
-    it('summer', () => {
+    it('summer', async () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
@@ -170,7 +170,7 @@ describe('World', () => {
       const decreaseSpy = jest.spyOn(world, 'decreaseResource')
       const increaseSpy = jest.spyOn(world, 'increaseResource')
       world['month'] = 2
-      world.passAMonth()
+      await world.passAMonth()
       const { month } = world.getInfos()
 
       expect(month).toBe(3)
@@ -180,7 +180,7 @@ describe('World', () => {
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.2))
     })
 
-    it('automn', () => {
+    it('automn', async () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
@@ -191,7 +191,7 @@ describe('World', () => {
       const decreaseSpy = jest.spyOn(world, 'decreaseResource')
       const increaseSpy = jest.spyOn(world, 'increaseResource')
       world['month'] = 5
-      world.passAMonth()
+      await world.passAMonth()
       const { month } = world.getInfos()
 
       expect(month).toBe(6)
@@ -201,7 +201,7 @@ describe('World', () => {
       expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION))
     })
 
-    it('winter', () => {
+    it('winter', async () => {
       const world = new World()
       const civilization = new Civilization()
       world.addCivilization(civilization)
@@ -212,7 +212,7 @@ describe('World', () => {
       const decreaseSpy = jest.spyOn(world, 'decreaseResource')
       const increaseSpy = jest.spyOn(world, 'increaseResource')
       world['month'] = 8
-      world.passAMonth()
+      await world.passAMonth()
       const { month } = world.getInfos()
 
       expect(month).toBe(9)
@@ -281,7 +281,7 @@ describe('World', () => {
   // Passing a month when there are no civilizations does not throw an error
   it('should not throw an error when passing a month with no civilizations', () => {
     const world = new World()
-    expect(() => world.passAMonth()).not.toThrow()
+    expect(async () => await world.passAMonth()).not.toThrow()
   })
 
   // World instance initializes with an empty id
@@ -325,7 +325,7 @@ describe('World', () => {
     expect(world.getInfos().civilizations).toEqual(formattedCivilizations)
   })
 
-  it('should pass a month on civilizations', () => {
+  it('should pass a month on civilizations', async () => {
     const world = new World()
 
     const worldFood = new Resource(ResourceTypes.FOOD, 5000)
@@ -337,7 +337,7 @@ describe('World', () => {
     civilization1.addResource(new Resource(ResourceTypes.FOOD, 10))
     world.addCivilization(civilization1)
 
-    world.passAMonth()
+    await world.passAMonth()
 
     for (const civilization of world.civilizations) {
       expect(civilization.livedMonths).toBe(1)

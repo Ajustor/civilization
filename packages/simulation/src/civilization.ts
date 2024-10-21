@@ -10,6 +10,7 @@ import { People } from './people/people'
 import type { World } from './world'
 import { isWithinChance } from './utils'
 import { v4 } from 'uuid'
+import { intersect } from './utils/array'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
@@ -339,31 +340,24 @@ export class Civilization {
     let men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE)
 
     console.time(`createNewPeople-${this.name}`)
-
-    // Temporary fix to avoid 6min of work
-    if (women.length > NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE) {
-      women.length = NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE
-    }
     console.timeLog(`createNewPeople-${this.name}`, `Prepare eligible people for ${women.length} women`)
 
+    if (!women.length) {
+      return
+    }
+
     await Promise.all(women.map((woman) => new Promise((resolve) => {
-      let eligibleMen = men.filter(({ id }) => !woman.tree || !woman.tree.findByKey(id))
+      const womanLineage = woman.tree?.getAllTreeNodes()?.map(({ source }) => source) ?? []
+      const eligibleMen = men.filter((man) => {
+        const manLineage = man.tree?.getAllTreeNodes()?.map(({ source }) => source) ?? []
+        const manAndWomanIntersection = intersect(womanLineage, manLineage)
 
-      // A person SHOULD NOT be in a relationship with a child of his/her parent
-      if (woman.lineage) {
-        eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndLevel(woman.lineage!.father.id, 1) && !tree.findByKeyAndLevel(woman.lineage!.mother.id, 1)))
-      }
-
-      // A person SHOULD NOT be in a relationship with a descendant of his/her grand-parent
-      if (woman.lineage) {
-        const grandParent = woman.tree?.filterAllByLevel(2).map(({ nodeKey }) => nodeKey) ?? []
-        if (grandParent.length) {
-          eligibleMen = eligibleMen.filter(({ tree }) => !tree || (!tree.findByKeyAndMaxLevel(grandParent[0], 2) && !tree.findByKeyAndMaxLevel(grandParent[1], 2)))
-        }
-      }
+        return !manAndWomanIntersection.length
+      })
 
       if (eligibleMen.length) {
-        const father = eligibleMen[Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)]
+        const randomMan = Math.min(Math.floor(Math.random() * eligibleMen.length), eligibleMen.length - 1)
+        const father = eligibleMen[randomMan]
         if (father) {
           eligiblePeople.push([woman, father])
         }
