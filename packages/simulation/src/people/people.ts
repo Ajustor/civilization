@@ -160,9 +160,9 @@ export class People {
     return false
   }
 
-  startBuilding(): void {
+  startBuilding(buildingMonthsLeft = 2): void {
     this.isBuilding = true
-    this.buildingMonthsLeft = 2
+    this.buildingMonthsLeft = buildingMonthsLeft
   }
 
   canConceive(): boolean {

@@ -107,7 +107,7 @@ describe('Civilization', () => {
     const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
 
     person.setOccupation(OccupationTypes.FARMER)
-    person2.setOccupation(OccupationTypes.CARPENTER)
+    person2.setOccupation(OccupationTypes.WOOD_CUTTER)
     civilization.addPeople(person, person2)
     civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
     civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
@@ -130,11 +130,11 @@ describe('Civilization', () => {
     const mockCarpenter = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
 
     mockFarmer.setOccupation(OccupationTypes.FARMER)
-    mockCarpenter.setOccupation(OccupationTypes.CARPENTER)
+    mockCarpenter.setOccupation(OccupationTypes.WOOD_CUTTER)
     civilization.addPeople(mockFarmer, mockCarpenter)
 
     const farmers = civilization.getPeopleWithOccupation(OccupationTypes.FARMER)
-    const carpenters = civilization.getPeopleWithOccupation(OccupationTypes.CARPENTER)
+    const carpenters = civilization.getPeopleWithOccupation(OccupationTypes.WOOD_CUTTER)
 
     expect(farmers).toContain(mockFarmer)
     expect(carpenters).toContain(mockCarpenter)
@@ -145,11 +145,11 @@ describe('Civilization', () => {
     const mockCarpenter = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
 
     mockFarmer.setOccupation(OccupationTypes.FARMER)
-    mockCarpenter.setOccupation(OccupationTypes.CARPENTER)
+    mockCarpenter.setOccupation(OccupationTypes.WOOD_CUTTER)
     civilization.addPeople(mockFarmer, mockCarpenter)
 
     const notFarmers = civilization.getPeopleWithoutOccupation(OccupationTypes.FARMER)
-    const notCarpenters = civilization.getPeopleWithoutOccupation(OccupationTypes.CARPENTER)
+    const notCarpenters = civilization.getPeopleWithoutOccupation(OccupationTypes.WOOD_CUTTER)
 
     expect(notCarpenters).toContain(mockFarmer)
     expect(notFarmers).toContain(mockCarpenter)
@@ -174,10 +174,10 @@ describe('Civilization', () => {
       const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
       const person4 = new People({ name: 'Carpenter Baby Bob', gender: Gender.MALE, lifeCounter: 50, month: 100 })
 
-      person1.setOccupation(OccupationTypes.CARPENTER)
+      person1.setOccupation(OccupationTypes.WOOD_CUTTER)
       person2.setOccupation(OccupationTypes.FARMER)
       person3.setOccupation(OccupationTypes.FARMER)
-      person4.setOccupation(OccupationTypes.CARPENTER)
+      person4.setOccupation(OccupationTypes.WOOD_CUTTER)
 
       civilization.addPeople(person1, person2, person3, person4)
 
@@ -195,10 +195,10 @@ describe('Civilization', () => {
       const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
       const person4 = new People({ name: 'Carpenter Baby Bob', gender: Gender.MALE, lifeCounter: 50, month: 100 })
 
-      person1.setOccupation(OccupationTypes.CARPENTER)
+      person1.setOccupation(OccupationTypes.WOOD_CUTTER)
       person2.setOccupation(OccupationTypes.FARMER)
       person3.setOccupation(OccupationTypes.FARMER)
-      person4.setOccupation(OccupationTypes.CARPENTER)
+      person4.setOccupation(OccupationTypes.WOOD_CUTTER)
 
       civilization.addPeople(person1, person2, person3, person4)
       await civilization.passAMonth(world)
@@ -239,7 +239,7 @@ describe('Civilization', () => {
 
     it('should create new born', async () => {
       civilization.name = 'createNewBorn'
-      const child = new PeopleBuilder().withGender(Gender.MALE).withOccupation(OccupationTypes.CARPENTER).withName('Patrique').build()
+      const child = new PeopleBuilder().withGender(Gender.MALE).withOccupation(OccupationTypes.WOOD_CUTTER).withName('Patrique').build()
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
         .withLifeCounter(50)
@@ -712,8 +712,6 @@ describe('Civilization', () => {
           expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(100)
         })
       })
-
-
     })
   })
 })

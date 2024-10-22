@@ -1,9 +1,15 @@
+import { OccupationTypes } from '..'
 import { ResourceTypes } from '../resource'
-import { BuildingType, ConstructionCost, ProductionBuilding } from '../types/building'
+import { AbstractProductionBuilding, BuildingType, ConstructionCost } from '../types/building'
 import { BuildingTypes } from './enum'
 
-export class Kiln implements ProductionBuilding {
-  constructor(public readonly capacity: number, public readonly count: number) { }
+export class Kiln extends AbstractProductionBuilding {
+  constructor(public readonly capacity: number, public readonly count: number) { super() }
+  workerTypeRequired: { workerType: OccupationTypes; count: number }[] = [
+    {
+      workerType: OccupationTypes.CHARCOAL_BURNER, count: 2
+    }
+  ]
 
   inputResources = [
     {
@@ -16,6 +22,8 @@ export class Kiln implements ProductionBuilding {
     resource: ResourceTypes.CHARCOAL,
     amount: 10
   }]
+
+  public static timeToBuild: number = 4
 
   public static constructionCosts: ConstructionCost[] = [{
     resource: ResourceTypes.STONE,

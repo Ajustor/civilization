@@ -130,8 +130,10 @@ export class Civilization {
     return this._people.filter((worker) => worker.work && OCCUPATION_TREE[worker.work.occupationType]?.length)
   }
 
-  addPeople(...people: People[]): void {
-    this._people.push(...people)
+  addPeople(...peoples: People[]): void {
+    for (const people of peoples) {
+      this._people.push(people)
+    }
   }
 
   addResource(...resources: Resource[]): void {
@@ -241,7 +243,6 @@ export class Civilization {
 
     const civilizationFood = this.getResource(ResourceTypes.FOOD)
     const civilizationWood = this.getResource(ResourceTypes.WOOD)
-    const civilizationCharcoal = this.getResource(ResourceTypes.CHARCOAL)
 
     const farmers = this.getPeopleWithOccupation(OccupationTypes.FARMER)
     const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOOD_CUTTER)
@@ -253,7 +254,6 @@ export class Civilization {
       this.collectResource(farmers, foodResource, FARMER_RESOURCES_GET, world),
       this.collectResource(woodCutters, woodResource, WOOD_CUTTER_RESOURCES_GET, world),
     ])
-
 
     civilizationFood.increase(foodCollected)
     civilizationWood.increase(woodCollected)
@@ -273,9 +273,9 @@ export class Civilization {
 
     await Promise.all([
       this.adaptPeopleJob(),
-      this.buildNewBuilding()
     ])
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted and new houses builded')
+    this.buildNewBuilding()
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted and bew building builded')
 
     this.checkHabitations()
 
@@ -297,7 +297,6 @@ export class Civilization {
     }
 
     console.timeEnd(`CivilizationPassAMonth-${this.name}`)
-
   }
 
   private produceResources() {
@@ -341,12 +340,23 @@ export class Civilization {
       return
     }
 
-    const carpenter = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
-    if (!carpenter) {
+    const workers = Kiln.workerRequiredToBuild.reduce<People[]>((workers, workerRequired) => {
+      for (let i = 0; i < workerRequired.amount; i++) {
+        const worker = this.getPeopleWithOccupation(workerRequired.occupation).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
+        if (worker) {
+          workers.push(worker)
+        }
+      }
+      return workers
+    }, [])
+
+    if (!workers.length || workers.length < Kiln.workerRequiredToBuild.reduce((sum, { amount }) => sum + amount, 0)) {
       return
     }
 
-    carpenter.startBuilding()
+    for (const worker of workers) {
+      worker.startBuilding()
+    }
     this.constructBuilding(BuildingTypes.KILN, 4)
   }
 

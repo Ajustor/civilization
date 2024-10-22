@@ -2,6 +2,7 @@ import { Civilization } from './civilization'
 import { formatCivilizations } from './formatters'
 import { Gender } from './people/enum'
 import { People } from './people/people'
+import { OccupationTypes } from './people/work/enum'
 import { Resource, ResourceTypes } from './resource'
 import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION, World } from './world'
 
@@ -34,8 +35,8 @@ describe('World', () => {
   // Getting civilizations returns the correct list of civilizations
   it('should return correct list of civilizations when getting civilizations', () => {
     const world = new World()
-    const civilization1 = new Civilization('Civilization 1')
-    const civilization2 = new Civilization('Civilization 2')
+    const civilization1 = new Civilization('GET Civilization 1')
+    const civilization2 = new Civilization('GET Civilization 2')
     world.addCivilization(civilization1, civilization2)
     expect(world.civilizations).toEqual([civilization1, civilization2])
   })
@@ -43,8 +44,8 @@ describe('World', () => {
   // Adding civilizations updates the civilizations list
   it('should update civilizations list when civilizations are added', () => {
     const world = new World()
-    const civilization1 = new Civilization('Civilization 1')
-    const civilization2 = new Civilization('Civilization 2')
+    const civilization1 = new Civilization('UPDATE Civilization 1')
+    const civilization2 = new Civilization('UPDATE Civilization 2')
 
     world.addCivilization(civilization1, civilization2)
 
@@ -229,7 +230,7 @@ describe('World', () => {
     const worldFood = new Resource(ResourceTypes.FOOD, 5000)
     const worldWood = new Resource(ResourceTypes.WOOD, 2000)
     world.addResource(worldFood, worldWood)
-    const civilization1 = new Civilization('Civilization 1')
+    const civilization1 = new Civilization('FORMATTED Civilization 1')
     civilization1.id = 'civilizationId'
     const food = new Resource(ResourceTypes.FOOD, 500)
     const wood = new Resource(ResourceTypes.WOOD, 200)
@@ -241,7 +242,7 @@ describe('World', () => {
       id: '',
       name: 'The world',
       civilizations: [{
-        name: 'Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
+        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
           food.formatToType(),
           wood.formatToType()
         ]
@@ -331,8 +332,10 @@ describe('World', () => {
     const worldFood = new Resource(ResourceTypes.FOOD, 5000)
     const worldWood = new Resource(ResourceTypes.WOOD, 2000)
     world.addResource(worldFood, worldWood)
-    const civilization1 = new Civilization('Civilization 1')
-    civilization1.addPeople(new People({ name: 'Yves', month: 200, lifeCounter: 49, gender: Gender.MALE }))
+    const civilization1 = new Civilization('PASS A MONTH Civilization 1')
+    const people = new People({ name: 'Yves', month: 200, lifeCounter: 49, gender: Gender.MALE })
+    people.setOccupation(OccupationTypes.FARMER)
+    civilization1.addPeople(people)
 
     civilization1.addResource(new Resource(ResourceTypes.FOOD, 10))
     world.addCivilization(civilization1)
