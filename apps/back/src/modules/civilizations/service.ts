@@ -251,7 +251,7 @@ export class CivilizationService {
           alivePeople.push(person)
           const personToUpdate = peopleIndexedById.get(person.toString())
           if (personToUpdate) {
-            peoplesToUpdate.push(PersonModel.findOneAndUpdate({ _id: person }, personToUpdate.formatToEntity()))
+            peoplesToUpdate.push(PersonModel.findOneAndUpdate({ _id: person }, personToUpdate.formatToEntity()).exec())
           }
         } else {
           deadPeople.push(PersonModel.deleteOne({ _id: person }).exec())
