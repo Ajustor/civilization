@@ -118,28 +118,37 @@
         <mxCell id="VrHXVTZJJK4kQPbwEYjZ-51" value="Ferme" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-46">
           <mxGeometry x="190" y="40" width="140" height="104" as="geometry" />
         </mxCell>
-        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-52" value="2 Récolteur" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-51">
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-52" value="2 Récolteurs" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-51">
           <mxGeometry y="26" width="140" height="26" as="geometry" />
         </mxCell>
         <mxCell id="VrHXVTZJJK4kQPbwEYjZ-53" value="10 planches" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-51">
           <mxGeometry y="52" width="140" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-54" value="10 pierre" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-51">
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-54" value="10 pierres" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-51">
           <mxGeometry y="78" width="140" height="26" as="geometry" />
         </mxCell>
         <mxCell id="VrHXVTZJJK4kQPbwEYjZ-55" value="Charbonnière" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-46">
           <mxGeometry x="350" y="40" width="140" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-56" value="20 pierre" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-55">
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-56" value="20 pierres" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-55">
           <mxGeometry y="26" width="140" height="26" as="geometry" />
         </mxCell>
         <mxCell id="VrHXVTZJJK4kQPbwEYjZ-57" value="2 coupeur de bois" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-55">
           <mxGeometry y="52" width="140" height="26" as="geometry" />
         </mxCell>
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-63" value="Mine" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-46">
+          <mxGeometry x="20" y="110" width="140" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-64" value="10 pierres" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-63">
+          <mxGeometry y="26" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-65" value="2 Récolteurs" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-63">
+          <mxGeometry y="52" width="140" height="26" as="geometry" />
+        </mxCell>
         <mxCell id="VrHXVTZJJK4kQPbwEYjZ-59" value="Scierie" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;" vertex="1" parent="1">
           <mxGeometry x="530" y="1360" width="140" height="104" as="geometry" />
         </mxCell>
-        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-60" value="10 pierre" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-59">
+        <mxCell id="VrHXVTZJJK4kQPbwEYjZ-60" value="10 pierres" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-59">
           <mxGeometry y="26" width="140" height="26" as="geometry" />
         </mxCell>
         <mxCell id="VrHXVTZJJK4kQPbwEYjZ-61" value="2 coupeur de bois" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="VrHXVTZJJK4kQPbwEYjZ-59">
