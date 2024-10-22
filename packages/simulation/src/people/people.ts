@@ -13,21 +13,24 @@ import type { World } from '../world'
 import { isWithinChance } from '../utils'
 import { WoodCutter } from './work/woodCutter'
 import { CharcoalBurner } from './work/charcoalBurner'
+import { Gatherer } from './work/gatherer'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
   [OccupationTypes.FARMER]: Farmer,
   [OccupationTypes.RETIRED]: Retired,
   [OccupationTypes.WOOD_CUTTER]: WoodCutter,
-  [OccupationTypes.CHARCOAL_BURNER]: CharcoalBurner
+  [OccupationTypes.CHARCOAL_BURNER]: CharcoalBurner,
+  [OccupationTypes.GATHERER]: Gatherer
 }
 
 export const EAT_FACTOR = {
-  [OccupationTypes.CARPENTER]: 2,
-  [OccupationTypes.WOOD_CUTTER]: 3,
-  [OccupationTypes.FARMER]: 2,
-  [OccupationTypes.RETIRED]: 1,
+  [OccupationTypes.CARPENTER]: 3,
+  [OccupationTypes.FARMER]: 3,
   [OccupationTypes.CHARCOAL_BURNER]: 3,
+  [OccupationTypes.WOOD_CUTTER]: 2,
+  [OccupationTypes.GATHERER]: 2,
+  [OccupationTypes.RETIRED]: 1,
 }
 
 const PREGNANCY_MONTHS = 9

@@ -16,10 +16,19 @@ export class Farm extends AbstractProductionBuilding {
     { workerType: OccupationTypes.FARMER, count: 5 }
   ]
 
-  public static workerRequiredToBuild: WorkerRequiredToBuild[] = []
+  public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
+    {
+      occupation: OccupationTypes.GATHERER,
+      amount: 2
+    }
+  ]
 
   public static constructionCosts: ConstructionCost[] = [{
-    resource: ResourceTypes.WOOD,
+    resource: ResourceTypes.PLANK,
+    amount: 10
+  },
+  {
+    resource: ResourceTypes.STONE,
     amount: 10
   }]
 
