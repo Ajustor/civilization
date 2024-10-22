@@ -340,7 +340,6 @@ export class Civilization {
     if (!women.length) {
       return
     }
-    let womenCounter = 0
     for (const woman of women) {
 
       const womanLineage = woman.getDirectLineage()
@@ -350,6 +349,10 @@ export class Civilization {
 
         return !manAndWomanIntersection
       })
+
+      if (eligibleManIndex === -1) {
+        continue
+      }
       const [eligibleMan] = men.splice(eligibleManIndex, 1)
 
       if (eligibleMan) {
