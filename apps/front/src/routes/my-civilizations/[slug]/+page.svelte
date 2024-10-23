@@ -142,7 +142,14 @@
 		</ul>
 	</span>
 
-	{#await data.lazy.stats then stats}
+	{#await data.lazy.stats}
+		<div
+			class="skeleton w-100 md:w-50 flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
+		></div>
+		<div
+			class="skeleton w-100 md:w-50 flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
+		></div>
+	{:then stats}
 		<!-- promise was fulfilled -->
 		<div class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-3 lg:grid-cols-4">
 			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">

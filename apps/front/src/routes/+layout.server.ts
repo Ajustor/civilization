@@ -1,6 +1,7 @@
 export const prerender = false
+export const ssr = false
 
-/** @type {import('@sveltejs/adapter-vercel').Config} */export const config = {	runtime: 'nodejs20.x'}
+/** @type {import('@sveltejs/adapter-vercel').Config} */export const config = { runtime: 'nodejs20.x' }
 
 import { getUser } from '../services/api/user-api'
 import { type User } from '../stores/user'
