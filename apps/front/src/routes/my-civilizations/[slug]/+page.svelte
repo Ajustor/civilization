@@ -20,6 +20,9 @@
 
 	export let data: PageData
 
+	let pageIndex = 0
+	let pageSize = 10
+
 	const resourceIcons = {
 		food: Carrot,
 		wood: FlameKindling,
@@ -77,23 +80,41 @@
 		}
 	}
 
+	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
+		const oldPeople = await data.lazy.people
+		pageIndex = newPageIndex
+		pageSize = newPageSize
+		data.lazy.people = new Promise(async (resolve) => {
+			try {
+				const { people } = await callGetPeople(data.civilization.id, pageIndex, pageSize)
+				resolve(people)
+			} catch (error) {
+				console.error(error)
+				resolve(oldPeople)
+			}
+		})
+	}
+
 	onMount(async () => {
 		await fetchPeoples()
 	})
 </script>
 
 {#snippet citizensView()}
-	{#if people.length !== data.civilization.citizensCount}
+	{#await data.lazy.people}
 		<div
 			class="skeleton w-100 flex h-40 items-center justify-center rounded-md border border-slate-100 bg-slate-200"
-		>
-			<progress class="progress w-56" value={people.length} max={data.civilization.citizensCount}
-			></progress>
-		</div>
-	{:else}
+		></div>
+	{:then people}
 		<!-- getPeopleFromCivilization() was fulfilled -->
-		<PeopleTable {people} />
-	{/if}
+		<PeopleTable
+			{people}
+			totalPeople={data.civilization.citizensCount ?? 0}
+			updateData={retrievePeople}
+			{pageIndex}
+			{pageSize}
+		/>
+	{/await}
 {/snippet}
 
 {#snippet buildingsView(buildings: BuildingType[])}
@@ -109,23 +130,6 @@
 			data.civilization.livedMonths % 12
 		)} mois</span
 	>
-	<Accordion class="w-full">
-		<AccordionItem value="people-table">
-			<AccordionTrigger>Citoyens: ({data.civilization.citizensCount} au total)</AccordionTrigger>
-			<AccordionContent>
-				{@render citizensView()}
-			</AccordionContent>
-		</AccordionItem>
-		<AccordionItem value="buildings-table">
-			<AccordionTrigger
-				>Bâtiments: ({data.civilization.buildings.reduce((acc, { count }) => acc + count, 0)} au total)</AccordionTrigger
-			>
-			<AccordionContent>
-				{@render buildingsView(data.civilization.buildings)}
-			</AccordionContent>
-		</AccordionItem>
-	</Accordion>
-
 	<span>
 		Ressources:
 		<ul class="list-inside list-disc">
@@ -147,10 +151,14 @@
 					{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
 						<Doughnut
 							data={{
-								labels: ['Hommes', 'Femmes'],
+								labels: ['Hommes', 'Femmes', 'Femmes enceintes'],
 								datasets: [
 									{
-										data: [stats.menAndWomen.men, stats.menAndWomen.women]
+										data: [
+											stats.menAndWomen.men,
+											stats.menAndWomen.women - stats.pregnantWomen,
+											stats.pregnantWomen
+										]
 									}
 								]
 							}}
@@ -181,4 +189,21 @@
 			</div>
 		</div>
 	{/await}
+
+	<Accordion class="w-full">
+		<AccordionItem value="people-table">
+			<AccordionTrigger>Citoyens: ({data.civilization.citizensCount} au total)</AccordionTrigger>
+			<AccordionContent>
+				{@render citizensView()}
+			</AccordionContent>
+		</AccordionItem>
+		<AccordionItem value="buildings-table">
+			<AccordionTrigger
+				>Bâtiments: ({data.civilization.buildings.reduce((acc, { count }) => acc + count, 0)} au total)</AccordionTrigger
+			>
+			<AccordionContent>
+				{@render buildingsView(data.civilization.buildings)}
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
 </div>

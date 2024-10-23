@@ -1,6 +1,7 @@
 import { Gender, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
 import { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
+import { SortOrder } from 'mongoose'
 
 export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }: PeopleType): People => {
   const peopleBuilder = new PeopleBuilder()
@@ -66,13 +67,19 @@ export class PeopleService {
     return PersonModel.find<PeopleEntity>({ _id: { $in: civilization.people } }, !withLineage ? '-lineage' : undefined)
   }
 
-  public async getPeopleFromCivilizationPaginated(civilizationId: string, count: number, page: number): Promise<PeopleType[]> {
+  public async getPeopleFromCivilizationPaginated(civilizationId: string, count: number, page: number, sort?: { field: string, order: SortOrder }): Promise<PeopleType[]> {
     const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const rawPeople = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id').skip(page * count).limit(count)
+    const rawPeopleRequest = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id')
+
+    if (sort) {
+      rawPeopleRequest.sort({ [sort.field]: sort.order })
+    }
+
+    const rawPeople = await rawPeopleRequest.skip(page * count).limit(count)
 
     const formatedPeople = []
     for (const rawPerson of rawPeople) {

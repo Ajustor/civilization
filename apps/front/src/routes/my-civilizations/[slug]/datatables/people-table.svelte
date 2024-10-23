@@ -19,10 +19,19 @@
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte'
 
 	export let people: PeopleType[]
+	export let totalPeople: number
+	export let updateData: CallableFunction
+	export let pageIndex: number
+	export let pageSize: number
 
 	const table = createTable(readable(people), {
 		sort: addSortBy(),
-		page: addPagination()
+		page: addPagination({
+			initialPageIndex: pageIndex,
+			initialPageSize: pageSize,
+			serverSide: true,
+			serverItemCount: readable(totalPeople)
+		})
 	})
 
 	const GenderIcons = {
@@ -102,12 +111,53 @@
 		// })
 	])
 
+	const getNewPagination = (pageIndex: number, pageSize: number) => {
+		updateData(pageIndex, pageSize)
+	}
+
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
 		table.createViewModel(columns)
-	const { hasNextPage, hasPreviousPage, pageCount, pageIndex } = pluginStates.page
+	const { hasNextPage, hasPreviousPage, pageCount } = pluginStates.page
+	const { sortKeys } = pluginStates.sort
 </script>
 
-<div class="rounded-md border border-slate-100 bg-slate-200">
+<div class="rounded-md">
+	<div class="flex items-center justify-between space-x-4 py-4">
+		<div class="flex items-center justify-between gap-2">
+			<Button
+				variant="outline"
+				size="sm"
+				on:click={() => {
+					getNewPagination(pageIndex - 1, pageSize)
+				}}
+				disabled={!$hasPreviousPage}
+			>
+				Précédent
+			</Button>
+			<p>{pageIndex + 1}/{$pageCount}</p>
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={!$hasNextPage}
+				on:click={() => {
+					getNewPagination(pageIndex + 1, pageSize)
+				}}
+			>
+				Suivant
+			</Button>
+		</div>
+		<select
+			bind:value={pageSize}
+			class="select w-full max-w-xs"
+			onchange={() => getNewPagination(pageIndex + 1, pageSize)}
+		>
+			<option disabled>Nombre d'éléments par page</option>
+			<option value={10}>10</option>
+			<option value={25}>25</option>
+			<option value={50}>50</option>
+			<option value={100}>100</option>
+		</select>
+	</div>
 	<Table class="bg-neutral text-neutral-content">
 		<TableHeader {...$tableAttrs}>
 			{#each $headerRows as headerRow}
@@ -153,29 +203,4 @@
 			{/each}
 		</TableBody>
 	</Table>
-	<div class="flex items-center justify-center space-x-4 py-4">
-		<Button
-			variant="outline"
-			size="sm"
-			on:click={() => ($pageIndex = $pageIndex - 1)}
-			disabled={!$hasPreviousPage}
-		>
-			Précédent
-		</Button>
-		<Button
-			variant="outline"
-			size="sm"
-			disabled={!$hasNextPage}
-			on:click={() => ($pageIndex = $pageIndex + 1)}
-		>
-			Suivant
-		</Button>
-		<!-- <select bind:value={$pageSize} class="select w-full max-w-xs">
-			<option disabled>Nombre d'éléments par page</option>
-			<option value={10}>10</option>
-			<option value={25}>25</option>
-			<option value={50}>50</option>
-			<option value={100}>100</option>
-		</select> -->
-	</div>
 </div>
