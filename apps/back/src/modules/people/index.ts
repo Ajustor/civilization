@@ -34,7 +34,7 @@ export const peopleModule = new Elysia({ prefix: '/people' })
         }
 
         if (people.length) {
-          controller.enqueue(JSON.stringify(people))
+          controller.enqueue(encoder.encode(JSON.stringify(people) + '\n\n\n'))
         }
         controller.close()
       }
