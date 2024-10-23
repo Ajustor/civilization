@@ -1,4 +1,3 @@
-import { User } from '../../../db/schema/users'
 import { CivilizationModel, PersonModel, UserModel } from '../../libs/database/models'
 import { Civilization } from '@ajustor/simulation'
 
@@ -32,7 +31,7 @@ export class UsersTable {
     await createdUser.save()
   }
 
-  async getAuthUser({ username, password }: { username: string, password: string }): Promise<User | null> {
+  async getAuthUser({ username, password }: { username: string, password: string }) {
 
     const retrievedUser = await UserModel.findOne({
       $or: [
