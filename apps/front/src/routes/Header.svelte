@@ -15,7 +15,7 @@
 
 <header>
 	<nav class="navbar justify-between">
-		<a class="navbar-start max-w-24 p-4" href="/">
+		<a class="navbar-start max-w-24 p-4" href="/" aria-label="Logo du simulateur">
 			<enhanced:img src={logo} sizes="min(64px, 100%)" alt="Logo du simulateur de civilisation" />
 		</a>
 		<ul class="navbar-end hidden lg:flex">
