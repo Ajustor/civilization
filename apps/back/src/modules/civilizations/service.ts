@@ -1,8 +1,9 @@
-import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, People, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
+import { BuildingType, BuildingTypes, Civilization, CivilizationBuilder, CivilizationType, House, PeopleEntity, Resource, ResourceTypes } from '@ajustor/simulation'
 
 import { CivilizationModel, PersonModel, UserModel, WorldModel } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
 import { arrayToMap } from '../../utils'
+import { AnyBulkWriteOperation } from 'mongoose'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -218,8 +219,8 @@ export class CivilizationService {
 
   async saveAll(civilizations: Civilization[]) {
 
-    await Promise.all(civilizations.map(async (civilization) => {
-
+    for (const civilization of civilizations) {
+      const bulkWriteOperations: AnyBulkWriteOperation<PeopleEntity>[] = []
       console.time(civilization.name)
       console.timeLog(civilization.name, `Saving civilization`)
       const oldCivilization = await CivilizationModel.findOne({ _id: civilization.id })
@@ -229,53 +230,64 @@ export class CivilizationService {
       }
 
       console.timeLog(civilization.name, 'Calculate dead/alive people')
-      const alivePeople = []
-      const deadPeople = []
-      const peoplesToUpdate = []
-      const { peopleToCreate, existingPeople } = civilization.people.reduce<{ peopleToCreate: People[], existingPeople: People[] }>((acc, people) => {
+      const alivePeople = new Set<string>()
+      for (const people of civilization.people) {
         if (!people) {
-          return acc
+          continue
         }
         if (people.id) {
-          acc.existingPeople.push(people)
+          bulkWriteOperations.push({
+            updateOne: {
+              filter: {
+                _id: people.id
+              },
+              update: people.formatToEntity()
+            }
+          })
+          alivePeople.add(people.id)
         } else {
-          acc.peopleToCreate.push(people)
+          bulkWriteOperations.push({
+            insertOne: {
+              document: people.formatToEntity()
+            }
+          })
         }
-        return acc
-      }, { peopleToCreate: [], existingPeople: [] })
-      const peopleIndexedById = arrayToMap(existingPeople, ({ id }) => id)
+      }
+
+      const peopleIndexedById = arrayToMap(civilization.people, ({ id }) => id)
 
       for (const person of oldCivilization.people) {
         const isAlive = peopleIndexedById.has(person.toString())
-        if (isAlive) {
-          alivePeople.push(person)
-          const personToUpdate = peopleIndexedById.get(person.toString())
-          if (personToUpdate) {
-            peoplesToUpdate.push(PersonModel.findOneAndUpdate({ _id: person }, personToUpdate.formatToEntity()).exec())
-          }
-        } else {
-          deadPeople.push(PersonModel.deleteOne({ _id: person }).exec())
+        if (!isAlive) {
+          bulkWriteOperations.push({
+            deleteOne: {
+              filter: {
+                _id: person
+              }
+            }
+          })
         }
       }
 
       console.timeLog(civilization.name, 'Deleting dead people and update people')
-      await Promise.all([...deadPeople, ...peoplesToUpdate])
+
+      const bulkResult = await PersonModel.bulkWrite(bulkWriteOperations)
+      bulkResult.upsertedIds
+      for (const id of Object.values(bulkResult.insertedIds)) {
+        alivePeople.add(id)
+      }
 
       console.timeLog(civilization.name, `Start saving new people for civilization`)
-      await Promise.all(peopleToCreate.map(async (person) => {
-        const newPerson = await PersonModel.create(person.formatToEntity())
-        alivePeople.push(newPerson._id)
-      }))
       console.timeLog(civilization.name, 'People saved save civilization')
 
       await CivilizationModel.findOneAndUpdate({ _id: civilization.id }, {
         buildings: civilization.buildings.map(({ count, getType, capacity }) => ({ capacity, count, buildingType: getType() })),
         livedMonths: civilization.livedMonths,
         resources: civilization.resources.map(({ type, quantity }) => ({ resourceType: type, quantity })),
-        people: alivePeople
+        people: [...alivePeople]
       })
       console.timeEnd(civilization.name)
-    }))
+    }
   }
 
   async delete(userId: string, civilizationId: string) {

@@ -34,7 +34,7 @@
 			{#if $offlineReady}
 				<span> L'application est prête </span>
 			{:else}
-				<span> Du nouveau contenus est disponible ! </span>
+				<span> Du nouveau contenu est disponible ! </span>
 			{/if}
 		</div>
 		{#if $needRefresh}
