@@ -42,10 +42,6 @@
 
 	const columns = table.createColumns([
 		table.column({
-			accessor: 'name',
-			header: 'Nom'
-		}),
-		table.column({
 			accessor: 'gender',
 			header: 'Genre',
 			cell: ({ value }) => {

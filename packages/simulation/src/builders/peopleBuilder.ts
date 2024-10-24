@@ -7,16 +7,11 @@ export class PeopleBuilder {
   private peopleEntity: People
 
   constructor() {
-    this.peopleEntity = new People({ name: 'nope', month: 0, gender: Gender.UNKNOWN, lifeCounter: 0 })
+    this.peopleEntity = new People({ month: 0, gender: Gender.UNKNOWN, lifeCounter: 0 })
   }
 
   withId(peopleId: string): PeopleBuilder {
     this.peopleEntity.id = peopleId
-    return this
-  }
-
-  withName(name: string): PeopleBuilder {
-    this.peopleEntity.name = name
     return this
   }
 
@@ -62,7 +57,6 @@ export class PeopleBuilder {
     const peopleBuilder = new PeopleBuilder()
       .withGender(child?.gender)
       .withLifeCounter(child.lifeCounter)
-      .withName(child.name)
 
     if (child.occupation) {
       peopleBuilder.withOccupation(child.occupation)

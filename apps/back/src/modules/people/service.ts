@@ -3,12 +3,11 @@ import { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 import { SortOrder } from 'mongoose'
 
-export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }: PeopleType): People => {
+export const personMapper = ({ id, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }: PeopleType): People => {
   const peopleBuilder = new PeopleBuilder()
     .withId(id)
     .withGender(gender)
     .withMonth(month)
-    .withName(name)
     .withLifeCounter(lifeCounter)
     .withIsBuilding(isBuilding)
     .withBuildingMonthsLeft(buildingMonthsLeft)
@@ -35,6 +34,28 @@ export class PeopleService {
 
   constructor() {
 
+  }
+
+  public async snap() {
+    const deletedPeople: string[] = []
+
+    const numberOfPeople = await PersonModel.find().countDocuments()
+    const numberToDelete = numberOfPeople / 2
+
+    console.log(`Deleting ${numberToDelete} people`)
+
+    const cursor = PersonModel.find({}, 'id').batchSize(1000).cursor()
+
+    for (let rawPerson = await cursor.next(); rawPerson !== null; rawPerson = await cursor.next()) {
+      if (numberToDelete < deletedPeople.length) {
+        break
+      }
+      deletedPeople.push(rawPerson.id.toString())
+      await rawPerson.deleteOne()
+    }
+
+    await CivilizationModel.updateMany({}, { $pull: { people: { $in: deletedPeople } } })
+    return 'DONE'
   }
 
   public async getPeopleFromCivilization(civilizationId: string, withLineage = false): Promise<PeopleType[]> {
