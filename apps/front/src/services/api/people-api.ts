@@ -28,6 +28,34 @@ export const getCivilizationPeopleStats = async (authToken: string, civilization
   return stats
 }
 
+export const getCivilizationPeopleJobsStats = async (authToken: string, civilizationId: string) => {
+  const { data: stats, error } = await client.people({ civilizationId }).stats.jobs.get({
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return stats
+}
+
+export const getCivilizationPeopleRatioStats = async (authToken: string, civilizationId: string) => {
+  const { data: stats, error } = await client.people({ civilizationId }).stats.peopleRatio.get({
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return stats
+}
+
 export const getPeopleFromCivilizationPaginated = async (authToken: string, civilizationId: string, { page, count }: { page: number, count: number }) => {
   const { data: people, error } = await client.people({ civilizationId }).paginated.get({
     query: {

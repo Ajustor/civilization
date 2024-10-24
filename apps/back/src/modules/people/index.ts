@@ -80,3 +80,27 @@ export const peopleModule = new Elysia({ prefix: '/people' })
 
     return { menAndWomen, pregnantWomen, jobs }
   })
+  .get('/:civilizationId/stats/peopleRatio', async ({ peopleService, params: { civilizationId } }) => {
+    const menAndWomen = await peopleService.countGenders(civilizationId)
+    const pregnantWomen = await peopleService.countPregnant(civilizationId)
+
+    return { menAndWomen, pregnantWomen }
+  })
+  .get('/:civilizationId/stats/jobs', async ({ peopleService, params: { civilizationId } }) => {
+    const peoples = await peopleService.getPeopleFromCivilization(civilizationId)
+    if (!peoples) {
+      throw new NotFoundError('No civilization found for this id')
+    }
+    const jobs: { [key in OccupationTypes | 'child']?: number } = {}
+
+    for (const rawPerson of peoples) {
+      const person = personMapper(rawPerson)
+      if (person.work && (person.work.canWork(person.years) || person.work.occupationType === OccupationTypes.RETIRED)) {
+        jobs[person.work.occupationType] = (jobs[person.work.occupationType] ?? 0) + 1
+      } else if (person.work && !person.work.canWork(person.years) && person.work.occupationType !== OccupationTypes.RETIRED) {
+        jobs['child'] = (jobs['child'] ?? 0) + 1
+      }
+    }
+
+    return jobs
+  })

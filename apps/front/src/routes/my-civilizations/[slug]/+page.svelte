@@ -104,14 +104,11 @@
 
 	<!-- promise was fulfilled -->
 	<div class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-3 lg:grid-cols-4">
-		{#await data.lazy.stats}
+		{#await data.lazy.stats.peopleRatio}
 			<div
 				class="skeleton card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2"
 			></div>
-			<div
-				class="skeleton card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2"
-			></div>
-		{:then stats}
+		{:then peopleRatio}
 			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
 				<div class="card-body">
 					<h2 class="card-title">Rapport homme/femme dans la civilisation</h2>
@@ -122,9 +119,9 @@
 								datasets: [
 									{
 										data: [
-											stats.menAndWomen.men,
-											stats.menAndWomen.women - stats.pregnantWomen,
-											stats.pregnantWomen
+											peopleRatio.menAndWomen.men,
+											peopleRatio.menAndWomen.women - peopleRatio.pregnantWomen,
+											peopleRatio.pregnantWomen
 										]
 									}
 								]
@@ -133,20 +130,24 @@
 					{/await}
 				</div>
 			</div>
+		{/await}
 
+		{#await data.lazy.stats.jobs}
+			<div
+				class="skeleton card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2"
+			></div>
+		{:then jobs}
 			<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
 				<div class="card-body">
 					<h2 class="card-title">Répartition des métiers dans la civilisation</h2>
 					{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
 						<Doughnut
 							data={{
-								labels: Object.keys(stats.jobs).map(
-									(key: string) => OCCUPATIONS[key as OccupationTypes]
-								),
+								labels: Object.keys(jobs).map((key: string) => OCCUPATIONS[key as OccupationTypes]),
 								datasets: [
 									{
-										data: Object.values(stats.jobs),
-										backgroundColor: Object.keys(stats.jobs).map((key) => stringToColour(key))
+										data: Object.values(jobs),
+										backgroundColor: Object.keys(jobs).map((key) => stringToColour(key))
 									}
 								]
 							}}
