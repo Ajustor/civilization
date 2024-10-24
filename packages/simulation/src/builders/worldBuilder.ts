@@ -45,6 +45,8 @@ export class WorldBuilder {
     const world = new World(this.name, this.month)
     world.id = this.id
 
+    world.nextEvent = this.nextEvent
+
     // Add resources
     for (const resource of this.resources) {
       world.addResource(resource)
