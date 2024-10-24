@@ -26,6 +26,7 @@ const PREGNANCY_MONTHS = 9
 const MINIMUM_CONCEPTION_AGE = 16
 const MAXIMUM_CONCEPTION_AGE = 50
 const MINIMUM_CONCEPTION_HEALTH = 30
+const MAX_NUMBER_OF_CHILD = 3
 
 export const LIFE_EXPECTANCY = 85
 const DEATH_RATE_AFTER_EXPECTANCY = 20
@@ -33,7 +34,6 @@ const DEATH_RATE_AFTER_EXPECTANCY = 20
 const MAX_LIFE = 12
 
 export type PeopleConstructorParams = {
-  name: string,
   month: number,
   gender: Gender,
   lifeCounter: number
@@ -41,6 +41,7 @@ export type PeopleConstructorParams = {
   buildingMonthsLeft?: number
   pregnancyMonthsLeft?: number
   lineage?: Lineage
+  numberOfChild?: number
 }
 
 // renommer
@@ -56,7 +57,6 @@ export type Lineage = {
 }
 export class People {
   public id!: string
-  name: string
   month: number
   work: Work | null = null
   lifeCounter: number
@@ -66,20 +66,20 @@ export class People {
   gender: Gender
   child: People | null = null
   lineage?: Lineage
+  numberOfChild: number
 
   tree: Tree<string> | null = null
 
   constructor({
-    name,
     month,
     gender,
     lifeCounter = 3,
     isBuilding = false,
     buildingMonthsLeft = 0,
     pregnancyMonthsLeft = 0,
-    lineage
+    lineage,
+    numberOfChild = 0
   }: PeopleConstructorParams) {
-    this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
     this.isBuilding = isBuilding
@@ -87,6 +87,7 @@ export class People {
     this.gender = gender
     this.pregnancyMonthsLeft = pregnancyMonthsLeft
     this.lineage = lineage
+    this.numberOfChild = numberOfChild
   }
 
   setOccupation(occupationType: OccupationTypes) {
@@ -111,8 +112,8 @@ export class People {
     }
   }
 
-  decreaseLife(): void {
-    this.lifeCounter -= 1
+  decreaseLife(amount = 1): void {
+    this.lifeCounter -= amount
   }
 
   increaseLife(amount: number): void {
@@ -137,7 +138,7 @@ export class People {
   }
 
   canConceive(): boolean {
-    return this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
+    return this.numberOfChild !== MAX_NUMBER_OF_CHILD && this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
   }
 
   canRetire(): boolean {
@@ -145,6 +146,7 @@ export class People {
   }
 
   addChildToBirth(child: People) {
+    this.numberOfChild++
     this.child = child
     this.pregnancyMonthsLeft = PREGNANCY_MONTHS
   }
@@ -222,11 +224,11 @@ export class People {
       isBuilding: this.isBuilding,
       lifeCounter: this.lifeCounter,
       month: this.month,
-      name: this.name,
       occupation: this.work?.occupationType,
       gender: this.gender,
       pregnancyMonthsLeft: this.pregnancyMonthsLeft,
       child: this.child?.formatToEntity() ?? null,
+      numberOfChild: this.numberOfChild,
       ...(this.lineage && { lineage: this.lineage }),
     }
   }

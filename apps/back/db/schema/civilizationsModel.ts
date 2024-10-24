@@ -46,7 +46,7 @@ const civilizationSchema = new Schema({
 
 civilizationSchema.pre('deleteOne', async function () {
   const { _id: civilizationId } = this.getQuery()
-  const civilization = await CivilizationModel.findById(civilizationId).populate('people')
+  const civilization = await CivilizationModel.findById(civilizationId)
 
   if (!civilization) {
     throw new Error('It seams to have a big issue')
