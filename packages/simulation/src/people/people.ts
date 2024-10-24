@@ -1,4 +1,4 @@
-import type { PeopleEntity, PeopleType } from '..'
+import type { Civilization, PeopleEntity, PeopleType } from '..'
 
 import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
@@ -6,19 +6,30 @@ import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
 import { Retired } from './work/retired'
 import { Tree } from '../utils/tree/tree'
-import type { Work } from './work/interface'
+import { isUpgradedWork, type Work } from './work/interface'
+// People.ts
+import type { UpgradedWork } from './work/interface'
 import type { World } from '../world'
 import { isWithinChance } from '../utils'
+import { WoodCutter } from './work/woodCutter'
+import { CharcoalBurner } from './work/charcoalBurner'
+import { Gatherer } from './work/gatherer'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
   [OccupationTypes.FARMER]: Farmer,
   [OccupationTypes.RETIRED]: Retired,
+  [OccupationTypes.WOOD_CUTTER]: WoodCutter,
+  [OccupationTypes.CHARCOAL_BURNER]: CharcoalBurner,
+  [OccupationTypes.GATHERER]: Gatherer
 }
 
 export const EAT_FACTOR = {
   [OccupationTypes.CARPENTER]: 3,
-  [OccupationTypes.FARMER]: 2,
+  [OccupationTypes.FARMER]: 3,
+  [OccupationTypes.CHARCOAL_BURNER]: 3,
+  [OccupationTypes.WOOD_CUTTER]: 2,
+  [OccupationTypes.GATHERER]: 2,
   [OccupationTypes.RETIRED]: 1,
 }
 
@@ -56,7 +67,7 @@ export class People {
   public id!: string
   name: string
   month: number
-  work: Work | null = null
+  work: Work | UpgradedWork | null = null
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
@@ -126,12 +137,35 @@ export class People {
       return false
     }
 
-    return this.work?.collectResources(world, amount) ?? false
+    if (!this.work) {
+      return false
+    }
+
+    if (!isUpgradedWork(this.work)) {
+      return this.work.collectResources(world, amount) ?? false
+    }
+    return false
   }
 
-  startBuilding(): void {
+  produceResources(civilization: Civilization): boolean {
+    if (!this.work?.canWork(this.years) && !this.isBuilding) {
+      return false
+    }
+
+    if (!this.work) {
+      return false
+    }
+
+    if (isUpgradedWork(this.work)) {
+      return this.work.produceResources(civilization)
+    }
+
+    return false
+  }
+
+  startBuilding(buildingMonthsLeft = 2): void {
     this.isBuilding = true
-    this.buildingMonthsLeft = 2
+    this.buildingMonthsLeft = buildingMonthsLeft
   }
 
   canConceive(): boolean {

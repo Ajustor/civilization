@@ -6,7 +6,6 @@ import { EAT_FACTOR, LIFE_EXPECTANCY, People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 
 import { BuildingTypes } from './buildings/enum'
-import { Carpenter } from './people/work/carpenter'
 import { Civilization } from './civilization'
 import { Farmer } from './people/work/farmer'
 import { Gender } from './people/enum'
@@ -14,6 +13,7 @@ import { House } from './buildings/house'
 import { OccupationTypes } from './people/work/enum'
 import { PeopleBuilder } from './builders'
 import { World } from './world'
+import { WoodCutter } from './people/work/woodCutter'
 
 describe('Civilization', () => {
 
@@ -107,7 +107,7 @@ describe('Civilization', () => {
     const person2 = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
 
     person.setOccupation(OccupationTypes.FARMER)
-    person2.setOccupation(OccupationTypes.CARPENTER)
+    person2.setOccupation(OccupationTypes.WOOD_CUTTER)
     civilization.addPeople(person, person2)
     civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
     civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
@@ -130,11 +130,11 @@ describe('Civilization', () => {
     const mockCarpenter = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
 
     mockFarmer.setOccupation(OccupationTypes.FARMER)
-    mockCarpenter.setOccupation(OccupationTypes.CARPENTER)
+    mockCarpenter.setOccupation(OccupationTypes.WOOD_CUTTER)
     civilization.addPeople(mockFarmer, mockCarpenter)
 
     const farmers = civilization.getPeopleWithOccupation(OccupationTypes.FARMER)
-    const carpenters = civilization.getPeopleWithOccupation(OccupationTypes.CARPENTER)
+    const carpenters = civilization.getPeopleWithOccupation(OccupationTypes.WOOD_CUTTER)
 
     expect(farmers).toContain(mockFarmer)
     expect(carpenters).toContain(mockCarpenter)
@@ -145,11 +145,11 @@ describe('Civilization', () => {
     const mockCarpenter = new People({ name: 'Bob', gender: Gender.MALE, lifeCounter: 50, month: 0 })
 
     mockFarmer.setOccupation(OccupationTypes.FARMER)
-    mockCarpenter.setOccupation(OccupationTypes.CARPENTER)
+    mockCarpenter.setOccupation(OccupationTypes.WOOD_CUTTER)
     civilization.addPeople(mockFarmer, mockCarpenter)
 
     const notFarmers = civilization.getPeopleWithoutOccupation(OccupationTypes.FARMER)
-    const notCarpenters = civilization.getPeopleWithoutOccupation(OccupationTypes.CARPENTER)
+    const notCarpenters = civilization.getPeopleWithoutOccupation(OccupationTypes.WOOD_CUTTER)
 
     expect(notCarpenters).toContain(mockFarmer)
     expect(notFarmers).toContain(mockCarpenter)
@@ -174,10 +174,10 @@ describe('Civilization', () => {
       const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
       const person4 = new People({ name: 'Carpenter Baby Bob', gender: Gender.MALE, lifeCounter: 50, month: 100 })
 
-      person1.setOccupation(OccupationTypes.CARPENTER)
+      person1.setOccupation(OccupationTypes.WOOD_CUTTER)
       person2.setOccupation(OccupationTypes.FARMER)
       person3.setOccupation(OccupationTypes.FARMER)
-      person4.setOccupation(OccupationTypes.CARPENTER)
+      person4.setOccupation(OccupationTypes.WOOD_CUTTER)
 
       civilization.addPeople(person1, person2, person3, person4)
 
@@ -195,10 +195,10 @@ describe('Civilization', () => {
       const person3 = new People({ name: 'Farmer Bob', gender: Gender.MALE, lifeCounter: 50, month: 841 })
       const person4 = new People({ name: 'Carpenter Baby Bob', gender: Gender.MALE, lifeCounter: 50, month: 100 })
 
-      person1.setOccupation(OccupationTypes.CARPENTER)
+      person1.setOccupation(OccupationTypes.WOOD_CUTTER)
       person2.setOccupation(OccupationTypes.FARMER)
       person3.setOccupation(OccupationTypes.FARMER)
-      person4.setOccupation(OccupationTypes.CARPENTER)
+      person4.setOccupation(OccupationTypes.WOOD_CUTTER)
 
       civilization.addPeople(person1, person2, person3, person4)
       await civilization.passAMonth(world)
@@ -239,7 +239,7 @@ describe('Civilization', () => {
 
     it('should create new born', async () => {
       civilization.name = 'createNewBorn'
-      const child = new PeopleBuilder().withGender(Gender.MALE).withOccupation(OccupationTypes.CARPENTER).withName('Patrique').build()
+      const child = new PeopleBuilder().withGender(Gender.MALE).withOccupation(OccupationTypes.WOOD_CUTTER).withName('Patrique').build()
       const person1 = new PeopleBuilder()
         .withGender(Gender.FEMALE)
         .withLifeCounter(50)
@@ -297,7 +297,7 @@ describe('Civilization', () => {
         expect(child).toBeDefined()
         expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
         expect(child?.work).toBeDefined()
-        expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+        expect([OccupationTypes.WOOD_CUTTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
         expect(child?.gender).toBeDefined()
         expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
       })
@@ -335,7 +335,7 @@ describe('Civilization', () => {
         expect(child).toBeDefined()
         expect(child?.lineage).toStrictEqual({ mother: { id: person1.id }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
         expect(child?.work).toBeDefined()
-        expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+        expect([OccupationTypes.WOOD_CUTTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
         expect(child?.gender).toBeDefined()
         expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
       })
@@ -373,14 +373,14 @@ describe('Civilization', () => {
         expect(child).toBeDefined()
         expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id } })
         expect(child?.work).toBeDefined()
-        expect([OccupationTypes.CARPENTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
+        expect([OccupationTypes.WOOD_CUTTER, OccupationTypes.FARMER].includes(child!.work!.occupationType)).toBeTruthy()
         expect(child?.gender).toBeDefined()
         expect([Gender.FEMALE, Gender.MALE].includes(child!.gender)).toBeTruthy()
       })
     })
 
-    it('should set mother pregnant with a female carpenter child', async () => {
-      civilization.name = 'setPregnantWithFemaleCarpenter'
+    it('should set mother pregnant with a female wood cutter child', async () => {
+      civilization.name = 'setPregnantWithFemaleWoodCutter'
       mockMath.random = () => 0
       global.Math = mockMath
       isWithinChance.mockReturnValue(true)
@@ -414,7 +414,7 @@ describe('Civilization', () => {
       expect(child).toBeDefined()
       expect(child?.lineage).toStrictEqual({ mother: { id: person1.id, lineage: { father: { id: 'nope' }, mother: { id: 'nope' } } }, father: { id: person2.id, lineage: { mother: { id: 'mother' }, father: { id: 'father' } } } })
       expect(child?.work).toBeDefined()
-      expect(child!.work).toBeInstanceOf(Carpenter)
+      expect(child!.work).toBeInstanceOf(WoodCutter)
       expect(child?.gender).toBeDefined()
       expect(child!.gender).toBe(Gender.FEMALE)
     })
@@ -645,9 +645,73 @@ describe('Civilization', () => {
 
           expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(100 - 2 * civilization.people.length)
         })
+
+        it('Should use charcoal in winter', () => {
+          const person1 = new PeopleBuilder()
+            .withGender(Gender.FEMALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Carole')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p1')
+            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+            .build()
+          const person2 = new PeopleBuilder()
+            .withGender(Gender.MALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Yves')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p2')
+            .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+            .build()
+
+          world['month'] = 9
+
+          civilization.addPeople(person1, person2)
+          civilization.addBuilding(new House(4, 1))
+          civilization.addResource(new Resource(ResourceTypes.CHARCOAL, 100))
+          civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.passAMonth(world)
+
+          expect(civilization.getResource(ResourceTypes.CHARCOAL).quantity).toBe(99)
+          expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(100)
+        })
+
+        it('Should use charcoal in automn', () => {
+          const person1 = new PeopleBuilder()
+            .withGender(Gender.FEMALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Carole')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p1')
+            .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'nope' } })
+            .build()
+          const person2 = new PeopleBuilder()
+            .withGender(Gender.MALE)
+            .withLifeCounter(50)
+            .withMonth(240)
+            .withName('Yves')
+            .withOccupation(OccupationTypes.FARMER)
+            .withId('p2')
+            .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
+            .build()
+
+          world['month'] = 9
+
+          civilization.addPeople(person1, person2)
+          civilization.addBuilding(new House(4, 1))
+          civilization.addResource(new Resource(ResourceTypes.CHARCOAL, 100))
+          civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.passAMonth(world)
+
+          expect(civilization.getResource(ResourceTypes.CHARCOAL).quantity).toBe(99)
+          expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(100)
+        })
       })
-
-
     })
   })
 })
