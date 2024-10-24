@@ -19,6 +19,7 @@ export type WorldInfos = {
   resources: { type: ResourceTypes, quantity: number }[]
   month: number
   year: number
+  nextEvent: Events | null
   civilizations: CivilizationType[]
 }
 
@@ -145,6 +146,7 @@ export class World {
         type: resource.type,
         quantity: resource.quantity
       })),
+      nextEvent: this.nextEvent,
       year: this.getYear()
     }
   }

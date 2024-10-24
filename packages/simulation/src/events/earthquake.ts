@@ -6,12 +6,24 @@ export class Earthquake implements WorldEvent {
 
   actions({ civilizations }: Required<Pick<ActionInput, 'civilizations'>>): void {
     for (const civilization of civilizations) {
-      const random = Math.floor(Math.random() * civilization.buildings.length)
-      const min = Math.floor(Math.random() * civilization.buildings.length)
-      const deleteCount = Math.floor(Math.random() * (civilization.buildings.length - min) + min)
+      const buildingCount = civilization.buildings.reduce((sum, { count }) => sum + count, 0)
+      const min = Math.floor(Math.random() * buildingCount)
+      let deleteCount = Math.floor(Math.random() * (buildingCount - min) + min)
 
-      civilization.buildings.splice(random, deleteCount)
+      for (const building of civilization.buildings.toSorted(() => Math.random() - 0.5)) {
+        const random = Math.floor(Math.random() * deleteCount)
+        deleteCount -= random
+
+
+        building.count -= random
+
+        if (building.count < 0) {
+          building.count = 0
+        }
+        if (deleteCount <= 0) {
+          break
+        }
+      }
     }
   }
-
 }

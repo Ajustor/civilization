@@ -1,5 +1,6 @@
 import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
+import { Events } from '@ajustor/simulation'
 
 export const worldSchema = new Schema({
   name: {
@@ -9,7 +10,8 @@ export const worldSchema = new Schema({
   },
   nextEvent: {
     type: String,
-    deault: null
+    default: null,
+    enum: Events
   },
   month: {
     type: Number,

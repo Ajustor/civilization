@@ -1,4 +1,5 @@
 import type { Civilization } from '../civilization'
+import { Events } from '../events/enum'
 import { Resource } from '../resource'
 import { World } from '../world'
 
@@ -8,6 +9,7 @@ export class WorldBuilder {
   private month: number = 1;
   private resources: Resource[] = [];
   private civilizations: Civilization[] = [];
+  private nextEvent: Events | null = null
 
   withId(id: string): this {
     this.id = id
@@ -31,6 +33,11 @@ export class WorldBuilder {
 
   addCivilization(...civilizations: Civilization[]): this {
     this.civilizations.push(...civilizations)
+    return this
+  }
+
+  withNextEvent(nextEvent: Events | null): this {
+    this.nextEvent = nextEvent
     return this
   }
 

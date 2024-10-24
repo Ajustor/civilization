@@ -6,6 +6,6 @@ export const eventsName = {
 }
 
 export const eventsDescription = {
-  [Events.EARTHQUAKE]: 'Un tremblement de terre qui ravage les bâtiments',
-  [Events.STARVATION]: 'Les gens ont faims ils vident les réserves du monde et de la civilisation !'
+  [Events.EARTHQUAKE]: 'Un tremblement de terre qui ravage les bâtiments.',
+  [Events.STARVATION]: 'Les gens ont faim! Ils vident les réserves du monde et de la civilisation !'
 }
