@@ -13,8 +13,6 @@ export class Earthquake implements WorldEvent {
       for (const building of civilization.buildings.toSorted(() => Math.random() - 0.5)) {
         const random = Math.floor(Math.random() * deleteCount)
         deleteCount -= random
-
-
         building.count -= random
 
         if (building.count < 0) {
