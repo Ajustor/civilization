@@ -13,6 +13,18 @@ export const peopleModule = new Elysia({ prefix: '/people' })
   .use(logger())
   .use(jwtMiddleware)
   .decorate({ peopleService })
+  .post('/snap', ({ peopleService, body: { key } }) => {
+
+    if (key !== process.env.SNAP_KEY!) {
+      return 'You need the infinity stones to do this'
+    }
+
+    return peopleService.snap()
+  }, {
+    body: t.Object({
+      key: t.String()
+    })
+  })
   .use(authorization('You must connect to check people'))
   .get('/:civilizationId', ({ peopleService, params: { civilizationId } }) => peopleService.getPeopleFromCivilization(civilizationId))
   .get('/:civilizationId/stream', async ({ params: { civilizationId }, peopleService, set }) => {

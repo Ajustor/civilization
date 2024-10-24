@@ -26,6 +26,7 @@ type PeopleType = PeopleEntity & {
   id: string,
   years: number
 }
+
 type CivilizationEntity = typeof Civilization
 
 export { World, Civilization, People, Resource, ResourceTypes }
