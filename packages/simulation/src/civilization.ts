@@ -171,9 +171,8 @@ export class Civilization {
         for (const person of people) {
           const eatFactor = person.eatFactor
           if (civilizationFood.quantity >= eatFactor) {
-            if (person.lifeCounter < 50) {
-              person.increaseLife(1)
-            }
+            person.increaseLife(1)
+
             civilizationFood.decrease(eatFactor)
           } else {
             person.decreaseLife()

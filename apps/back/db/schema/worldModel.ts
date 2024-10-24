@@ -7,6 +7,10 @@ export const worldSchema = new Schema({
     unique: true,
     required: true
   },
+  nextEvent: {
+    type: String,
+    deault: null
+  },
   month: {
     type: Number,
     default: 0,
@@ -21,7 +25,6 @@ export const worldSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Civilization'
   }]
-
 }, {
   timestamps: true
 })

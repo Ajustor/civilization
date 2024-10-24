@@ -6,7 +6,12 @@
 	import Doughnut from '$lib/components/charts/Doughnut.svelte'
 	import { Carrot, FlameKindling, Cuboid } from 'lucide-svelte'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
-	import { resourceNames, seasonsTranslations } from '$lib/translations'
+	import {
+		eventsDescription,
+		eventsName,
+		resourceNames,
+		seasonsTranslations
+	} from '$lib/translations'
 
 	export let data: PageData
 
@@ -49,6 +54,17 @@
 							<p>
 								Nous sommes a la saison: {seasonsTranslations[getSeason(world.month)]} (mois {world.month})
 							</p>
+
+							{#if world.nextEvent}
+								<p>
+									Le prochain événement est: <span
+										class="tooltip"
+										data-tip={eventsDescription[world.nextEvent]}
+									>
+										{eventsName[world.nextEvent]}
+									</span>
+								</p>
+							{/if}
 						</div>
 					</div>
 					{#await data.lazy.worldsStats}
