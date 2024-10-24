@@ -14,11 +14,11 @@ export { House } from './buildings/house'
 
 export { OccupationTypes } from './people/work/enum'
 export { Gender } from './people/enum'
-export { Carpenter } from './people/work/carpenter'
-export { Farmer } from './people/work/farmer'
+export { Carpenter, CARPENTER_REQUIRED_AGE } from './people/work/carpenter'
+export { Farmer, FARMER_REQUIRED_AGE } from './people/work/farmer'
 export type { Work } from './people/work/interface'
 export * from './constants'
-
+export * from './events'
 export * from './builders'
 export * from './formatters'
 

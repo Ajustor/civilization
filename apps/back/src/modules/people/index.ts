@@ -3,7 +3,8 @@ import { authorization } from '../../libs/handlers/authorization'
 import { logger } from '@bogeychan/elysia-logger'
 import { jwtMiddleware } from '../../libs/jwt'
 import { PeopleService, personMapper } from './service'
-import { OccupationTypes, PeopleType } from '@ajustor/simulation'
+import { OccupationTypes, PeopleType, CARPENTER_REQUIRED_AGE, FARMER_REQUIRED_AGE } from '@ajustor/simulation'
+
 
 const peopleService = new PeopleService()
 const PEOPLE_LIMIT = 1000
@@ -87,17 +88,18 @@ export const peopleModule = new Elysia({ prefix: '/people' })
     return { menAndWomen, pregnantWomen }
   })
   .get('/:civilizationId/stats/jobs', async ({ peopleService, params: { civilizationId } }) => {
-    const peoples = await peopleService.getPeopleFromCivilization(civilizationId)
+    const peoples = await peopleService.getRawPeopleFromCivilization(civilizationId)
     if (!peoples) {
       throw new NotFoundError('No civilization found for this id')
     }
     const jobs: { [key in OccupationTypes | 'child']?: number } = {}
 
-    for (const rawPerson of peoples) {
-      const person = personMapper(rawPerson)
-      if (person.work && (person.work.canWork(person.years) || person.work.occupationType === OccupationTypes.RETIRED)) {
-        jobs[person.work.occupationType] = (jobs[person.work.occupationType] ?? 0) + 1
-      } else if (person.work && !person.work.canWork(person.years) && person.work.occupationType !== OccupationTypes.RETIRED) {
+    for (const person of peoples) {
+      const personAge = ~~(person.month / 12)
+      const personCanWork = person.occupation === OccupationTypes.CARPENTER && personAge >= CARPENTER_REQUIRED_AGE || person.occupation === OccupationTypes.FARMER && personAge >= FARMER_REQUIRED_AGE
+      if (person.occupation && (personCanWork || person.occupation === OccupationTypes.RETIRED)) {
+        jobs[person.occupation] = (jobs[person.occupation] ?? 0) + 1
+      } else if (person.occupation && !personCanWork) {
         jobs['child'] = (jobs['child'] ?? 0) + 1
       }
     }

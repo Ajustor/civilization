@@ -1,4 +1,4 @@
-import { World, WorldBuilder, Resource, ResourceTypes } from '@ajustor/simulation'
+import { World, WorldBuilder, Resource, ResourceTypes, Events } from '@ajustor/simulation'
 import { WorldModel } from '../../libs/database/models'
 
 export type GetOptions = {
@@ -35,7 +35,7 @@ export class WorldsTable {
 
     for (const world of worlds) {
       const builder = new WorldBuilder()
-      builder.withName(world.name).withId(world.id).startingMonth(world.month)
+      builder.withName(world.name).withId(world.id).startingMonth(world.month).withNextEvent(world.nextEvent as Events)
 
       builder.addResource(...world.resources.map(({ quantity, resourceType }) => new Resource(resourceType as ResourceTypes, quantity ?? 0)))
 
@@ -49,7 +49,7 @@ export class WorldsTable {
     for (const world of worlds) {
 
       console.time('worldSave')
-      await WorldModel.updateOne({ _id: world.id }, { month: world.getMonth(), resources: world.getResources().map(({ type, quantity }) => ({ resourceType: type, quantity })) })
+      await WorldModel.updateOne({ _id: world.id }, { month: world.getMonth(), nextEvent: world.nextEvent, resources: world.getResources().map(({ type, quantity }) => ({ resourceType: type, quantity })) })
       console.timeEnd('worldSave')
     }
   }

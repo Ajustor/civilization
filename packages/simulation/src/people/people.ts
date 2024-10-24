@@ -30,6 +30,8 @@ const MINIMUM_CONCEPTION_HEALTH = 30
 export const LIFE_EXPECTANCY = 85
 const DEATH_RATE_AFTER_EXPECTANCY = 20
 
+const MAX_LIFE = 12
+
 export type PeopleConstructorParams = {
   name: string,
   month: number,
@@ -114,7 +116,7 @@ export class People {
   }
 
   increaseLife(amount: number): void {
-    this.lifeCounter += amount
+    this.lifeCounter = Math.min(MAX_LIFE, this.lifeCounter + amount)
   }
 
   isAlive(): boolean {

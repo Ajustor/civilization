@@ -3,6 +3,8 @@ import { ResourceTypes } from '../../resource'
 import type { Work } from './interface'
 import type { World } from '../../world'
 
+export const FARMER_REQUIRED_AGE = 4
+
 export class Farmer implements Work {
 
   public RETIREMENT_AGE = 70
@@ -16,7 +18,7 @@ export class Farmer implements Work {
   }
 
   canWork(personAge: number): boolean {
-    return personAge > 4 && personAge < this.RETIREMENT_AGE
+    return personAge >= FARMER_REQUIRED_AGE && personAge < this.RETIREMENT_AGE
   }
 
   collectResources(world: World, count: number): boolean {

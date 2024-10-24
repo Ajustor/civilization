@@ -2,9 +2,16 @@ import { Resource, ResourceTypes } from './resource'
 import { Civilization } from './civilization'
 import { formatCivilizations } from './formatters/civilization'
 import type { CivilizationType } from './types/civilization'
+import { Events } from './events/enum'
+import { Earthquake } from './events/earthquake'
+import { isWithinChance } from './utils'
+import { WorldEvent } from './events/interface'
+import { Starvation } from './events/starvation'
 
 export const BASE_FOOD_GENERATION = 30_000_000
 export const BASE_WOOD_GENERATION = 15_000_000
+
+const EVENT_CHANCE = 70
 
 export type WorldInfos = {
   id: string
@@ -12,6 +19,7 @@ export type WorldInfos = {
   resources: { type: ResourceTypes, quantity: number }[]
   month: number
   year: number
+  nextEvent: Events | null
   civilizations: CivilizationType[]
 }
 
@@ -22,10 +30,19 @@ const seasons = {
   winter: [9, 10, 11]
 }
 
+const AVAILABLE_EVENTS: {
+  [key in Events]: () => WorldEvent
+} = {
+  [Events.EARTHQUAKE]: () => new Earthquake(),
+  [Events.STARVATION]: () => new Starvation()
+}
+
 export class World {
   id: string
   private resources: Resource[] = []
   private _civilizations: Civilization[] = []
+
+  public nextEvent: Events | null = null
 
   constructor(private readonly name = 'The world', private month = 0) {
     this.id = ''
@@ -108,6 +125,14 @@ export class World {
       }
     }
 
+    if (this.nextEvent) {
+      const event = AVAILABLE_EVENTS[this.nextEvent]()
+
+      event.actions({ world: this, civilizations: this._civilizations })
+    }
+
+    this.createNextEvent()
+
     await Promise.all(this._civilizations.map((civilization) => civilization.passAMonth(this)))
   }
 
@@ -121,7 +146,30 @@ export class World {
         type: resource.type,
         quantity: resource.quantity
       })),
+      nextEvent: this.nextEvent,
       year: this.getYear()
+    }
+  }
+
+  private createNextEvent() {
+    if (!isWithinChance(EVENT_CHANCE)) {
+      this.nextEvent = null
+      return
+    }
+
+    const event = (Math.random() * 100)
+
+    switch (true) {
+      case (20 > event && event > 0): {
+        this.nextEvent = Events.EARTHQUAKE
+        break
+      }
+      case (50 > event && event > 20): {
+        this.nextEvent = Events.EARTHQUAKE
+        break
+      }
+      default:
+        this.nextEvent = null
     }
   }
 
