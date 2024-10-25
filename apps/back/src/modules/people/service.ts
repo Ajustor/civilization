@@ -42,6 +42,8 @@ export class PeopleService {
     const numberOfPeople = await PersonModel.find().countDocuments()
     const numberToDelete = ~~(numberOfPeople / 2)
 
+    console.log(`SNAP ${numberToDelete} people will be snapped`)
+
     const cursor = PersonModel.find({}, 'id').batchSize(1000).cursor()
 
     for (let rawPerson = await cursor.next(); rawPerson !== null; rawPerson = await cursor.next()) {
