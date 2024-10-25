@@ -40,7 +40,7 @@ export class PeopleService {
     const deletedPeople: string[] = []
 
     const numberOfPeople = await PersonModel.find().countDocuments()
-    const numberToDelete = numberOfPeople / 2
+    const numberToDelete = ~~(numberOfPeople / 2)
 
     console.log(`Deleting ${numberToDelete} people`)
 
