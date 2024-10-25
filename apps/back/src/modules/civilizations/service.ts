@@ -37,7 +37,6 @@ export const civilizationMapper = (civilization: MongoCivilizationType, populate
     }
   }
 
-
   return builder.build()
 }
 
@@ -52,25 +51,33 @@ export class CivilizationService {
   }
 
   async getAllByWorldId(worldId: string, populate?: CivilizationPopulate): Promise<Civilization[]> {
-    const world = await WorldModel.findOne({ _id: worldId })
+    const world = await WorldModel.findOne({ _id: worldId }, 'civilizations')
 
     if (!world) {
       return []
     }
 
-    const civilizationsRequest = CivilizationModel.find<MongoCivilizationType>({ _id: { $in: world.civilizations } })
-
-    if (populate?.people) {
-      civilizationsRequest.populate<{ people: PeopleEntity }>('people')
-    }
-
-    const civilizations = await civilizationsRequest
+    const civilizations = await CivilizationModel.find<MongoCivilizationType>({ _id: { $in: world.civilizations } }, '-people')
 
     if (!civilizations?.length) {
       return []
     }
 
-    return civilizations.map((civilization) => civilizationMapper(civilization, populate))
+    return Promise.all(civilizations.map(async (rawCivilization) => {
+      const civilization = civilizationMapper(rawCivilization, populate)
+      if (!populate?.people) {
+        return civilization
+      }
+
+      const peoplesOfCivilization = this.peopleService.getPeopleWithLineageStreamFromCivilization(civilization.id, 1000)
+
+      for await (const peopleOfCivilization of peoplesOfCivilization) {
+        civilization.people ??= []
+        civilization.people.push(peopleOfCivilization)
+      }
+
+      return civilization
+    }))
   }
 
   async getAllRawByWorldId(worldId: string, populate?: CivilizationPopulate): Promise<MongoCivilizationType[]> {
@@ -272,7 +279,6 @@ export class CivilizationService {
       console.timeLog(civilization.name, 'Deleting dead people and update people')
 
       const bulkResult = await PersonModel.bulkWrite(bulkWriteOperations)
-      bulkResult.upsertedIds
       for (const id of Object.values(bulkResult.insertedIds)) {
         alivePeople.add(id)
       }

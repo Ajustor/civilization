@@ -100,8 +100,21 @@ export class PeopleService {
 
     const cursor = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }, '-lineage').lean().batchSize(batchSize).cursor()
 
-    for (let rawPerson = await cursor.next(); rawPerson !== null; rawPerson = await cursor.next()) {
+    for await (const rawPerson of cursor) {
       yield personMapper(rawPerson as unknown as PeopleType).formatToType()
+    }
+  }
+
+  public async* getPeopleWithLineageStreamFromCivilization(civilizationId: string, batchSize: number) {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    const cursor = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).batchSize(batchSize).cursor()
+
+    for await (const rawPerson of cursor) {
+      yield personMapper(rawPerson)
     }
   }
 

@@ -257,11 +257,12 @@ export class Civilization {
 
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Everybody has agged')
 
-    await Promise.all([
-      this.adaptPeopleJob(),
-      this.buildNewHouses()
-    ])
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted and new houses builded')
+    this.adaptPeopleJob()
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted')
+
+    this.buildNewHouses()
+
+    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New houses builded')
 
     this.checkHabitations()
 
@@ -285,25 +286,23 @@ export class Civilization {
   }
 
   private buildNewHouses() {
-    return new Promise((resolve) => {
-      const civilizationWood = this.getResource(ResourceTypes.WOOD)
+    const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
-      let housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+    const housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+    const carpentersNeeded = Math.ceil((this._people.length - housesTotalCapacity) / 4)
+    if (carpentersNeeded < 0) {
+      return
+    }
+    const filteredCarpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).filter(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
+    const carpenters = filteredCarpenters.slice(0, Math.min(carpentersNeeded, filteredCarpenters.length))
 
-      while (this._people.length > housesTotalCapacity && civilizationWood.quantity >= 15) {
-        const carpenter = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).find(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
-
-        if (!carpenter) {
-          return resolve(null)
-        }
-
-        carpenter.startBuilding()
-        this.constructBuilding(BuildingTypes.HOUSE, 4)
-        housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+    for (const carpenter of carpenters) {
+      if (civilizationWood.quantity < 15) {
+        return
       }
-
-      resolve(null)
-    })
+      carpenter.startBuilding()
+      this.constructBuilding(BuildingTypes.HOUSE, 4)
+    }
   }
 
   private checkHabitations() {
@@ -319,12 +318,11 @@ export class Civilization {
   }
 
 
-  public async adaptPeopleJob() {
+  public adaptPeopleJob() {
     const workers = this.getWorkersWhoCanRetire()
-    await Promise.all(workers.map((citizen) => new Promise((resolve) => {
+    for (const citizen of workers) {
       citizen.setOccupation(OccupationTypes.RETIRED)
-      resolve(null)
-    })))
+    }
   }
 
   private async createNewPeople() {
