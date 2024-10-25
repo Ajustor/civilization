@@ -30,14 +30,13 @@ const civilizationsDbClient = new CivilizationService(new PeopleService())
 const worlds = await worldDbClient.getAll()
 for (const world of worlds) {
 
+  const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id, { people: true })
   for (let i = 0; i < +values.years * 12; i++) {
-    const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id, { people: true })
     world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
     console.timeLog('skipYears', `Passing a month ${i}/${+values.years * 12 - 1}`)
     await world.passAMonth()
-    await civilizationsDbClient.saveAll(worldCivilizations)
-    world['_civilizations'] = []
   }
+  await civilizationsDbClient.saveAll(worldCivilizations)
 }
 
 console.timeLog('skipYears', 'Civilizations saved, save the worlds')

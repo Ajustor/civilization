@@ -1,7 +1,7 @@
 import { Gender, OccupationTypes, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
 import { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
-import { SortOrder } from 'mongoose'
+import { AnyBulkWriteOperation, SortOrder } from 'mongoose'
 
 export const personMapper = ({ id, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage }: PeopleType): People => {
   const peopleBuilder = new PeopleBuilder()
@@ -38,23 +38,39 @@ export class PeopleService {
 
   public async snap() {
     const deletedPeople: string[] = []
+    const bulkOperations: AnyBulkWriteOperation<PeopleEntity>[] = []
 
     const numberOfPeople = await PersonModel.find().countDocuments()
     const numberToDelete = ~~(numberOfPeople / 2)
 
     console.log(`SNAP ${numberToDelete} people will be snapped`)
 
-    const cursor = PersonModel.find({}, 'id').batchSize(1000).cursor()
+    const cursor = PersonModel.find({}, 'id').batchSize(100000).cursor()
 
-    for (let rawPerson = await cursor.next(); rawPerson !== null; rawPerson = await cursor.next()) {
+    const people = []
+
+    for await (const rawPeople of cursor) {
+      people.push(rawPeople)
+    }
+
+    for (const rawPerson of people.sort(() => Math.random() - 0.5)) {
       if (numberToDelete < deletedPeople.length) {
         break
       }
       deletedPeople.push(rawPerson.id.toString())
-      await rawPerson.deleteOne()
+
+      bulkOperations.push({
+        deleteOne: {
+          filter: {
+            _id: rawPerson.id
+          }
+        }
+      })
     }
 
+    await PersonModel.bulkWrite(bulkOperations)
     await CivilizationModel.updateMany({}, { $pull: { people: { $in: deletedPeople } } })
+
     return 'DONE'
   }
 

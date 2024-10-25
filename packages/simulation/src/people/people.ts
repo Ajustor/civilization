@@ -138,7 +138,7 @@ export class People {
   }
 
   canConceive(): boolean {
-    return this.numberOfChild !== MAX_NUMBER_OF_CHILD && this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
+    return this.numberOfChild <= MAX_NUMBER_OF_CHILD && this.years > MINIMUM_CONCEPTION_AGE && this.years < MAXIMUM_CONCEPTION_AGE && this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH && !this.child
   }
 
   canRetire(): boolean {
