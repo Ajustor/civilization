@@ -1,6 +1,5 @@
 import { CivilizationBuilder, Gender, OccupationTypes, People, Resource, ResourceTypes, formatCivilizations } from '@ajustor/simulation'
 import Elysia, { error, t } from 'elysia'
-import { names, uniqueNamesGenerator } from 'unique-names-generator'
 
 import { CivilizationService } from './service'
 import { authorization } from '../../libs/handlers/authorization'
@@ -52,7 +51,6 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
 
     const people = Array.from(Array(INITIAL_CITIZEN_NUMBER)).map((_, idx) => {
       const person = new People({
-        name: uniqueNamesGenerator({ dictionaries: [names] }),
         month: INITIAL_CITIZEN_AGE,
         gender: idx % 2 === 0 ? Gender.FEMALE : Gender.MALE,
         lifeCounter: INITIAL_CITIZEN_LIFE
