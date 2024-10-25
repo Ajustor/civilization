@@ -1,4 +1,4 @@
-import { Gender, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
+import { Gender, OccupationTypes, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
 import { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 import { SortOrder } from 'mongoose'
@@ -163,6 +163,14 @@ export class PeopleService {
     }
 
     return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ child: { $ne: null } })
+  }
+
+  public async countPeopleWithJob(civilizationId: string, occupation: OccupationTypes): Promise<number> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+    return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ occupation })
   }
 
 }
