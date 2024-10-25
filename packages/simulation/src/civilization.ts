@@ -1,5 +1,5 @@
 import { Resource, ResourceTypes } from './resource'
-import { countries, names, uniqueNamesGenerator } from 'unique-names-generator'
+import { countries, uniqueNamesGenerator } from 'unique-names-generator'
 
 import type { Building } from './types/building'
 import { BuildingTypes } from './buildings/enum'
@@ -175,12 +175,11 @@ export class Civilization {
 
             civilizationFood.decrease(eatFactor)
           } else {
-            person.decreaseLife()
+            person.decreaseLife(4)
           }
         }
       }
       resolve(null)
-
     })
 
     const heatPromise = new Promise((resolve) => {
@@ -372,7 +371,6 @@ export class Civilization {
       const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
       const genders = [Gender.FEMALE, Gender.MALE]
       const newPerson = new People({
-        name: uniqueNamesGenerator({ dictionaries: [names] }),
         month: 0,
         gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
         lifeCounter: 2,

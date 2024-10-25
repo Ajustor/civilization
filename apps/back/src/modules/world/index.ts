@@ -7,7 +7,8 @@ import { WorldService } from './service'
 import { PeopleService } from '../people/service'
 
 const worldDbClientInstance = new WorldsTable()
-const civilizationsDbClientInstance = new CivilizationService(new PeopleService())
+const peopleServiceInstance = new PeopleService()
+const civilizationsDbClientInstance = new CivilizationService(peopleServiceInstance)
 const worldServiceInstance = new WorldService(worldDbClientInstance, civilizationsDbClientInstance)
 
 export const worldModule = new Elysia({ prefix: '/worlds' })
@@ -15,7 +16,8 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .decorate({
     worldDbClient: worldDbClientInstance,
     worldService: worldServiceInstance,
-    civilizationsDbClient: civilizationsDbClientInstance
+    civilizationsDbClient: civilizationsDbClientInstance,
+    peopleService: peopleServiceInstance
   })
   .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
     const worlds = await worldDbClient.getAll()
