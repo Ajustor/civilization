@@ -26,11 +26,6 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       throw new NotFoundError('No worlds found')
     }
 
-    for (const world of worlds) {
-      const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id)
-      world.addCivilization(...worldCivilizations)
-    }
-
     const worldInfos = worlds.map((world) => world.getInfos())
     return worldInfos
   })
