@@ -4,6 +4,7 @@ import { enhancedImages } from '@sveltejs/enhanced-img'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 import { partytownVite } from '@builder.io/partytown/utils'
+import { join } from 'path'
 
 const generateSW = process.env.GENERATE_SW === 'true'
 
