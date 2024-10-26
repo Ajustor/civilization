@@ -9,6 +9,7 @@
 	import { page } from '$app/stores'
 	import { toast } from 'svelte-sonner'
 	import { pwaInfo } from 'virtual:pwa-info'
+	import { partytownSnippet } from '@builder.io/partytown/integration'
 
 	$: webManifest = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
@@ -29,6 +30,7 @@
 <svelte:head>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html webManifest}
+	{@html '<script>' + partytownSnippet() + '</script>'}
 </svelte:head>
 
 <Toaster richColors />

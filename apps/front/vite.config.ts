@@ -3,6 +3,7 @@ import { defineConfig, type PluginOption } from 'vite'
 import { enhancedImages } from '@sveltejs/enhanced-img'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
+import { partytownVite } from '@builder.io/partytown/utils'
 
 const generateSW = process.env.GENERATE_SW === 'true'
 
@@ -60,6 +61,9 @@ export default defineConfig({
 			kit: {
 				includeVersionFile: true,
 			}
+		}),
+		partytownVite({
+			dest: join(__dirname, 'static', '~partytown'),
 		}),
 	]
 })

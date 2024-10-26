@@ -110,12 +110,11 @@ export class CivilizationService {
     }
 
     const menAndWomen = { men: 0, women: 0 }
-
-    for (const civilizationId of world.civilizations) {
+    await Promise.all(world.civilizations.map(async (civilizationId) => {
       const { men, women } = await this.peopleService.countGenders(civilizationId.toString())
       menAndWomen.men += men
       menAndWomen.women += women
-    }
+    }))
 
     return menAndWomen
   }

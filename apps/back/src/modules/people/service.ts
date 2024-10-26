@@ -169,8 +169,10 @@ export class PeopleService {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const men = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ gender: Gender.MALE })
-    const women = await PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ gender: Gender.FEMALE })
+    const [men, women] = await Promise.all([
+      PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ gender: Gender.MALE }),
+      PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ gender: Gender.FEMALE }),
+    ])
     return { men, women }
   }
 
@@ -190,5 +192,4 @@ export class PeopleService {
     }
     return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ occupation })
   }
-
 }
