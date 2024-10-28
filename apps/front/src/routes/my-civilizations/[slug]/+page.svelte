@@ -14,9 +14,7 @@
 	} from '$lib/components/ui/accordion'
 	import { OCCUPATIONS, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
-	import PeopleTree from './datatables/PeopleTree.svelte'
 	import { callGetPeople, callGetPeopleStream } from '../../../services/sveltekit-api/people'
-	import { onMount } from 'svelte'
 
 	export let data: PageData
 

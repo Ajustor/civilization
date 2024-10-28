@@ -196,7 +196,9 @@
 <div class="m-auto flex w-3/4 flex-col items-center justify-center gap-4">
 	{@render createCivilizationDialog()}
 	{#await data.myCivilizations}
-		<span class="loading loading-infinity loading-lg"></span>
+		<div
+			class="card skeleton bg-neutral text-neutral-content relative h-24 w-1/3 rounded shadow-xl"
+		></div>
 	{:then myCivilizations}
 		{#if myCivilizations.length}
 			<Root

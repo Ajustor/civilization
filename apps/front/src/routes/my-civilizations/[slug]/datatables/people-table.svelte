@@ -88,7 +88,6 @@
 				}
 				return createRender(ChildDetails, {
 					gender: value.gender,
-					name: value.name,
 					occupation: value.occupation
 				})
 			}

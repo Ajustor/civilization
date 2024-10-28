@@ -4,7 +4,6 @@
 	import Icon from '@iconify/svelte'
 
 	type Props = {
-		name: string
 		gender: Gender
 		occupation?: OccupationTypes
 	}
@@ -15,12 +14,11 @@
 		[Gender.UNKNOWN]: 'Inconnu'
 	}
 
-	let { name, gender, occupation }: Props = $props()
+	let { gender, occupation }: Props = $props()
 </script>
 
 <span class="text-neutral-content">
 	<ul>
-		<li>Nom: {name}</li>
 		<li>Genre: <Icon icon={GenderIcons[gender]} /></li>
 		{#if occupation}
 			<li>Occupation: {OCCUPATIONS[occupation]}</li>
