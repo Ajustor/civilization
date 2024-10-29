@@ -3,6 +3,7 @@ import '../libs/database/index'
 import { CivilizationService } from '../modules/civilizations/service'
 import { PeopleService } from '../modules/people/service'
 import { WorldsTable } from '../modules/world/database'
+import mongoose from 'mongoose'
 
 const worldDbClientInstance = new WorldsTable()
 const civilizationsDbClientInstance = new CivilizationService(new PeopleService())
@@ -26,6 +27,7 @@ console.timeLog('monthPass', 'Civilizations saved, save the worlds')
 try {
   await worldDbClientInstance.saveAll(worlds)
   console.timeEnd('monthPass')
+  await mongoose.disconnect()
   process.exit(0)
 } catch (error) {
   console.error(error)
