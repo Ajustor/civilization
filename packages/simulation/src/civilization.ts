@@ -15,6 +15,7 @@ import { hasElementInCommon } from './utils/array'
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
 const CARPENTER_RESOURCES_GET = 20
+const MAX_PEOPLE_BY_CIVILIZATION = 100_000
 const NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE = 100
 
 export class Civilization {
@@ -271,7 +272,10 @@ export class Civilization {
 
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Dead people removed')
 
-    await this.createNewPeople()
+    if (this.people.length < MAX_PEOPLE_BY_CIVILIZATION) {
+      await this.createNewPeople()
+    }
+
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was created')
     await this.birthAwaitingBabies()
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was birth')

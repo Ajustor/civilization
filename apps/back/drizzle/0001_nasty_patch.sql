@@ -1,1 +1,0 @@
-ALTER TABLE `civilizations` RENAME COLUMN `citizens` TO `people`;

@@ -26,6 +26,7 @@
 					Les citoyens peuvent se reproduire tous les mois si leur santé est d'au moins de 8 et
 					qu'ils ont entre 16 et 60 ans
 				</li>
+				<li>Les civilisations sont limité a une population de 100000 habitants</li>
 				<li>
 					Chaque citoyen a un métier dans la liste suivante :
 					<ol class="list-inside list-decimal">
