@@ -118,7 +118,6 @@
 			{@const resources = civilizationStats.map(({ resources }) => resources)}
 			{@const peoples = civilizationStats.map(({ people }) => people)}
 			{@const labels = civilizationStats.map(({ month }) => `Mois: ${month}`)}
-			{JSON.stringify(resources)}
 			{#if resources.length}
 				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 					<div class="card-body">
