@@ -416,8 +416,8 @@ export class CivilizationService {
     return !!exists?._id
   }
 
-  async getCivilizationStats(civilizationId: string) {
-    const result = await CivilizationStatsModel.find({ civilizationId }).lean()
-    return result
+  async getCivilizationStats(civilizationId: string, limit: number = 10) {
+    const result = await CivilizationStatsModel.find({ civilizationId }).sort('-month').limit(limit).lean()
+    return result.reverse()
   }
 }

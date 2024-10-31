@@ -86,7 +86,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
 
         person.setOccupation(
           INITIAL_OCCUPATION_CHOICE[
-            Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)
+          Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)
           ],
         )
 
@@ -124,6 +124,11 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   )
   .get(
     '/:civilizationId/stats',
-    ({ params: { civilizationId }, civilizationService }) =>
-      civilizationService.getCivilizationStats(civilizationId),
+    ({ params: { civilizationId }, civilizationService, query: { limit = 10 } }) =>
+      civilizationService.getCivilizationStats(civilizationId, limit),
+    {
+      query: t.Object({
+        limit: t.Optional(t.Number())
+      })
+    }
   )
