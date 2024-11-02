@@ -69,7 +69,54 @@ export type CivilizationPopulate = {
 }
 
 export class CivilizationService {
-  constructor(private readonly peopleService: PeopleService) { }
+  constructor(private readonly peopleService: PeopleService) {}
+
+  async getAliveByWorldId(
+    worldId: string,
+    populate?: CivilizationPopulate,
+  ): Promise<Civilization[]> {
+    const world = await WorldModel.findOne({ _id: worldId }, 'civilizations')
+
+    if (!world) {
+      return []
+    }
+
+    const civilizations = await CivilizationModel.find<MongoCivilizationType>(
+      {
+        $and: [
+          { _id: { $in: world.civilizations } },
+          { people: { $not: { $size: 0 } } },
+        ],
+      },
+      '-people',
+    )
+
+    if (!civilizations?.length) {
+      return []
+    }
+
+    return Promise.all(
+      civilizations.map(async (rawCivilization) => {
+        const civilization = civilizationMapper(rawCivilization, populate)
+        if (!populate?.people) {
+          return civilization
+        }
+
+        const peoplesOfCivilization =
+          this.peopleService.getPeopleWithLineageStreamFromCivilization(
+            civilization.id,
+            1000,
+          )
+
+        for await (const peopleOfCivilization of peoplesOfCivilization) {
+          civilization.people ??= []
+          civilization.people.push(peopleOfCivilization)
+        }
+
+        return civilization
+      }),
+    )
+  }
 
   async getAllByWorldId(
     worldId: string,
@@ -417,7 +464,10 @@ export class CivilizationService {
   }
 
   async getCivilizationStats(civilizationId: string, limit: number = 10) {
-    const result = await CivilizationStatsModel.find({ civilizationId }).sort('-month').limit(limit).lean()
+    const result = await CivilizationStatsModel.find({ civilizationId })
+      .sort('-month')
+      .limit(limit)
+      .lean()
     return result.reverse()
   }
 }

@@ -17,7 +17,7 @@ console.timeLog('monthPass', 'Worlds retrieved')
 for (const world of worlds) {
   console.timeLog('monthPass', 'Retrieve civilizations')
   const worldCivilizations =
-    await civilizationsDbClientInstance.getAllByWorldId(world.id, {
+    await civilizationsDbClientInstance.getAliveByWorldId(world.id, {
       people: true,
     })
   world.addCivilization(
@@ -49,7 +49,10 @@ for (const world of worlds) {
 
     await CivilizationStatsModel.create({
       month: livedMonths,
-      resources: resources.map((resource) => ({ ...resource.formatToType(), resourceType: resource.type })),
+      resources: resources.map((resource) => ({
+        ...resource.formatToType(),
+        resourceType: resource.type,
+      })),
       civilizationId,
       people: { men, women, pregnantWomen },
     })

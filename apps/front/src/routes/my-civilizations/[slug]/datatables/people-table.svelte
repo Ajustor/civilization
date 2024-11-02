@@ -144,7 +144,7 @@
 		<select
 			bind:value={pageSize}
 			class="select select-bordered w-full max-w-xs"
-			onchange={() => getNewPagination(pageIndex + 1, pageSize)}
+			onchange={() => getNewPagination(0, pageSize)}
 		>
 			<option disabled>Nombre d'éléments par page</option>
 			<option value={10}>10</option>
