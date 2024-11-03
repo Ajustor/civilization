@@ -27,7 +27,7 @@
 					qu'ils ont entre 16 et 60 ans
 				</li>
 				<li>
-					Les civilisations sont limité a une population de 100000 habitants en dehors des retraités
+					La population de chaque civilisation est limitée à 100 000 habitants. Hors retraités.
 				</li>
 				<li>
 					Chaque citoyen a un métier dans la liste suivante :
