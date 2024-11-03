@@ -3,7 +3,12 @@
 	import type { PageData } from './$types'
 	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
 
-	import type { BuildingType, OccupationTypes, PeopleType } from '@ajustor/simulation'
+	import {
+		ResourceTypes,
+		type BuildingType,
+		type OccupationTypes,
+		type PeopleType
+	} from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -40,8 +45,6 @@
 		return colour
 	}
 
-	let people: PeopleType[] = []
-
 	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
 		const oldPeople = await data.lazy.people
 		pageIndex = newPageIndex
@@ -55,6 +58,12 @@
 				resolve(oldPeople)
 			}
 		})
+	}
+
+	const RESOURCES_INDEXES = {
+		[ResourceTypes.FOOD]: 0,
+		[ResourceTypes.WOOD]: 1,
+		[ResourceTypes.STONE]: 2
 	}
 </script>
 
@@ -100,7 +109,80 @@
 		</ul>
 	</span>
 
-	<!-- promise was fulfilled -->
+	<div class="grid grid-cols-1 gap-4 pl-0">
+		{#await data.lazy.stats.civilization}
+			<div
+				class="skeleton card bg-neutral text-neutral-content h-16 w-1/2 rounded shadow-xl md:col-span-2"
+			></div>
+		{:then civilizationStats}
+			{@const resources = civilizationStats.map(({ resources }) => resources)}
+			{@const peoples = civilizationStats.map(({ people }) => people)}
+			{@const labels = civilizationStats.map(({ month }) => `Mois: ${month}`)}
+			{#if resources.length}
+				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+					<div class="card-body">
+						<h2 class="card-title">Progression des ressources</h2>
+						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
+							<Line
+								data={{
+									labels,
+									datasets: resources.reduce<{ data: number[]; label: string; type: string }[]>(
+										(datasets, civilizationResources) => {
+											for (const resource of civilizationResources) {
+												if (!resource?.resourceType) {
+													continue
+												}
+												datasets[RESOURCES_INDEXES[resource.resourceType as ResourceTypes]] ??= {
+													data: [],
+													label: resourceNames[resource.resourceType as ResourceTypes],
+													type: 'line'
+												}
+												datasets[
+													RESOURCES_INDEXES[resource.resourceType as ResourceTypes]
+												].data.push(resource.quantity ?? 0)
+											}
+											return datasets
+										},
+										[]
+									)
+								}}
+							/>
+						{/await}
+					</div>
+				</div>
+			{/if}
+
+			{#if peoples.length}
+				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
+					<div class="card-body">
+						<h2 class="card-title">Progression de la population</h2>
+						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
+							Progression de la population
+							<Line
+								data={{
+									labels,
+									datasets: peoples.reduce<{ data: number[]; type: string; label: string }[]>(
+										(datasets, data) => {
+											datasets[0] ??= { data: [], type: 'line', label: 'Hommes' }
+											datasets[1] ??= { data: [], type: 'line', label: 'Femmes' }
+											datasets[2] ??= { data: [], type: 'line', label: 'Femmes enceintes' }
+
+											datasets[0].data.push(data?.men ?? 0)
+											datasets[1].data.push(data?.women ?? 0)
+											datasets[2].data.push(data?.pregnantWomen ?? 0)
+											return datasets
+										},
+										[]
+									)
+								}}
+							/>
+						{/await}
+					</div>
+				</div>
+			{/if}
+		{/await}
+	</div>
+
 	<div class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-3 lg:grid-cols-4">
 		{#await data.lazy.stats.peopleRatio}
 			<div

@@ -21,10 +21,13 @@
 					Tous les mois les citoyens doivent manger et avoir un logement afin de gagner de la vie.
 					De plus en automne et en hiver, les citoyens ont besoin de bois pour se réchauffer
 				</li>
-				<li>Un citoyen qui atteint l'age de 91 ans meurt</li>
+				<li>Un citoyen qui atteint l'age de 85 ans a 20% de chances de mourir chaque mois</li>
 				<li>
 					Les citoyens peuvent se reproduire tous les mois si leur santé est d'au moins de 8 et
 					qu'ils ont entre 16 et 60 ans
+				</li>
+				<li>
+					La population de chaque civilisation est limitée à 100 000 habitants. Hors retraités.
 				</li>
 				<li>
 					Chaque citoyen a un métier dans la liste suivante :

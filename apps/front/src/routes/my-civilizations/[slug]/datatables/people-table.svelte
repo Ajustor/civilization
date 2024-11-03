@@ -144,13 +144,14 @@
 		<select
 			bind:value={pageSize}
 			class="select select-bordered w-full max-w-xs"
-			onchange={() => getNewPagination(pageIndex + 1, pageSize)}
+			onchange={() => getNewPagination(0, pageSize)}
 		>
 			<option disabled>Nombre d'éléments par page</option>
 			<option value={10}>10</option>
 			<option value={25}>25</option>
 			<option value={50}>50</option>
 			<option value={100}>100</option>
+			<option value={1000}>1000</option>
 		</select>
 	</div>
 	<Table class="bg-neutral text-neutral-content">

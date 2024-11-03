@@ -15,6 +15,7 @@ import { hasElementInCommon } from './utils/array'
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
 const CARPENTER_RESOURCES_GET = 20
+const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
 const NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE = 100
 
 export class Civilization {
@@ -25,7 +26,9 @@ export class Civilization {
   private _buildings: Building[]
   private _citizensCount: number = 0
 
-  constructor(public name = uniqueNamesGenerator({ dictionaries: [countries] })) {
+  constructor(
+    public name = uniqueNamesGenerator({ dictionaries: [countries] }),
+  ) {
     this._people = []
     this._resources = []
     this._buildings = []
@@ -72,7 +75,10 @@ export class Civilization {
   }
 
   get houses(): House | undefined {
-    return this.buildings.find<House>((building): building is House => building.getType() === BuildingTypes.HOUSE)
+    return this.buildings.find<House>(
+      (building): building is House =>
+        building.getType() === BuildingTypes.HOUSE,
+    )
   }
 
   set houses(house: House) {
@@ -111,11 +117,17 @@ export class Civilization {
   }
 
   getPeopleWithOccupation(occupation: OccupationTypes): People[] {
-    return this._people.filter(({ work: peopleJob }) => peopleJob && occupation === peopleJob.occupationType)
+    return this._people.filter(
+      ({ work: peopleJob }) =>
+        peopleJob && occupation === peopleJob.occupationType,
+    )
   }
 
   getPeopleWithoutOccupation(occupation: OccupationTypes): People[] {
-    return this._people.filter(({ work: peopleJob }) => peopleJob && occupation !== peopleJob.occupationType)
+    return this._people.filter(
+      ({ work: peopleJob }) =>
+        peopleJob && occupation !== peopleJob.occupationType,
+    )
   }
 
   getWorkersWhoCanRetire(): People[] {
@@ -135,20 +147,34 @@ export class Civilization {
   }
 
   constructBuilding(type: BuildingTypes, capacity: number): void {
-    const woodResource = this._resources.find(res => res.type === ResourceTypes.WOOD)
-    if (woodResource && woodResource.quantity >= 15 && type === BuildingTypes.HOUSE) {
+    const woodResource = this._resources.find(
+      (res) => res.type === ResourceTypes.WOOD,
+    )
+    if (
+      woodResource &&
+      woodResource.quantity >= 15 &&
+      type === BuildingTypes.HOUSE
+    ) {
       woodResource.decrease(15)
       this.houses ??= new House(capacity)
       this.houses.count++
     }
   }
 
-  private collectResource(workers: People[], resource: Resource | undefined, amountOfResourceCollected: number, world: World): Promise<number> {
+  private collectResource(
+    workers: People[],
+    resource: Resource | undefined,
+    amountOfResourceCollected: number,
+    world: World,
+  ): Promise<number> {
     return new Promise((resolve) => {
       let collectedResources = 0
       if (resource?.quantity) {
         for (const farmer of workers) {
-          const successfullyCollectResource = farmer.collectResource(world, amountOfResourceCollected)
+          const successfullyCollectResource = farmer.collectResource(
+            world,
+            amountOfResourceCollected,
+          )
           if (!successfullyCollectResource) {
             return resolve(collectedResources)
           }
@@ -160,14 +186,16 @@ export class Civilization {
     })
   }
 
-  private async resourceConsumption(world: World, people: People[]): Promise<void> {
+  private async resourceConsumption(
+    world: World,
+    people: People[],
+  ): Promise<void> {
     const civilizationFood = this.getResource(ResourceTypes.FOOD)
     const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
     const foodPromise = new Promise((resolve) => {
       // Handle food consumption and life counter
       if (civilizationFood) {
-
         for (const person of people) {
           const eatFactor = person.eatFactor
           if (civilizationFood.quantity >= eatFactor) {
@@ -212,12 +240,8 @@ export class Civilization {
       resolve(null)
     })
 
-    await Promise.all([
-      foodPromise,
-      heatPromise
-    ])
+    await Promise.all([foodPromise, heatPromise])
   }
-
 
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
@@ -231,30 +255,48 @@ export class Civilization {
     const farmers = this.getPeopleWithOccupation(OccupationTypes.FARMER)
     const carpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER)
 
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Base data retrieved from civilization')
-
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'Base data retrieved from civilization',
+    )
 
     const [foodCollected, woodCollected] = await Promise.all([
       this.collectResource(farmers, foodResource, FARMER_RESOURCES_GET, world),
-      this.collectResource(carpenters, woodResource, CARPENTER_RESOURCES_GET, world),
+      this.collectResource(
+        carpenters,
+        woodResource,
+        CARPENTER_RESOURCES_GET,
+        world,
+      ),
     ])
-
 
     civilizationFood.increase(foodCollected)
     civilizationWood.increase(woodCollected)
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Resources collected')
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'Resources collected',
+    )
 
-    const people = this.people.toSorted((firstPerson, secondPerson) => secondPerson.years - firstPerson.years).toSorted((person) => person.work?.canWork(person.years) ? 1 : -1)
+    const people = this.people
+      .toSorted(
+        (firstPerson, secondPerson) => secondPerson.years - firstPerson.years,
+      )
+      .toSorted((person) => (person.work?.canWork(person.years) ? 1 : -1))
 
     await this.resourceConsumption(world, people)
 
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Resources consomed by people')
-
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'Resources consomed by people',
+    )
 
     // Age all people
-    this._people.forEach(person => person.ageOneMonth())
+    this._people.forEach((person) => person.ageOneMonth())
 
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Everybody has agged')
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'Everybody has agged',
+    )
 
     this.adaptPeopleJob()
     console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted')
@@ -265,35 +307,63 @@ export class Civilization {
 
     this.checkHabitations()
 
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'People without houses get cold')
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'People without houses get cold',
+    )
 
     this.removeDeadPeople()
 
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Dead people removed')
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'Dead people removed',
+    )
 
-    await this.createNewPeople()
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was created')
+    const activePeopleCount = this.people.filter(
+      ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
+    ).length
+
+    if (activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION) {
+      await this.createNewPeople()
+    }
+
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'New people was created',
+    )
     await this.birthAwaitingBabies()
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New people was birth')
+    console.timeLog(
+      `CivilizationPassAMonth-${this.name}`,
+      'New people was birth',
+    )
 
     if (!this.nobodyAlive()) {
       this.livedMonths++
     }
 
     console.timeEnd(`CivilizationPassAMonth-${this.name}`)
-
   }
 
   private buildNewHouses() {
     const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
-    const housesTotalCapacity = (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
-    const carpentersNeeded = Math.ceil((this._people.length - housesTotalCapacity) / 4)
+    const housesTotalCapacity =
+      (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
+    const carpentersNeeded = Math.ceil(
+      (this._people.length - housesTotalCapacity) / 4,
+    )
     if (carpentersNeeded < 0) {
       return
     }
-    const filteredCarpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER).filter(citizen => citizen.work?.canWork(citizen.years) && !citizen.isBuilding)
-    const carpenters = filteredCarpenters.slice(0, Math.min(carpentersNeeded, filteredCarpenters.length))
+    const filteredCarpenters = this.getPeopleWithOccupation(
+      OccupationTypes.CARPENTER,
+    ).filter(
+      (citizen) => citizen.work?.canWork(citizen.years) && !citizen.isBuilding,
+    )
+    const carpenters = filteredCarpenters.slice(
+      0,
+      Math.min(carpentersNeeded, filteredCarpenters.length),
+    )
 
     for (const carpenter of carpenters) {
       if (civilizationWood.quantity < 15) {
@@ -307,15 +377,18 @@ export class Civilization {
   private checkHabitations() {
     let lastCitizenWithoutHouseIndex = 0
     if (this.houses) {
-      lastCitizenWithoutHouseIndex = this.houses.capacity * this.houses.count - 1
+      lastCitizenWithoutHouseIndex =
+        this.houses.capacity * this.houses.count - 1
     }
-    const citizenWithoutHouse = this.people.slice(lastCitizenWithoutHouseIndex, undefined)
+    const citizenWithoutHouse = this.people.slice(
+      lastCitizenWithoutHouseIndex,
+      undefined,
+    )
 
     for (const citizen of citizenWithoutHouse) {
       citizen.decreaseLife()
     }
   }
-
 
   public adaptPeopleJob() {
     const workers = this.getWorkersWhoCanRetire()
@@ -328,20 +401,28 @@ export class Civilization {
     // Handle pregnancy
 
     let eligiblePeople: [People, People][] = []
-    const ableToConceivePeople = this._people.filter(person => person.canConceive())
+    const ableToConceivePeople = this._people.filter((person) =>
+      person.canConceive(),
+    )
 
-    const women = ableToConceivePeople.filter(({ gender }) => gender === Gender.FEMALE)
-    const men = ableToConceivePeople.filter(({ gender }) => gender === Gender.MALE).toSorted(() => Math.random() - 0.5)
+    const women = ableToConceivePeople.filter(
+      ({ gender }) => gender === Gender.FEMALE,
+    )
+    const men = ableToConceivePeople
+      .filter(({ gender }) => gender === Gender.MALE)
+      .toSorted(() => Math.random() - 0.5)
 
     if (!women.length) {
       return
     }
     for (const woman of women) {
-
       const womanLineage = woman.getDirectLineage()
       const eligibleManIndex = men.findIndex((man) => {
         const manLineage = man.getDirectLineage()
-        const manAndWomanIntersection = hasElementInCommon(womanLineage, manLineage)
+        const manAndWomanIntersection = hasElementInCommon(
+          womanLineage,
+          manLineage,
+        )
 
         return !manAndWomanIntersection
       })
@@ -355,60 +436,94 @@ export class Civilization {
         eligiblePeople.push([woman, eligibleMan])
       }
       // TODO: check if we need to remove the father from the available men
-
     }
-
 
     if (!eligiblePeople.length) {
       return
     }
 
-    await Promise.all(eligiblePeople.map(([mother, father]) => new Promise((resolve) => {
-      if (!isWithinChance(PREGNANCY_PROBABILITY)) {
-        return resolve(null)
-      }
+    await Promise.all(
+      eligiblePeople.map(
+        ([mother, father]) =>
+          new Promise((resolve) => {
+            if (!isWithinChance(PREGNANCY_PROBABILITY)) {
+              return resolve(null)
+            }
 
-      const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER, mother.work?.occupationType ?? OccupationTypes.CARPENTER, father.work?.occupationType ?? OccupationTypes.FARMER]
-      const genders = [Gender.FEMALE, Gender.MALE]
-      const newPerson = new People({
-        month: 0,
-        gender: genders[Math.min(Math.floor(Math.random() * genders.length), genders.length - 1)],
-        lifeCounter: 2,
-        lineage: {
-          mother: {
-            id: mother.id,
-            ...(mother.lineage && { lineage: { mother: { id: mother.lineage.mother.id }, father: { id: mother.lineage.father.id } } })
-          },
-          father: {
-            id: father.id,
-            ...(father.lineage && { lineage: { mother: { id: father.lineage.mother.id }, father: { id: father.lineage.father.id } } })
-          }
-        }
-      })
-      newPerson.setOccupation(occupations[Math.min(Math.floor(Math.random() * occupations.length), occupations.length - 1)])
+            const occupations = [
+              OccupationTypes.CARPENTER,
+              OccupationTypes.FARMER,
+            ]
+            const genders = [Gender.FEMALE, Gender.MALE]
+            const newPerson = new People({
+              month: 0,
+              gender:
+                genders[
+                  Math.min(
+                    Math.floor(Math.random() * genders.length),
+                    genders.length - 1,
+                  )
+                ],
+              lifeCounter: 2,
+              lineage: {
+                mother: {
+                  id: mother.id,
+                  ...(mother.lineage && {
+                    lineage: {
+                      mother: { id: mother.lineage.mother.id },
+                      father: { id: mother.lineage.father.id },
+                    },
+                  }),
+                },
+                father: {
+                  id: father.id,
+                  ...(father.lineage && {
+                    lineage: {
+                      mother: { id: father.lineage.mother.id },
+                      father: { id: father.lineage.father.id },
+                    },
+                  }),
+                },
+              },
+            })
+            newPerson.setOccupation(
+              occupations[
+                Math.min(
+                  Math.floor(Math.random() * occupations.length),
+                  occupations.length - 1,
+                )
+              ],
+            )
 
-      mother.addChildToBirth(newPerson)
+            mother.addChildToBirth(newPerson)
 
-      mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
-      father.lifeCounter = Math.floor(father.lifeCounter / 2)
-      resolve(null)
-    })))
+            mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
+            father.lifeCounter = Math.floor(father.lifeCounter / 2)
+            resolve(null)
+          }),
+      ),
+    )
   }
 
   private async birthAwaitingBabies() {
-
-    const awaitingMothers = this._people.filter<People & { child: People }>((person): person is People & { child: People } => !!(person.pregnancyMonthsLeft === 0 && person.child))
+    const awaitingMothers = this._people.filter<People & { child: People }>(
+      (person): person is People & { child: People } =>
+        !!(person.pregnancyMonthsLeft === 0 && person.child),
+    )
 
     await Promise.all(
-      awaitingMothers.map((mother) => new Promise((resolve) => {
-        this.addPeople(mother.child)
-        mother.giveBirth()
-        resolve(null)
-      }))
+      awaitingMothers.map(
+        (mother) =>
+          new Promise((resolve) => {
+            this.addPeople(mother.child)
+            mother.giveBirth()
+            resolve(null)
+          }),
+      ),
     )
   }
 
   private removeDeadPeople() {
-    this._people = this._people.filter(person => person.isAlive())
+    this._people = this._people.filter((person) => person.isAlive())
   }
 }

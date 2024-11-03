@@ -57,7 +57,7 @@
 							{#if world.nextEvent}
 								<p>
 									Le prochain événement est: <span
-										class="tooltip"
+										class="tooltip tooltip-top tooltip-accent"
 										data-tip={eventsDescription[world.nextEvent]}
 									>
 										{eventsName[world.nextEvent]}
