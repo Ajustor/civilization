@@ -121,7 +121,7 @@
 			{#if resources.length}
 				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 					<div class="card-body">
-						<h2 class="card-title">Progression des resources</h2>
+						<h2 class="card-title">Progression des ressources</h2>
 						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
 							<Line
 								data={{
