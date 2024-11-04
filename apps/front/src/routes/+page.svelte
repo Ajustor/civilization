@@ -11,6 +11,7 @@
 		resourceNames,
 		seasonsTranslations
 	} from '$lib/translations'
+	import Icon from '@iconify/svelte'
 
 	export let data: PageData
 
@@ -30,6 +31,14 @@
 		content="Une simulation d'un monde avec des civilisations qui vivent seule"
 	/>
 </svelte:head>
+
+<a
+	class="btn"
+	href="https://discord.gg/fJUvvX3www"
+	aria-label="Lien d'invitation au serveur discord"
+>
+	<Icon icon="logos:discord-icon" /> Rejoindre le discord
+</a>
 
 <Root
 	opts={{

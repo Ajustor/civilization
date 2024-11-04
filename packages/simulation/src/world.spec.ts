@@ -246,6 +246,7 @@ describe('World', () => {
           wood.formatToType()
         ]
       }],
+      nextEvent: null,
       month: 0,
       resources: [
         worldFood.formatToType(),
@@ -332,7 +333,7 @@ describe('World', () => {
     const worldWood = new Resource(ResourceTypes.WOOD, 2000)
     world.addResource(worldFood, worldWood)
     const civilization1 = new Civilization('Civilization 1')
-    civilization1.addPeople(new People({ name: 'Yves', month: 200, lifeCounter: 49, gender: Gender.MALE }))
+    civilization1.addPeople(new People({ month: 200, lifeCounter: 12, gender: Gender.MALE }))
 
     civilization1.addResource(new Resource(ResourceTypes.FOOD, 10))
     world.addCivilization(civilization1)
@@ -341,7 +342,7 @@ describe('World', () => {
 
     for (const civilization of world.civilizations) {
       expect(civilization.livedMonths).toBe(1)
-      expect(civilization.people.every(({ lifeCounter }) => lifeCounter === 49)).toBeTruthy()
+      expect(civilization.people.every(({ lifeCounter }) => lifeCounter === 11)).toBeTruthy()
     }
   })
 })
