@@ -36,6 +36,7 @@
 	class="btn"
 	href="https://discord.gg/fJUvvX3www"
 	aria-label="Lien d'invitation au serveur discord"
+	target="_blank"
 >
 	<Icon icon="logos:discord-icon" /> Rejoindre le discord
 </a>
