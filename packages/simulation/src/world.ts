@@ -1,12 +1,14 @@
 import { Resource, ResourceTypes } from './resource'
+
 import { Civilization } from './civilization'
-import { formatCivilizations } from './formatters/civilization'
 import type { CivilizationType } from './types/civilization'
-import { Events } from './events/enum'
 import { Earthquake } from './events/earthquake'
-import { isWithinChance } from './utils'
-import { WorldEvent } from './events/interface'
+import { Events } from './events/enum'
+import { Migration } from './events'
 import { Starvation } from './events/starvation'
+import { WorldEvent } from './events/interface'
+import { formatCivilizations } from './formatters/civilization'
+import { isWithinChance } from './utils'
 
 export const BASE_FOOD_GENERATION = 30_000_000
 export const BASE_WOOD_GENERATION = 15_000_000
@@ -34,7 +36,8 @@ const AVAILABLE_EVENTS: {
   [key in Events]: () => WorldEvent
 } = {
   [Events.EARTHQUAKE]: () => new Earthquake(),
-  [Events.STARVATION]: () => new Starvation()
+  [Events.STARVATION]: () => new Starvation(),
+  [Events.MIGRATION]: () => new Migration(),
 }
 
 export class World {

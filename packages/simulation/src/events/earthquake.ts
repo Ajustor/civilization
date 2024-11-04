@@ -1,5 +1,6 @@
-import { Events } from './enum'
 import { ActionInput, WorldEvent } from './interface'
+
+import { Events } from './enum'
 
 export class Earthquake implements WorldEvent {
   type = Events.EARTHQUAKE

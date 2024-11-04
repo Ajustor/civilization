@@ -8,9 +8,9 @@ import { House } from './buildings/house'
 import { OccupationTypes } from './people/work/enum'
 import { People } from './people/people'
 import type { World } from './world'
+import { hasElementInCommon } from './utils/array'
 import { isWithinChance } from './utils'
 import { v4 } from 'uuid'
-import { hasElementInCommon } from './utils/array'
 
 const PREGNANCY_PROBABILITY = 60
 const FARMER_RESOURCES_GET = 10
@@ -121,6 +121,16 @@ export class Civilization {
       ({ work: peopleJob }) =>
         peopleJob && occupation === peopleJob.occupationType,
     )
+  }
+
+  getPeopleOlderThan(age: number): People[] {
+    return this._people.filter(
+      ({ years }) => years >= age
+    )
+  }
+
+  removePeople(citizenIds: string[]) {
+    this._people = this._people.filter(({ id }) => !citizenIds.includes(id))
   }
 
   getPeopleWithoutOccupation(occupation: OccupationTypes): People[] {
