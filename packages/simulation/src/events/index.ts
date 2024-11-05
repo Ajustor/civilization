@@ -1,5 +1,7 @@
 export { Earthquake } from './earthquake'
 export { Events } from './enum'
+export { Fire } from './fire'
 export { Migration } from './migration'
+export { RatInvasion } from './ratInvasion'
 export { Starvation } from './starvation'
 export type { ActionInput, WorldEvent } from './interface'
