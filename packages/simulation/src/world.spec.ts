@@ -1,9 +1,10 @@
+import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION, World } from './world'
+import { Resource, ResourceTypes } from './resource'
+
 import { Civilization } from './civilization'
-import { formatCivilizations } from './formatters'
 import { Gender } from './people/enum'
 import { People } from './people/people'
-import { Resource, ResourceTypes } from './resource'
-import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION, World } from './world'
+import { formatCivilizations } from './formatters'
 
 describe('World', () => {
 

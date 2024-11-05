@@ -242,7 +242,6 @@ describe('Civilization', () => {
         .withGender(Gender.FEMALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withChild(child)
         .withPregnancyMonthsLeft(0)
@@ -269,7 +268,6 @@ describe('Civilization', () => {
           .withGender(Gender.FEMALE)
           .withLifeCounter(12)
           .withMonth(240)
-
           .withOccupation(OccupationTypes.FARMER)
           .withId('p1')
           .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
@@ -278,7 +276,6 @@ describe('Civilization', () => {
           .withGender(Gender.MALE)
           .withLifeCounter(12)
           .withMonth(240)
-
           .withOccupation(OccupationTypes.FARMER)
           .withId('p2')
           .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
@@ -308,7 +305,6 @@ describe('Civilization', () => {
           .withGender(Gender.FEMALE)
           .withLifeCounter(12)
           .withMonth(240)
-
           .withOccupation(OccupationTypes.FARMER)
           .withId('p1')
           .build()
@@ -346,7 +342,6 @@ describe('Civilization', () => {
           .withGender(Gender.FEMALE)
           .withLifeCounter(12)
           .withMonth(240)
-
           .withOccupation(OccupationTypes.FARMER)
           .withId('p1')
           .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
@@ -386,7 +381,6 @@ describe('Civilization', () => {
         .withGender(Gender.FEMALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p1')
         .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
@@ -395,7 +389,6 @@ describe('Civilization', () => {
         .withGender(Gender.MALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p2')
         .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
@@ -426,7 +419,6 @@ describe('Civilization', () => {
         .withGender(Gender.FEMALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p1')
         .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
@@ -435,7 +427,6 @@ describe('Civilization', () => {
         .withGender(Gender.MALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p2')
         .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
@@ -464,7 +455,6 @@ describe('Civilization', () => {
         .withGender(Gender.FEMALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p1')
         .withLineage({ mother: { id: 'nope' }, father: { id: 'nope' } })
@@ -473,7 +463,6 @@ describe('Civilization', () => {
         .withGender(Gender.MALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p2')
         .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
@@ -498,7 +487,6 @@ describe('Civilization', () => {
         .withGender(Gender.FEMALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p1')
         .withLineage({ mother: { id: 'mother' }, father: { id: 'nope' } })
@@ -507,7 +495,6 @@ describe('Civilization', () => {
         .withGender(Gender.MALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p2')
         .withLineage({ mother: { id: 'mother' }, father: { id: 'father' } })
@@ -532,7 +519,6 @@ describe('Civilization', () => {
         .withGender(Gender.FEMALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p1')
         .withLineage({ mother: { id: 'nope', lineage: { mother: { id: 'mother' }, father: { id: 'yep' } } }, father: { id: 'fope' } })
@@ -541,7 +527,6 @@ describe('Civilization', () => {
         .withGender(Gender.MALE)
         .withLifeCounter(12)
         .withMonth(240)
-
         .withOccupation(OccupationTypes.FARMER)
         .withId('p2')
         .withLineage({ mother: { id: 'mother' }, father: { id: 'p1' } })
@@ -564,7 +549,6 @@ describe('Civilization', () => {
           .withGender(Gender.FEMALE)
           .withLifeCounter(12)
           .withMonth(240)
-
           .withOccupation(OccupationTypes.FARMER)
           .withId('p1')
           .build()
@@ -591,7 +575,6 @@ describe('Civilization', () => {
             .withGender(Gender.FEMALE)
             .withLifeCounter(12)
             .withMonth(240)
-
             .withOccupation(OccupationTypes.FARMER)
             .withId('p1')
             .build()
@@ -599,7 +582,6 @@ describe('Civilization', () => {
             .withGender(Gender.MALE)
             .withLifeCounter(12)
             .withMonth(240)
-
             .withOccupation(OccupationTypes.FARMER)
             .withId('p2')
             .build()
@@ -620,7 +602,6 @@ describe('Civilization', () => {
             .withGender(Gender.FEMALE)
             .withLifeCounter(12)
             .withMonth(240)
-
             .withOccupation(OccupationTypes.FARMER)
             .withId('p1')
             .build()
@@ -628,7 +609,6 @@ describe('Civilization', () => {
             .withGender(Gender.MALE)
             .withLifeCounter(12)
             .withMonth(240)
-
             .withOccupation(OccupationTypes.FARMER)
             .withId('p2')
             .build()

@@ -22,8 +22,8 @@ export const EAT_FACTOR = {
   [OccupationTypes.RETIRED]: 1,
 }
 
+export const MINIMUM_CONCEPTION_AGE = 16
 const PREGNANCY_MONTHS = 9
-const MINIMUM_CONCEPTION_AGE = 16
 const MAXIMUM_CONCEPTION_AGE = 50
 const MINIMUM_CONCEPTION_HEALTH = 8
 const MAX_NUMBER_OF_CHILD = 3
@@ -31,7 +31,7 @@ const MAX_NUMBER_OF_CHILD = 3
 export const LIFE_EXPECTANCY = 85
 const DEATH_RATE_AFTER_EXPECTANCY = 20
 
-const MAX_LIFE = 12
+export const MAX_LIFE = 12
 
 export type PeopleConstructorParams = {
   month: number,

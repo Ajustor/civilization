@@ -1,4 +1,4 @@
-import { isWithinChance } from './random'
+import { getRandomInt, isWithinChance } from './random'
 
 describe('isWithinChance', () => {
   const mockMath = Object.create(global.Math)
@@ -86,4 +86,18 @@ describe('isWithinChance', () => {
     const result = isWithinChance(undefined as unknown as number)
     expect(result).toBe(false)
   })
+})
+
+describe('getRandomInt', () => {
+  const mockMath = Object.create(global.Math)
+
+  it('Should return a number between min and max', () => {
+    mockMath.random = () => .5
+    global.Math = mockMath
+
+    const result = getRandomInt(1, 10)
+    expect(result).toEqual(6)
+
+  })
+
 })
