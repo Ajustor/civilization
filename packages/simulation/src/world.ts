@@ -1,10 +1,10 @@
+import { Fire, Migration, RatInvasion } from './events'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
 import type { CivilizationType } from './types/civilization'
 import { Earthquake } from './events/earthquake'
 import { Events } from './events/enum'
-import { Migration } from './events'
 import { Starvation } from './events/starvation'
 import { WorldEvent } from './events/interface'
 import { formatCivilizations } from './formatters/civilization'
@@ -38,6 +38,8 @@ const AVAILABLE_EVENTS: {
   [Events.EARTHQUAKE]: () => new Earthquake(),
   [Events.STARVATION]: () => new Starvation(),
   [Events.MIGRATION]: () => new Migration(),
+  [Events.FIRE]: () => new Fire(),
+  [Events.RAT_INVASION]: () => new RatInvasion(),
 }
 
 export class World {

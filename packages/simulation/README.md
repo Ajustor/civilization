@@ -14,8 +14,15 @@ bun run src/index.ts
 ## Events 
 
 ### Earthquake
+* For each civilisation, a random quantity of building will be destroyed (up to the total number of building)
+* For each different building type, a random number of building will be destroyed until the total number is destroyed
 
 ### Starvation
+* World :
+  * A random quantity of food will disappear
+
+* Civilisation :
+  * A random quantity of food will be consumed
 
 ### Migration
 * outgoing migration
@@ -28,5 +35,10 @@ bun run src/index.ts
   * The population limitation is overidden
   * Incoming people age / health / occupation are randomised
 
+### Fire
+* Every wood resources in civilizations are destroyed
+
+### Rat invasion
+* Every food resources in civilizations are destroyed
 
 This project was created using `bun init` in bun v1.1.22. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
