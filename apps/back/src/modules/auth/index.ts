@@ -4,7 +4,7 @@ import { jwtMiddleware } from '../../libs/jwt'
 import { authorization } from '../../libs/handlers/authorization'
 import { addDays } from 'date-fns'
 import { logger } from '@bogeychan/elysia-logger'
-import { IForgetEmailTemplate } from '../../emailTemplates/i-forget'
+import { IForgetEmailTemplate } from '../../emailTemplates/i-forget.tsx'
 import { emailSender } from '../../libs/services/emailSender'
 
 export const authModule = new Elysia({ prefix: '/auth' })
