@@ -18,7 +18,7 @@ const EVENT_CHANCE = 70
 export type WorldInfos = {
   id: string
   name: string
-  resources: { type: ResourceTypes, quantity: number }[]
+  resources: { type: ResourceTypes; quantity: number }[]
   month: number
   year: number
   nextEvent: Events | null
@@ -29,7 +29,7 @@ const seasons = {
   spring: [0, 1, 2],
   summer: [3, 4, 5],
   automn: [6, 7, 8],
-  winter: [9, 10, 11]
+  winter: [9, 10, 11],
 }
 
 const AVAILABLE_EVENTS: {
@@ -49,12 +49,18 @@ export class World {
 
   public nextEvent: Events | null = null
 
-  constructor(private readonly name = 'The world', private month = 0) {
+  constructor(
+    private readonly name = 'The world',
+    private month = 0,
+  ) {
     this.id = ''
   }
 
   get season(): string {
-    const [currentSeason] = Object.entries(seasons).find(([_, months]) => months.includes(this.month % 12)) ?? []
+    const [currentSeason] =
+      Object.entries(seasons).find(([_, months]) =>
+        months.includes(this.month % 12),
+      ) ?? []
     return currentSeason ?? ''
   }
 
@@ -83,7 +89,7 @@ export class World {
   }
 
   getResource(type: ResourceTypes): Resource | undefined {
-    return this.resources.find(resource => resource.type === type)
+    return this.resources.find((resource) => resource.type === type)
   }
 
   decreaseResource(type: ResourceTypes, amount: number): void {
@@ -108,24 +114,45 @@ export class World {
     this.month++
     switch (this.season) {
       case 'spring': {
-        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 1.5))
-        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION * 1.1))
+        this.increaseResource(
+          ResourceTypes.FOOD,
+          ~~(BASE_FOOD_GENERATION * 1.5),
+        )
+        this.increaseResource(
+          ResourceTypes.WOOD,
+          ~~(BASE_WOOD_GENERATION * 1.1),
+        )
 
         break
       }
       case 'summer': {
-        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 1.75))
-        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION * 1.2))
+        this.increaseResource(
+          ResourceTypes.FOOD,
+          ~~(BASE_FOOD_GENERATION * 1.75),
+        )
+        this.increaseResource(
+          ResourceTypes.WOOD,
+          ~~(BASE_WOOD_GENERATION * 1.2),
+        )
         break
       }
       case 'automn': {
-        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 1.2))
-        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION))
+        this.increaseResource(
+          ResourceTypes.FOOD,
+          ~~(BASE_FOOD_GENERATION * 1.2),
+        )
+        this.increaseResource(ResourceTypes.WOOD, ~~BASE_WOOD_GENERATION)
         break
       }
       case 'winter': {
-        this.increaseResource(ResourceTypes.FOOD, ~~(BASE_FOOD_GENERATION * 0.5))
-        this.increaseResource(ResourceTypes.WOOD, ~~(BASE_WOOD_GENERATION * 0.75))
+        this.increaseResource(
+          ResourceTypes.FOOD,
+          ~~(BASE_FOOD_GENERATION * 0.5),
+        )
+        this.increaseResource(
+          ResourceTypes.WOOD,
+          ~~(BASE_WOOD_GENERATION * 0.75),
+        )
         break
       }
     }
@@ -138,7 +165,9 @@ export class World {
 
     this.createNextEvent()
 
-    await Promise.all(this._civilizations.map((civilization) => civilization.passAMonth(this)))
+    await Promise.all(
+      this._civilizations.map((civilization) => civilization.passAMonth(this)),
+    )
   }
 
   public getInfos(): WorldInfos {
@@ -149,10 +178,10 @@ export class World {
       month: this.month % 12,
       resources: this.resources.map((resource) => ({
         type: resource.type,
-        quantity: resource.quantity
+        quantity: resource.quantity,
       })),
       nextEvent: this.nextEvent,
-      year: this.getYear()
+      year: this.getYear(),
     }
   }
 
@@ -162,20 +191,31 @@ export class World {
       return
     }
 
-    const event = (Math.random() * 100)
+    const event = Math.random() * 100
 
     switch (true) {
-      case (20 > event && event > 0): {
+      case 20 > event && event > 0: {
         this.nextEvent = Events.EARTHQUAKE
         break
       }
-      case (50 > event && event > 20): {
+      case 40 > event && event > 20: {
         this.nextEvent = Events.EARTHQUAKE
+        break
+      }
+      case 60 > event && event > 40: {
+        this.nextEvent = Events.FIRE
+        break
+      }
+      case 80 > event && event > 60: {
+        this.nextEvent = Events.RAT_INVASION
+        break
+      }
+      case 100 > event && event > 80: {
+        this.nextEvent = Events.MIGRATION
         break
       }
       default:
         this.nextEvent = null
     }
   }
-
 }
