@@ -9,7 +9,7 @@ export class EmailSender {
   public async sendEmail(to: string, subject: string, template: ReactNode) {
     const { data, error } = await this.client.emails.send({
       from: 'My Civilizations <no-reply@civilizations.darthoit.eu>',
-      to: [to],
+      to,
       subject,
       react: template,
     })
