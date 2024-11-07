@@ -202,15 +202,15 @@ export class World {
         this.nextEvent = Events.EARTHQUAKE
         break
       }
-      case 60 > event && event > 40: {
+      case 50 > event && event > 40: {
         this.nextEvent = Events.FIRE
         break
       }
-      case 80 > event && event > 60: {
+      case 60 > event && event > 50: {
         this.nextEvent = Events.RAT_INVASION
         break
       }
-      case 100 > event && event > 80: {
+      case 100 > event && event > 60: {
         this.nextEvent = Events.MIGRATION
         break
       }
