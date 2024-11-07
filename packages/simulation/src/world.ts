@@ -194,28 +194,29 @@ export class World {
     const event = Math.random() * 100
 
     switch (true) {
-      case 20 > event && event > 0: {
+      case event < 20: {
         this.nextEvent = Events.EARTHQUAKE
         break
       }
-      case 40 > event && event > 20: {
+      case event < 40: {
         this.nextEvent = Events.EARTHQUAKE
         break
       }
-      case 50 > event && event > 40: {
+      case event < 50: {
         this.nextEvent = Events.FIRE
         break
       }
-      case 60 > event && event > 50: {
+      case event < 60: {
         this.nextEvent = Events.RAT_INVASION
         break
       }
-      case 100 > event && event > 60: {
+      case event < 80: {
         this.nextEvent = Events.MIGRATION
         break
       }
-      default:
+      default: {
         this.nextEvent = null
+      }
     }
   }
 }
