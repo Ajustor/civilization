@@ -3,7 +3,7 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button } from '$lib/components/ui/button'
-	import { Carrot, FlameKindling, Landmark, PersonStanding, Plus, Trash } from 'lucide-svelte'
+	import { Landmark, PersonStanding, Plus, Trash } from 'lucide-svelte'
 	import {
 		Dialog,
 		DialogTrigger,
@@ -38,16 +38,9 @@
 	} from '$lib/components/ui/alert-dialog'
 	import { type CivilizationType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
-	import Cuboid from 'lucide-svelte/icons/cuboid'
-	import { resourceNames } from '$lib/translations'
+	        import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
 
 	export let data: PageData
-
-	const resourceIcons = {
-		food: Carrot,
-		wood: FlameKindling,
-		stone: Cuboid
-	}
 
 	const form = superForm(data.civilizationCreationForm, {
 		validators: zodClient(newCivilizationSchema),
