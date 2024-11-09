@@ -20,6 +20,6 @@ export class CharcoalBurner implements UpgradedWork {
   }
 
   canWork(personAge: number): boolean {
-    return personAge >= 12 && personAge < 50
+    return personAge >= 12 && personAge < this.RETIREMENT_AGE
   }
 }
