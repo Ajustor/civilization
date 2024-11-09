@@ -33,8 +33,8 @@
 			}
 		}),
 		table.column({
-			accessor: 'capacity',
-			header: 'Capacité'
+			accessor: (content) => content.capacity ?? '',
+			header: 'Capacité / Unité restante'
 		}),
 		table.column({
 			accessor: 'count',
