@@ -351,11 +351,11 @@ export class Civilization {
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
 
-    const farmers = this.getPeopleWithOccupation(OccupationTypes.FARMER)
+    const gatherers = this.getPeopleWithOccupation(OccupationTypes.GATHERER)
     const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER)
 
     await Promise.all([
-      this.collectResource(farmers, world),
+      this.collectResource(gatherers, world),
       this.collectResource(woodCutters, world),
     ])
 
