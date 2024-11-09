@@ -24,7 +24,11 @@
 					return ''
 				}
 				return {
-					[BuildingTypes.HOUSE]: 'Maison'
+					[BuildingTypes.HOUSE]: 'Maison',
+					[BuildingTypes.FARM]: 'Ferme',
+					[BuildingTypes.KILN]: 'Charbonnière',
+					[BuildingTypes.MINE]: 'Mine',
+					[BuildingTypes.SAWMILL]: 'Scierie'
 				}[value]
 			}
 		}),
