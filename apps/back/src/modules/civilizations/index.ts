@@ -19,8 +19,8 @@ const INITIAL_CITIZEN_NUMBER = 6
 const INITIAL_CITIZEN_AGE = 12 * 16
 const INITIAL_CITIZEN_LIFE = 3
 const INITIAL_OCCUPATION_CHOICE = [
-  OccupationTypes.CARPENTER,
-  OccupationTypes.FARMER,
+  OccupationTypes.WOODCUTTER,
+  OccupationTypes.GATHERER,
 ]
 const INITIAL_CIVILIZATION_RESOURCES = {
   FOOD: 20,
