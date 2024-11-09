@@ -10,9 +10,9 @@ export const resourceNames: { [key in ResourceTypes]: string } = {
 }
 
 export const resourceIcons: { [key in ResourceTypes]: any } = {
-  food: getIcon('game-icon:carrot'),
-  wood: getIcon('game-icon:wood-pile'),
-  stone: getIcon('game-icon:stone-block'),
+  food: getIcon('game-icons:carrot'),
+  wood: getIcon('game-icons:wood-pile'),
+  stone: getIcon('game-icons:stone-block'),
   plank: getIcon('game-icons:planks'),
-  charcoal: getIcon('game-icon:charcoal')
+  charcoal: getIcon('game-icons:charcoal')
 }
