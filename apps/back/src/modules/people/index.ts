@@ -104,11 +104,10 @@ export const peopleModule = new Elysia({ prefix: '/people' })
   .get('/:civilizationId/stats/jobs', async ({ peopleService, params: { civilizationId } }) => {
     const jobs: { [key in OccupationTypes]?: number } = {}
 
-      ;[jobs.farmer, jobs.carpenter, jobs.retired] = await Promise.all([
-        peopleService.countPeopleWithJob(civilizationId, OccupationTypes.FARMER),
-        peopleService.countPeopleWithJob(civilizationId, OccupationTypes.CARPENTER),
-        peopleService.countPeopleWithJob(civilizationId, OccupationTypes.RETIRED)
-      ])
+    for (const job of Object.values(OccupationTypes)) {
+      const stat = await peopleService.countPeopleWithJob(civilizationId, job)
+      jobs[job] = stat
+    }
 
     return jobs
   })

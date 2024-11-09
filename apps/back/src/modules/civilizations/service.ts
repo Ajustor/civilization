@@ -20,8 +20,21 @@ import {
 import { PeopleService, personMapper } from '../people/service'
 import { arrayToMap } from '../../utils'
 import { AnyBulkWriteOperation } from 'mongoose'
+import { Farm } from '@ajustor/simulation/src/buildings/farm'
+import { Kiln } from '@ajustor/simulation/src/buildings/kiln'
+import { Mine } from '@ajustor/simulation/src/buildings/mine'
+import { Sawmill } from '@ajustor/simulation/src/buildings/sawmill'
+import { AbstractExtractionBuilding } from '@ajustor/simulation/src/types/building'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
+
+const BUILDING_CONSTRUCTORS = {
+  [BuildingTypes.FARM]: Farm,
+  [BuildingTypes.KILN]: Kiln,
+  [BuildingTypes.HOUSE]: House,
+  [BuildingTypes.SAWMILL]: Sawmill,
+  [BuildingTypes.MINE]: Mine,
+}
 
 export type MongoCivilizationType = CivilizationType & {
   resources: { quantity: number; resourceType: ResourceTypes }[]
@@ -47,12 +60,14 @@ export const civilizationMapper = (
   }
 
   for (const building of civilization.buildings) {
-    if (building.buildingType === BuildingTypes.HOUSE) {
-      const house = new House(building.capacity ?? 0)
-      house.count = building.count
+    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count)
 
-      builder.addBuilding(house)
+    if (buildingInstance instanceof AbstractExtractionBuilding && building.outputResources) {
+      buildingInstance.outputResources = building.outputResources
+      buildingInstance.capacity = building.capacity ?? 0
     }
+
+    builder.addBuilding(buildingInstance)
   }
 
   if (populate?.people && civilization.people) {
@@ -69,7 +84,7 @@ export type CivilizationPopulate = {
 }
 
 export class CivilizationService {
-  constructor(private readonly peopleService: PeopleService) {}
+  constructor(private readonly peopleService: PeopleService) { }
 
   async getAliveByWorldId(
     worldId: string,
