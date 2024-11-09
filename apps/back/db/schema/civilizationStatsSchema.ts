@@ -1,5 +1,6 @@
 import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
+import { Events } from '@ajustor/simulation'
 
 const statsPeopleSchema = new Schema({
   men: Number,
@@ -21,6 +22,11 @@ const civilizationStatsSchema = new Schema(
       type: [ResourceSchema],
       required: true,
       default: [],
+    },
+    event: {
+      type: String,
+      default: null,
+      enum: Events,
     },
     people: {
       type: statsPeopleSchema,

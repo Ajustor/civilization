@@ -1,14 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
-	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
+	import { ArrowLeft } from 'lucide-svelte'
 
-	import {
-		ResourceTypes,
-		type BuildingType,
-		type OccupationTypes,
-		type PeopleType
-	} from '@ajustor/simulation'
+	import { ResourceTypes, type BuildingType, type OccupationTypes } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -17,20 +12,14 @@
 		AccordionItem,
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
-	import { OCCUPATIONS, resourceNames } from '$lib/translations'
+	import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
-	import { callGetPeople, callGetPeopleStream } from '../../../services/sveltekit-api/people'
+	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
 	export let data: PageData
 
 	let pageIndex = 0
 	let pageSize = 10
-
-	const resourceIcons = {
-		food: Carrot,
-		wood: FlameKindling,
-		stone: Cuboid
-	}
 
 	const stringToColour = function (str: string) {
 		let hash = 0
@@ -63,7 +52,9 @@
 	const RESOURCES_INDEXES = {
 		[ResourceTypes.FOOD]: 0,
 		[ResourceTypes.WOOD]: 1,
-		[ResourceTypes.STONE]: 2
+		[ResourceTypes.STONE]: 2,
+		[ResourceTypes.PLANK]: 3,
+		[ResourceTypes.CHARCOAL]: 4
 	}
 </script>
 
@@ -102,7 +93,7 @@
 		<ul class="list-inside list-disc">
 			{#each data.civilization.resources as resource}
 				<IconText
-					iconComponent={resourceIcons[resource.type]}
+					icon={resourceIcons[resource.type]}
 					text="{resourceNames[resource.type]}: {resource.quantity}"
 				/>
 			{/each}

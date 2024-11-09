@@ -71,7 +71,7 @@ describe('CivilizationBuilder', () => {
   // Correctly adds multiple Buildings to the Civilization
   it('should add multiple Buildings to the Civilization', () => {
     const builder = new CivilizationBuilder()
-    const building1 = new House(4, 1)
+    const building1 = new House(1)
 
     const civilization = builder
       .addBuilding(building1)

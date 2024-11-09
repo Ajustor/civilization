@@ -3,11 +3,11 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import { getSeason } from '@ajustor/simulation'
-	import { Carrot, FlameKindling, Cuboid } from 'lucide-svelte'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import {
 		eventsDescription,
 		eventsName,
+		resourceIcons,
 		resourceNames,
 		seasonsTranslations
 	} from '$lib/translations'
@@ -16,12 +16,6 @@
 	export let data: PageData
 
 	let api: CarouselAPI
-
-	const resourceIcons = {
-		food: Carrot,
-		wood: FlameKindling,
-		stone: Cuboid
-	}
 </script>
 
 <svelte:head>
@@ -77,8 +71,6 @@
 						</div>
 					</div>
 					{#await data.lazy.worldsStats}
-						<div class="card skeleton rounded shadow-xl"></div>
-						<div class="card skeleton rounded shadow-xl"></div>
 						<div class="card skeleton rounded shadow-xl"></div>
 					{:then worldsStats}
 						{@const worldStats = worldsStats.get(world.id)}
@@ -159,7 +151,7 @@
 							<h2 class="card-title">Les ressources du monde</h2>
 							{#each world.resources as resource}
 								<IconText
-									iconComponent={resourceIcons[resource.type]}
+									icon={resourceIcons[resource.type]}
 									text="{resourceNames[resource.type]}: {resource.quantity} restante"
 								/>
 							{/each}

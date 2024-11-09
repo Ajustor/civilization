@@ -1,7 +1,15 @@
 import { Resource, ResourceTypes } from './resource'
 import { countries, uniqueNamesGenerator } from 'unique-names-generator'
 
-import type { Building } from './types/building'
+import {
+  AbstractExtractionBuilding,
+  AbstractProductionBuilding,
+  ExtractionBuilding,
+  type Building,
+  type ConstructionCost,
+  type ProductionBuilding,
+  type WorkerRequiredToBuild,
+} from './types/building'
 import { BuildingTypes } from './buildings/enum'
 import { Gender } from './people/enum'
 import { House } from './buildings/house'
@@ -11,12 +19,29 @@ import type { World } from './world'
 import { hasElementInCommon } from './utils/array'
 import { isWithinChance } from './utils'
 import { v4 } from 'uuid'
+import { OCCUPATION_TREE } from './technology/occupationTree'
+import { getRandomInt } from './utils/random'
+import { Kiln } from './buildings/kiln'
+import { Sawmill } from './buildings/sawmill'
+import { Farm } from './buildings/farm'
+import { Mine } from './buildings/mine'
 
 const PREGNANCY_PROBABILITY = 60
-const FARMER_RESOURCES_GET = 10
-const CARPENTER_RESOURCES_GET = 20
 const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
-const NUMBER_OF_WOMEN_CAN_TRY_TO_REPRODUCE = 100
+const PEOPLE_CHARCOAL_CAN_HEAT = 10
+const CHANCE_TO_EVOLVE = 25
+
+const BUILDING_CONSTRUCTORS = {
+  [BuildingTypes.FARM]: Farm,
+  [BuildingTypes.KILN]: Kiln,
+  [BuildingTypes.HOUSE]: House,
+  [BuildingTypes.SAWMILL]: Sawmill,
+  [BuildingTypes.MINE]: Mine,
+}
+
+const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
+  [BuildingTypes.MINE]: [ResourceTypes.STONE],
+}
 
 export class Civilization {
   public id = v4()
@@ -81,13 +106,49 @@ export class Civilization {
     )
   }
 
+  get sawmill(): Sawmill | undefined {
+    return this.buildings.find<Sawmill>(
+      (building): building is Sawmill =>
+        building.getType() === BuildingTypes.SAWMILL,
+    )
+  }
+
+  get mine(): Mine | undefined {
+    return this.buildings.find<Mine>(
+      (building): building is Mine => building.getType() === BuildingTypes.MINE,
+    )
+  }
+
+  get kiln(): Kiln | undefined {
+    return this.buildings.find<Kiln>(
+      (building): building is Kiln => building.getType() === BuildingTypes.KILN,
+    )
+  }
+
   set houses(house: House) {
     this.buildings.push(house)
   }
 
+  private getWorkerSpaceLeft(workerType: OccupationTypes): number {
+    const peopleWithOccupation = this.getPeopleWithOccupation(workerType).length
+    return (
+      this.buildings.reduce((space, building) => {
+        if (building instanceof AbstractProductionBuilding || building instanceof AbstractExtractionBuilding) {
+          const requiredWorker = building.workerTypeRequired.filter(
+            (worker) => worker.occupation === workerType,
+          )
+          if(!requiredWorker.length) {
+            return space
+          }
+          space += requiredWorker.reduce((sum, { count }) => sum + count, 0)
+        }
+        return space
+      }, 0) - peopleWithOccupation
+    )
+  }
+
   increaseResource(type: ResourceTypes, count: number) {
     const resource = this._resources.find((resource) => type === resource.type)
-
     if (!resource) {
       this._resources.push(new Resource(type, count))
     } else {
@@ -124,9 +185,7 @@ export class Civilization {
   }
 
   getPeopleOlderThan(age: number): People[] {
-    return this._people.filter(
-      ({ years }) => years >= age
-    )
+    return this._people.filter(({ years }) => years >= age)
   }
 
   removePeople(citizenIds: string[]) {
@@ -144,8 +203,17 @@ export class Civilization {
     return this._people.filter((worker) => worker.canRetire())
   }
 
-  addPeople(...people: People[]): void {
-    this._people.push(...people)
+  getWorkersWhoCanUpgrade(): People[] {
+    return this._people.filter(
+      (worker) =>
+        worker.work && OCCUPATION_TREE[worker.work.occupationType]?.length,
+    )
+  }
+
+  addPeople(...peoples: People[]): void {
+    for (const people of peoples) {
+      this._people.push(people)
+    }
   }
 
   addResource(...resources: Resource[]): void {
@@ -156,43 +224,48 @@ export class Civilization {
     this._buildings.push(...buildings)
   }
 
-  constructBuilding(type: BuildingTypes, capacity: number): void {
-    const woodResource = this._resources.find(
-      (res) => res.type === ResourceTypes.WOOD,
+  constructBuilding(type: BuildingTypes): void {
+    const existingBuilding = this.buildings.find(
+      (building) => building.getType() === type,
     )
-    if (
-      woodResource &&
-      woodResource.quantity >= 15 &&
-      type === BuildingTypes.HOUSE
-    ) {
-      woodResource.decrease(15)
-      this.houses ??= new House(capacity)
-      this.houses.count++
+
+    if (!existingBuilding) {
+      const newBuilding = new BUILDING_CONSTRUCTORS[type](1)
+
+      if (newBuilding instanceof AbstractExtractionBuilding) {
+        const buildingType = newBuilding.getType()
+        newBuilding.generateOutput(
+          (buildingType in EXTRACTIONS_RESOURCES &&
+            EXTRACTIONS_RESOURCES[buildingType]) ||
+          [],
+        )
+      }
+      this.addBuilding(newBuilding)
+      return
     }
+
+    if (existingBuilding instanceof AbstractExtractionBuilding) {
+      const buildingType = existingBuilding.getType()
+      existingBuilding.generateOutput(
+        (buildingType in EXTRACTIONS_RESOURCES &&
+          EXTRACTIONS_RESOURCES[buildingType]) ||
+        [],
+      )
+    }
+
+    existingBuilding.count++
   }
 
-  private collectResource(
-    workers: People[],
-    resource: Resource | undefined,
-    amountOfResourceCollected: number,
-    world: World,
-  ): Promise<number> {
+  private collectResource(workers: People[], world: World): Promise<null> {
     return new Promise((resolve) => {
-      let collectedResources = 0
-      if (resource?.quantity) {
-        for (const farmer of workers) {
-          const successfullyCollectResource = farmer.collectResource(
-            world,
-            amountOfResourceCollected,
-          )
-          if (!successfullyCollectResource) {
-            return resolve(collectedResources)
-          }
-          collectedResources += amountOfResourceCollected
+      for (const worker of workers) {
+        const successfullyCollectResource = worker.collectResource(world, this)
+        if (!successfullyCollectResource) {
+          return resolve(null)
         }
       }
 
-      resolve(collectedResources)
+      resolve(null)
     })
   }
 
@@ -202,6 +275,7 @@ export class Civilization {
   ): Promise<void> {
     const civilizationFood = this.getResource(ResourceTypes.FOOD)
     const civilizationWood = this.getResource(ResourceTypes.WOOD)
+    const civilizationCharcoal = this.getResource(ResourceTypes.CHARCOAL)
 
     const foodPromise = new Promise((resolve) => {
       // Handle food consumption and life counter
@@ -223,7 +297,7 @@ export class Civilization {
     const heatPromise = new Promise((resolve) => {
       // Handle wood consumption
 
-      if (civilizationWood) {
+      if (civilizationWood || civilizationCharcoal) {
         let requiredWoodQuantity = 0
 
         switch (world.season) {
@@ -239,7 +313,28 @@ export class Civilization {
           resolve(null)
         }
 
-        for (const person of people) {
+        const peopleHeatedWithCharcoal = Math.min(
+          civilizationCharcoal.quantity * PEOPLE_CHARCOAL_CAN_HEAT,
+          people.length,
+        )
+
+        let peopleDoesNotHaveHeat = [...people]
+
+        if (peopleHeatedWithCharcoal) {
+          peopleDoesNotHaveHeat = people.toSpliced(0, peopleHeatedWithCharcoal)
+          civilizationCharcoal.decrease(
+            Math.ceil(
+              (people.length - peopleDoesNotHaveHeat.length) /
+              PEOPLE_CHARCOAL_CAN_HEAT,
+            ),
+          )
+        }
+
+        if (!peopleDoesNotHaveHeat.length) {
+          return resolve(null)
+        }
+
+        for (const person of peopleDoesNotHaveHeat) {
           if (civilizationWood.quantity >= requiredWoodQuantity) {
             civilizationWood.decrease(requiredWoodQuantity)
           } else {
@@ -255,37 +350,14 @@ export class Civilization {
 
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
-    console.time(`CivilizationPassAMonth-${this.name}`)
-    const foodResource = world.getResource(ResourceTypes.FOOD)
-    const woodResource = world.getResource(ResourceTypes.WOOD)
-
-    const civilizationFood = this.getResource(ResourceTypes.FOOD)
-    const civilizationWood = this.getResource(ResourceTypes.WOOD)
 
     const farmers = this.getPeopleWithOccupation(OccupationTypes.FARMER)
-    const carpenters = this.getPeopleWithOccupation(OccupationTypes.CARPENTER)
+    const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER)
 
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'Base data retrieved from civilization',
-    )
-
-    const [foodCollected, woodCollected] = await Promise.all([
-      this.collectResource(farmers, foodResource, FARMER_RESOURCES_GET, world),
-      this.collectResource(
-        carpenters,
-        woodResource,
-        CARPENTER_RESOURCES_GET,
-        world,
-      ),
+    await Promise.all([
+      this.collectResource(farmers, world),
+      this.collectResource(woodCutters, world),
     ])
-
-    civilizationFood.increase(foodCollected)
-    civilizationWood.increase(woodCollected)
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'Resources collected',
-    )
 
     const people = this.people
       .toSorted(
@@ -295,39 +367,15 @@ export class Civilization {
 
     await this.resourceConsumption(world, people)
 
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'Resources consomed by people',
-    )
-
     // Age all people
     this._people.forEach((person) => person.ageOneMonth())
 
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'Everybody has agged',
-    )
-
     this.adaptPeopleJob()
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'Job adapted')
-
-    this.buildNewHouses()
-
-    console.timeLog(`CivilizationPassAMonth-${this.name}`, 'New houses builded')
+    this.buildNewBuilding()
 
     this.checkHabitations()
 
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'People without houses get cold',
-    )
-
     this.removeDeadPeople()
-
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'Dead people removed',
-    )
 
     const activePeopleCount = this.people.filter(
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
@@ -337,63 +385,245 @@ export class Civilization {
       await this.createNewPeople()
     }
 
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'New people was created',
-    )
     await this.birthAwaitingBabies()
-    console.timeLog(
-      `CivilizationPassAMonth-${this.name}`,
-      'New people was birth',
-    )
+
+    this.extractResources()
+    this.produceResources()
 
     if (!this.nobodyAlive()) {
       this.livedMonths++
     }
 
-    console.timeEnd(`CivilizationPassAMonth-${this.name}`)
+  }
+
+  private useProductionBuilding(building: ProductionBuilding) {
+    for (let i = building.count; i > 0; i--) {
+      const requiredWorkers = building.workerTypeRequired
+      const workerByTypes = new Map<OccupationTypes, People[]>()
+      const requiredResourceAmountIndexedByType = new Map<
+        ResourceTypes,
+        number
+      >()
+      for (const requiredWorker of requiredWorkers) {
+        const workers = this.getPeopleWithOccupation(
+          requiredWorker.occupation,
+        ).filter((people) => people.canWork())
+
+        if (workers.length < requiredWorker.count) {
+          return
+        }
+
+        workerByTypes.set(
+          requiredWorker.occupation,
+          workers.toSpliced(0, requiredWorker.count),
+        )
+      }
+
+      for (const requiredResources of building.inputResources) {
+        const resource = this.getResource(requiredResources.resource)
+
+        if (resource.quantity < requiredResources.amount) {
+          return
+        }
+
+        requiredResourceAmountIndexedByType.set(
+          requiredResources.resource,
+          requiredResources.amount,
+        )
+      }
+
+      for (const workers of workerByTypes.values()) {
+        for (const worker of workers) {
+          worker.hasWork = true
+        }
+      }
+
+      for (const [
+        resource,
+        amount,
+      ] of requiredResourceAmountIndexedByType.entries()) {
+        this.decreaseResource(resource, amount)
+      }
+
+      for (const producedResource of building.outputResources) {
+        this.increaseResource(
+          producedResource.resource,
+          producedResource.amount,
+        )
+      }
+    }
+  }
+
+  private extractResources() {
+    if (this.mine) {
+      this.extractResourcesFromBuilding(this.mine)
+    }
+  }
+
+  private extractResourcesFromBuilding(building: ExtractionBuilding) {
+    const resourcesProbabilities = building.outputResources
+    const requiredWorkers = building.workerTypeRequired
+    for (const requiredWorker of requiredWorkers) {
+      const worker = this.getPeopleWithOccupation(
+        requiredWorker.occupation,
+      ).find((people) => people.canWork())
+
+      if (!worker) {
+        return
+      }
+      worker.hasWork = true
+      for (const resource of resourcesProbabilities) {
+        if (isWithinChance(resource.probability)) {
+          const amount = getRandomInt(1, 100)
+          this.increaseResource(resource.resource, amount)
+          if (building.capacity) {
+            building.capacity -= amount
+          }
+
+          if (!building?.capacity) {
+            building.count = 0
+          }
+        }
+      }
+    }
+  }
+
+  private produceResources() {
+    if (this.sawmill) {
+      this.useProductionBuilding(this.sawmill)
+    }
+
+    if (this.kiln) {
+      this.useProductionBuilding(this.kiln)
+    }
+  }
+
+  private buildNewBuilding() {
+    this.buildNewHouses()
+    this.buildNew(
+      BuildingTypes.KILN,
+      Kiln.constructionCosts,
+      Kiln.workerRequiredToBuild,
+      Kiln.timeToBuild,
+    )
+    this.buildNew(
+      BuildingTypes.SAWMILL,
+      Sawmill.constructionCosts,
+      Sawmill.workerRequiredToBuild,
+      Sawmill.timeToBuild,
+    )
+    this.buildNew(
+      BuildingTypes.FARM,
+      Farm.constructionCosts,
+      Farm.workerRequiredToBuild,
+      Farm.timeToBuild,
+    )
+    if (!this.mine?.count) {
+      this.buildNew(
+        BuildingTypes.MINE,
+        Mine.constructionCosts,
+        Mine.workerRequiredToBuild,
+        Mine.timeToBuild,
+      )
+    }
   }
 
   private buildNewHouses() {
-    const civilizationWood = this.getResource(ResourceTypes.WOOD)
-
-    const housesTotalCapacity =
-      (this.houses?.capacity ?? 0) * (this.houses?.count ?? 0)
-    const carpentersNeeded = Math.ceil(
-      (this._people.length - housesTotalCapacity) / 4,
+    const canBuild = House.constructionCosts.every(
+      (cost) => this.getResource(cost.resource).quantity >= cost.amount,
     )
-    if (carpentersNeeded < 0) {
+    if (!canBuild) {
       return
     }
-    const filteredCarpenters = this.getPeopleWithOccupation(
-      OccupationTypes.CARPENTER,
-    ).filter(
-      (citizen) => citizen.work?.canWork(citizen.years) && !citizen.isBuilding,
-    )
-    const carpenters = filteredCarpenters.slice(
-      0,
-      Math.min(carpentersNeeded, filteredCarpenters.length),
+
+    const housesTotalCapacity = House.capacity * (this.houses?.count ?? 0)
+    const workerNeeded = Math.ceil(
+      (this._people.length - housesTotalCapacity) / House.capacity,
     )
 
-    for (const carpenter of carpenters) {
-      if (civilizationWood.quantity < 15) {
+    if (workerNeeded < 0) {
+      return
+    }
+    const filteredWorkers = this.people.filter((citizen) => citizen.canWork())
+    const workers = filteredWorkers.slice(
+      0,
+      Math.min(workerNeeded, filteredWorkers.length),
+    )
+
+    for (const worker of workers) {
+      const canContinueBuilding = House.constructionCosts.every(
+        (cost) => this.getResource(cost.resource).quantity >= cost.amount,
+      )
+
+      if (!canContinueBuilding) {
         return
       }
-      carpenter.startBuilding()
-      this.constructBuilding(BuildingTypes.HOUSE, 4)
+
+      for (const cost of House.constructionCosts) {
+        this.decreaseResource(cost.resource, cost.amount)
+      }
+
+      worker.startBuilding()
+      this.constructBuilding(BuildingTypes.HOUSE)
     }
+  }
+
+  private buildNew(
+    buildingType: BuildingTypes,
+    constructionCosts: ConstructionCost[],
+    workerRequiredToBuild: WorkerRequiredToBuild[],
+    timeToBuild: number,
+  ) {
+    const canBuild = constructionCosts.every(
+      (cost) => this.getResource(cost.resource).quantity >= cost.amount,
+    )
+    if (!canBuild) {
+      return
+    }
+
+    const workers = workerRequiredToBuild.reduce<People[]>(
+      (workers, workerRequired) => {
+        const availableWorkers = this.getPeopleWithOccupation(
+          workerRequired.occupation,
+        )
+        for (let i = 0; i < workerRequired.amount; i++) {
+          const worker = availableWorkers.find(
+            (citizen) =>
+              citizen.canWork() && !workers.find(({ id }) => id === citizen.id),
+          )
+          if (worker) {
+            workers.push(worker)
+          }
+        }
+        return workers
+      },
+      [],
+    )
+
+    if (
+      !workers.length ||
+      workers.length <
+      workerRequiredToBuild.reduce((sum, { amount }) => sum + amount, 0)
+    ) {
+      return
+    }
+    for (const worker of workers) {
+      worker.startBuilding(timeToBuild)
+    }
+
+    for (const cost of constructionCosts) {
+      this.decreaseResource(cost.resource, cost.amount)
+    }
+
+    this.constructBuilding(buildingType)
   }
 
   private checkHabitations() {
     let lastCitizenWithoutHouseIndex = 0
     if (this.houses) {
-      lastCitizenWithoutHouseIndex =
-        this.houses.capacity * this.houses.count - 1
+      lastCitizenWithoutHouseIndex = House.capacity * this.houses.count - 1
     }
-    const citizenWithoutHouse = this.people.slice(
-      lastCitizenWithoutHouseIndex,
-      undefined,
-    )
+    const citizenWithoutHouse = this.people.slice(lastCitizenWithoutHouseIndex)
 
     for (const citizen of citizenWithoutHouse) {
       citizen.decreaseLife()
@@ -404,6 +634,29 @@ export class Civilization {
     const workers = this.getWorkersWhoCanRetire()
     for (const citizen of workers) {
       citizen.setOccupation(OccupationTypes.RETIRED)
+    }
+
+    const workersCanUpgrade = this.getWorkersWhoCanUpgrade()
+    for (const worker of workersCanUpgrade) {
+      const hasChanceToEvolve = worker.work?.occupationType === OccupationTypes.CHILD || isWithinChance(CHANCE_TO_EVOLVE)
+      if (
+        hasChanceToEvolve &&
+        worker.work &&
+        worker.canUpgradeWork()
+      ) {
+        const newPossibleOccupations =
+          OCCUPATION_TREE[worker.work.occupationType] ?? []
+
+        if(!newPossibleOccupations.length) {
+          continue
+        }
+
+        const selectedNewOccupation = getRandomInt(0, newPossibleOccupations.length - 1)
+        const newOccupation = newPossibleOccupations[selectedNewOccupation]
+        if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
+          worker.setOccupation(newOccupation)
+        }
+      }
     }
   }
 
@@ -445,7 +698,6 @@ export class Civilization {
       if (eligibleMan) {
         eligiblePeople.push([woman, eligibleMan])
       }
-      // TODO: check if we need to remove the father from the available men
     }
 
     if (!eligiblePeople.length) {
@@ -460,19 +712,15 @@ export class Civilization {
               return resolve(null)
             }
 
-            const occupations = [
-              OccupationTypes.CARPENTER,
-              OccupationTypes.FARMER,
-            ]
             const genders = [Gender.FEMALE, Gender.MALE]
             const newPerson = new People({
               month: 0,
               gender:
                 genders[
-                  Math.min(
-                    Math.floor(Math.random() * genders.length),
-                    genders.length - 1,
-                  )
+                Math.min(
+                  Math.floor(Math.random() * genders.length),
+                  genders.length - 1,
+                )
                 ],
               lifeCounter: 2,
               lineage: {
@@ -497,12 +745,7 @@ export class Civilization {
               },
             })
             newPerson.setOccupation(
-              occupations[
-                Math.min(
-                  Math.floor(Math.random() * occupations.length),
-                  occupations.length - 1,
-                )
-              ],
+              OccupationTypes.CHILD
             )
 
             mother.addChildToBirth(newPerson)

@@ -1,6 +1,8 @@
 import { Events } from '@ajustor/simulation'
 
-export const eventsName = {
+type EventTranslations = {[key in Events]: string}
+
+export const eventsName: EventTranslations = {
   [Events.EARTHQUAKE]: 'Tremblement de terre',
   [Events.STARVATION]: 'Famine',
   [Events.MIGRATION]: 'Vague de migration',
@@ -8,7 +10,7 @@ export const eventsName = {
   [Events.RAT_INVASION]: 'Invasion de rat',
 }
 
-export const eventsDescription = {
+export const eventsDescription: EventTranslations = {
   [Events.EARTHQUAKE]: 'Un tremblement de terre qui ravage les bâtiments.',
   [Events.STARVATION]: 'Les gens ont faim ! Ils vident les réserves du monde et de la civilisation !',
   [Events.MIGRATION]: "Les gens se déplacent beaucoup en ce moment. Les variations de population risquent d'être importantes",

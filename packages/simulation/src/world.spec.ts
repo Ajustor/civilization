@@ -35,8 +35,8 @@ describe('World', () => {
   // Getting civilizations returns the correct list of civilizations
   it('should return correct list of civilizations when getting civilizations', () => {
     const world = new World()
-    const civilization1 = new Civilization('Civilization 1')
-    const civilization2 = new Civilization('Civilization 2')
+    const civilization1 = new Civilization('GET Civilization 1')
+    const civilization2 = new Civilization('GET Civilization 2')
     world.addCivilization(civilization1, civilization2)
     expect(world.civilizations).toEqual([civilization1, civilization2])
   })
@@ -44,8 +44,8 @@ describe('World', () => {
   // Adding civilizations updates the civilizations list
   it('should update civilizations list when civilizations are added', () => {
     const world = new World()
-    const civilization1 = new Civilization('Civilization 1')
-    const civilization2 = new Civilization('Civilization 2')
+    const civilization1 = new Civilization('UPDATE Civilization 1')
+    const civilization2 = new Civilization('UPDATE Civilization 2')
 
     world.addCivilization(civilization1, civilization2)
 
@@ -230,7 +230,7 @@ describe('World', () => {
     const worldFood = new Resource(ResourceTypes.FOOD, 5000)
     const worldWood = new Resource(ResourceTypes.WOOD, 2000)
     world.addResource(worldFood, worldWood)
-    const civilization1 = new Civilization('Civilization 1')
+    const civilization1 = new Civilization('FORMATTED Civilization 1')
     civilization1.id = 'civilizationId'
     const food = new Resource(ResourceTypes.FOOD, 500)
     const wood = new Resource(ResourceTypes.WOOD, 200)
@@ -242,7 +242,7 @@ describe('World', () => {
       id: '',
       name: 'The world',
       civilizations: [{
-        name: 'Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
+        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
           food.formatToType(),
           wood.formatToType()
         ]
