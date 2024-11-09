@@ -14,5 +14,5 @@ export const resourceIcons: { [key in ResourceTypes]: any } = {
   wood: getIcon('game-icons:wood-pile'),
   stone: getIcon('game-icons:stone-block'),
   plank: getIcon('game-icons:planks'),
-  charcoal: getIcon('game-icons:charcoal')
+  charcoal: getIcon('game-icons:coal-pile')
 }
