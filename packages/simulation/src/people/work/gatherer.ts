@@ -14,7 +14,7 @@ export class Gatherer implements Work {
 
   public RETIREMENT_AGE = 70
 
-  collectedResource: number = 5
+  collectedResource: number = 10
 
   get occupationType() {
     return OccupationTypes.GATHERER
@@ -32,7 +32,7 @@ export class Gatherer implements Work {
     const possibleResourceCollected = [ResourceTypes.FOOD, ResourceTypes.STONE]
     const resource = world.getResource(
       possibleResourceCollected[
-        getRandomInt(0, possibleResourceCollected.length - 1)
+      getRandomInt(0, possibleResourceCollected.length - 1)
       ],
     )
     if (resource) {
