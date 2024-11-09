@@ -1,15 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
-	import { ArrowLeft, Carrot, Cuboid, FlameKindling } from 'lucide-svelte'
+	import { ArrowLeft } from 'lucide-svelte'
 
-	import {
-		Resource,
-		ResourceTypes,
-		type BuildingType,
-		type OccupationTypes,
-		type PeopleType
-	} from '@ajustor/simulation'
+	import { ResourceTypes, type BuildingType, type OccupationTypes } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import {
@@ -20,7 +14,7 @@
 	} from '$lib/components/ui/accordion'
 	import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
-	import { callGetPeople, callGetPeopleStream } from '../../../services/sveltekit-api/people'
+	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
 	export let data: PageData
 
@@ -99,7 +93,7 @@
 		<ul class="list-inside list-disc">
 			{#each data.civilization.resources as resource}
 				<IconText
-					iconComponent={resourceIcons[resource.type]}
+					icon={resourceIcons[resource.type]}
 					text="{resourceNames[resource.type]}: {resource.quantity}"
 				/>
 			{/each}

@@ -1,5 +1,4 @@
 import type { ResourceTypes } from '@ajustor/simulation'
-import { getIcon } from '@iconify/svelte'
 
 export const resourceNames: { [key in ResourceTypes]: string } = {
   food: 'Nourriture',
@@ -10,9 +9,9 @@ export const resourceNames: { [key in ResourceTypes]: string } = {
 }
 
 export const resourceIcons: { [key in ResourceTypes]: any } = {
-  food: getIcon('game-icons:carrot'),
-  wood: getIcon('game-icons:wood-pile'),
-  stone: getIcon('game-icons:stone-block'),
-  plank: getIcon('game-icons:planks'),
-  charcoal: getIcon('game-icons:coal-pile')
+  food: 'lucide:carrot',
+  wood: 'game-icons:wood-pile',
+  stone: 'game-icons:stone-block',
+  plank: 'game-icons:planks',
+  charcoal: 'game-icons:coal-pile'
 }

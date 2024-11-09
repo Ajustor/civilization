@@ -50,7 +50,7 @@
 				<!-- content here -->
 				<Item title={world.name} class="grid grid-cols-1 gap-4 pl-0 md:grid-cols-2 lg:grid-cols-3">
 					<h2 class="text-center text-2xl md:col-span-2 lg:col-span-3">{world.name}</h2>
-					<div class="card rounded bg-neutral text-neutral-content shadow-xl">
+					<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 						<div class="card-body">
 							<h2 class="card-title">Calendrier</h2>
 							<p>Ce monde a {world.year} années</p>
@@ -82,7 +82,7 @@
 									<div class="card skeleton rounded shadow-xl"></div>
 								{:then deadCivilizations}
 									<!-- promise was fulfilled -->
-									<div class="card rounded bg-neutral text-neutral-content shadow-xl">
+									<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 										<div class="card-body">
 											<h2 class="card-title">Information sur les civilisations</h2>
 											<p>
@@ -100,7 +100,7 @@
 								<div class="card skeleton rounded shadow-xl"></div>
 							{:then topCivilizations}
 								{#if topCivilizations}
-									<div class="card rounded bg-neutral text-neutral-content shadow-xl">
+									<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 										<div class="card-body">
 											<h2 class="card-title">Classement des civilisations</h2>
 											{#if worldStats.topCivilizations}
@@ -121,7 +121,7 @@
 								<div class="card skeleton h-32 w-32 rounded shadow-lg md:col-span-2"></div>
 							{:then menAndWomenRatio}
 								{#if menAndWomenRatio}
-									<div class="card rounded bg-neutral text-neutral-content shadow-xl md:col-span-2">
+									<div class="card bg-neutral text-neutral-content rounded shadow-xl md:col-span-2">
 										<div class="card-body">
 											<h2 class="card-title">Rapport homme/femme dans le monde</h2>
 
@@ -145,13 +145,13 @@
 					{/await}
 
 					<div
-						class="card col-start-1 row-start-2 rounded bg-neutral text-neutral-content shadow-xl"
+						class="card bg-neutral text-neutral-content col-start-1 row-start-2 rounded shadow-xl"
 					>
 						<div class="card-body">
 							<h2 class="card-title">Les ressources du monde</h2>
 							{#each world.resources as resource}
 								<IconText
-									iconComponent={resourceIcons[resource.type]}
+									icon={resourceIcons[resource.type]}
 									text="{resourceNames[resource.type]}: {resource.quantity} restante"
 								/>
 							{/each}

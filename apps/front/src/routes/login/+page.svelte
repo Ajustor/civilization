@@ -56,7 +56,7 @@
 			toast.error("Merci d'entrer une adresse email")
 		}
 		await fetch('/login', { body: JSON.stringify({ email }), method: 'POST' })
-		redirect(302, '/login')
+		throw redirect(302, '/login')
 	}
 </script>
 

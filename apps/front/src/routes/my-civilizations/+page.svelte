@@ -170,15 +170,15 @@
 					</Button>
 				</span>
 			{:else}
-				<IconText iconComponent={PersonStanding} text={civilization.citizensCount} />
-				<IconText iconComponent={Landmark} text={civilization.buildings.length} />
+				<IconText icon={PersonStanding} text={civilization.citizensCount} />
+				<IconText icon={Landmark} text={civilization.buildings.length} />
 				<span>
 					Ressources:
 					<ul>
 						{#each civilization.resources as resource}
 							<li>
 								<IconText
-									iconComponent={resourceIcons[resource.type]}
+									icon={resourceIcons[resource.type]}
 									text="{resourceNames[resource.type]}: {resource.quantity} restante"
 								/>
 							</li>
