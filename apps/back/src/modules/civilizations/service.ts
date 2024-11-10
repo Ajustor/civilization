@@ -344,6 +344,7 @@ export class CivilizationService {
         quantity,
       })),
       people: newPeople,
+      buildings: civilization.buildings.map((building) => building.formatToType())
     })
 
     user.civilizations ??= []

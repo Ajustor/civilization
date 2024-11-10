@@ -1,6 +1,7 @@
 import {
   CivilizationBuilder,
   Gender,
+  House,
   OccupationTypes,
   People,
   Resource,
@@ -23,10 +24,14 @@ const INITIAL_OCCUPATION_CHOICE = [
   OccupationTypes.GATHERER,
 ]
 const INITIAL_CIVILIZATION_RESOURCES = {
-  FOOD: 20,
+  FOOD: 100,
   WOOD: 0,
   STONE: 0,
 }
+
+const INITIAL_CIVILIZATION_BUILDING = [
+  new House(2)
+]
 
 const civilizationServiceInstance = new CivilizationService(new PeopleService())
 
@@ -103,6 +108,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
             INITIAL_CIVILIZATION_RESOURCES.STONE,
           ),
         )
+        .addBuilding(...INITIAL_CIVILIZATION_BUILDING)
         .addCitizen(...people)
 
       await civilizationService.create(
