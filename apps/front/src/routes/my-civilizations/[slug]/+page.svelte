@@ -12,7 +12,7 @@
 		AccordionItem,
 		AccordionTrigger
 	} from '$lib/components/ui/accordion'
-	import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
+	import { OCCUPATIONS, resourceIcons, resourceNames, eventsName } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
@@ -108,7 +108,7 @@
 		{:then civilizationStats}
 			{@const resources = civilizationStats.map(({ resources }) => resources)}
 			{@const peoples = civilizationStats.map(({ people }) => people)}
-			{@const labels = civilizationStats.map(({ month }) => `Mois: ${month}`)}
+			{@const labels = civilizationStats.map(({ month, event }) => `Mois: ${month}${event ? ` (${eventsName[event]})`: ''})}
 			{#if resources.length}
 				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 					<div class="card-body">
