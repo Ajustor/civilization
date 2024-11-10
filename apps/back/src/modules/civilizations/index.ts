@@ -16,7 +16,7 @@ import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 import { PeopleService } from '../people/service'
 
-const INITIAL_CITIZEN_NUMBER = 6
+const INITIAL_CITIZEN_NUMBER = 20
 const INITIAL_CITIZEN_AGE = 12 * 16
 const INITIAL_CITIZEN_LIFE = 3
 const INITIAL_OCCUPATION_CHOICE = [
@@ -30,7 +30,7 @@ const INITIAL_CIVILIZATION_RESOURCES = {
 }
 
 const INITIAL_CIVILIZATION_BUILDING = [
-  new House(2)
+  new House(5)
 ]
 
 const civilizationServiceInstance = new CivilizationService(new PeopleService())
