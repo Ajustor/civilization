@@ -60,7 +60,7 @@ export const civilizationMapper = (
   }
 
   for (const building of civilization.buildings) {
-    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count)
+    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count ?? 1)
 
     if (buildingInstance instanceof AbstractExtractionBuilding && building.outputResources) {
       buildingInstance.outputResources = building.outputResources
@@ -433,10 +433,9 @@ export class CivilizationService {
           { _id: civilization.id },
           {
             buildings: civilization.buildings.map(
-              ({ count, getType, capacity }) => ({
-                capacity,
-                count,
-                buildingType: getType(),
+              (building) => ({
+                ...building.formatToType(),
+                buildingType: building.getType(),
               }),
             ),
             livedMonths: civilization.livedMonths,
