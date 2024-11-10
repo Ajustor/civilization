@@ -60,7 +60,7 @@ export const civilizationMapper = (
   }
 
   for (const building of civilization.buildings) {
-    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count ?? 1)
+    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count)
 
     if (buildingInstance instanceof AbstractExtractionBuilding && building.outputResources) {
       buildingInstance.outputResources = building.outputResources
