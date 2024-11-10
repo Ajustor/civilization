@@ -149,24 +149,24 @@
 			</CardTitle>
 		</CardHeader>
 		<CardContent class="flex flex-col gap-4">
-				<IconText icon={PersonStanding} text={civilization.citizensCount} />
-				<IconText icon={Landmark} text={civilization.buildings.length} />
-				<span>
-					Ressources:
-					<ul>
-						{#each civilization.resources as resource}
-							<li>
-								<IconText
-									icon={resourceIcons[resource.type]}
-									text="{resourceNames[resource.type]}: {resource.quantity} restante"
-								/>
-							</li>
-						{/each}
-					</ul>
-				</span>
-				<a class="btn btn-primary" href="/my-civilizations/{civilization.id}">
-					Voir le détail de la civilisation
-				</a>
+			<IconText icon={PersonStanding} text={civilization.citizensCount} />
+			<IconText icon={Landmark} text={civilization.buildings.length} />
+			<span>
+				Ressources:
+				<ul>
+					{#each civilization.resources as resource}
+						<li>
+							<IconText
+								icon={resourceIcons[resource.type]}
+								text="{resourceNames[resource.type]}: {resource.quantity} restante"
+							/>
+						</li>
+					{/each}
+				</ul>
+			</span>
+			<a class="btn btn-primary" href="/my-civilizations/{civilization.id}">
+        Voir le détail de la civilisation
+      </a>
 		</CardContent>
 	</Card>
 {/snippet}
