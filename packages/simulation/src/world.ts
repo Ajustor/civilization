@@ -202,11 +202,11 @@ export class World {
         this.nextEvent = Events.EARTHQUAKE
         break
       }
-      case event < 50: {
+      case event < 45: {
         this.nextEvent = Events.FIRE
         break
       }
-      case event < 60: {
+      case event < 50: {
         this.nextEvent = Events.RAT_INVASION
         break
       }
