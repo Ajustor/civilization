@@ -30,6 +30,7 @@ const PREGNANCY_PROBABILITY = 60
 const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
 const PEOPLE_CHARCOAL_CAN_HEAT = 10
 const CHANCE_TO_EVOLVE = 25
+const CHANCE_TO_BUILD_EVOLVED_BUILDING = 25
 
 const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
@@ -137,7 +138,7 @@ export class Civilization {
           const requiredWorker = building.workerTypeRequired.filter(
             (worker) => worker.occupation === workerType,
           )
-          if(!requiredWorker.length) {
+          if (!requiredWorker.length) {
             return space
           }
           space += requiredWorker.reduce((sum, { count }) => sum + count, 0)
@@ -500,31 +501,44 @@ export class Civilization {
 
   private buildNewBuilding() {
     this.buildNewHouses()
-    this.buildNew(
-      BuildingTypes.KILN,
-      Kiln.constructionCosts,
-      Kiln.workerRequiredToBuild,
-      Kiln.timeToBuild,
-    )
-    this.buildNew(
-      BuildingTypes.SAWMILL,
-      Sawmill.constructionCosts,
-      Sawmill.workerRequiredToBuild,
-      Sawmill.timeToBuild,
-    )
-    this.buildNew(
-      BuildingTypes.FARM,
-      Farm.constructionCosts,
-      Farm.workerRequiredToBuild,
-      Farm.timeToBuild,
-    )
-    if (!this.mine?.count) {
+    // TODO: create a new function to determine if building is full
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+
       this.buildNew(
-        BuildingTypes.MINE,
-        Mine.constructionCosts,
-        Mine.workerRequiredToBuild,
-        Mine.timeToBuild,
+        BuildingTypes.KILN,
+        Kiln.constructionCosts,
+        Kiln.workerRequiredToBuild,
+        Kiln.timeToBuild,
       )
+    }
+
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      this.buildNew(
+        BuildingTypes.SAWMILL,
+        Sawmill.constructionCosts,
+        Sawmill.workerRequiredToBuild,
+        Sawmill.timeToBuild,
+      )
+    }
+
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      this.buildNew(
+        BuildingTypes.FARM,
+        Farm.constructionCosts,
+        Farm.workerRequiredToBuild,
+        Farm.timeToBuild,
+      )
+    }
+
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      if (!this.mine?.count) {
+        this.buildNew(
+          BuildingTypes.MINE,
+          Mine.constructionCosts,
+          Mine.workerRequiredToBuild,
+          Mine.timeToBuild,
+        )
+      }
     }
   }
 
@@ -576,7 +590,7 @@ export class Civilization {
   ) {
     const canBuild = constructionCosts.every(
       (cost) => this.getResource(cost.resource).quantity >= cost.amount,
-    )
+    ) || !constructionCosts.length
     if (!canBuild) {
       return
     }
@@ -601,7 +615,6 @@ export class Civilization {
     )
 
     if (
-      !workers.length ||
       workers.length <
       workerRequiredToBuild.reduce((sum, { amount }) => sum + amount, 0)
     ) {
@@ -647,7 +660,7 @@ export class Civilization {
         const newPossibleOccupations =
           OCCUPATION_TREE[worker.work.occupationType] ?? []
 
-        if(!newPossibleOccupations.length) {
+        if (!newPossibleOccupations.length) {
           continue
         }
 
