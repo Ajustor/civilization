@@ -108,7 +108,7 @@
 		{:then civilizationStats}
 			{@const resources = civilizationStats.map(({ resources }) => resources)}
 			{@const peoples = civilizationStats.map(({ people }) => people)}
-			{@const labels = civilizationStats.map(({ month, event }) => `Mois: ${month}${event ? ` (${eventsName[event]})`: ''})`}
+			{@const labels = civilizationStats.map(({ month, event }) => `Mois: ${month}${event ? ` (${eventsName[event]})`: ''}`)}
 			{#if resources.length}
 				<div class="card bg-neutral text-neutral-content rounded shadow-xl">
 					<div class="card-body">
