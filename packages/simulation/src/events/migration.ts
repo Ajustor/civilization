@@ -48,7 +48,7 @@ export class Migration implements WorldEvent {
         (INCOMING_PEOPLE_RATE / 100)
       )
       const genders = [Gender.MALE, Gender.FEMALE]
-      const occupations = [OccupationTypes.CARPENTER, OccupationTypes.FARMER]
+      const occupations = [OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER]
 
       const incomingPeople = Array.from({ length: incomingPeopleCount }, () =>
         new PeopleBuilder()
