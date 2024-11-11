@@ -14,7 +14,7 @@ export class Gatherer implements Work {
 
   public RETIREMENT_AGE = 70
 
-  collectedResource: number = 10
+  collectedResource: number = 20
 
   get occupationType() {
     return OccupationTypes.GATHERER
