@@ -16,7 +16,7 @@ import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 import { PeopleService } from '../people/service'
 
-const INITIAL_CITIZEN_NUMBER = 20
+const INITIAL_CITIZEN_NUMBER = 40
 const INITIAL_CITIZEN_AGE = 12 * 16
 const INITIAL_CITIZEN_LIFE = 3
 const INITIAL_OCCUPATION_CHOICE = [
@@ -25,12 +25,12 @@ const INITIAL_OCCUPATION_CHOICE = [
 ]
 const INITIAL_CIVILIZATION_RESOURCES = {
   FOOD: 100,
-  WOOD: 0,
+  WOOD: 50,
   STONE: 0,
 }
 
 const INITIAL_CIVILIZATION_BUILDING = [
-  new House(5)
+  new House(Math.ceil(INITIAL_CITIZEN_NUMBER / 4))
 ]
 
 const civilizationServiceInstance = new CivilizationService(new PeopleService())
@@ -91,7 +91,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
 
         person.setOccupation(
           INITIAL_OCCUPATION_CHOICE[
-            Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)
+          Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)
           ],
         )
 
