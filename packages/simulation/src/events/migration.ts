@@ -17,6 +17,11 @@ export class Migration implements WorldEvent {
     civilizations,
   }: Required<Pick<ActionInput, 'civilizations'>>): void {
     for (const civilization of civilizations) {
+      
+      if(civilization.people.length < 100) {
+        continue
+      } 
+
       const INCOMING_PEOPLE_RATE = getRandomInt(0, MAXIMUM_INCOMING_PEOPLE_RATE)
       const OUTGOING_PEOPLE_RATE = getRandomInt(0, MAXIMUM_OUTGOING_PEOPLE_RATE)
 
