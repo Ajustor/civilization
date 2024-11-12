@@ -24,8 +24,8 @@ const INITIAL_OCCUPATION_CHOICE = [
   OccupationTypes.GATHERER,
 ]
 const INITIAL_CIVILIZATION_RESOURCES = {
-  FOOD: 100,
-  WOOD: 50,
+  FOOD: 400,
+  WOOD: 100,
   STONE: 0,
 }
 
