@@ -5,6 +5,7 @@ import {
   CivilizationBuilder,
   CivilizationType,
   House,
+  isExtractionBuilding,
   PeopleEntity,
   Resource,
   ResourceTypes,
@@ -20,11 +21,7 @@ import {
 import { PeopleService, personMapper } from '../people/service'
 import { arrayToMap } from '../../utils'
 import { AnyBulkWriteOperation } from 'mongoose'
-import { Farm } from '@ajustor/simulation/src/buildings/farm'
-import { Kiln } from '@ajustor/simulation/src/buildings/kiln'
-import { Mine } from '@ajustor/simulation/src/buildings/mine'
-import { Sawmill } from '@ajustor/simulation/src/buildings/sawmill'
-import { AbstractExtractionBuilding } from '@ajustor/simulation/src/types/building'
+import { Farm, Kiln, Mine, Sawmill } from '@ajustor/simulation'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -62,7 +59,7 @@ export const civilizationMapper = (
   for (const building of civilization.buildings) {
     const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count)
 
-    if (buildingInstance instanceof AbstractExtractionBuilding && building.outputResources) {
+    if (isExtractionBuilding(buildingInstance) && building.outputResources) {
       buildingInstance.outputResources = building.outputResources
       buildingInstance.capacity = building.capacity ?? 0
     }

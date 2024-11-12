@@ -1,6 +1,6 @@
 import { Resource, ResourceTypes } from './resource'
 
-import { Civilization } from './civilization'
+import { Civilization, isExtractionBuilding } from './civilization'
 import { People } from './people/people'
 import type { PeopleEntity } from './types/people'
 import type { ResourceType } from './types/resources'
@@ -10,7 +10,7 @@ export type { CivilizationType } from './types/civilization'
 export type { BuildingType } from './types/building'
 
 export { BuildingTypes } from './buildings/enum'
-export { House } from './buildings/house'
+export * from './buildings'
 
 export { OccupationTypes } from './people/work/enum'
 export { Gender } from './people/enum'
@@ -29,5 +29,5 @@ type PeopleType = PeopleEntity & {
 
 type CivilizationEntity = typeof Civilization
 
-export { World, Civilization, People, Resource, ResourceTypes }
+export { World, Civilization, People, Resource, ResourceTypes, isExtractionBuilding }
 export type { CivilizationEntity, PeopleType, ResourceType, PeopleEntity }

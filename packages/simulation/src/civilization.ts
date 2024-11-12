@@ -25,6 +25,7 @@ import { Kiln } from './buildings/kiln'
 import { Sawmill } from './buildings/sawmill'
 import { Farm } from './buildings/farm'
 import { Mine } from './buildings/mine'
+import { isExtractionOrProductionBuilding } from './buildings'
 
 const PREGNANCY_PROBABILITY = 60
 const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
@@ -43,6 +44,12 @@ const BUILDING_CONSTRUCTORS = {
 const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
   [BuildingTypes.MINE]: [ResourceTypes.STONE],
 }
+
+const EXTRACTIONS_BUILDINGS = [
+  BuildingTypes.MINE
+]
+
+export const isExtractionBuilding = (building: Building): building is AbstractExtractionBuilding => EXTRACTIONS_BUILDINGS.includes(building.getType())
 
 export class Civilization {
   public id = v4()
@@ -134,11 +141,11 @@ export class Civilization {
     const peopleWithOccupation = this.getPeopleWithOccupation(workerType).length
     return (
       this.buildings.reduce((space, building) => {
-        if (building instanceof AbstractProductionBuilding || building instanceof AbstractExtractionBuilding) {
+        if (isExtractionOrProductionBuilding(building)) {
           const requiredWorker = building.workerTypeRequired.filter(
             (worker) => worker.occupation === workerType,
           )
-          console.log('WORKER REQUIRED', {requiredWorker})
+          console.log('WORKER REQUIRED', { requiredWorker })
           if (!requiredWorker.length) {
             return space
           }
@@ -234,7 +241,7 @@ export class Civilization {
     if (!existingBuilding) {
       const newBuilding = new BUILDING_CONSTRUCTORS[type](1)
 
-      if (newBuilding instanceof AbstractExtractionBuilding) {
+      if (isExtractionBuilding(newBuilding)) {
         const buildingType = newBuilding.getType()
         newBuilding.generateOutput(
           (buildingType in EXTRACTIONS_RESOURCES &&
@@ -246,7 +253,7 @@ export class Civilization {
       return
     }
 
-    if (existingBuilding instanceof AbstractExtractionBuilding) {
+    if (isExtractionBuilding(existingBuilding)) {
       const buildingType = existingBuilding.getType()
       existingBuilding.generateOutput(
         (buildingType in EXTRACTIONS_RESOURCES &&
