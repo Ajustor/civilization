@@ -7,14 +7,12 @@ export class Fire implements WorldEvent {
   type = Events.FIRE
 
   actions({ civilizations }: Required<ActionInput>): void {
-    
     for (const civilization of civilizations) {
       const wood = civilization.getResource(ResourceTypes.WOOD)
 
       if (wood.quantity) {
-        wood.decrease(wood.quantity-100)
+        wood.decrease(wood.quantity - 100)
       }
     }
   }
-
 }

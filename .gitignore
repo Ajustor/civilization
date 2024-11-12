@@ -7,3 +7,5 @@ civ_server
 # Local Netlify folder
 .netlify
 dist
+
+apps/front/core.1

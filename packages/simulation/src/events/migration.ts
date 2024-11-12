@@ -17,34 +17,34 @@ export class Migration implements WorldEvent {
     civilizations,
   }: Required<Pick<ActionInput, 'civilizations'>>): void {
     for (const civilization of civilizations) {
-      
-      if(civilization.people.length < 100) {
+      if (civilization.people.length < 100) {
         continue
-      } 
+      }
 
       const INCOMING_PEOPLE_RATE = getRandomInt(0, MAXIMUM_INCOMING_PEOPLE_RATE)
       const OUTGOING_PEOPLE_RATE = getRandomInt(0, MAXIMUM_OUTGOING_PEOPLE_RATE)
 
-      const adults = civilization
-        .getPeopleOlderThan(MINIMUM_CONCEPTION_AGE)
-        .toSorted(() => Math.random() - 0.5)
+      const citizens = civilization.people.toSorted(() => Math.random() - 0.5)
 
-      let leavingPeopleCount = ~~(adults.length * (OUTGOING_PEOPLE_RATE / 100))
+      let leavingPeopleCount = ~~(
+        citizens.length *
+        (OUTGOING_PEOPLE_RATE / 100)
+      )
 
-      const leavingPeopleIds = adults.reduce<string[]>((acc, citizen) => {
+      const leavingPeopleIds = []
+
+      for (const citizen of citizens) {
         if (!leavingPeopleCount) {
-          return acc
+          break
         }
 
         const willMigrate = isWithinChance(50)
 
         if (!willMigrate) {
-          return acc
+          leavingPeopleIds.push(citizen.id)
+          leavingPeopleCount--
         }
-
-        leavingPeopleCount--
-        return [...acc, citizen.id]
-      }, [])
+      }
 
       civilization.removePeople(leavingPeopleIds)
 
