@@ -38,8 +38,8 @@
 	} from '$lib/components/ui/alert-dialog'
 	import { type CivilizationType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
-	import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
-  import {getIcon} from 'iconify/svelte'
+	import { resourceIcons, resourceNames } from '$lib/translations'
+
 	export let data: PageData
 
 	const form = superForm(data.civilizationCreationForm, {
@@ -134,7 +134,7 @@
 {/snippet}
 
 {#snippet civilizationInformations(civilization: CivilizationType)}
-	<Card class="card bg-neutral text-neutral-content relative shadow-xl">
+	<Card class="card relative bg-neutral text-neutral-content shadow-xl">
 		<CardHeader>
 			<CardTitle class="flex items-center justify-between">
 				{civilization.name}
@@ -165,8 +165,8 @@
 				</ul>
 			</span>
 			<a class="btn btn-primary" href="/my-civilizations/{civilization.id}">
-        Voir le détail de la civilisation
-      </a>
+				Voir le détail de la civilisation
+			</a>
 		</CardContent>
 	</Card>
 {/snippet}
@@ -175,7 +175,7 @@
 	{@render createCivilizationDialog()}
 	{#await data.myCivilizations}
 		<div
-			class="card skeleton bg-neutral text-neutral-content relative h-24 w-1/3 rounded shadow-xl"
+			class="card skeleton relative h-24 w-1/3 rounded bg-neutral text-neutral-content shadow-xl"
 		></div>
 	{:then myCivilizations}
 		{#if myCivilizations.length}
