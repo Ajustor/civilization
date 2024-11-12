@@ -138,6 +138,7 @@ export class Civilization {
           const requiredWorker = building.workerTypeRequired.filter(
             (worker) => worker.occupation === workerType,
           )
+          console.log('WORKER REQUIRED', {requiredWorker})
           if (!requiredWorker.length) {
             return space
           }
