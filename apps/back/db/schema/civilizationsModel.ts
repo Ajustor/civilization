@@ -1,4 +1,4 @@
-import { BuildingType, BuildingTypes, ResourceTypes } from '@ajustor/simulation'
+import { BuildingTypes, ResourceTypes } from '@ajustor/simulation'
 import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
 import {
@@ -15,7 +15,7 @@ const BuildingSchema = new Schema({
     type: String,
     enum: BuildingTypes,
   },
-  outputProbability: {
+  outputResources: {
     type: [
       {
         type: {
