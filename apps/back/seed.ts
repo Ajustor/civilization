@@ -9,26 +9,28 @@ async function seed(): Promise<void> {
     month: 0,
     resources: [
       {
-        resourceType: ResourceTypes.FOOD,
-        quantity: 10000
+        resourceType: ResourceTypes.RAW_FOOD,
+        quantity: 10000,
       },
       {
         resourceType: ResourceTypes.WOOD,
-        quantity: 5000
+        quantity: 5000,
       },
       {
         resourceType: ResourceTypes.STONE,
-        quantity: 5000
-      }
-    ]
+        quantity: 5000,
+      },
+    ],
   })
 
   console.log('World inserted')
-
 }
 
 try {
-  mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
+  mongoose.connection.on(
+    'error',
+    console.error.bind(console, 'MongoDB connection error:'),
+  )
   await mongoose.connect(Bun.env.mongoConnectString ?? '')
 
   console.log('MongoDB Connected')

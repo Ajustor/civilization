@@ -5,12 +5,12 @@ import {
   CivilizationBuilder,
   CivilizationType,
   House,
-  isExtractionBuilding,
   PeopleEntity,
   Resource,
   ResourceTypes,
+  isExtractionBuilding,
 } from '@ajustor/simulation'
-
+import { Campfire, Farm, Kiln, Mine, Sawmill } from '@ajustor/simulation'
 import {
   CivilizationModel,
   CivilizationStatsModel,
@@ -19,14 +19,15 @@ import {
   WorldModel,
 } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
-import { arrayToMap } from '../../utils'
+
 import { AnyBulkWriteOperation } from 'mongoose'
-import { Farm, Kiln, Mine, Sawmill } from '@ajustor/simulation'
+import { arrayToMap } from '../../utils'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
 const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
+  [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.KILN]: Kiln,
   [BuildingTypes.HOUSE]: House,
   [BuildingTypes.SAWMILL]: Sawmill,

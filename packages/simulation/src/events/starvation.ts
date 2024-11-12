@@ -6,7 +6,7 @@ export class Starvation implements WorldEvent {
   type = Events.STARVATION
 
   actions({ civilizations, world }: Required<ActionInput>): void {
-    const worldFood = world.getResource(ResourceTypes.FOOD)
+    const worldFood = world.getResource(ResourceTypes.RAW_FOOD)
 
     if (worldFood) {
       const randomDecrease = Math.floor(Math.random() * (worldFood.quantity))
@@ -15,7 +15,7 @@ export class Starvation implements WorldEvent {
     }
 
     for (const civilization of civilizations) {
-      const civilizationFood = civilization.getResource(ResourceTypes.FOOD)
+      const civilizationFood = civilization.getResource(ResourceTypes.RAW_FOOD)
 
       if (civilizationFood) {
         const randomDecrease = Math.floor(Math.random() * (civilizationFood.quantity))

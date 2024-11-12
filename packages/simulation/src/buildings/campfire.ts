@@ -10,16 +10,24 @@ import {
 } from '../types/building'
 import { BuildingTypes } from './enum'
 
-export class Farm extends AbstractProductionBuilding {
+export class Campfire extends AbstractProductionBuilding {
   constructor(public count = 0) {
     super()
   }
 
-  outputResources: ProduceResource[] = [
-    { amount: 25, resource: ResourceTypes.RAW_FOOD },
+  inputResources = [
+    {
+      resource: ResourceTypes.RAW_FOOD,
+      amount: 10,
+    },
   ]
+
+  outputResources: ProduceResource[] = [
+    { amount: 7, resource: ResourceTypes.COOKED_FOOD },
+  ]
+
   workerTypeRequired: WorkerRequired[] = [
-    { occupation: OccupationTypes.FARMER, count: 5 },
+    { occupation: OccupationTypes.GATHERER, count: 1 },
   ]
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
@@ -31,17 +39,13 @@ export class Farm extends AbstractProductionBuilding {
 
   public static constructionCosts: ConstructionCost[] = [
     {
-      resource: ResourceTypes.PLANK,
-      amount: 10,
-    },
-    {
-      resource: ResourceTypes.STONE,
-      amount: 10,
+      resource: ResourceTypes.WOOD,
+      amount: 15,
     },
   ]
 
   getType(): BuildingTypes {
-    return BuildingTypes.FARM
+    return BuildingTypes.CAMPFIRE
   }
 
   formatToType(): BuildingType {

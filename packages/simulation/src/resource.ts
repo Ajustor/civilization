@@ -2,15 +2,18 @@ import type { ResourceType } from '.'
 
 export enum ResourceTypes {
   WOOD = 'wood',
-  FOOD = 'food',
+  RAW_FOOD = 'food',
   STONE = 'stone',
   PLANK = 'plank',
-  CHARCOAL = 'charcoal'
+  CHARCOAL = 'charcoal',
+  COOKED_FOOD = 'cookedFood',
 }
 
 export class Resource {
-
-  constructor(private _type: ResourceTypes, private _quantity: number) {
+  constructor(
+    private _type: ResourceTypes,
+    private _quantity: number,
+  ) {
     if (!Object.values(ResourceTypes).includes(_type)) {
       throw new Error('Resource not implemented')
     }
@@ -41,7 +44,7 @@ export class Resource {
   formatToType(): ResourceType {
     return {
       quantity: this.quantity,
-      type: this.type
+      type: this.type,
     }
   }
 }

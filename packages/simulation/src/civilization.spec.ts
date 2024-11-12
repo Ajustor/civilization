@@ -2,18 +2,18 @@ const isWithinChance = jest.fn()
 
 jest.mock('./utils', () => ({ isWithinChance }))
 
-import { EAT_FACTOR, LIFE_EXPECTANCY, People } from './people/people'
+import { LIFE_EXPECTANCY, People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
+import { Farm } from './buildings/farm'
 import { Gender } from './people/enum'
 import { House } from './buildings/house'
+import { Kiln } from './buildings/kiln'
 import { OccupationTypes } from './people/work/enum'
 import { PeopleBuilder } from './builders'
-import { World } from './world'
 import { Sawmill } from './buildings/sawmill'
-import { Kiln } from './buildings/kiln'
-import { Farm } from './buildings/farm'
+import { World } from './world'
 
 describe('Civilization', () => {
   let civilization: Civilization
@@ -63,7 +63,7 @@ describe('Civilization', () => {
   it('should update resources list when adding resources', () => {
     const initialResourceCount = civilization.resources.length
 
-    civilization.addResource(new Resource(ResourceTypes.FOOD, 10))
+    civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 10))
 
     expect(civilization.resources.length).toBe(initialResourceCount + 1)
   })
@@ -78,10 +78,10 @@ describe('Civilization', () => {
   // Increasing resources updates the resource count correctly
   it('should increase the resource count correctly when a resource is added', () => {
     civilization.increaseResource(ResourceTypes.WOOD, 10)
-    civilization.increaseResource(ResourceTypes.FOOD, 5)
+    civilization.increaseResource(ResourceTypes.RAW_FOOD, 5)
 
     const woodResource = civilization.getResource(ResourceTypes.WOOD)
-    const foodResource = civilization.getResource(ResourceTypes.FOOD)
+    const foodResource = civilization.getResource(ResourceTypes.RAW_FOOD)
 
     expect(woodResource.quantity).toBe(10)
     expect(foodResource.quantity).toBe(5)
@@ -89,9 +89,9 @@ describe('Civilization', () => {
 
   // Decreasing resources updates the resource count correctly
   it('should update resource count correctly when decreasing resources', () => {
-    civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
-    civilization.decreaseResource(ResourceTypes.FOOD, 50)
-    const updatedFoodResource = civilization.getResource(ResourceTypes.FOOD)
+    civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
+    civilization.decreaseResource(ResourceTypes.RAW_FOOD, 50)
+    const updatedFoodResource = civilization.getResource(ResourceTypes.RAW_FOOD)
     expect(updatedFoodResource.quantity).toBe(50)
   })
 
@@ -111,10 +111,10 @@ describe('Civilization', () => {
     person.setOccupation(OccupationTypes.FARMER)
     person2.setOccupation(OccupationTypes.WOODCUTTER)
     civilization.addPeople(person, person2)
-    civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+    civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
     civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
     civilization.addBuilding(new House(1))
-    world.addResource(new Resource(ResourceTypes.FOOD, 200))
+    world.addResource(new Resource(ResourceTypes.RAW_FOOD, 200))
     world.addResource(new Resource(ResourceTypes.WOOD, 200))
 
     await civilization.passAMonth(world)
@@ -122,7 +122,7 @@ describe('Civilization', () => {
     expect(civilization.livedMonths).toBe(1)
     expect(
       civilization.resources.find(
-        (resource) => resource.type === ResourceTypes.FOOD,
+        (resource) => resource.type === ResourceTypes.RAW_FOOD,
       )?.quantity,
     ).toBeLessThan(100)
     expect(
@@ -297,9 +297,7 @@ describe('Civilization', () => {
       })
 
       it('should decrease required resources when building kiln', async () => {
-        civilization.addResource(
-          new Resource(ResourceTypes.STONE, 20),
-        )
+        civilization.addResource(new Resource(ResourceTypes.STONE, 20))
         const person1 = new PeopleBuilder()
           .withMonth(500)
           .withOccupation(OccupationTypes.WOODCUTTER)
@@ -501,7 +499,7 @@ describe('Civilization', () => {
 
         civilization.addPeople(person1, person2)
         civilization.addBuilding(new House(1))
-        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
         await civilization.passAMonth(world)
         const child = person1.child
 
@@ -519,9 +517,7 @@ describe('Civilization', () => {
           },
         })
         expect(child?.work).toBeDefined()
-        expect(
-          child!.work!.occupationType,
-        ).toBe(OccupationTypes.CHILD)
+        expect(child!.work!.occupationType).toBe(OccupationTypes.CHILD)
         expect(child?.gender).toBeDefined()
         expect(
           [Gender.FEMALE, Gender.MALE].includes(child!.gender),
@@ -551,7 +547,7 @@ describe('Civilization', () => {
 
         civilization.addPeople(person1, person2)
         civilization.addBuilding(new House(1))
-        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
         await civilization.passAMonth(world)
         const child = person1.child
 
@@ -595,7 +591,7 @@ describe('Civilization', () => {
 
         civilization.addPeople(person1, person2)
         civilization.addBuilding(new House(1))
-        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
         await civilization.passAMonth(world)
         const child = person1.child
 
@@ -639,7 +635,7 @@ describe('Civilization', () => {
 
         civilization.addPeople(person1, person2)
         civilization.addBuilding(new House(1), new Sawmill(1))
-        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
         civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
         await civilization.passAMonth(world)
 
@@ -668,7 +664,7 @@ describe('Civilization', () => {
 
         civilization.addPeople(person1, person2)
         civilization.addBuilding(new House(1), new Kiln(1))
-        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
         civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
         await civilization.passAMonth(world)
 
@@ -703,7 +699,7 @@ describe('Civilization', () => {
 
       civilization.addPeople(person1, person2)
       civilization.addBuilding(new House(1))
-      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
       await civilization.passAMonth(world)
       const child = person1.child
 
@@ -749,7 +745,7 @@ describe('Civilization', () => {
 
       civilization.addPeople(person1, person2)
       civilization.addBuilding(new House(1))
-      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
       await civilization.passAMonth(world)
       const child = person1.child
 
@@ -793,7 +789,7 @@ describe('Civilization', () => {
 
       civilization.addPeople(person1, person2)
       civilization.addBuilding(new House(1))
-      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
       await civilization.passAMonth(world)
       const child = person1.child
 
@@ -825,7 +821,7 @@ describe('Civilization', () => {
 
       civilization.addPeople(person1, person2)
       civilization.addBuilding(new House(1))
-      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
       await civilization.passAMonth(world)
       const child = person1.child
 
@@ -863,7 +859,7 @@ describe('Civilization', () => {
 
       civilization.addPeople(person1, person2)
       civilization.addBuilding(new House(1))
-      civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+      civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
       await civilization.passAMonth(world)
       const child = person1.child
 
@@ -873,7 +869,7 @@ describe('Civilization', () => {
     })
 
     describe('Resource consumption', () => {
-      it('Should eat food', async () => {
+      it('Should eat raw food', async () => {
         const person1 = new PeopleBuilder()
           .withGender(Gender.FEMALE)
           .withLifeCounter(12)
@@ -892,10 +888,43 @@ describe('Civilization', () => {
 
         civilization.addPeople(person1, person2)
         civilization.addBuilding(new House(1))
-        civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+        civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
         await civilization.passAMonth(world)
 
-        expect(civilization.getResource(ResourceTypes.FOOD).quantity).toBe(
+        expect(civilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(
+          100 -
+          civilization.people.reduce(
+            (acc, person) =>
+              EAT_FACTOR[person.work!.occupationType] * 2 + acc,
+            0,
+          ),
+        )
+      })
+
+      it('Should eat cooked food', async () => {
+        const person1 = new PeopleBuilder()
+          .withGender(Gender.FEMALE)
+          .withLifeCounter(10)
+          .withMonth(240)
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p1')
+          .build()
+        const person2 = new PeopleBuilder()
+          .withGender(Gender.MALE)
+          .withLifeCounter(12)
+          .withMonth(240)
+          .withOccupation(OccupationTypes.FARMER)
+          .withId('p2')
+          .build()
+
+        civilization.addPeople(person1, person2)
+        civilization.addBuilding(new House(1))
+        civilization.addResource(new Resource(ResourceTypes.COOKED_FOOD, 100))
+        await civilization.passAMonth(world)
+
+        expect(
+          civilization.getResource(ResourceTypes.COOKED_FOOD).quantity,
+        ).toBe(
           100 -
           civilization.people.reduce(
             (acc, person) => EAT_FACTOR[person.work!.occupationType] + acc,
@@ -926,7 +955,7 @@ describe('Civilization', () => {
           civilization.addPeople(person1, person2)
           civilization.addBuilding(new House(1))
           civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
-          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
           await civilization.passAMonth(world)
 
           expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(
@@ -955,7 +984,7 @@ describe('Civilization', () => {
           civilization.addPeople(person1, person2)
           civilization.addBuilding(new House(1))
           civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
-          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
           await civilization.passAMonth(world)
 
           expect(civilization.getResource(ResourceTypes.WOOD).quantity).toBe(
@@ -994,7 +1023,7 @@ describe('Civilization', () => {
           civilization.addBuilding(new House(1))
           civilization.addResource(new Resource(ResourceTypes.CHARCOAL, 100))
           civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
-          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
           await civilization.passAMonth(world)
 
           expect(
@@ -1023,7 +1052,7 @@ describe('Civilization', () => {
           civilization.addBuilding(new House(100))
           civilization.addResource(new Resource(ResourceTypes.CHARCOAL, 100))
           civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
-          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
           await civilization.passAMonth(world)
 
           expect(
@@ -1052,7 +1081,7 @@ describe('Civilization', () => {
           civilization.addBuilding(new House(100))
           civilization.addResource(new Resource(ResourceTypes.CHARCOAL, 100))
           civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
-          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
           await civilization.passAMonth(world)
 
           expect(
@@ -1094,7 +1123,7 @@ describe('Civilization', () => {
           civilization.addBuilding(new House(1))
           civilization.addResource(new Resource(ResourceTypes.CHARCOAL, 100))
           civilization.addResource(new Resource(ResourceTypes.WOOD, 100))
-          civilization.addResource(new Resource(ResourceTypes.FOOD, 100))
+          civilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
           await civilization.passAMonth(world)
 
           expect(

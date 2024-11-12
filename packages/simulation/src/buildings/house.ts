@@ -1,4 +1,3 @@
-import { ResourceTypes } from '../resource'
 import type {
   Building,
   BuildingType,
@@ -6,6 +5,7 @@ import type {
 } from '../types/building'
 
 import { BuildingTypes } from './enum'
+import { ResourceTypes } from '../resource'
 
 export class House implements Building {
   static capacity = 4

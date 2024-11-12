@@ -1,9 +1,9 @@
+import { Civilization } from '../../civilization'
 import { OccupationTypes } from './enum'
 import { ResourceTypes } from '../../resource'
 import type { Work } from './interface'
 import type { World } from '../../world'
 import { getRandomInt } from '../../utils/random'
-import { Civilization } from '../../civilization'
 
 const MINIMAL_AGE_TO_UPGRADE = 18
 
@@ -29,8 +29,10 @@ export class Gatherer implements Work {
   }
 
   collectResources(world: World, civilization: Civilization): boolean {
-    const possibleResourceCollected = [ResourceTypes.FOOD, ResourceTypes.STONE]
-
+    const possibleResourceCollected = [
+      ResourceTypes.RAW_FOOD,
+      ResourceTypes.STONE,
+    ]
     let worldResource = world.getResource(
       possibleResourceCollected[
       getRandomInt(0, possibleResourceCollected.length - 1)
@@ -38,7 +40,7 @@ export class Gatherer implements Work {
     )
 
     if(!worldResource?.quantity) {
-      worldResource = world.getResource(ResourceTypes.FOOD)
+      worldResource = world.getResource(ResourceTypes.RAW_FOOD)
     }
     
     if (worldResource) {

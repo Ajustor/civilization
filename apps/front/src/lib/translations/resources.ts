@@ -1,17 +1,19 @@
-import type { ResourceTypes } from '@ajustor/simulation'
+import { ResourceTypes } from '@ajustor/simulation'
 
 export const resourceNames: { [key in ResourceTypes]: string } = {
-  food: 'Nourriture',
-  wood: 'Bois',
-  stone: 'Pierre',
-  plank: 'Planche',
-  charcoal: 'Charbon'
+  [ResourceTypes.RAW_FOOD]: 'Nourriture',
+  [ResourceTypes.WOOD]: 'Bois',
+  [ResourceTypes.STONE]: 'Pierre',
+  [ResourceTypes.PLANK]: 'Planche',
+  [ResourceTypes.CHARCOAL]: 'Charbon',
+  [ResourceTypes.COOKED_FOOD] : 'Nourriture préparée'
 }
 
 export const resourceIcons: { [key in ResourceTypes]: any } = {
-  food: 'lucide:carrot',
-  wood: 'game-icons:wood-pile',
-  stone: 'game-icons:stone-block',
-  plank: 'game-icons:planks',
-  charcoal: 'game-icons:coal-pile'
+  [ResourceTypes.RAW_FOOD]: 'lucide:carrot',
+  [ResourceTypes.WOOD]: 'game-icons:wood-pile',
+  [ResourceTypes.STONE]: 'game-icons:stone-block',
+  [ResourceTypes.PLANK]: 'game-icons:planks',
+  [ResourceTypes.CHARCOAL]: 'game-icons:coal-pile',
+  [ResourceTypes.COOKED_FOOD]: 'game-icons:opened-food-can',
 }

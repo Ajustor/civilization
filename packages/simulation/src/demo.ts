@@ -7,7 +7,7 @@ import { OccupationTypes } from './people/work/enum'
 const world = new World()
 
 world.addResource(
-  new Resource(ResourceTypes.FOOD, 100),
+  new Resource(ResourceTypes.RAW_FOOD, 100),
   new Resource(ResourceTypes.WOOD, 10),
 )
 const myCivilization = new Civilization()
@@ -25,7 +25,7 @@ myCivilization.addPeople(alice)
 myCivilization.addPeople(bob)
 
 // Adding some resources
-myCivilization.addResource(new Resource(ResourceTypes.FOOD, 5))
+myCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 5))
 myCivilization.addResource(new Resource(ResourceTypes.WOOD, 0)) // Start with no wood
 
 function nextYear() {
