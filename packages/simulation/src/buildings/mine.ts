@@ -12,7 +12,7 @@ import { BuildingTypes } from './enum'
 
 export class Mine extends AbstractExtractionBuilding {
   workerTypeRequired: WorkerRequired[] = [
-    { occupation: OccupationTypes.MINER, count: 20 },
+    { occupation: OccupationTypes.MINER, count: 10 },
   ]
   outputResources: ExtractedResource[] = []
   capacity = getRandomInt(1000, 100_000)
