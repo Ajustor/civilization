@@ -411,7 +411,7 @@ export class Civilization {
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
     if (
       activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
-      children.length < adults.length * 1/3
+      children.length < adults.length * 1 / 3
     ) {
       await this.createNewPeople()
     }
