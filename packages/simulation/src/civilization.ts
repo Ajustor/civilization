@@ -660,6 +660,8 @@ export class Civilization {
           continue
         }
 
+        console.log('TRY TO UPGRADING WORKER FROM', { currentOccupation: worker.work.occupationType, newOccupation: newPossibleOccupations })
+
         const selectedNewOccupation = getRandomInt(0, newPossibleOccupations.length - 1)
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
         if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
