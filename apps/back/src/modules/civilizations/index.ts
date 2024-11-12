@@ -16,7 +16,7 @@ import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 
-const INITIAL_CITIZEN_NUMBER = 40
+const INITIAL_CITIZEN_NUMBER = 50
 const INITIAL_CITIZEN_AGE = 12 * 16
 const INITIAL_CITIZEN_LIFE = 3
 const INITIAL_OCCUPATION_CHOICE = [
@@ -24,7 +24,7 @@ const INITIAL_OCCUPATION_CHOICE = [
   OccupationTypes.GATHERER,
 ]
 const INITIAL_CIVILIZATION_RESOURCES = {
-  RAW_FOOD: 400,
+  RAW_FOOD: 1000,
   WOOD: 100,
   STONE: 0,
 }
