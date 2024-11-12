@@ -30,7 +30,7 @@ import { isExtractionOrProductionBuilding } from './buildings'
 const PREGNANCY_PROBABILITY = 60
 const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
 const PEOPLE_CHARCOAL_CAN_HEAT = 10
-const CHANCE_TO_EVOLVE = 50
+const CHANCE_TO_EVOLVE = 20
 const CHANCE_TO_BUILD_EVOLVED_BUILDING = 25
 
 const BUILDING_CONSTRUCTORS = {
@@ -145,7 +145,6 @@ export class Civilization {
           const requiredWorker = building.workerTypeRequired.filter(
             (worker) => worker.occupation === workerType,
           )
-          console.log('WORKER REQUIRED', { requiredWorker })
           if (!requiredWorker.length) {
             return space
           }
@@ -670,7 +669,6 @@ export class Civilization {
 
         const selectedNewOccupation = getRandomInt(0, newPossibleOccupations.length - 1)
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
-        console.log(this.name, 'TRY TO UPGRADING WORKER FROM', { currentOccupation: worker.work.occupationType, newOccupation, spaceLeft: this.getWorkerSpaceLeft(newOccupation) })
         if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
           worker.setOccupation(newOccupation)
         }
