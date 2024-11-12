@@ -2,10 +2,8 @@ import { BuildingTypes, ResourceTypes } from '@ajustor/simulation'
 import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
 import {
-  CivilizationModel,
-  PersonModel,
-  UserModel,
-  WorldModel,
+  CivilizationModel, UserModel,
+  WorldModel
 } from '../../src/libs/database/models'
 
 const BuildingSchema = new Schema({
@@ -73,9 +71,6 @@ civilizationSchema.pre('deleteOne', async function () {
     throw new Error('It seams to have a big issue')
   }
 
-  await PersonModel.deleteMany({
-    _id: { $in: civilization.people.map(({ id }) => id) },
-  })
   await WorldModel.updateMany({}, { $pull: { civilizations: civilizationId } })
   await UserModel.updateMany({}, { $pull: { civilizations: civilizationId } })
 })

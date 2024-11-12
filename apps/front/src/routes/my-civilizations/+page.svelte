@@ -134,7 +134,7 @@
 {/snippet}
 
 {#snippet civilizationInformations(civilization: CivilizationType)}
-	<Card class="card relative bg-neutral text-neutral-content shadow-xl">
+	<Card class="card bg-neutral text-neutral-content relative shadow-xl">
 		<CardHeader>
 			<CardTitle class="flex items-center justify-between">
 				{civilization.name}
@@ -175,7 +175,7 @@
 	{@render createCivilizationDialog()}
 	{#await data.myCivilizations}
 		<div
-			class="card skeleton relative h-24 w-1/3 rounded bg-neutral text-neutral-content shadow-xl"
+			class="card skeleton bg-neutral text-neutral-content relative h-24 w-1/3 rounded shadow-xl"
 		></div>
 	{:then myCivilizations}
 		{#if myCivilizations.length}

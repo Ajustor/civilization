@@ -17,7 +17,7 @@ import { People } from './people/people'
 import type { World } from './world'
 import { hasElementInCommon } from './utils/array'
 import { isWithinChance } from './utils'
-import { v4, v5 } from 'uuid'
+import { v4 } from 'uuid'
 import { OCCUPATION_TREE } from './technology/occupationTree'
 import { getRandomInt } from './utils/random'
 import { Kiln } from './buildings/kiln'
@@ -163,7 +163,7 @@ export class Civilization {
           if (!requiredWorker.length) {
             return space
           }
-          space += requiredWorker.reduce((sum, { count }) => sum + count, 0)
+          space += requiredWorker.reduce((sum, { count }) => sum + count, 0) * building.count
         }
         return space
       }, 0) - peopleWithOccupation
@@ -399,11 +399,7 @@ export class Civilization {
     // Age all people
     this._people.forEach((person) => person.ageOneMonth())
 
-    this.adaptPeopleJob()
-    this.buildNewBuilding()
-
     this.checkHousing()
-
     this.removeDeadPeople()
 
     const activePeopleCount = this.people.filter(
@@ -424,6 +420,9 @@ export class Civilization {
 
     this.extractResources()
     this.produceResources()
+
+    this.adaptPeopleJob()
+    this.buildNewBuilding()
 
     if (!this.nobodyAlive()) {
       this.livedMonths++
@@ -451,7 +450,7 @@ export class Civilization {
 
         workerByTypes.set(
           requiredWorker.occupation,
-          workers.toSpliced(0, requiredWorker.count),
+          workers.splice(0, requiredWorker.count),
         )
       }
 
@@ -476,7 +475,6 @@ export class Civilization {
           availableWorkers++
         }
       }
-
       const productionRatio = availableWorkers / workerRequiredCount
       for (const [
         resource,
@@ -723,6 +721,7 @@ export class Civilization {
           newPossibleOccupations.length - 1,
         )
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
+
         if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
           worker.setOccupation(newOccupation)
         }
