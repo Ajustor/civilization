@@ -463,7 +463,7 @@ export class Civilization {
       for (const producedResource of building.outputResources) {
         this.increaseResource(
           producedResource.resource,
-          producedResource.amount * productionRatio,
+          Math.ceil(producedResource.amount * productionRatio),
         )
       }
     }
