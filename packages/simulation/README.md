@@ -25,6 +25,7 @@ bun run src/index.ts
   * A random quantity of food will be consumed
 
 ### Migration
+* apply only if civilization people is greater than 100
 * outgoing migration
   * Up to MAXIMUM_OUTGOING_PEOPLE_RATE are removed from the population
   * Only retired and working people can go
