@@ -459,9 +459,6 @@ export class CivilizationService {
       civilizations: CivilizationType[]
     }>({
       path: 'civilizations',
-      populate: {
-        path: 'people',
-      },
     })
 
     const civilizationToDelete = user?.civilizations.find(
@@ -472,6 +469,8 @@ export class CivilizationService {
       throw new Error('No civilization found')
     }
 
+    await PersonModel.deleteMany({ _id: { $in: civilizationToDelete.people } })
+    await CivilizationStatsModel.deleteMany({ civilizationId })
     await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
   }
 

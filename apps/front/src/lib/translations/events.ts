@@ -1,6 +1,6 @@
 import { Events } from '@ajustor/simulation'
 
-type EventTranslations = {[key in Events]: string}
+type EventTranslations = { [key in Events]: string }
 
 export const eventsName: EventTranslations = {
   [Events.EARTHQUAKE]: 'Tremblement de terre',

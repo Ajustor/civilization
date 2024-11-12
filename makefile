@@ -50,3 +50,6 @@ build-back:
 	docker compose run --rm back bun run build
 
 build: build-back build-front
+
+passAMonth:
+	docker compose run --rm back bun run passAMonth
