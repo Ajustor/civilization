@@ -3,7 +3,7 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button } from '$lib/components/ui/button'
-	import { Landmark, PersonStanding, Plus, Trash } from 'lucide-svelte'
+	import { Plus, Trash } from 'lucide-svelte'
 	import {
 		Dialog,
 		DialogTrigger,
@@ -38,8 +38,8 @@
 	} from '$lib/components/ui/alert-dialog'
 	import { type CivilizationType } from '@ajustor/simulation'
 	import IconText from '$lib/components/IconText/icon-text.svelte'
-	        import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
-
+	import { OCCUPATIONS, resourceIcons, resourceNames } from '$lib/translations'
+  import {getIcon} from 'iconify/svelte'
 	export let data: PageData
 
 	const form = superForm(data.civilizationCreationForm, {
@@ -149,8 +149,8 @@
 			</CardTitle>
 		</CardHeader>
 		<CardContent class="flex flex-col gap-4">
-			<IconText icon={PersonStanding} text={civilization.citizensCount} />
-			<IconText icon={Landmark} text={civilization.buildings.length} />
+			<IconText icon="lucide:person-standing" text={civilization.citizensCount} />
+			<IconText icon="lucide:landmark" text={civilization.buildings.length} />
 			<span>
 				Ressources:
 				<ul>

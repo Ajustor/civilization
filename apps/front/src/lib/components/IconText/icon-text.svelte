@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte'
 
-	export let icon
+	export let icon: string
 	export let text: string | number | undefined
 </script>
 
