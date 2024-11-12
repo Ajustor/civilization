@@ -260,12 +260,8 @@ export class Civilization {
   private collectResource(workers: People[], world: World): Promise<null> {
     return new Promise((resolve) => {
       for (const worker of workers) {
-        const successfullyCollectResource = worker.collectResource(world, this)
-        if (!successfullyCollectResource) {
-          return resolve(null)
-        }
+        worker.collectResource(world, this)
       }
-
       resolve(null)
     })
   }

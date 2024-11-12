@@ -30,6 +30,7 @@ export class Gatherer implements Work {
 
   collectResources(world: World, civilization: Civilization): boolean {
     const possibleResourceCollected = [ResourceTypes.FOOD, ResourceTypes.STONE]
+
     const worldResource = world.getResource(
       possibleResourceCollected[
       getRandomInt(0, possibleResourceCollected.length - 1)
