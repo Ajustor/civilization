@@ -3,7 +3,6 @@ import { countries, uniqueNamesGenerator } from 'unique-names-generator'
 
 import {
   AbstractExtractionBuilding,
-  AbstractProductionBuilding,
   ExtractionBuilding,
   type Building,
   type ConstructionCost,
@@ -385,7 +384,10 @@ export class Civilization {
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
     ).length
 
-    if (activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION) {
+    // Allow only half people to be child
+    const children = this.getPeopleWithOccupation(OccupationTypes.CHILD)
+    const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
+    if (activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION && children.length < adults.length / 2) {
       await this.createNewPeople()
     }
 
