@@ -13,7 +13,7 @@ import { isWithinChance } from './utils'
 export const BASE_FOOD_GENERATION = 30_000_000
 export const BASE_WOOD_GENERATION = 15_000_000
 
-const EVENT_CHANCE = 60
+const EVENT_CHANCE = 30
 
 export type WorldInfos = {
   id: string
