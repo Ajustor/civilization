@@ -16,7 +16,7 @@ export class Farm extends AbstractProductionBuilding {
   }
 
   outputResources: ProduceResource[] = [
-    { amount: 25, resource: ResourceTypes.RAW_FOOD },
+    { amount: 100, resource: ResourceTypes.RAW_FOOD },
   ]
   workerTypeRequired: WorkerRequired[] = [
     { occupation: OccupationTypes.FARMER, count: 5 },
