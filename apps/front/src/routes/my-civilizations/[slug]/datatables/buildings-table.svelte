@@ -28,7 +28,8 @@
 					[BuildingTypes.FARM]: 'Ferme',
 					[BuildingTypes.KILN]: 'Charbonnière',
 					[BuildingTypes.MINE]: 'Mine',
-					[BuildingTypes.SAWMILL]: 'Scierie'
+					[BuildingTypes.SAWMILL]: 'Scierie',
+					[BuildingTypes.CAMPFIRE]: 'Feu de camp'
 				}[value]
 			}
 		}),

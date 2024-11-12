@@ -50,7 +50,6 @@ export class Campfire extends AbstractProductionBuilding {
 
   formatToType(): BuildingType {
     return {
-      capacity: 0,
       type: this.getType(),
       count: this.count,
     }

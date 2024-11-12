@@ -17,7 +17,7 @@ import { People } from './people/people'
 import type { World } from './world'
 import { hasElementInCommon } from './utils/array'
 import { isWithinChance } from './utils'
-import { v4 } from 'uuid'
+import { v4, v5 } from 'uuid'
 import { OCCUPATION_TREE } from './technology/occupationTree'
 import { getRandomInt } from './utils/random'
 import { Kiln } from './buildings/kiln'
@@ -313,6 +313,7 @@ export class Civilization {
           const eatFactor = person.eatFactor * 2
           if (civilizationFood.quantity >= eatFactor) {
             civilizationFood.decrease(eatFactor)
+            person.increaseLife(0.5)
             continue
           }
         }
@@ -438,7 +439,10 @@ export class Civilization {
         number
       >()
 
-      const workerRequiredCount = requiredWorkers.reduce((count, { count: amount }) => count + amount, 0)
+      const workerRequiredCount = requiredWorkers.reduce(
+        (count, { count: amount }) => count + amount,
+        0,
+      )
 
       for (const requiredWorker of requiredWorkers) {
         const workers = this.getPeopleWithOccupation(
@@ -569,6 +573,15 @@ export class Civilization {
         Farm.constructionCosts,
         Farm.workerRequiredToBuild,
         Farm.timeToBuild,
+      )
+    }
+
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      this.buildNew(
+        BuildingTypes.CAMPFIRE,
+        Campfire.constructionCosts,
+        Campfire.workerRequiredToBuild,
+        Campfire.timeToBuild,
       )
     }
 

@@ -2,19 +2,18 @@ const isWithinChance = jest.fn()
 
 jest.mock('./utils', () => ({ isWithinChance }))
 
-import { EAT_FACTOR, LIFE_EXPECTANCY, People } from './people/people'
+import { LIFE_EXPECTANCY, People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
+import { Farm } from './buildings/farm'
 import { Gender } from './people/enum'
 import { House } from './buildings/house'
+import { Kiln } from './buildings/kiln'
 import { OccupationTypes } from './people/work/enum'
 import { PeopleBuilder } from './builders'
-import { World } from './world'
 import { Sawmill } from './buildings/sawmill'
-import { Kiln } from './buildings/kiln'
-import { Farm } from './buildings/farm'
-import { Campfire } from './buildings/campfire'
+import { World } from './world'
 
 describe('Civilization', () => {
   let civilization: Civilization

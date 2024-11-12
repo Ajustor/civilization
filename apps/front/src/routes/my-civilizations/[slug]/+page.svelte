@@ -56,11 +56,12 @@
 	}
 
 	const RESOURCES_INDEXES = {
-		[ResourceTypes.FOOD]: 0,
-		[ResourceTypes.WOOD]: 1,
-		[ResourceTypes.STONE]: 2,
-		[ResourceTypes.PLANK]: 3,
-		[ResourceTypes.CHARCOAL]: 4
+		[ResourceTypes.RAW_FOOD]: 0,
+		[ResourceTypes.COOKED_FOOD]: 1,
+		[ResourceTypes.WOOD]: 2,
+		[ResourceTypes.STONE]: 3,
+		[ResourceTypes.PLANK]: 4,
+		[ResourceTypes.CHARCOAL]: 5
 	}
 </script>
 

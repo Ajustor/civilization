@@ -6,7 +6,7 @@ export enum ResourceTypes {
   STONE = 'stone',
   PLANK = 'plank',
   CHARCOAL = 'charcoal',
-  COOKED_FOOD = 'cooked food',
+  COOKED_FOOD = 'cookedFood',
 }
 
 export class Resource {
