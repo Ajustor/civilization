@@ -29,16 +29,16 @@ export class Gatherer implements Work {
   }
 
   collectResources(world: World, civilization: Civilization): boolean {
-    const possibleResourceCollected = [ResourceTypes.FOOD, ResourceTypes.STONE, ResourceTypes.FOOD]
-    const resource = world.getResource(
+    const possibleResourceCollected = [ResourceTypes.FOOD, ResourceTypes.STONE]
+    const worldResource = world.getResource(
       possibleResourceCollected[
       getRandomInt(0, possibleResourceCollected.length - 1)
       ],
     )
-    if (resource) {
-      if (resource.quantity >= this.collectedResource) {
-        resource.decrease(this.collectedResource)
-        civilization.increaseResource(resource.type, this.collectedResource)
+    if (worldResource) {
+      if (worldResource.quantity >= this.collectedResource) {
+        worldResource.decrease(this.collectedResource)
+        civilization.increaseResource(worldResource.type, this.collectedResource)
         return true
       }
     }
