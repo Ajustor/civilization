@@ -132,6 +132,12 @@ export class Civilization {
     )
   }
 
+  get farm(): Farm | undefined {
+    return this.buildings.find<Farm>(
+      (building): building is Farm => building.getType() === BuildingTypes.FARM,
+    )
+  }
+
   set houses(house: House) {
     this.buildings.push(house)
   }
@@ -410,14 +416,13 @@ export class Civilization {
         ResourceTypes,
         number
       >()
+
+      const workerRequiredCount = requiredWorkers.reduce((count, { count: amount }) => count + amount, 0)
+
       for (const requiredWorker of requiredWorkers) {
         const workers = this.getPeopleWithOccupation(
           requiredWorker.occupation,
         ).filter((people) => people.canWork())
-
-        if (workers.length < requiredWorker.count) {
-          return
-        }
 
         workerByTypes.set(
           requiredWorker.occupation,
@@ -437,13 +442,17 @@ export class Civilization {
           requiredResources.amount,
         )
       }
+      let availableWorkers = 0
 
       for (const workers of workerByTypes.values()) {
         for (const worker of workers) {
           worker.hasWork = true
+
+          availableWorkers++
         }
       }
 
+      const productionRatio = availableWorkers / workerRequiredCount
       for (const [
         resource,
         amount,
@@ -454,7 +463,7 @@ export class Civilization {
       for (const producedResource of building.outputResources) {
         this.increaseResource(
           producedResource.resource,
-          producedResource.amount,
+          producedResource.amount * productionRatio,
         )
       }
     }
@@ -501,6 +510,10 @@ export class Civilization {
 
     if (this.kiln) {
       this.useProductionBuilding(this.kiln)
+    }
+
+    if (this.farm) {
+      this.useProductionBuilding(this.farm)
     }
   }
 
