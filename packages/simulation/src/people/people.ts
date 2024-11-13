@@ -50,7 +50,7 @@ const DEATH_RATE_AFTER_EXPECTANCY = 20
 
 export const MAX_LIFE = 12
 
-export const MINIMAL_AGE_TO_WORK = 12
+export const MINIMAL_AGE_TO_WORK = 4
 
 export type PeopleConstructorParams = {
   month: number
