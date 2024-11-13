@@ -11,7 +11,7 @@ export class Child implements Work {
     return personAge >= 12
   }
 
-  collectedResource = 0
+  collectedResource = 5
 
   get occupationType(): OccupationTypes {
     return OccupationTypes.CHILD
