@@ -382,8 +382,10 @@ export class Civilization {
 
     const gatherers = this.getPeopleWithOccupation(OccupationTypes.GATHERER)
     const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER)
+    const children = this.getPeopleWithOccupation(OccupationTypes.CHILD)
 
     await Promise.all([
+      this.collectResource(children, world),
       this.collectResource(gatherers, world),
       this.collectResource(woodCutters, world),
     ])
@@ -407,7 +409,6 @@ export class Civilization {
     ).length
 
     // Allow only half people to be child
-    const children = this.getPeopleWithOccupation(OccupationTypes.CHILD)
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
     if (
       activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
