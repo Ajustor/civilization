@@ -27,7 +27,7 @@ export class Campfire extends AbstractProductionBuilding {
   ]
 
   workerTypeRequired: WorkerRequired[] = [
-    { occupation: OccupationTypes.GATHERER, count: 1 },
+    { occupation: OccupationTypes.KITCHEN_ASSISTANT, count: 1 },
   ]
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [

@@ -6,7 +6,7 @@ export const OCCUPATION_TREE: { [key in OccupationTypes]?: OccupationTypes[] } =
       OccupationTypes.CARPENTER,
       OccupationTypes.CHARCOAL_BURNER,
     ],
-    [OccupationTypes.GATHERER]: [OccupationTypes.FARMER, OccupationTypes.MINER],
+    [OccupationTypes.GATHERER]: [OccupationTypes.FARMER, OccupationTypes.MINER, OccupationTypes.KITCHEN_ASSISTANT],
     [OccupationTypes.CHILD]: [
       OccupationTypes.WOODCUTTER,
       OccupationTypes.GATHERER,

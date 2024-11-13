@@ -163,7 +163,9 @@ export class Civilization {
           if (!requiredWorker.length) {
             return space
           }
-          space += requiredWorker.reduce((sum, { count }) => sum + count, 0) * building.count
+          space +=
+            requiredWorker.reduce((sum, { count }) => sum + count, 0) *
+            building.count
         }
         return space
       }, 0) - peopleWithOccupation
@@ -412,7 +414,7 @@ export class Civilization {
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
     if (
       activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
-      children.length < adults.length * 1 / 3
+      children.length < (adults.length * 1) / 3
     ) {
       await this.createNewPeople()
     }
@@ -722,6 +724,7 @@ export class Civilization {
           newPossibleOccupations.length - 1,
         )
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
+        console.log(newOccupation)
 
         if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
           worker.setOccupation(newOccupation)
