@@ -1,7 +1,15 @@
-import { AbstractExtractionBuilding, AbstractProductionBuilding, Building } from "../types/building"
+import {
+  AbstractExtractionBuilding,
+  AbstractProductionBuilding,
+  Building,
+} from '../types/building'
 
-export const isExtractionOrProductionBuilding = (building: Building): building is AbstractExtractionBuilding | AbstractProductionBuilding => 'outputResources' in building
+export const isExtractionOrProductionBuilding = (
+  building: Building,
+): building is AbstractExtractionBuilding | AbstractProductionBuilding =>
+  'outputResources' in building
 
+export { Cache } from './cache'
 export { Farm } from './farm'
 export { Kiln } from './kiln'
 export { Mine } from './mine'

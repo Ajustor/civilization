@@ -10,7 +10,7 @@ import {
   ResourceTypes,
   isExtractionBuilding,
 } from '@ajustor/simulation'
-import { Campfire, Farm, Kiln, Mine, Sawmill } from '@ajustor/simulation'
+import { Campfire, Farm, Kiln, Mine, Sawmill, Cache } from '@ajustor/simulation'
 import {
   CivilizationModel,
   CivilizationStatsModel,
@@ -32,6 +32,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.HOUSE]: House,
   [BuildingTypes.SAWMILL]: Sawmill,
   [BuildingTypes.MINE]: Mine,
+  [BuildingTypes.CACHE]: Cache,
 }
 
 export type MongoCivilizationType = CivilizationType & {
@@ -58,7 +59,9 @@ export const civilizationMapper = (
   }
 
   for (const building of civilization.buildings) {
-    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](building.count)
+    const buildingInstance = new BUILDING_CONSTRUCTORS[building.buildingType](
+      building.count,
+    )
 
     if (isExtractionBuilding(buildingInstance) && building.outputResources) {
       buildingInstance.outputResources = building.outputResources
@@ -342,12 +345,10 @@ export class CivilizationService {
         quantity,
       })),
       people: newPeople,
-      buildings: civilization.buildings.map(
-        (building) => ({
-          ...building.formatToType(),
-          buildingType: building.getType(),
-        }),
-      ),
+      buildings: civilization.buildings.map((building) => ({
+        ...building.formatToType(),
+        buildingType: building.getType(),
+      })),
     })
 
     user.civilizations ??= []
@@ -435,12 +436,10 @@ export class CivilizationService {
         await CivilizationModel.findOneAndUpdate(
           { _id: civilization.id },
           {
-            buildings: civilization.buildings.map(
-              (building) => ({
-                ...building.formatToType(),
-                buildingType: building.getType(),
-              }),
-            ),
+            buildings: civilization.buildings.map((building) => ({
+              ...building.formatToType(),
+              buildingType: building.getType(),
+            })),
             livedMonths: civilization.livedMonths,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,

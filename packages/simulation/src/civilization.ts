@@ -3,6 +3,7 @@ import { countries, uniqueNamesGenerator } from 'unique-names-generator'
 
 import {
   AbstractExtractionBuilding,
+  AbstractStorageBuilding,
   ExtractionBuilding,
   type Building,
   type ConstructionCost,
@@ -26,6 +27,7 @@ import { Farm } from './buildings/farm'
 import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
+import { Cache } from './buildings/cache'
 
 const PREGNANCY_PROBABILITY = 60
 const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
@@ -40,12 +42,16 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.SAWMILL]: Sawmill,
   [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.MINE]: Mine,
+  [BuildingTypes.CACHE]: Cache,
 }
+
+const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE]
 
 const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
   [BuildingTypes.MINE]: [ResourceTypes.STONE],
 }
 
+const STORAGE_BUILDINGS = [BuildingTypes.CACHE]
 const EXTRACTIONS_BUILDINGS = [BuildingTypes.MINE]
 
 export const isExtractionBuilding = (
@@ -138,6 +144,13 @@ export class Civilization {
   get farm(): Farm | undefined {
     return this.buildings.find<Farm>(
       (building): building is Farm => building.getType() === BuildingTypes.FARM,
+    )
+  }
+
+  get cache(): Cache | undefined {
+    return this.buildings.find<Cache>(
+      (building): building is Cache =>
+        building.getType() === BuildingTypes.CACHE,
     )
   }
 
@@ -235,6 +248,18 @@ export class Civilization {
     )
   }
 
+  getDestructibleBuildings(): Building[] {
+    return this._buildings.filter(
+      (building) => !UNDESTRUCTIBLE_BUILDINGS.includes(building.getType()),
+    )
+  }
+
+  getStorageBuildings(): AbstractStorageBuilding[] {
+    return this._buildings.filter((building) =>
+      STORAGE_BUILDINGS.includes(building.getType()),
+    ) as AbstractStorageBuilding[]
+  }
+
   addPeople(...peoples: People[]): void {
     for (const people of peoples) {
       this._people.push(people)
@@ -262,7 +287,7 @@ export class Civilization {
         newBuilding.generateOutput(
           (buildingType in EXTRACTIONS_RESOURCES &&
             EXTRACTIONS_RESOURCES[buildingType]) ||
-          [],
+            [],
         )
       }
       this.addBuilding(newBuilding)
@@ -274,7 +299,7 @@ export class Civilization {
       existingBuilding.generateOutput(
         (buildingType in EXTRACTIONS_RESOURCES &&
           EXTRACTIONS_RESOURCES[buildingType]) ||
-        [],
+          [],
       )
     }
 
@@ -356,7 +381,7 @@ export class Civilization {
           civilizationCharcoal.decrease(
             Math.ceil(
               (people.length - peopleDoesNotHaveHeat.length) /
-              PEOPLE_CHARCOAL_CAN_HEAT,
+                PEOPLE_CHARCOAL_CAN_HEAT,
             ),
           )
         }
@@ -549,6 +574,18 @@ export class Civilization {
 
   private buildNewBuilding() {
     this.buildNewHouses()
+
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      if (!this.cache?.count) {
+        this.buildNew(
+          BuildingTypes.CACHE,
+          Cache.constructionCosts,
+          Cache.workerRequiredToBuild,
+          Cache.timeToBuild,
+        )
+      }
+    }
+
     // TODO: create a new function to determine if building is full
     if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
@@ -736,7 +773,13 @@ export class Civilization {
         )
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
 
-        if (newOccupation && (this.getWorkerSpaceLeft(newOccupation) > 0 || [OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(newOccupation))) {
+        if (
+          newOccupation &&
+          (this.getWorkerSpaceLeft(newOccupation) > 0 ||
+            [OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(
+              newOccupation,
+            ))
+        ) {
           worker.setOccupation(newOccupation)
         }
       }
@@ -801,10 +844,10 @@ export class Civilization {
               month: 0,
               gender:
                 genders[
-                Math.min(
-                  Math.floor(Math.random() * genders.length),
-                  genders.length - 1,
-                )
+                  Math.min(
+                    Math.floor(Math.random() * genders.length),
+                    genders.length - 1,
+                  )
                 ],
               lifeCounter: 2,
               lineage: {

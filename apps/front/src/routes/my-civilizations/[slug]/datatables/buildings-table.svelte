@@ -24,6 +24,7 @@
 					return ''
 				}
 				return {
+					[BuildingTypes.CACHE]: 'Cache',
 					[BuildingTypes.HOUSE]: 'Maison',
 					[BuildingTypes.FARM]: 'Ferme',
 					[BuildingTypes.KILN]: 'Charbonnière',

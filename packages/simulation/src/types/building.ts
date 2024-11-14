@@ -4,6 +4,7 @@ import { ResourceTypes } from '../resource'
 
 export type ProduceResource = { resource: ResourceTypes; amount: number }
 export type ExtractedResource = { resource: ResourceTypes; probability: number }
+export type StoredResource = { resource: ResourceTypes; maxQuantity: number }
 
 export type BuildingType = {
   id?: string
@@ -76,4 +77,22 @@ export abstract class AbstractExtractionBuilding implements ExtractionBuilding {
   public static constructionCosts: ConstructionCost[] = []
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = []
   public static timeToBuild: number = 2
+}
+
+export interface StorageBuilding extends Building {
+  storedResources: StoredResource[]
+}
+
+export abstract class AbstractStorageBuilding implements StorageBuilding {
+  abstract storedResources: StoredResource[]
+  abstract count: number
+  getType(): BuildingTypes {
+    throw new Error('Method not implemented.')
+  }
+  formatToType(): BuildingType {
+    throw new Error('Method not implemented.')
+  }
+  public static constructionCosts: ConstructionCost[]
+  public static workerRequiredToBuild: WorkerRequiredToBuild[] = []
+  public static timeToBuild: number = 1
 }
