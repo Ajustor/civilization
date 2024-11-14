@@ -734,6 +734,7 @@ export class Civilization {
     const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(({ work, hasWork }) => work?.occupationType !== OccupationTypes.RETIRED && work && ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(work.occupationType) && !hasWork)
     for (const peopleWhoHasNotWork of peoplesWhoHasNotWork) {
       for(const [key, jobs] of Object.entries(OCCUPATION_TREE)) {
+if(key === OccupationTypes.CHILD) continue
         if(peopleWhoHasNotWork.work && jobs.includes(peopleWhoHasNotWork.work.occupationType)) {
           peopleWhoHasNotWork.setOccupation(key as OccupationTypes)
         }
