@@ -724,7 +724,6 @@ export class Civilization {
           newPossibleOccupations.length - 1,
         )
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
-        console.log(newOccupation)
 
         if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
           worker.setOccupation(newOccupation)
