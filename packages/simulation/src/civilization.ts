@@ -792,7 +792,7 @@ export class Civilization {
       eligiblePeople.map(
         ([mother, father]) =>
           new Promise((resolve) => {
-            if (!isWithinChance(PREGNANCY_PROBABILITY)) {
+            if (!isWithinChance(PREGNANCY_PROBABILITY) || !mother) {
               return resolve(null)
             }
 

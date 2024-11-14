@@ -265,12 +265,12 @@ export class People {
     if (this.lineage) {
       if (this.lineage.father) {
         result.push(this.lineage.father.id)
-      if (this.lineage.father.lineage) {
-        result.push(
-          this.lineage.father.lineage.father.id,
-          this.lineage.father.lineage.mother.id,
-        )
-      }
+        if (this.lineage.father.lineage) {
+          result.push(
+            this.lineage.father.lineage.father.id,
+            this.lineage.father.lineage.mother.id,
+          )
+        }
       }
 
       if (this.lineage.mother) {
