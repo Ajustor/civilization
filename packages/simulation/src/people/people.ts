@@ -263,29 +263,26 @@ export class People {
   getDirectLineage(): string[] {
     const result = []
     if (this.lineage) {
-      if(this.lineage.father) {
+      if (this.lineage.father) {
         result.push(this.lineage.father.id)
-      }
-
-      if(this.lineage.mother) {
-        result.push(this.lineage.mother.id)
-      }
-
       if (this.lineage.father.lineage) {
         result.push(
           this.lineage.father.lineage.father.id,
           this.lineage.father.lineage.mother.id,
         )
       }
+      }
 
-      if (this.lineage.mother.lineage) {
-        result.push(
-          this.lineage.mother.lineage.father.id,
-          this.lineage.mother.lineage.mother.id,
-        )
+      if (this.lineage.mother) {
+        result.push(this.lineage.mother.id)
+        if (this.lineage.mother.lineage) {
+          result.push(
+            this.lineage.mother.lineage.father.id,
+            this.lineage.mother.lineage.mother.id,
+          )
+        }
       }
     }
-
     return result
   }
 
