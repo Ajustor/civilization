@@ -263,7 +263,13 @@ export class People {
   getDirectLineage(): string[] {
     const result = []
     if (this.lineage) {
-      result.push(this.lineage.father.id, this.lineage.mother.id)
+      if(this.lineage.father) {
+        result.push(this.lineage.father.id)
+      }
+
+      if(this.lineage.mother) {
+        result.push(this.lineage.mother.id)
+      }
 
       if (this.lineage.father.lineage) {
         result.push(
