@@ -725,7 +725,7 @@ export class Civilization {
         )
         const newOccupation = newPossibleOccupations[selectedNewOccupation]
 
-        if (newOccupation && this.getWorkerSpaceLeft(newOccupation) > 0) {
+        if (newOccupation && (this.getWorkerSpaceLeft(newOccupation) > 0 || [OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(newOccupation))) {
           worker.setOccupation(newOccupation)
         }
       }
