@@ -812,8 +812,8 @@ export class Civilization {
                   id: mother.id,
                   ...(mother.lineage && {
                     lineage: {
-                      mother: { id: mother.lineage.mother.id },
-                      father: { id: mother.lineage.father.id },
+                      mother: { id: mother.lineage.mother?.id },
+                      father: { id: mother.lineage.father?.id },
                     },
                   }),
                 },
@@ -821,8 +821,8 @@ export class Civilization {
                   id: father.id,
                   ...(father.lineage && {
                     lineage: {
-                      mother: { id: father.lineage.mother.id },
-                      father: { id: father.lineage.father.id },
+                      mother: { id: father.lineage.mother?.id },
+                      father: { id: father.lineage.father?.id },
                     },
                   }),
                 },
