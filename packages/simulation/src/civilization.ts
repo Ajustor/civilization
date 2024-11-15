@@ -521,8 +521,9 @@ export class Civilization {
             building.capacity -= amount
           }
 
-          if (!building?.capacity) {
+          if (building.capacity <= 0) {
             building.count = 0
+building.count = 0
           }
         }
       }
