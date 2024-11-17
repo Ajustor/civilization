@@ -3,10 +3,10 @@ import { ResourceTypes } from '../resource'
 import {
   AbstractStorageBuilding,
   BuildingType,
+  ConstructionCost,
   StoredResource,
   WorkerRequiredToBuild,
 } from '../types/building'
-import { getRandomInt } from '../utils/random'
 import { BuildingTypes } from './enum'
 
 export class Cache extends AbstractStorageBuilding {
@@ -37,6 +37,8 @@ export class Cache extends AbstractStorageBuilding {
       maxQuantity: 300,
     },
   ]
+
+  public static constructionCosts: ConstructionCost[] = []
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
