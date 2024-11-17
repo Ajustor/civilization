@@ -1,4 +1,5 @@
 import {
+  Cache,
   CivilizationBuilder,
   Gender,
   House,
@@ -30,7 +31,8 @@ const INITIAL_CIVILIZATION_RESOURCES = {
 }
 
 const INITIAL_CIVILIZATION_BUILDING = [
-  new House(Math.ceil(INITIAL_CITIZEN_NUMBER / 4))
+  new House(Math.ceil(INITIAL_CITIZEN_NUMBER / 4)),
+  new Cache(),
 ]
 
 const civilizationServiceInstance = new CivilizationService(new PeopleService())

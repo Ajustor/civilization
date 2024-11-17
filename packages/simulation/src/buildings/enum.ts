@@ -5,4 +5,5 @@ export enum BuildingTypes {
   SAWMILL = 'sawmill',
   MINE = 'mine',
   CAMPFIRE = 'campfire',
+  CACHE = 'cache',
 }
