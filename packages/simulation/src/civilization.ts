@@ -529,6 +529,12 @@ export class Civilization {
   private extractResourcesFromBuilding(building: ExtractionBuilding) {
     const resourcesProbabilities = building.outputResources
     const requiredWorkers = building.workerTypeRequired
+    if (building.capacity && building.capacity <= 0) {
+      building.count = 0
+      building.capacity = 0
+      return
+    }
+
     for (const requiredWorker of requiredWorkers) {
       const worker = this.getPeopleWithOccupation(
         requiredWorker.occupation,
@@ -546,9 +552,9 @@ export class Civilization {
             building.capacity -= amount
           }
 
-          if (building.capacity <= 0) {
+          if (building.capacity && building.capacity <= 0) {
             building.count = 0
-building.count = 0
+            building.capacity = 0
           }
         }
       }
