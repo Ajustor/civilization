@@ -70,7 +70,7 @@ export abstract class AbstractExtractionBuilding implements ExtractionBuilding {
   abstract workerTypeRequired: WorkerRequired[]
   abstract outputResources: ExtractedResource[]
   abstract capacity: number
-  count: number = 1
+  count: number = 0
   abstract getType(): BuildingTypes
   abstract formatToType(): BuildingType
   abstract generateOutput(possibleOutput: ResourceTypes[]): void
