@@ -199,7 +199,7 @@ export class World {
         break
       }
       case event < 40: {
-        this.nextEvent = Events.EARTHQUAKE
+        this.nextEvent = Events.STARVATION
         break
       }
       case event < 45: {
