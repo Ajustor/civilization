@@ -2,7 +2,7 @@ const isWithinChance = jest.fn()
 
 jest.mock('./utils', () => ({ isWithinChance }))
 
-import { LIFE_EXPECTANCY, People } from './people/people'
+import { EAT_FACTOR, LIFE_EXPECTANCY, People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'

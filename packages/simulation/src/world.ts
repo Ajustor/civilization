@@ -10,9 +10,6 @@ import { WorldEvent } from './events/interface'
 import { formatCivilizations } from './formatters/civilization'
 import { isWithinChance } from './utils'
 
-export const BASE_FOOD_GENERATION = 30_000_000
-export const BASE_WOOD_GENERATION = 15_000_000
-
 const EVENT_CHANCE = 30
 
 export type WorldInfos = {
@@ -23,6 +20,11 @@ export type WorldInfos = {
   year: number
   nextEvent: Events | null
   civilizations: CivilizationType[]
+}
+
+export type WorldConfig = {
+  BASE_FOOD_GENERATION: number,
+  BASE_WOOD_GENERATION: number
 }
 
 const seasons = {
@@ -42,6 +44,11 @@ const AVAILABLE_EVENTS: {
   [Events.RAT_INVASION]: () => new RatInvasion(),
 }
 
+const defaultConfig: WorldConfig = {
+  BASE_WOOD_GENERATION: 15_000,
+  BASE_FOOD_GENERATION: 30_000
+}
+
 export class World {
   id: string
   private resources: Resource[] = []
@@ -52,6 +59,7 @@ export class World {
   constructor(
     private readonly name = 'The world',
     private month = 0,
+    private config: WorldConfig = defaultConfig
   ) {
     this.id = ''
   }
@@ -116,11 +124,11 @@ export class World {
       case 'spring': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 1.5),
+          ~~(this.config.BASE_FOOD_GENERATION * 1.5),
         )
         this.increaseResource(
           ResourceTypes.WOOD,
-          ~~(BASE_WOOD_GENERATION * 1.1),
+          ~~(this.config.BASE_WOOD_GENERATION * 1.1),
         )
 
         break
@@ -128,30 +136,30 @@ export class World {
       case 'summer': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 1.75),
+          ~~(this.config.BASE_FOOD_GENERATION * 1.75),
         )
         this.increaseResource(
           ResourceTypes.WOOD,
-          ~~(BASE_WOOD_GENERATION * 1.2),
+          ~~(this.config.BASE_WOOD_GENERATION * 1.2),
         )
         break
       }
       case 'automn': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 1.2),
+          ~~(this.config.BASE_FOOD_GENERATION * 1.2),
         )
-        this.increaseResource(ResourceTypes.WOOD, ~~BASE_WOOD_GENERATION)
+        this.increaseResource(ResourceTypes.WOOD, ~~this.config.BASE_WOOD_GENERATION)
         break
       }
       case 'winter': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 0.5),
+          ~~(this.config.BASE_FOOD_GENERATION * 0.5),
         )
         this.increaseResource(
           ResourceTypes.WOOD,
-          ~~(BASE_WOOD_GENERATION * 0.75),
+          ~~(this.config.BASE_WOOD_GENERATION * 0.75),
         )
         break
       }

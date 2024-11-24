@@ -287,7 +287,7 @@ export class Civilization {
         newBuilding.generateOutput(
           (buildingType in EXTRACTIONS_RESOURCES &&
             EXTRACTIONS_RESOURCES[buildingType]) ||
-            [],
+          [],
         )
       }
       this.addBuilding(newBuilding)
@@ -299,7 +299,7 @@ export class Civilization {
       existingBuilding.generateOutput(
         (buildingType in EXTRACTIONS_RESOURCES &&
           EXTRACTIONS_RESOURCES[buildingType]) ||
-          [],
+        [],
       )
     }
 
@@ -381,7 +381,7 @@ export class Civilization {
           civilizationCharcoal.decrease(
             Math.ceil(
               (people.length - peopleDoesNotHaveHeat.length) /
-                PEOPLE_CHARCOAL_CAN_HEAT,
+              PEOPLE_CHARCOAL_CAN_HEAT,
             ),
           )
         }
@@ -851,10 +851,10 @@ export class Civilization {
               month: 0,
               gender:
                 genders[
-                  Math.min(
-                    Math.floor(Math.random() * genders.length),
-                    genders.length - 1,
-                  )
+                Math.min(
+                  Math.floor(Math.random() * genders.length),
+                  genders.length - 1,
+                )
                 ],
               lifeCounter: 2,
               lineage: {
