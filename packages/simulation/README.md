@@ -31,22 +31,27 @@ bun run src/index.ts
 ### Migration
 
 - apply only if civilization population is greater than 100
+- People are taken from existing civilization to be added in another one
 - outgoing migration :
 
-  - Up to MAXIMUM_OUTGOING_PEOPLE_RATE are removed from the population
+  - Up to `MAXIMUM_OUTGOING_PEOPLE_RATE` are going away
 
 - incoming migration :
-  - Up to MAXIMUM_INCOMING_PEOPLE_RATE are added to population.
+
+  - Up to `MAXIMUM_INCOMING_PEOPLE_RATE` are added to population.
   - The rate is computed using ALL alive people.
   - The population limitation is overidden
-  - Incoming people age / health / occupation are randomised
+
+- Attractiveness of a civilization is `(RAW_FOOD + (COOKED_FOOD * 2) ) / population`. The higher, the better.
+- After processing the last wave of migration, citizens without civilization disappear from the kingdom.
+- Potentially, people can go back to their homeland during a migration
 
 ### Fire
 
-- Every wood resources in civilizations are destroyed
+- Every wood resources that is not in a storage building is destroyed
 
 ### Rat invasion
 
-- Every food resources in civilizations are destroyed
+- Every food resources that is not in a storage building is destroyed
 
 This project was created using `bun init` in bun v1.1.22. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

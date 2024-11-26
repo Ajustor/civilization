@@ -88,6 +88,12 @@ export class World {
     return this.resources
   }
 
+  getCivilization(id: string): Civilization | undefined {
+    return this._civilizations.find(
+      ({ id: civilizationId }) => civilizationId === id,
+    )
+  }
+
   getResource(type: ResourceTypes): Resource | undefined {
     return this.resources.find((resource) => resource.type === type)
   }
