@@ -4,7 +4,7 @@ services:
     image: oven/bun:slim
     user: bun
     ports:
-      - "8080:8080"
+      - "${DOCKER_FRONT_EXTERNAL_PORT}:8080"
     working_dir: /home/bun/app/apps/front
     volumes:
       - .:/home/bun/app:cached

@@ -12,6 +12,8 @@ To run:
 bun run src/index.ts
 ```
 
+## Buildings
+
 ## Events
 
 ### Earthquake
