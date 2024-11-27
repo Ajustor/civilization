@@ -6,4 +6,5 @@ export enum BuildingTypes {
   MINE = 'mine',
   CAMPFIRE = 'campfire',
   CACHE = 'cache',
+  OUTDOOR_KITCHEN = 'outdoor kitchen',
 }

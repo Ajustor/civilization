@@ -4,13 +4,21 @@ import {
   Civilization,
   CivilizationBuilder,
   CivilizationType,
-  House,
   PeopleEntity,
   Resource,
   ResourceTypes,
   isExtractionBuilding,
 } from '@ajustor/simulation'
-import { Campfire, Farm, Kiln, Mine, Sawmill, Cache } from '@ajustor/simulation'
+import {
+  Campfire,
+  Farm,
+  Kiln,
+  Mine,
+  Sawmill,
+  Cache,
+  OutdoorKitchen,
+  House,
+} from '@ajustor/simulation'
 import {
   CivilizationModel,
   CivilizationStatsModel,
@@ -33,6 +41,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.SAWMILL]: Sawmill,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.OUTDOOR_KITCHEN]: OutdoorKitchen,
 }
 
 export type MongoCivilizationType = CivilizationType & {
