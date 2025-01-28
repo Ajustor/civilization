@@ -29,11 +29,21 @@ import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
 
-const PREGNANCY_PROBABILITY = 60
-const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
-const PEOPLE_CHARCOAL_CAN_HEAT = 10
-const CHANCE_TO_EVOLVE = 20
-const CHANCE_TO_BUILD_EVOLVED_BUILDING = 25
+export type CivilizationConfig = {
+  PREGNANCY_PROBABILITY: number
+  MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: number
+  PEOPLE_CHARCOAL_CAN_HEAT: number
+  CHANCE_TO_EVOLVE: number
+  CHANCE_TO_BUILD_EVOLVED_BUILDING: number
+}
+
+const defaultCivilizationConfig: CivilizationConfig = {
+  PEOPLE_CHARCOAL_CAN_HEAT: 10,
+  MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: 100_000,
+  PREGNANCY_PROBABILITY: 60,
+  CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
+  CHANCE_TO_EVOLVE: 20,
+}
 
 const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
@@ -69,6 +79,7 @@ export class Civilization {
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
+    public config: CivilizationConfig = defaultCivilizationConfig,
   ) {
     this._people = []
     this._resources = []
@@ -287,7 +298,7 @@ export class Civilization {
         newBuilding.generateOutput(
           (buildingType in EXTRACTIONS_RESOURCES &&
             EXTRACTIONS_RESOURCES[buildingType]) ||
-          [],
+            [],
         )
       }
       this.addBuilding(newBuilding)
@@ -299,7 +310,7 @@ export class Civilization {
       existingBuilding.generateOutput(
         (buildingType in EXTRACTIONS_RESOURCES &&
           EXTRACTIONS_RESOURCES[buildingType]) ||
-        [],
+          [],
       )
     }
 
@@ -370,7 +381,7 @@ export class Civilization {
         }
 
         const peopleHeatedWithCharcoal = Math.min(
-          civilizationCharcoal.quantity * PEOPLE_CHARCOAL_CAN_HEAT,
+          civilizationCharcoal.quantity * this.config.PEOPLE_CHARCOAL_CAN_HEAT,
           people.length,
         )
 
@@ -381,7 +392,7 @@ export class Civilization {
           civilizationCharcoal.decrease(
             Math.ceil(
               (people.length - peopleDoesNotHaveHeat.length) /
-              PEOPLE_CHARCOAL_CAN_HEAT,
+                this.config.PEOPLE_CHARCOAL_CAN_HEAT,
             ),
           )
         }
@@ -438,7 +449,7 @@ export class Civilization {
     // Allow only half people to be child
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
     if (
-      activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
+      activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
       children.length < (adults.length * 1) / 3
     ) {
       await this.createNewPeople()
@@ -582,7 +593,7 @@ export class Civilization {
   private buildNewBuilding() {
     this.buildNewHouses()
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       if (!this.cache?.count) {
         this.buildNew(
           BuildingTypes.CACHE,
@@ -594,7 +605,7 @@ export class Civilization {
     }
 
     // TODO: create a new function to determine if building is full
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.KILN,
         Kiln.constructionCosts,
@@ -603,7 +614,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.SAWMILL,
         Sawmill.constructionCosts,
@@ -612,7 +623,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.FARM,
         Farm.constructionCosts,
@@ -621,7 +632,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.CAMPFIRE,
         Campfire.constructionCosts,
@@ -630,7 +641,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       if (!this.mine?.count) {
         this.buildNew(
           BuildingTypes.MINE,
@@ -750,12 +761,24 @@ export class Civilization {
       citizen.setOccupation(OccupationTypes.RETIRED)
     }
 
-
-    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(({ work, hasWork }) => work?.occupationType !== OccupationTypes.RETIRED && work && ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(work.occupationType) && !hasWork)
+    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(
+      OccupationTypes.CHILD,
+    ).filter(
+      ({ work, hasWork }) =>
+        work?.occupationType !== OccupationTypes.RETIRED &&
+        work &&
+        ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(
+          work.occupationType,
+        ) &&
+        !hasWork,
+    )
     for (const peopleWhoHasNotWork of peoplesWhoHasNotWork) {
       for (const [key, jobs] of Object.entries(OCCUPATION_TREE)) {
         if (key === OccupationTypes.CHILD) continue
-        if (peopleWhoHasNotWork.work && jobs.includes(peopleWhoHasNotWork.work.occupationType)) {
+        if (
+          peopleWhoHasNotWork.work &&
+          jobs.includes(peopleWhoHasNotWork.work.occupationType)
+        ) {
           peopleWhoHasNotWork.setOccupation(key as OccupationTypes)
         }
       }
@@ -765,7 +788,7 @@ export class Civilization {
     for (const worker of workersCanUpgrade) {
       const hasChanceToEvolve =
         worker.work?.occupationType === OccupationTypes.CHILD ||
-        isWithinChance(CHANCE_TO_EVOLVE)
+        isWithinChance(this.config.CHANCE_TO_EVOLVE)
       if (hasChanceToEvolve && worker.work && worker.canUpgradeWork()) {
         const newPossibleOccupations =
           OCCUPATION_TREE[worker.work.occupationType] ?? []
@@ -791,7 +814,6 @@ export class Civilization {
         }
       }
     }
-
   }
 
   private async createNewPeople() {
@@ -842,7 +864,7 @@ export class Civilization {
       eligiblePeople.map(
         ([mother, father]) =>
           new Promise((resolve) => {
-            if (!isWithinChance(PREGNANCY_PROBABILITY) || !mother) {
+            if (!isWithinChance(this.config.PREGNANCY_PROBABILITY) || !mother) {
               return resolve(null)
             }
 
@@ -851,10 +873,10 @@ export class Civilization {
               month: 0,
               gender:
                 genders[
-                Math.min(
-                  Math.floor(Math.random() * genders.length),
-                  genders.length - 1,
-                )
+                  Math.min(
+                    Math.floor(Math.random() * genders.length),
+                    genders.length - 1,
+                  )
                 ],
               lifeCounter: 2,
               lineage: {
