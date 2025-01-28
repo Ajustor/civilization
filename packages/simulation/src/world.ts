@@ -10,8 +10,6 @@ import { WorldEvent } from './events/interface'
 import { formatCivilizations } from './formatters/civilization'
 import { isWithinChance } from './utils'
 
-const EVENT_CHANCE = 30
-
 export type WorldInfos = {
   id: string
   name: string
@@ -23,8 +21,9 @@ export type WorldInfos = {
 }
 
 export type WorldConfig = {
-  BASE_FOOD_GENERATION: number,
+  BASE_FOOD_GENERATION: number
   BASE_WOOD_GENERATION: number
+  EVENT_CHANCE: number
 }
 
 const seasons = {
@@ -46,7 +45,8 @@ const AVAILABLE_EVENTS: {
 
 const defaultConfig: WorldConfig = {
   BASE_WOOD_GENERATION: 15_000,
-  BASE_FOOD_GENERATION: 30_000
+  BASE_FOOD_GENERATION: 30_000,
+  EVENT_CHANCE: 30,
 }
 
 export class World {
@@ -59,7 +59,7 @@ export class World {
   constructor(
     private readonly name = 'The world',
     private month = 0,
-    private config: WorldConfig = defaultConfig
+    private config: WorldConfig = defaultConfig,
   ) {
     this.id = ''
   }
@@ -149,7 +149,10 @@ export class World {
           ResourceTypes.RAW_FOOD,
           ~~(this.config.BASE_FOOD_GENERATION * 1.2),
         )
-        this.increaseResource(ResourceTypes.WOOD, ~~this.config.BASE_WOOD_GENERATION)
+        this.increaseResource(
+          ResourceTypes.WOOD,
+          ~~this.config.BASE_WOOD_GENERATION,
+        )
         break
       }
       case 'winter': {
@@ -194,7 +197,7 @@ export class World {
   }
 
   private createNextEvent() {
-    if (!isWithinChance(EVENT_CHANCE)) {
+    if (!isWithinChance(this.config.EVENT_CHANCE)) {
       this.nextEvent = null
       return
     }
