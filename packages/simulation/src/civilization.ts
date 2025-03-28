@@ -5,6 +5,7 @@ import {
   AbstractExtractionBuilding,
   AbstractStorageBuilding,
   ExtractionBuilding,
+  NeededBuildingToUpgrade,
   type Building,
   type ConstructionCost,
   type ProductionBuilding,
@@ -25,7 +26,11 @@ import { Kiln } from './buildings/kiln'
 import { Sawmill } from './buildings/sawmill'
 import { Farm } from './buildings/farm'
 import { Mine } from './buildings/mine'
-import { isExtractionOrProductionBuilding } from './buildings'
+import {
+  AnyBuilding,
+  isExtractionOrProductionBuilding,
+  OutdoorKitchen,
+} from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
 
@@ -43,6 +48,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.OUTDOOR_KITCHEN]: OutdoorKitchen,
 }
 
 const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE]
@@ -158,6 +164,21 @@ export class Civilization {
     return this.buildings.find<Campfire>(
       (building): building is Campfire =>
         building.getType() === BuildingTypes.CAMPFIRE,
+    )
+  }
+
+  get outdoorKitchen(): OutdoorKitchen | undefined {
+    return this.buildings.find<OutdoorKitchen>(
+      (building): building is OutdoorKitchen =>
+        building.getType() === BuildingTypes.OUTDOOR_KITCHEN,
+    )
+  }
+
+  getBuildingsByType<T extends AnyBuilding>(
+    type: BuildingTypes,
+  ): T | undefined {
+    return this.buildings.find<T>(
+      (building): building is T => building.getType() === type,
     )
   }
 
@@ -577,6 +598,10 @@ export class Civilization {
     if (this.campfire) {
       this.useProductionBuilding(this.campfire)
     }
+
+    if (this.outdoorKitchen) {
+      this.useProductionBuilding(this.outdoorKitchen)
+    }
   }
 
   private buildNewBuilding() {
@@ -640,6 +665,51 @@ export class Civilization {
         )
       }
     }
+
+    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      const neededBuildings = OutdoorKitchen.neededBuildingToUpgrade
+
+      const isUpgraded = this.upgradeNeededBuildingIfUpgradable(neededBuildings)
+      if (isUpgraded) {
+        this.buildNew(
+          BuildingTypes.OUTDOOR_KITCHEN,
+          OutdoorKitchen.constructionCosts,
+          OutdoorKitchen.workerRequiredToBuild,
+          OutdoorKitchen.timeToBuild,
+        )
+      }
+    }
+  }
+
+  private upgradeNeededBuildingIfUpgradable(
+    neededBuildings: NeededBuildingToUpgrade[],
+  ): boolean {
+    const buildingsToUpgrade: { building: AnyBuilding; quantity: number }[] = []
+    const canUpgrade = neededBuildings.reduce<boolean>(
+      (acc, neededBuilding) => {
+        if (!acc) {
+          return acc
+        }
+        const building = this.getBuildingsByType(neededBuilding.building)
+
+        if (!building || building.count < neededBuilding.quantity) {
+          return false
+        }
+
+        buildingsToUpgrade.push({
+          quantity: neededBuilding.quantity,
+          building,
+        })
+        return acc
+      },
+      true,
+    )
+
+    for (const { building, quantity } of buildingsToUpgrade) {
+      building.count -= quantity
+    }
+
+    return canUpgrade
   }
 
   private buildNewHouses() {
@@ -750,12 +820,24 @@ export class Civilization {
       citizen.setOccupation(OccupationTypes.RETIRED)
     }
 
-
-    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(({ work, hasWork }) => work?.occupationType !== OccupationTypes.RETIRED && work && ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(work.occupationType) && !hasWork)
+    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(
+      OccupationTypes.CHILD,
+    ).filter(
+      ({ work, hasWork }) =>
+        work?.occupationType !== OccupationTypes.RETIRED &&
+        work &&
+        ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(
+          work.occupationType,
+        ) &&
+        !hasWork,
+    )
     for (const peopleWhoHasNotWork of peoplesWhoHasNotWork) {
       for (const [key, jobs] of Object.entries(OCCUPATION_TREE)) {
         if (key === OccupationTypes.CHILD) continue
-        if (peopleWhoHasNotWork.work && jobs.includes(peopleWhoHasNotWork.work.occupationType)) {
+        if (
+          peopleWhoHasNotWork.work &&
+          jobs.includes(peopleWhoHasNotWork.work.occupationType)
+        ) {
           peopleWhoHasNotWork.setOccupation(key as OccupationTypes)
         }
       }
@@ -791,7 +873,6 @@ export class Civilization {
         }
       }
     }
-
   }
 
   private async createNewPeople() {

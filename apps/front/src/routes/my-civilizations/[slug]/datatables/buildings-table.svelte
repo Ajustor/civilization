@@ -30,7 +30,8 @@
 					[BuildingTypes.KILN]: 'Charbonnière',
 					[BuildingTypes.MINE]: 'Mine',
 					[BuildingTypes.SAWMILL]: 'Scierie',
-					[BuildingTypes.CAMPFIRE]: 'Feu de camp'
+					[BuildingTypes.CAMPFIRE]: 'Feu de camp',
+					[BuildingTypes.OUTDOOR_KITCHEN]: 'Cuisine extérieure'
 				}[value]
 			}
 		}),
