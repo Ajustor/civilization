@@ -11,10 +11,6 @@ import { worldModule } from './modules/world'
 import mongoose from 'mongoose'
 import { peopleModule } from './modules/people'
 
-import { opentelemetry } from '@elysiajs/opentelemetry'
-
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
 import { serverTiming } from '@elysiajs/server-timing'
 
 
@@ -28,15 +24,6 @@ const app = new Elysia()
   .use(swagger({ version }))
   .use(jwtMiddleware)
   // .use(compression())
-  .use(
-    opentelemetry({
-      spanProcessors: [
-        new BatchSpanProcessor(
-          new OTLPTraceExporter()
-        )
-      ]
-    })
-  )
   .get('', () => `api-version: ${version}`)
   .use(worldModule)
   .use(authModule)
