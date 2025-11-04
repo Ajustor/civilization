@@ -14,8 +14,8 @@ import { peopleModule } from './modules/people'
 import { serverTiming } from '@elysiajs/server-timing'
 
 
-mongoose.connect(Bun.env.mongoConnectString ?? '')
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
+await mongoose.connect(Bun.env.mongoConnectString ?? '')
 
 const app = new Elysia()
   .use(serverTiming())
