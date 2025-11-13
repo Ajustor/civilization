@@ -450,7 +450,7 @@ export class CivilizationService {
         )
         console.timeEnd(civilization.name)
       }),
-    )
+    ).catch((error) => console.error(error))
   }
 
   async delete(userId: string, civilizationId: string) {
