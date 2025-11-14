@@ -422,9 +422,13 @@ export class CivilizationService {
           'Deleting dead people and update people',
         )
 
-        const bulkResult = await PersonModel.bulkWrite(bulkWriteOperations)
-        for (const id of Object.values(bulkResult.insertedIds)) {
-          alivePeople.add(id)
+        try {
+          const bulkResult = await PersonModel.bulkWrite(bulkWriteOperations)
+          for (const id of Object.values(bulkResult.insertedIds)) {
+            alivePeople.add(id)
+          }
+        } catch (error) {
+          console.error(error)
         }
 
         console.timeLog(
