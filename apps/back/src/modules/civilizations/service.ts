@@ -363,8 +363,8 @@ export class CivilizationService {
   async saveAll(civilizations: Civilization[]) {
     for(const civilization of civilizations) {
         const bulkWriteOperations: AnyBulkWriteOperation<PeopleEntity>[] = []
-        console.time(civilization.name)
-        console.timeLog(civilization.name, `Saving civilization`)
+        // console.time(civilization.name)
+        // console.timeLog(civilization.name, `Saving civilization`)
         const oldCivilization = await CivilizationModel.findOne({
           _id: civilization.id,
         })
@@ -373,7 +373,7 @@ export class CivilizationService {
           throw new Error('Your civilization disapear from our data')
         }
 
-        console.timeLog(civilization.name, 'Calculate dead/alive people')
+        // console.timeLog(civilization.name, 'Calculate dead/alive people')
         const alivePeople = new Set<string>()
         for (const people of civilization.people) {
           if (!people) {
@@ -416,25 +416,21 @@ export class CivilizationService {
           }
         }
 
-        console.timeLog(
-          civilization.name,
-          'Deleting dead people and update people',
-        )
+        // console.timeLog(
+        //   civilization.name,
+        //   'Deleting dead people and update people',
+        // )
 
-        try {
-          const bulkResult = await PersonModel.bulkWrite(bulkWriteOperations)
-          for (const id of Object.values(bulkResult.insertedIds)) {
-            alivePeople.add(id)
-          }
-        } catch (error) {
-          console.error(error)
+        const bulkResult = await PersonModel.bulkWrite(bulkWriteOperations)
+        for (const id of Object.values(bulkResult.insertedIds)) {
+          alivePeople.add(id)
         }
 
-        console.timeLog(
-          civilization.name,
-          `Start saving new people for civilization`,
-        )
-        console.timeLog(civilization.name, 'People saved save civilization')
+        // console.timeLog(
+        //   civilization.name,
+        //   `Start saving new people for civilization`,
+        // )
+        // console.timeLog(civilization.name, 'People saved save civilization')
 
         await CivilizationModel.findOneAndUpdate(
           { _id: civilization.id },
@@ -451,7 +447,7 @@ export class CivilizationService {
             people: [...alivePeople],
           },
         )
-        console.timeEnd(civilization.name)
+        // console.timeEnd(civilization.name)
     }
   }
 
