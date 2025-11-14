@@ -361,8 +361,7 @@ export class CivilizationService {
   }
 
   async saveAll(civilizations: Civilization[]) {
-    await Promise.all(
-      civilizations.map(async (civilization) => {
+    for(const civilization of civilizations) {
         const bulkWriteOperations: AnyBulkWriteOperation<PeopleEntity>[] = []
         console.time(civilization.name)
         console.timeLog(civilization.name, `Saving civilization`)
@@ -453,8 +452,7 @@ export class CivilizationService {
           },
         )
         console.timeEnd(civilization.name)
-      }),
-    )
+    }
   }
 
   async delete(userId: string, civilizationId: string) {
