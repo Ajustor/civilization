@@ -28,14 +28,7 @@ import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
-
-export type CivilizationConfig = {
-  PREGNANCY_PROBABILITY: number
-  MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: number
-  PEOPLE_CHARCOAL_CAN_HEAT: number
-  CHANCE_TO_EVOLVE: number
-  CHANCE_TO_BUILD_EVOLVED_BUILDING: number
-}
+import { CivilizationConfig } from './types/civilization'
 
 const defaultCivilizationConfig: CivilizationConfig = {
   PEOPLE_CHARCOAL_CAN_HEAT: 10,
@@ -43,6 +36,8 @@ const defaultCivilizationConfig: CivilizationConfig = {
   PREGNANCY_PROBABILITY: 60,
   CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
   CHANCE_TO_EVOLVE: 20,
+  MAXIMUM_CHILDREN: 10,
+  OPEN_EXCHANGE: [],
 }
 
 const BUILDING_CONSTRUCTORS = {
@@ -96,6 +91,10 @@ export class Civilization {
 
   set citizensCount(citizenCount: number) {
     this._citizensCount = citizenCount
+  }
+
+  get childrenCount(): number {
+    return this.people.filter((person) => person.work?.occupationType === OccupationTypes.CHILD).length
   }
 
   get livedMonths(): number {
@@ -818,6 +817,10 @@ export class Civilization {
 
   private async createNewPeople() {
     // Handle pregnancy
+
+    if (this.config.MAXIMUM_CHILDREN <= this.childrenCount) {
+      return
+    }
 
     let eligiblePeople: [People, People][] = []
     const ableToConceivePeople = this._people.filter((person) =>

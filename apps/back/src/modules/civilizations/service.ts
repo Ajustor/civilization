@@ -19,7 +19,7 @@ import {
   WorldModel,
 } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
-
+import { UpdateCivilizationDto, UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
 import { arrayToMap } from '../../utils'
 
@@ -475,6 +475,32 @@ export class CivilizationService {
     const exists = await CivilizationModel.exists({ name: civilizationName })
 
     return !!exists?._id
+  }
+
+  async update(userId: string, civilizationId: string, body: UpdateCivilizationDtoType) {
+    const user = await UserModel.findOne({ _id: userId }).populate<{
+      civilizations: CivilizationType[]
+    }>({
+      path: 'civilizations',
+    })
+
+    const civilizationToUpdate = user?.civilizations.find(
+      ({ id }) => id === civilizationId,
+    )
+
+    if (!user?.civilizations?.length || !civilizationToUpdate) {
+      throw new Error('No civilization found')
+    }
+
+    await CivilizationModel.findOneAndUpdate(
+      { _id: civilizationToUpdate.id },
+      {
+        config: {
+          ...civilizationToUpdate.config,
+          ...body,
+        },
+      },
+    )
   }
 
   async getCivilizationStats(civilizationId: string, limit: number = 10) {

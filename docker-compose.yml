@@ -3,6 +3,8 @@ services:
     container_name: civilizations_front
     image: oven/bun:slim
     user: bun
+    extra_hosts:
+      - "localhost:172.17.0.1"
     ports:
       - "8080:8080"
     working_dir: /home/bun/app/apps/front

@@ -76,3 +76,19 @@ export const getCivilizationStats = async (authToken: string, civilizationId: st
 
 	return stats
 }
+
+export const updateCivilization = async (authToken: string, civilizationId: string, body: UpdateCivilizationDtoType) => {
+	const { error } = await client.civilizations({ civilizationId }).patch(
+		body,
+		{
+			headers: {
+				authorization: `Bearer ${authToken}`
+			}
+		}
+	)
+
+	if (error) {
+		console.error(error)
+		throw error
+	}
+}

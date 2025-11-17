@@ -16,6 +16,7 @@ import { PeopleService } from '../people/service'
 import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
+import { UpdateCivilizationDto } from './dto'
 
 const INITIAL_CITIZEN_NUMBER = 50
 const INITIAL_CITIZEN_AGE = 12 * 16
@@ -132,6 +133,15 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     async ({ civilizationService, params: { civilizationId }, user }) => {
       await civilizationService.delete(user.id as string, civilizationId)
     },
+  )
+  .patch(
+    '/:civilizationId',
+    async ({ civilizationService, params: { civilizationId }, user, body }) => {
+      await civilizationService.update(user.id as string, civilizationId, body)
+    },
+    {
+      body: UpdateCivilizationDto
+    }
   )
   .get(
     '/:civilizationId/stats',
