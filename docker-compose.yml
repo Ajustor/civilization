@@ -1,7 +1,18 @@
 services:
+
+  init:
+    container_name: civilizations_init
+    image: oven/bun:latest
+    user: bun
+    working_dir: /home/bun/app
+    volumes:
+      - .:/home/bun/app:cached
+    command: bun run prisma:init
+
   front:
+    profiles: ["app"]
     container_name: civilizations_front
-    image: oven/bun:slim
+    image: oven/bun:latest
     user: bun
     extra_hosts:
       - "localhost:172.17.0.1"
@@ -15,8 +26,9 @@ services:
       - civilizations
 
   back:
+    profiles: ["app"]
     container_name: civilizations_back
-    image: oven/bun:slim
+    image: oven/bun:latest
     user: bun
     ports:
       - "${DOCKER_BACK_EXTERNAL_PORT}:3000"
@@ -30,6 +42,7 @@ services:
       - mongo
 
   mongo:
+    profiles: ["app"]
     container_name: civilizations_mongo
     image: mongo
     restart: always

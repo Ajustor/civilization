@@ -1,6 +1,5 @@
 import { redirect, type Handle } from '@sveltejs/kit'
 import { getUser } from './services/api/user-api'
-
 const unprotectedRoutes = ['/', '/login', '/rules', '/register', '/i-forgot', '/favicon.ico']
 
 export const handle: Handle = async ({ event, resolve }) => {

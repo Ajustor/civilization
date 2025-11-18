@@ -22,7 +22,10 @@ init-front:
 init-back:
 	docker compose run --rm back bun i
 
-init: init-front init-back
+init:
+	docker compose run --rm init bun i
+	make init-front 
+	make init-back
 
 start-front:
 	docker compose up -d front

@@ -9,7 +9,7 @@ import {
   ResourceTypes,
   formatCivilizations,
 } from '@ajustor/simulation'
-import Elysia, { error, t } from 'elysia'
+import Elysia, { t } from 'elysia'
 
 import { CivilizationService } from './service'
 import { PeopleService } from '../people/service'
@@ -42,7 +42,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
   .use(jwtMiddleware)
   .decorate({ civilizationService: civilizationServiceInstance })
-  .get('', async ({ civilizationService, log }) => {
+  .get('', async ({ civilizationService }) => {
     const civilizations = await civilizationService.getAll({ people: true })
     return {
       count: civilizations.length,
@@ -74,7 +74,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   )
   .post(
     '',
-    async ({ civilizationService, body, log, user }) => {
+    async ({ civilizationService, body, log, user, error }) => {
       const civilizationWithThatNameExist = await civilizationService.exist(
         body.name,
       )

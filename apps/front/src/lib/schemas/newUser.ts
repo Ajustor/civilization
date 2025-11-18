@@ -2,11 +2,11 @@ import { z } from 'zod'
 
 export const newUserSchema = z.object({
   username: z.string({
-    required_error: 'Merci d\'entrer votre identifiant (nom d\'utilisateur)'
+    error: 'Merci d\'entrer votre identifiant (nom d\'utilisateur)'
   }),
-  email: z.string().email(),
+  email: z.email(),
   password: z.string({
-    required_error: "Merci d'entrer votre mot de passe"
+    error: "Merci d'entrer votre mot de passe"
   }),
   passwordVerif: z.string()
 }).refine(({ password, passwordVerif }) => password === passwordVerif, {

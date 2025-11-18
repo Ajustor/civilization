@@ -1,4 +1,4 @@
-import { t } from "elysia"
+import { t } from 'elysia'
 
 export const UpdateCivilizationDto = t.Object({
   openExchange: t.Optional(t.Array(t.String())),

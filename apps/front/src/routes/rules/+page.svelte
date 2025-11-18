@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION } from '@ajustor/simulation/src/world'
+	import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION } from '@ajustor/simulation'
 	import { Block, List, ListItem } from 'konsta/svelte'
 </script>
 

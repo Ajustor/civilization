@@ -66,5 +66,10 @@ export default defineConfig({
 		__RELOAD_SW__: false,
 		'process.env.NODE_ENV': process.env.NODE_ENV === 'production' ? '"production"' : '"development"',
 	},
+	css: {
+		postcss: {
+			config: './postcss.config.cjs',
+		}
+	},
 	plugins
 })
