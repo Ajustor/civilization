@@ -8,4 +8,5 @@ export enum OccupationTypes {
   CHILD = 'child',
   MINER = 'miner',
   KITCHEN_ASSISTANT = 'kitchenAssistant',
+  COOK = 'cook',
 }

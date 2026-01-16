@@ -5,6 +5,10 @@ import { ResourceTypes } from '../resource'
 export type ProduceResource = { resource: ResourceTypes; amount: number }
 export type ExtractedResource = { resource: ResourceTypes; probability: number }
 export type StoredResource = { resource: ResourceTypes; maxQuantity: number }
+export type NeededBuildingToUpgrade = {
+  building: BuildingTypes
+  quantity: number
+}
 
 export type BuildingType = {
   id?: string
@@ -38,6 +42,10 @@ export interface Building {
   formatToType(): BuildingType
 }
 
+export interface UpgradedBuilding {
+  neededBuildingToUpgrade: NeededBuildingToUpgrade[]
+}
+
 export interface ProductionBuilding extends Building {
   inputResources: ProduceResource[]
   outputResources: ProduceResource[]
@@ -59,6 +67,13 @@ export abstract class AbstractProductionBuilding implements ProductionBuilding {
   public static constructionCosts: ConstructionCost[]
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = []
   public static timeToBuild: number = 2
+}
+
+export abstract class AbstractUpgradedProductionBuilding
+  extends AbstractProductionBuilding
+  implements UpgradedBuilding
+{
+  neededBuildingToUpgrade: NeededBuildingToUpgrade[] = []
 }
 
 export interface ExtractionBuilding extends Building {
