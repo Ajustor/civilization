@@ -9,7 +9,7 @@ import {
   ResourceTypes,
   formatCivilizations,
 } from '@ajustor/simulation'
-import Elysia, { t } from 'elysia'
+import Elysia, { NotFoundError, t } from 'elysia'
 
 import { CivilizationService } from './service'
 import { PeopleService } from '../people/service'
@@ -161,6 +161,9 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     '/:civilizationId/world',
     async ({ civilizationService, params: { civilizationId } }) => {
       const worldId = await civilizationService.getWorldId(civilizationId)
+      if (!worldId) {
+        throw new NotFoundError('Civilization not found in any world')
+      }
       return { worldId }
     },
   )
