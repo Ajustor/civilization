@@ -28,6 +28,7 @@ import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
+import { Wall } from './buildings/wall'
 import type { CivilizationConfig, PendingConstruction } from './types/civilization'
 
 export const defaultCivilizationConfig: CivilizationConfig = {
@@ -51,6 +52,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.WALL]: Wall,
 }
 
 const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE]
@@ -176,6 +178,12 @@ export class Civilization {
     return this.buildings.find<Campfire>(
       (building): building is Campfire =>
         building.getType() === BuildingTypes.CAMPFIRE,
+    )
+  }
+
+  get wall(): Wall | undefined {
+    return this.buildings.find<Wall>(
+      (building): building is Wall => building.getType() === BuildingTypes.WALL,
     )
   }
 
