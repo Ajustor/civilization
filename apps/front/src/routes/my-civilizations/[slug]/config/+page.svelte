@@ -164,10 +164,10 @@
 					<FormFieldErrors />
 				</FormField>
 
-				{#if data.otherCivilizations.length}
+				{#if data.worldCivilizations.length}
 					<FormFieldset {form} name="atWarWith" class="flex flex-col gap-3">
 						<FormLegend>Civilisations à attaquer</FormLegend>
-						{#each data.otherCivilizations as otherCivilization}
+						{#each data.worldCivilizations as otherCivilization}
 							<div class="flex items-center gap-2">
 								<Checkbox
 									id="war-{otherCivilization.id}"
@@ -181,7 +181,7 @@
 						<FormFieldErrors />
 					</FormFieldset>
 				{:else}
-					<p>Vous n'avez pas d'autre civilisation à attaquer.</p>
+					<p>Aucune autre civilisation dans ce monde.</p>
 				{/if}
 
 				<FormField {form} name="nextBuildingToBuild">
