@@ -43,15 +43,7 @@
 	{/if}
 
 	<main class:auth-main={isAuthPage}>
-		{#key data.url}
-			<div
-				class="page-trans"
-				in:fly={{ delay: 300, x: -200, duration: 300 }}
-				out:fly={{ duration: 300 }}
-			>
-				{@render children()}
-			</div>
-		{/key}
+		{@render children()}
 	</main>
 </div>
 
