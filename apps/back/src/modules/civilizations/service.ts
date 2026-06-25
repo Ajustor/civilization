@@ -59,6 +59,15 @@ export const civilizationMapper = (
     })
   }
 
+  if (civilization.pendingConstructions?.length) {
+    builder.withPendingConstructions(
+      civilization.pendingConstructions.map(({ buildingType, monthsRemaining }) => ({
+        buildingType,
+        monthsRemaining,
+      })),
+    )
+  }
+
   for (const civilizationResource of civilization.resources) {
     const resource = new Resource(
       civilizationResource.resourceType,
@@ -451,6 +460,7 @@ export class CivilizationService {
               buildingType: building.getType(),
             })),
             livedMonths: civilization.livedMonths,
+            pendingConstructions: civilization.pendingConstructions,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,
               quantity,

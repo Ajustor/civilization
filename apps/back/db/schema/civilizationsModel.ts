@@ -84,6 +84,16 @@ const civilizationSchema = new Schema(
         OPEN_EXCHANGE: [],
       },
     },
+    pendingConstructions: {
+      type: [
+        {
+          buildingType: { type: String, required: true },
+          monthsRemaining: { type: Number, required: true },
+        },
+      ],
+      required: true,
+      default: [],
+    },
   },
   {
     timestamps: true,
