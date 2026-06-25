@@ -1,8 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/stores'
+	import { page } from '$app/state'
 	import logo from '$lib/images/logo.webp?enhanced'
 	import { type User } from '../stores/user'
-	export let user: User | null | undefined
+	interface Props {
+		user: User | null | undefined;
+	}
+
+	let { user }: Props = $props();
 
 	const routes: { url: string; label: string }[] = [
 		{ url: '/rules', label: 'Les règles de la simulation' },
@@ -17,13 +21,13 @@
 		</a>
 		<ul class="navbar-end hidden lg:flex">
 			{#each routes as route}
-				<li class:active={$page.url.pathname.includes(route.url)}>
+				<li class:active={page.url.pathname.includes(route.url)}>
 					<a class="btn" href={route.url}>
 						{route.label}
 					</a>
 				</li>
 			{/each}
-			<li class:active={$page.url.pathname.includes('/me')}>
+			<li class:active={page.url.pathname.includes('/me')}>
 				<a href="/me" class="btn min-w-20">
 					{#if user?.id}
 						<!-- content here -->
@@ -56,13 +60,13 @@
 				class="menu menu-sm dropdown-content bg-base-200 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 			>
 				{#each routes as route}
-					<li aria-current={$page.url.pathname.includes(route.url) ? 'page' : null}>
+					<li aria-current={page.url.pathname.includes(route.url) ? 'page' : null}>
 						<a class="btn" href={route.url}>
 							{route.label}
 						</a>
 					</li>
 				{/each}
-				<li aria-current={$page.url.pathname.includes('/me') ? 'page' : null}>
+				<li aria-current={page.url.pathname.includes('/me') ? 'page' : null}>
 					<a href="/me" class="btn navbar-end w-full text-center">
 						{#if user?.id}
 							<!-- content here -->

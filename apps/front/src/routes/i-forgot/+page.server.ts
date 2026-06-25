@@ -1,7 +1,7 @@
 import { fail, message, superValidate } from 'sveltekit-superforms'
 import type { Actions } from './$types'
 import type { PageServerLoad } from './$types'
-import { zod } from '$lib/forms/zod-adapter'
+import { zod } from 'sveltekit-superforms/adapters'
 import { iForgotSchema } from '$lib/schemas/iForgot'
 import { forgotPasswordUpdate } from '../../services/api/user-api'
 import { redirect } from '@sveltejs/kit'

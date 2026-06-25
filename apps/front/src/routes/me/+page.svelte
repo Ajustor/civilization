@@ -2,7 +2,7 @@
 	import { passwordChangeSchema } from '$lib/schemas/passwordChanger'
 	import { toast } from 'svelte-sonner'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from '$lib/forms/zod-adapter'
+	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { useUser } from '../../stores/user'
 	import type { PageData } from './$types'
 	import {
@@ -15,9 +15,13 @@
 	} from '$lib/components/ui/form'
 	import { Input } from '$lib/components/ui/input'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
 
-	const userStore = useUser()
+	let { data }: Props = $props();
+
+	const userStore = $state(useUser())
 
 	if (data.user) {
 		userStore.value = data.user
@@ -41,42 +45,48 @@
 
 		<form method="post" use:enhance>
 			<FormField {form} name="oldPassword">
-				<FormControl let:attrs>
-					<FormLabel>Ancien mot de passe</FormLabel>
-					<Input
-						{...attrs}
-						bind:value={$formData.oldPassword}
-						type="password"
-						{...$constraints.oldPassword}
-					/>
-				</FormControl>
+				<FormControl >
+					{#snippet children({ props })}
+										<FormLabel>Ancien mot de passe</FormLabel>
+						<Input
+							{...props}
+							bind:value={$formData.oldPassword}
+							type="password"
+							{...$constraints.oldPassword}
+						/>
+														{/snippet}
+								</FormControl>
 				<FormDescription />
 				<FormFieldErrors />
 			</FormField>
 
 			<FormField {form} name="newPassword">
-				<FormControl let:attrs>
-					<FormLabel>Nouveau mot de passe</FormLabel>
-					<Input
-						{...attrs}
-						bind:value={$formData.newPassword}
-						type="password"
-						{...$constraints.newPassword}
-					/>
-				</FormControl>
+				<FormControl >
+					{#snippet children({ props })}
+										<FormLabel>Nouveau mot de passe</FormLabel>
+						<Input
+							{...props}
+							bind:value={$formData.newPassword}
+							type="password"
+							{...$constraints.newPassword}
+						/>
+														{/snippet}
+								</FormControl>
 				<FormDescription />
 				<FormFieldErrors />
 			</FormField>
 			<FormField {form} name="newPasswordVerif">
-				<FormControl let:attrs>
-					<FormLabel>Vérification du nouveau mot de passe</FormLabel>
-					<Input
-						{...attrs}
-						bind:value={$formData.newPasswordVerif}
-						type="password"
-						{...$constraints.newPasswordVerif}
-					/>
-				</FormControl>
+				<FormControl >
+					{#snippet children({ props })}
+										<FormLabel>Vérification du nouveau mot de passe</FormLabel>
+						<Input
+							{...props}
+							bind:value={$formData.newPasswordVerif}
+							type="password"
+							{...$constraints.newPasswordVerif}
+						/>
+														{/snippet}
+								</FormControl>
 				<FormDescription />
 				<FormFieldErrors />
 			</FormField>

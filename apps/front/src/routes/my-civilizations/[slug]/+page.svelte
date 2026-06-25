@@ -23,10 +23,14 @@
 	import PeopleTable from './datatables/people-table.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
 
-	let pageIndex = 0
-	let pageSize = 10
+	let { data = $bindable() }: Props = $props();
+
+	let pageIndex = $state(0)
+	let pageSize = $state(10)
 
 	const stringToColour = function (str: string) {
 		let hash = 0

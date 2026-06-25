@@ -12,7 +12,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import { loginSchema } from '$lib/schemas/login'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from '$lib/forms/zod-adapter'
+	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import type { PageData } from './$types'
 	import { toast } from 'svelte-sonner'
@@ -28,7 +28,11 @@
 	import { buttonVariants } from '$lib/components/ui/button'
 	import { redirect } from '@sveltejs/kit'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	const form = superForm(data.loginForm, {
 		validators: zodClient(loginSchema)
@@ -49,7 +53,7 @@
 		toast.info(message.text)
 	})
 
-	let email = ''
+	let email = $state('')
 
 	const askANewPassword = async () => {
 		if (!email) {
@@ -76,7 +80,7 @@
 				</div>
 			</div>
 			<DialogFooter>
-				<Button on:click={askANewPassword}>Demander un changement</Button>
+				<Button onclick={askANewPassword}>Demander un changement</Button>
 			</DialogFooter>
 		</DialogContent>
 	</Dialog>
@@ -90,10 +94,12 @@
 		<CardContent>
 			<form method="post" use:enhance>
 				<FormField {form} name="username">
-					<FormControl let:attrs>
-						<FormLabel>Email / Nom d'utilisateur</FormLabel>
-						<Input {...attrs} bind:value={$formData.username} {...$constraints.username} />
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Email / Nom d'utilisateur</FormLabel>
+							<Input {...props} bind:value={$formData.username} {...$constraints.username} />
+																	{/snippet}
+										</FormControl>
 					<FormDescription />
 					<FormFieldErrors>
 						{#if $errors.username}
@@ -103,15 +109,17 @@
 				</FormField>
 
 				<FormField {form} name="password">
-					<FormControl let:attrs>
-						<FormLabel>Mot de passe</FormLabel>
-						<Input
-							{...attrs}
-							bind:value={$formData.password}
-							type="password"
-							{...$constraints.password}
-						/>
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Mot de passe</FormLabel>
+							<Input
+								{...props}
+								bind:value={$formData.password}
+								type="password"
+								{...$constraints.password}
+							/>
+																	{/snippet}
+										</FormControl>
 					<FormDescription />
 					<FormFieldErrors>
 						{#if $errors.password}

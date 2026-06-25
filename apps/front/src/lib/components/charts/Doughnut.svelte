@@ -1,4 +1,4 @@
-<script context="module">
+<script module>
 	export const hydrate = 'visible' // ou 'visible' pour hydrater seulement quand l'élément est visible
 </script>
 
@@ -16,11 +16,15 @@
 	} from 'chart.js'
 	import { onMount } from 'svelte'
 
-	export let data: ChartData<'doughnut'>
+	interface Props {
+		data: ChartData<'doughnut'>;
+	}
+
+	let { data }: Props = $props();
 
 	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, DoughnutController, Colors)
 
-	let chart: HTMLCanvasElement
+	let chart: HTMLCanvasElement = $state()
 
 	onMount(() => {
 		new ChartJS(chart, {

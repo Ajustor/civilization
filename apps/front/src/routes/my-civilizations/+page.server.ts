@@ -2,7 +2,7 @@ export const prerender = false
 import { fail, message, superValidate } from 'sveltekit-superforms'
 import { createCivilization, getMyCivilizations } from '../../services/api/civilization-api'
 import type { Actions, PageServerLoad } from './$types'
-import { zod } from '$lib/forms/zod-adapter'
+import { zod } from 'sveltekit-superforms/adapters'
 import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 import { error } from '@sveltejs/kit'
 

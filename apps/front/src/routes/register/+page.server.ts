@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types'
 import type { Actions } from './$types'
 import { message, superValidate, fail } from 'sveltekit-superforms'
-import { zod } from '$lib/forms/zod-adapter'
+import { zod } from 'sveltekit-superforms/adapters'
 import { redirect } from '@sveltejs/kit'
 import { createNewUser } from '../../services/api/user-api'
 import { newUserSchema } from '$lib/schemas/newUser'

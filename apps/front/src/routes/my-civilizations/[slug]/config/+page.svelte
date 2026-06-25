@@ -15,13 +15,17 @@
 		FormLegend
 	} from '$lib/components/ui/form'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from '$lib/forms/zod-adapter'
+	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import { toast } from 'svelte-sonner'
 	import { ArrowLeft } from '@lucide/svelte'
 	import { BuildingTypes } from '@ajustor/simulation'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	const form = superForm(data.configForm, {
 		validators: zodClient(civilizationConfigSchema),
@@ -71,10 +75,12 @@
 			</CardHeader>
 			<CardContent class="flex flex-col gap-4">
 				<FormField {form} name="maximumChildren">
-					<FormControl let:attrs>
-						<FormLabel>Nombre maximum d'enfants simultanés</FormLabel>
-						<Input type="number" min="0" {...attrs} bind:value={$formData.maximumChildren} />
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Nombre maximum d'enfants simultanés</FormLabel>
+							<Input type="number" min="0" {...props} bind:value={$formData.maximumChildren} />
+																	{/snippet}
+										</FormControl>
 					<FormDescription>
 						Limite le nombre d'enfants vivants en même temps dans la civilisation.
 					</FormDescription>
@@ -82,15 +88,17 @@
 				</FormField>
 
 				<FormField {form} name="maxActivePeopleByCivilization">
-					<FormControl let:attrs>
-						<FormLabel>Nombre maximum d'actifs</FormLabel>
-						<Input
-							type="number"
-							min="0"
-							{...attrs}
-							bind:value={$formData.maxActivePeopleByCivilization}
-						/>
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Nombre maximum d'actifs</FormLabel>
+							<Input
+								type="number"
+								min="0"
+								{...props}
+								bind:value={$formData.maxActivePeopleByCivilization}
+							/>
+																	{/snippet}
+										</FormControl>
 					<FormDescription>
 						Au-delà de cette limite, la civilisation arrête de faire des enfants.
 					</FormDescription>
@@ -138,16 +146,18 @@
 			</CardHeader>
 			<CardContent class="flex flex-col gap-4">
 				<FormField {form} name="militaryRatio">
-					<FormControl let:attrs>
-						<FormLabel>Ratio militaire (%)</FormLabel>
-						<Input
-							type="number"
-							min="0"
-							max="100"
-							{...attrs}
-							bind:value={$formData.militaryRatio}
-						/>
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Ratio militaire (%)</FormLabel>
+							<Input
+								type="number"
+								min="0"
+								max="100"
+								{...props}
+								bind:value={$formData.militaryRatio}
+							/>
+																	{/snippet}
+										</FormControl>
 					<FormDescription>
 						Part des adultes entretenus comme soldats (0–100%).
 					</FormDescription>
@@ -175,22 +185,24 @@
 				{/if}
 
 				<FormField {form} name="nextBuildingToBuild">
-					<FormControl let:attrs>
-						<FormLabel>Prochain bâtiment à construire</FormLabel>
-						<select
-							{...attrs}
-							value={$formData.nextBuildingToBuild ?? ''}
-							on:change={(e) => {
-								$formData.nextBuildingToBuild = e.currentTarget.value || null
-							}}
-							class="select select-bordered w-full"
-						>
-							<option value="">Aucun</option>
-							{#each Object.values(BuildingTypes) as buildingType}
-								<option value={buildingType}>{buildingType}</option>
-							{/each}
-						</select>
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Prochain bâtiment à construire</FormLabel>
+							<select
+								{...props}
+								value={$formData.nextBuildingToBuild ?? ''}
+								onchange={(e) => {
+									$formData.nextBuildingToBuild = e.currentTarget.value || null
+								}}
+								class="select select-bordered w-full"
+							>
+								<option value="">Aucun</option>
+								{#each Object.values(BuildingTypes) as buildingType}
+									<option value={buildingType}>{buildingType}</option>
+								{/each}
+							</select>
+																	{/snippet}
+										</FormControl>
 					<FormDescription>
 						Bâtiment que la civilisation cherchera à construire en priorité.
 					</FormDescription>

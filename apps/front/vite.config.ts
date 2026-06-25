@@ -3,6 +3,20 @@ import { defineConfig, type PluginOption } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 import { enhancedImages } from '@sveltejs/enhanced-img'
+import { fileURLToPath, URL } from 'node:url'
+
+// The `sveltekit-superforms/adapters` barrel eagerly evaluates every adapter,
+// including the TypeBox one, which throws "Class extends value undefined" with
+// the installed typebox and 500s every form page. We only use Zod, so alias the
+// barrel to the Zod (v4) adapter module directly — this bypasses the barrel and
+// still lets Vite pre-bundle its deps (avoiding the memoize-weak CJS interop
+// error a relative import would cause).
+const superformsZodAdapter = fileURLToPath(
+	new URL(
+		'./node_modules/sveltekit-superforms/dist/adapters/zod4.js',
+		import.meta.url,
+	),
+)
 
 const generateSW = process.env.GENERATE_SW === 'true'
 
@@ -65,6 +79,11 @@ export default defineConfig({
 		__DATE__: `'${new Date().toISOString()}'`,
 		__RELOAD_SW__: false,
 		'process.env.NODE_ENV': process.env.NODE_ENV === 'production' ? '"production"' : '"development"',
+	},
+	resolve: {
+		alias: {
+			'sveltekit-superforms/adapters': superformsZodAdapter,
+		},
 	},
 	// PostCSS config is auto-discovered from postcss.config.cjs. Setting
 	// css.postcss to an inline object here ({ config: ... }) made vite treat it
