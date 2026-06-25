@@ -118,7 +118,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     const civilizations = await civilizationsDbClient.getAllRawByWorldId(worldId, { people: false })
     return {
       civilizations: civilizations.map((civ) => ({
-        id: (civ._id as unknown as { toString(): string }).toString(),
+        id: civ.id,
         name: civ.name,
       })),
     }
