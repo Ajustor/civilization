@@ -360,9 +360,11 @@ export class CivilizationService {
     return civilizationMapper(civilization, populate)
   }
 
-  async create(userId: string, civilization: Civilization) {
+  async create(userId: string, civilization: Civilization, worldId?: string) {
     const user = await UserModel.findOne({ _id: userId })
-    const world = await WorldModel.findOne()
+    const world = worldId
+      ? await WorldModel.findById(worldId)
+      : await WorldModel.findOne()
     if (!user) {
       throw new Error('No user found for this id')
     }

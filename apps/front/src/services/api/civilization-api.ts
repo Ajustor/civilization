@@ -31,9 +31,9 @@ export const getMyCivilizationFromId = async (authToken: string, civilizationId:
 	return civilizationInfos.civilization
 }
 
-export const createCivilization = async (authToken: string, civilizationName: string) => {
+export const createCivilization = async (authToken: string, civilizationName: string, worldId?: string) => {
 	const { error } = await client.civilizations.post(
-		{ name: civilizationName },
+		{ name: civilizationName, ...(worldId ? { worldId } : {}) },
 		{
 			headers: {
 				authorization: `Bearer ${authToken}`

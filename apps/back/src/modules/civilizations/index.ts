@@ -121,11 +121,13 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       await civilizationService.create(
         user.id as string,
         civilizationBuilder.build(),
+        body.worldId,
       )
     },
     {
       body: t.Object({
         name: t.String({ minLength: 3 }),
+        worldId: t.Optional(t.String()),
       }),
     },
   )

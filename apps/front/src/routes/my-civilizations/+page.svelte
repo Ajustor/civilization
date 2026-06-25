@@ -23,6 +23,8 @@
 
 	let { data = $bindable() }: Props = $props()
 
+	const worlds = data.worlds ?? []
+
 	const form = superForm(data.civilizationCreationForm, {
 		validators: zodClient(newCivilizationSchema),
 		onError({ result }) {
@@ -104,6 +106,28 @@
 					<FormDescription />
 					<FormFieldErrors />
 				</FormField>
+				{#if worlds.length > 1}
+					<FormField {form} name="worldId">
+						<FormControl>
+							{#snippet children({ props })}
+								<FormLabel>Monde</FormLabel>
+								<select
+									{...props}
+									bind:value={$formData.worldId}
+									style="width:100%; padding:10px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.98 0.01 84); color:oklch(0.3 0.04 40); font-family:'EB Garamond',serif; font-size:16px;"
+								>
+									<option value="">— Choisir un monde —</option>
+									{#each worlds as world}
+										<option value={world.id}>{world.name}</option>
+									{/each}
+								</select>
+							{/snippet}
+						</FormControl>
+						<FormFieldErrors />
+					</FormField>
+				{:else if worlds.length === 1}
+					<input type="hidden" name="worldId" value={worlds[0].id} />
+				{/if}
 				<div style="display:flex; gap:10px; justify-content:flex-end;">
 					<button
 						type="button"
