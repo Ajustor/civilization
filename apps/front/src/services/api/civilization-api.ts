@@ -93,3 +93,16 @@ export const updateCivilization = async (authToken: string, civilizationId: stri
 		throw error
 	}
 }
+
+export const getCivilizationWorld = async (authToken: string, civilizationId: string): Promise<string | null> => {
+	const { data, error } = await client.civilizations({ civilizationId }).world.get({
+		headers: { authorization: `Bearer ${authToken}` }
+	})
+
+	if (error) {
+		console.error(error)
+		throw error
+	}
+
+	return data.worldId
+}

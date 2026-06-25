@@ -101,3 +101,14 @@ export async function getWorldStats(worldId: string, query: {
     ...(query.withTopCivilizations && { topCivilizations: worldStats.topCivilizations })
   }
 }
+
+export const getWorldCivilizations = async (worldId: string): Promise<{ id: string; name: string }[]> => {
+	const { data, error } = await client.worlds({ worldId }).civilizations.get()
+
+	if (error) {
+		console.error(error)
+		throw error
+	}
+
+	return data.civilizations
+}
