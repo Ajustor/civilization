@@ -4,6 +4,7 @@ import { worldSchema } from '../../../db/schema/worldModel'
 import { civilizationSchema } from '../../../db/schema/civilizationsModel'
 import { PersonSchema } from '../../../db/schema/personModel'
 import { civilizationStatsSchema } from '../../../db/schema/civilizationStatsSchema'
+import { tradeOfferSchema } from '../../../db/schema/tradeOfferModel'
 
 export const UserModel = model('User', UserSchema)
 export const WorldModel = model('World', worldSchema)
@@ -13,3 +14,4 @@ export const CivilizationStatsModel = model(
   'CivilizationStats',
   civilizationStatsSchema,
 )
+export const TradeOfferModel = model('TradeOffer', tradeOfferSchema)
