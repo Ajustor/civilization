@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ArrowRight from 'lucide-svelte/icons/arrow-right'
+	import ArrowRight from '@lucide/svelte/icons/arrow-right'
 	import type { VariantProps } from 'tailwind-variants'
 	import { getEmblaContext } from './context'
 	import { cn } from '$lib/utils'

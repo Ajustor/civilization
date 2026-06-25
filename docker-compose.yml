@@ -7,7 +7,7 @@ services:
     working_dir: /home/bun/app
     volumes:
       - .:/home/bun/app:cached
-    command: bun run prisma:init
+    command: bun install
 
   front:
     profiles: ["app"]
