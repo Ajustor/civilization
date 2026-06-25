@@ -1,4 +1,4 @@
-import { CivilizationType } from '@ajustor/simulation'
+import type { CivilizationType } from '@ajustor/simulation'
 import { CivilizationModel, TradeOfferModel, UserModel } from '../../libs/database/models'
 import { canFulfill, applyResourceChanges, type ResourceAmount } from './tradeLogic'
 
