@@ -1,3 +1,5 @@
+name: civilizations
+
 services:
 
   init:
@@ -31,7 +33,7 @@ services:
     image: oven/bun:latest
     user: bun
     ports:
-      - "${DOCKER_BACK_EXTERNAL_PORT}:3000"
+      - "3000:3000"
     working_dir: /home/bun/app/apps/back
     volumes:
       - .:/home/bun/app:cached
