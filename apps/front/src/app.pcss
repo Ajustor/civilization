@@ -230,13 +230,17 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+	html,
+	body {
+		height: 100%;
+		overflow: hidden;
+	}
 	body {
 		@apply text-foreground;
 		font-family: 'EB Garamond', serif;
 		color: oklch(0.34 0.03 50);
 		background: radial-gradient(ellipse at 50% -20%, oklch(0.92 0.025 78), oklch(0.84 0.035 66));
 		background-attachment: fixed;
-		min-height: 100vh;
 	}
 	html {
 		@apply font-sans;
