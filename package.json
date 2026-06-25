@@ -12,6 +12,9 @@
     "start:front": "bunx nx dev front",
     "start": "concurrently \"bun start:back\" \"bun start:front\""
   },
+  "engines": {
+    "node": ">=24.x"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
