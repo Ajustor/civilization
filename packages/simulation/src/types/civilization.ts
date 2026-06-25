@@ -16,6 +16,9 @@ export type CivilizationConfig = {
   CHANCE_TO_BUILD_EVOLVED_BUILDING: number
   MAXIMUM_CHILDREN: number
   OPEN_EXCHANGE: string[]
+  AT_WAR_WITH: string[]
+  MILITARY_RATIO: number
+  NEXT_BUILDING_TO_BUILD: BuildingTypes | null
 }
 
 

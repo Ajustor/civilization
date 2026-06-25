@@ -38,6 +38,9 @@ export const defaultCivilizationConfig: CivilizationConfig = {
   CHANCE_TO_EVOLVE: 20,
   MAXIMUM_CHILDREN: 10,
   OPEN_EXCHANGE: [],
+  AT_WAR_WITH: [],
+  MILITARY_RATIO: 0,
+  NEXT_BUILDING_TO_BUILD: null,
 }
 
 const BUILDING_CONSTRUCTORS = {
@@ -78,6 +81,7 @@ export class Civilization {
     public config: CivilizationConfig = {
       ...defaultCivilizationConfig,
       OPEN_EXCHANGE: [...defaultCivilizationConfig.OPEN_EXCHANGE],
+      AT_WAR_WITH: [...defaultCivilizationConfig.AT_WAR_WITH],
     },
   ) {
     this._people = []

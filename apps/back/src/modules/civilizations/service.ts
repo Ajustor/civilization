@@ -3,6 +3,7 @@ import {
   BuildingTypes,
   Civilization,
   CivilizationBuilder,
+  CivilizationConfig,
   CivilizationType,
   House,
   PeopleEntity,
@@ -56,6 +57,7 @@ export const civilizationMapper = (
       ...civilization.config,
       // OPEN_EXCHANGE is stored as ObjectId refs, normalize to plain id strings
       OPEN_EXCHANGE: (civilization.config.OPEN_EXCHANGE ?? []).map(String),
+      AT_WAR_WITH: (civilization.config.AT_WAR_WITH ?? []).map(String),
     })
   }
 
@@ -548,6 +550,19 @@ export class CivilizationService {
             body.openExchange ??
             currentConfig.OPEN_EXCHANGE ??
             defaultCivilizationConfig.OPEN_EXCHANGE,
+          MILITARY_RATIO:
+            body.militaryRatio ??
+            currentConfig.MILITARY_RATIO ??
+            defaultCivilizationConfig.MILITARY_RATIO,
+          NEXT_BUILDING_TO_BUILD:
+            body.nextBuildingToBuild !== undefined
+              ? (body.nextBuildingToBuild as CivilizationConfig['NEXT_BUILDING_TO_BUILD'])
+              : (currentConfig.NEXT_BUILDING_TO_BUILD ??
+                defaultCivilizationConfig.NEXT_BUILDING_TO_BUILD),
+          AT_WAR_WITH:
+            body.atWarWith ??
+            currentConfig.AT_WAR_WITH ??
+            defaultCivilizationConfig.AT_WAR_WITH,
         },
       },
     )

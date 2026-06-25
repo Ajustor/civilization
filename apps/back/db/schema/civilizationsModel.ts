@@ -41,7 +41,14 @@ const ConfigSchema = new Schema({
     type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
     required: true,
     default: [],
-  }
+  },
+  MILITARY_RATIO: Number,
+  NEXT_BUILDING_TO_BUILD: { type: String, default: null },
+  AT_WAR_WITH: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
+    required: true,
+    default: [],
+  },
 })
 
 const civilizationSchema = new Schema(
@@ -82,6 +89,9 @@ const civilizationSchema = new Schema(
         CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
         MAXIMUM_CHILDREN: 10,
         OPEN_EXCHANGE: [],
+        MILITARY_RATIO: 0,
+        NEXT_BUILDING_TO_BUILD: null,
+        AT_WAR_WITH: [],
       },
     },
     pendingConstructions: {
