@@ -224,6 +224,14 @@ export class CivilizationService {
     return civilizations
   }
 
+  async getWorldId(civilizationId: string): Promise<string | null> {
+    const world = await WorldModel.findOne(
+      { civilizations: civilizationId },
+      '_id',
+    )
+    return world ? world._id.toString() : null
+  }
+
   async countGenderForWorld(
     worldId: string,
   ): Promise<{ men: number; women: number }> {
