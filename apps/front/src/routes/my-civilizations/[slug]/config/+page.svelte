@@ -19,6 +19,7 @@
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import { toast } from 'svelte-sonner'
 	import { ArrowLeft } from '@lucide/svelte'
+	import { BuildingTypes } from '@ajustor/simulation'
 
 	export let data: PageData
 
@@ -41,6 +42,14 @@
 			$formData.openExchange = [...$formData.openExchange, civilizationId]
 		} else {
 			$formData.openExchange = $formData.openExchange.filter((id) => id !== civilizationId)
+		}
+	}
+
+	const toggleWar = (civilizationId: string, checked: boolean | 'indeterminate') => {
+		if (checked === true) {
+			$formData.atWarWith = [...$formData.atWarWith, civilizationId]
+		} else {
+			$formData.atWarWith = $formData.atWarWith.filter((id) => id !== civilizationId)
 		}
 	}
 </script>
@@ -120,6 +129,73 @@
 				{:else}
 					<p>Vous n'avez pas d'autre civilisation avec laquelle ouvrir des échanges.</p>
 				{/if}
+			</CardContent>
+		</Card>
+
+		<Card class="card bg-neutral text-neutral-content shadow-xl">
+			<CardHeader>
+				<CardTitle>Militaire</CardTitle>
+			</CardHeader>
+			<CardContent class="flex flex-col gap-4">
+				<FormField {form} name="militaryRatio">
+					<FormControl let:attrs>
+						<FormLabel>Ratio militaire (%)</FormLabel>
+						<Input
+							type="number"
+							min="0"
+							max="100"
+							{...attrs}
+							bind:value={$formData.militaryRatio}
+						/>
+					</FormControl>
+					<FormDescription>
+						Part des adultes entretenus comme soldats (0–100%).
+					</FormDescription>
+					<FormFieldErrors />
+				</FormField>
+
+				{#if data.otherCivilizations.length}
+					<FormFieldset {form} name="atWarWith" class="flex flex-col gap-3">
+						<FormLegend>Civilisations à attaquer</FormLegend>
+						{#each data.otherCivilizations as otherCivilization}
+							<div class="flex items-center gap-2">
+								<Checkbox
+									id="war-{otherCivilization.id}"
+									checked={$formData.atWarWith.includes(otherCivilization.id)}
+									onCheckedChange={(checked: boolean | 'indeterminate') =>
+										toggleWar(otherCivilization.id, checked)}
+								/>
+								<label for="war-{otherCivilization.id}">{otherCivilization.name}</label>
+							</div>
+						{/each}
+						<FormFieldErrors />
+					</FormFieldset>
+				{:else}
+					<p>Vous n'avez pas d'autre civilisation à attaquer.</p>
+				{/if}
+
+				<FormField {form} name="nextBuildingToBuild">
+					<FormControl let:attrs>
+						<FormLabel>Prochain bâtiment à construire</FormLabel>
+						<select
+							{...attrs}
+							value={$formData.nextBuildingToBuild ?? ''}
+							on:change={(e) => {
+								$formData.nextBuildingToBuild = e.currentTarget.value || null
+							}}
+							class="select select-bordered w-full"
+						>
+							<option value="">Aucun</option>
+							{#each Object.values(BuildingTypes) as buildingType}
+								<option value={buildingType}>{buildingType}</option>
+							{/each}
+						</select>
+					</FormControl>
+					<FormDescription>
+						Bâtiment que la civilisation cherchera à construire en priorité.
+					</FormDescription>
+					<FormFieldErrors />
+				</FormField>
 			</CardContent>
 		</Card>
 

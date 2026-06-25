@@ -34,7 +34,10 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		{
 			maximumChildren: civilization.config.MAXIMUM_CHILDREN,
 			maxActivePeopleByCivilization: civilization.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
-			openExchange: civilization.config.OPEN_EXCHANGE ?? []
+			openExchange: civilization.config.OPEN_EXCHANGE ?? [],
+			militaryRatio: civilization.config.MILITARY_RATIO,
+			atWarWith: civilization.config.AT_WAR_WITH ?? [],
+			nextBuildingToBuild: civilization.config.NEXT_BUILDING_TO_BUILD ?? null
 		},
 		zod(civilizationConfigSchema)
 	)
@@ -58,7 +61,10 @@ export const actions: Actions = {
 			await updateCivilization(cookies.get('auth') ?? '', params.slug, {
 				maximumChildren: form.data.maximumChildren,
 				maxActivePeopleByCivilization: form.data.maxActivePeopleByCivilization,
-				openExchange: form.data.openExchange
+				openExchange: form.data.openExchange,
+				militaryRatio: form.data.militaryRatio,
+				atWarWith: form.data.atWarWith,
+				nextBuildingToBuild: form.data.nextBuildingToBuild
 			})
 
 			message(form, { status: 'success', text: 'La configuration a bien été mise à jour' })
