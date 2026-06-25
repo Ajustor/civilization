@@ -15,7 +15,9 @@
 
 	let userStore = useUser()
 
-	userStore.value = data.user
+	$effect(() => {
+		userStore.value = data.user
+	})
 
 	const authRoutes = ['/login', '/register', '/i-forgot']
 	let isAuthPage = $derived(authRoutes.some((r) => page.url.pathname.startsWith(r)))
@@ -34,7 +36,7 @@
 	{@html webManifest}
 </svelte:head>
 
-<Toaster richColors />
+<Toaster />
 
 <div class="app">
 	{#if !isAuthPage}
