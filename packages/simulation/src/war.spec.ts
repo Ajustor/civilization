@@ -74,3 +74,73 @@ describe('resolveWars', () => {
     expect(b.getResource(ResourceTypes.WOOD).quantity).toBe(1000)
   })
 })
+
+describe('World.lastBattles', () => {
+  it('starts empty', () => {
+    const world = makeWorld()
+    expect(world.lastBattles).toEqual([])
+  })
+
+  it('is populated with one record when a battle is fought', () => {
+    const world = makeWorld()
+    const attacker = new Civilization('Attacker'); attacker.id = 'att'
+    const defender = new Civilization('Defender'); defender.id = 'def'
+    attacker.config = { ...attacker.config, AT_WAR_WITH: ['def'] }
+    army(attacker, 20, 10)
+    army(defender, 0, 30)
+    defender.addResource(new Resource(ResourceTypes.WOOD, 1000))
+    world.addCivilization(attacker, defender)
+
+    ;(world as unknown as { resolveWars: () => void }).resolveWars()
+
+    expect(world.lastBattles).toHaveLength(1)
+    const record = world.lastBattles[0]
+    expect(record.attackerCivId).toBe('att')
+    expect(record.defenderCivId).toBe('def')
+    expect(record.attackerWins).toBe(true)
+    expect(record.plunderedResources.length).toBeGreaterThan(0)
+    expect(record.captivesTaken).toBeGreaterThan(0)
+    expect(typeof record.battleId).toBe('string')
+    expect(record.battleId.length).toBeGreaterThan(0)
+  })
+
+  it('is empty when a wall blocks the attack', () => {
+    const world = makeWorld()
+    const attacker = new Civilization('Attacker'); attacker.id = 'att'
+    const defender = new Civilization('Defender'); defender.id = 'def'
+    attacker.config = { ...attacker.config, AT_WAR_WITH: ['def'] }
+    army(attacker, 20, 0)
+    army(defender, 0, 20)
+    defender.addBuilding(new Wall(1))
+    world.addCivilization(attacker, defender)
+
+    ;(world as unknown as { resolveWars: () => void }).resolveWars()
+
+    expect(world.lastBattles).toHaveLength(0)
+  })
+
+  it('resets to empty on each call (does not accumulate across calls)', () => {
+    const world = makeWorld()
+    world.lastBattles = [{ battleId: 'stale' } as any]
+
+    ;(world as unknown as { resolveWars: () => void }).resolveWars()
+
+    expect(world.lastBattles.every(r => r.battleId !== 'stale')).toBe(true)
+  })
+
+  it('records pre-battle strengths', () => {
+    const world = makeWorld()
+    const attacker = new Civilization('Attacker'); attacker.id = 'att'
+    const defender = new Civilization('Defender'); defender.id = 'def'
+    attacker.config = { ...attacker.config, AT_WAR_WITH: ['def'] }
+    army(attacker, 20, 0)
+    army(defender, 0, 10) // only civilians, no soldiers → strength 0
+    world.addCivilization(attacker, defender)
+
+    ;(world as unknown as { resolveWars: () => void }).resolveWars()
+
+    const record = world.lastBattles[0]
+    expect(record.attackerStrength).toBeGreaterThan(0)
+    expect(record.defenderStrength).toBe(0)
+  })
+})
