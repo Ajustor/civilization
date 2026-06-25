@@ -46,7 +46,7 @@
 	<title>Connexion — Civilizations</title>
 </svelte:head>
 
-<div style="display:flex; align-items:center; justify-content:center; min-height:100%; padding:24px;">
+<div style="flex:1; display:flex; align-items:center; justify-content:center; padding:24px;">
 	<div style="width:min(440px,100%); padding:clamp(28px,5vw,44px); border-radius:5px; background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.07), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 6px oklch(0.93 0.03 84), inset 0 0 0 7px oklch(0.74 0.05 60), 0 22px 60px rgba(60,40,20,.22); animation:loginIn .5s cubic-bezier(.22,.72,.2,1) both;">
 		<!-- Logo + Brand -->
 		<div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:26px;">

@@ -5,7 +5,6 @@
 	import { useUser } from '../stores/user'
 	import type { LayoutData } from './$types'
 	import { Toaster } from '$lib/components/ui/sonner'
-	import { fly } from 'svelte/transition'
 	import { page } from '$app/state'
 	import { toast } from 'svelte-sonner'
 	import { pwaInfo } from 'virtual:pwa-info'
@@ -60,14 +59,7 @@
 
 	main {
 		flex: 1;
-		position: relative;
-		overflow: hidden;
-		min-height: 0;
-	}
-
-	:global(.page-trans) {
-		position: absolute;
-		inset: 0;
-		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
 	}
 </style>
