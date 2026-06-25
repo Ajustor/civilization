@@ -16,6 +16,7 @@ import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall } from '@ajustor/simul
 import {
   CivilizationModel,
   CivilizationStatsModel,
+  CombatLogModel,
   PersonModel,
   UserModel,
   WorldModel,
@@ -593,5 +594,38 @@ export class CivilizationService {
       .limit(limit)
       .lean()
     return result.reverse()
+  }
+
+  async getCombatLogs(civilizationId: string, limit = 20, offset = 0) {
+    return CombatLogModel.find({ civilizationId })
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean()
+  }
+
+  async markCombatLogsViewed(civilizationId: string): Promise<void> {
+    await CivilizationModel.updateOne(
+      { _id: civilizationId },
+      { lastViewedCombats: new Date() },
+    )
+  }
+
+  async getRecentAttacksCount(civilizationId: string): Promise<number> {
+    const civ = await CivilizationModel.findById(civilizationId, {
+      lastViewedCombats: 1,
+    }).lean()
+
+    const filter: Record<string, unknown> = {
+      civilizationId,
+      role: 'defender',
+      attackerWins: true,
+    }
+
+    if (civ?.lastViewedCombats) {
+      filter.createdAt = { $gt: civ.lastViewedCombats }
+    }
+
+    return CombatLogModel.countDocuments(filter)
   }
 }
