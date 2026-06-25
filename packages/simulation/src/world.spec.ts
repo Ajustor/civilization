@@ -248,7 +248,7 @@ describe('World', () => {
       id: '',
       name: 'The world',
       civilizations: [{
-        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, config: civilization1.config, resources: [
+        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, config: civilization1.config, pendingConstructions: [], resources: [
           food.formatToType(),
           wood.formatToType()
         ]

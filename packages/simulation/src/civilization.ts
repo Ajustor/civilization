@@ -28,7 +28,7 @@ import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
-import type { CivilizationConfig } from './types/civilization'
+import type { CivilizationConfig, PendingConstruction } from './types/civilization'
 
 export const defaultCivilizationConfig: CivilizationConfig = {
   PEOPLE_CHARCOAL_CAN_HEAT: 10,
@@ -66,6 +66,7 @@ export const isExtractionBuilding = (
 
 export class Civilization {
   public id = v4()
+  public pendingConstructions: PendingConstruction[] = []
   private _people: People[]
   private _resources: Resource[]
   private _livedMonths: number = 0
@@ -82,6 +83,7 @@ export class Civilization {
     this._people = []
     this._resources = []
     this._buildings = []
+    this.pendingConstructions = []
   }
 
   nobodyAlive(): boolean {
@@ -325,6 +327,31 @@ export class Civilization {
     existingBuilding.count++
   }
 
+  private startConstruction(buildingType: BuildingTypes, timeToBuild: number): void {
+    this.pendingConstructions.push({
+      buildingType,
+      monthsRemaining: timeToBuild,
+    })
+  }
+
+  private progressConstructions(): void {
+    const completed: PendingConstruction[] = []
+    for (const pending of this.pendingConstructions) {
+      pending.monthsRemaining--
+      if (pending.monthsRemaining <= 0) {
+        completed.push(pending)
+      }
+    }
+
+    for (const pending of completed) {
+      this.constructBuilding(pending.buildingType)
+    }
+
+    this.pendingConstructions = this.pendingConstructions.filter(
+      (pending) => pending.monthsRemaining > 0,
+    )
+  }
+
   private collectResource(workers: People[], world: World): Promise<null> {
     return new Promise((resolve) => {
       for (const worker of workers) {
@@ -469,6 +496,7 @@ export class Civilization {
     this.produceResources()
 
     this.adaptPeopleJob()
+    this.progressConstructions()
     this.buildNewBuilding()
 
     if (!this.nobodyAlive()) {
@@ -700,8 +728,8 @@ export class Civilization {
         this.decreaseResource(cost.resource, cost.amount)
       }
 
-      worker.startBuilding()
-      this.constructBuilding(BuildingTypes.HOUSE)
+      worker.startBuilding(House.timeToBuild)
+      this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild)
     }
   }
 
@@ -752,7 +780,7 @@ export class Civilization {
       this.decreaseResource(cost.resource, cost.amount)
     }
 
-    this.constructBuilding(buildingType)
+    this.startConstruction(buildingType, timeToBuild)
   }
 
   private checkHousing() {
