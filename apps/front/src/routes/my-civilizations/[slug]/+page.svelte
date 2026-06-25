@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types'
-	import { Settings } from '@lucide/svelte'
+	import { Settings, ZoomIn } from '@lucide/svelte'
 	import {
 		Resource,
 		ResourceTypes,
@@ -10,7 +10,7 @@
 		Events
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
-	import { OCCUPATIONS, resourceNames, eventsName } from '$lib/translations'
+	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
@@ -22,6 +22,13 @@
 
 	let pageIndex = $state(0)
 	let pageSize = $state(10)
+
+	// Which panel is expanded: null = closed
+	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
+	let activePanel = $state<Panel>(null)
+
+	const openPanel = (p: Panel) => { activePanel = p }
+	const closePanel = () => { activePanel = null }
 
 	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
 		const oldPeople = await data.lazy.people
@@ -55,20 +62,288 @@
 
 	const maxResourceQty = $derived(Math.max(...data.civilization.resources.map(r => r.quantity), 1))
 
-	const stringToColour = (str: string) => {
-		let hash = 0
-		for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-		let colour = '#'
-		for (let i = 0; i < 3; i++) {
-			const value = (hash >> (i * 8)) & 0xff
-			colour += ('00' + value.toString(16)).substr(-2)
-		}
-		return colour
-	}
+	// ── Stat helpers ──────────────────────────────────────────────────────────
+	const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
+	const pct = (n: number, total: number) => total > 0 ? Math.round(n / total * 100) : 0
+	const trendArrow = (d: number) => d > 0 ? '▲' : d < 0 ? '▼' : '─'
+	const trendColor = (d: number) => d > 0 ? 'oklch(0.42 0.12 140)' : d < 0 ? 'oklch(0.48 0.16 30)' : 'oklch(0.5 0.03 50)'
+	const signedFmt = (d: number) => (d > 0 ? '+' : '') + fmt(d)
+
+	const CHART_OPTS = { maintainAspectRatio: false, responsive: true }
 </script>
 
+<!-- ── Modal backdrop ──────────────────────────────────────────────────────── -->
+{#if activePanel}
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
+	<div
+		role="presentation"
+		style="position:fixed; inset:0; z-index:60; background:rgba(24,14,4,.65); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:16px;"
+		onclick={closePanel}
+	>
+		<div
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.key === 'Escape' && closePanel()}
+			style="background:radial-gradient(circle at 20% 10%, rgba(150,110,60,.08), transparent 50%), oklch(0.95 0.022 84); border:1px solid oklch(0.74 0.05 60); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.72 0.05 60), 0 24px 64px rgba(40,20,4,.5); border-radius:5px; width:min(96vw, 1040px); max-height:88vh; overflow-y:auto; display:flex; flex-direction:column;"
+		>
+			<!-- Modal header -->
+			<div style="display:flex; justify-content:space-between; align-items:center; padding:18px 24px; border-bottom:2px solid oklch(0.76 0.05 60); flex-shrink:0;">
+				<div>
+					<div style="font-size:11px; letter-spacing:.12em; color:oklch(0.55 0.05 50); text-transform:uppercase; margin-bottom:4px;">Analyse détaillée · {data.civilization.name}</div>
+					<h2 style="font-family:'Marcellus',serif; font-size:22px; margin:0; color:oklch(0.3 0.04 40);">
+						{#if activePanel === 'resources'}Progression des ressources
+						{:else if activePanel === 'population'}Progression de la population
+						{:else if activePanel === 'jobs'}Répartition des métiers
+						{:else if activePanel === 'gender'}Rapport homme / femme
+						{/if}
+					</h2>
+				</div>
+				<button onclick={closePanel} style="background:none; border:1px solid oklch(0.74 0.05 60); border-radius:4px; padding:8px 14px; cursor:pointer; font-size:18px; color:oklch(0.5 0.04 50); line-height:1;">✕</button>
+			</div>
+
+			<!-- Modal body -->
+			<div style="flex:1; overflow-y:auto; padding:24px;">
+
+				<!-- ── RESOURCES panel ──────────────────────────────────────── -->
+				{#if activePanel === 'resources'}
+					{#await data.lazy.stats.civilization}
+						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
+					{:then civilizationStats}
+						{@const last = civilizationStats[civilizationStats.length - 1]}
+						{@const prev = civilizationStats[civilizationStats.length - 2]}
+						{@const events = civilizationStats.filter(s => s.event)}
+						{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
+						{@const datasets = civilizationStats.reduce<{ data: number[]; label: string; type: string }[]>(
+							(acc, { resources }) => {
+								for (const r of resources) {
+									if (!r?.resourceType) continue
+									acc[RESOURCES_INDEXES[r.resourceType as ResourceTypes]] ??= { data: [], label: resourceNames[r.resourceType as ResourceTypes], type: 'line' }
+									acc[RESOURCES_INDEXES[r.resourceType as ResourceTypes]].data.push(r.quantity ?? 0)
+								}
+								return acc
+							}, []
+						)}
+						<div style="display:grid; grid-template-columns:260px 1fr; gap:20px;">
+							<!-- Stats panel -->
+							<div style="background:oklch(0.91 0.025 78); border:1px solid oklch(0.78 0.045 70); border-radius:4px; padding:16px 18px; display:flex; flex-direction:column; gap:12px;">
+								<div>
+									<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:8px;">Informations</div>
+									<div style="display:grid; grid-template-columns:1fr auto; gap:4px 12px; font-size:14px;">
+										<span style="color:oklch(0.5 0.04 50);">Mois suivis</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{civilizationStats.length}</span>
+										<span style="color:oklch(0.5 0.04 50);">Dernier mois</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">M{last?.month ?? '─'}</span>
+										<span style="color:oklch(0.5 0.04 50);">Événements</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{events.length}</span>
+									</div>
+								</div>
+								<div style="border-top:1px solid oklch(0.8 0.04 70); padding-top:12px;">
+									<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:8px;">Ressources actuelles</div>
+									{#each Object.entries(RESOURCES_INDEXES).sort(([,a],[,b]) => a-b) as [rType, idx]}
+										{@const curQty = last?.resources.find(r => r.resourceType === rType)?.quantity ?? 0}
+										{@const prevQty = prev?.resources.find(r => r.resourceType === rType)?.quantity ?? 0}
+										{@const d = curQty - prevQty}
+										<div style="display:grid; grid-template-columns:1fr auto auto; gap:2px 10px; align-items:baseline; padding:4px 0; border-bottom:1px solid oklch(0.86 0.03 76);">
+											<span style="font-size:14px; color:oklch(0.45 0.04 48);">{resourceNames[rType as ResourceTypes]}</span>
+											<span style="font-size:15px; font-weight:600; color:oklch(0.3 0.04 40);">{fmt(curQty)}</span>
+											<span style="font-size:12px; color:{trendColor(d)};">{trendArrow(d)} {signedFmt(d)}</span>
+										</div>
+									{/each}
+								</div>
+								{#if events.length}
+									<div style="border-top:1px solid oklch(0.8 0.04 70); padding-top:12px;">
+										<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:8px;">Événements survenus</div>
+										{#each events as ev}
+											<div style="font-size:13px; padding:4px 0; border-bottom:1px solid oklch(0.88 0.03 76);">
+												<span style="color:oklch(0.48 0.08 40);">M{ev.month}</span>
+												<span style="color:oklch(0.5 0.04 50); margin:0 6px;">—</span>
+												<span style="color:oklch(0.35 0.04 40);">{eventsName[ev.event as Events]}</span>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</div>
+							<!-- Chart -->
+							<div style="display:flex; flex-direction:column; gap:12px;">
+								<div style="position:relative; height:380px;">
+									{#if datasets.length}
+										{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
+											<Line data={{ labels, datasets }} options={CHART_OPTS} />
+										{/await}
+									{:else}
+										<div style="height:100%; display:flex; align-items:center; justify-content:center; color:oklch(0.5 0.03 50);">Pas encore de données historiques</div>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/await}
+
+				<!-- ── POPULATION panel ──────────────────────────────────────── -->
+				{:else if activePanel === 'population'}
+					{#await data.lazy.stats.civilization}
+						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
+					{:then civilizationStats}
+						{@const last = civilizationStats[civilizationStats.length - 1]}
+						{@const first = civilizationStats[0]}
+						{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
+						{@const datasets = civilizationStats.reduce<{ data: number[]; type: string; label: string }[]>(
+							(acc, { people: p }) => {
+								acc[0] ??= { data: [], type: 'line', label: 'Hommes' }
+								acc[1] ??= { data: [], type: 'line', label: 'Femmes' }
+								acc[2] ??= { data: [], type: 'line', label: 'Femmes enceintes' }
+								acc[0].data.push(p?.men ?? 0)
+								acc[1].data.push(p?.women ?? 0)
+								acc[2].data.push(p?.pregnantWomen ?? 0)
+								return acc
+							}, []
+						)}
+						{@const peakEntry = civilizationStats.reduce((best, s) => {
+							const total = (s.people?.men ?? 0) + (s.people?.women ?? 0)
+							const bestTotal = (best?.people?.men ?? 0) + (best?.people?.women ?? 0)
+							return total > bestTotal ? s : best
+						}, civilizationStats[0])}
+						{@const curTotal = (last?.people?.men ?? 0) + (last?.people?.women ?? 0)}
+						{@const firstTotal = (first?.people?.men ?? 0) + (first?.people?.women ?? 0)}
+						{@const growth = curTotal - firstTotal}
+						<div style="display:grid; grid-template-columns:260px 1fr; gap:20px;">
+							<!-- Stats panel -->
+							<div style="background:oklch(0.91 0.025 78); border:1px solid oklch(0.78 0.045 70); border-radius:4px; padding:16px 18px; display:flex; flex-direction:column; gap:12px;">
+								<div>
+									<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:8px;">Population actuelle</div>
+									<div style="display:grid; grid-template-columns:1fr auto auto; gap:4px 10px; font-size:14px; align-items:baseline;">
+										<span style="color:oklch(0.5 0.04 50);">Total</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{fmt(curTotal)}</span>
+										<span></span>
+										<span style="color:oklch(0.5 0.04 50);">Hommes</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{fmt(last?.people?.men ?? 0)}</span>
+										<span style="color:oklch(0.5 0.04 50); font-size:12px;">{pct(last?.people?.men ?? 0, curTotal)}%</span>
+										<span style="color:oklch(0.5 0.04 50);">Femmes</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{fmt(last?.people?.women ?? 0)}</span>
+										<span style="color:oklch(0.5 0.04 50); font-size:12px;">{pct(last?.people?.women ?? 0, curTotal)}%</span>
+										<span style="color:oklch(0.5 0.04 50); padding-left:10px;">dont enceintes</span>
+										<span style="color:oklch(0.32 0.04 40);">{fmt(last?.people?.pregnantWomen ?? 0)}</span>
+										<span style="color:oklch(0.5 0.04 50); font-size:12px;">{pct(last?.people?.pregnantWomen ?? 0, last?.people?.women ?? 1)}%</span>
+									</div>
+								</div>
+								<div style="border-top:1px solid oklch(0.8 0.04 70); padding-top:12px;">
+									<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:8px;">Évolution</div>
+									<div style="display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-size:14px;">
+										<span style="color:oklch(0.5 0.04 50);">Début suivi</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{fmt(firstTotal)}</span>
+										<span style="color:oklch(0.5 0.04 50);">Progression</span>
+										<span style="color:{trendColor(growth)}; font-weight:600;">{trendArrow(growth)} {signedFmt(growth)} ({pct(Math.abs(growth), firstTotal || 1)}%)</span>
+										<span style="color:oklch(0.5 0.04 50);">Pic</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{fmt((peakEntry?.people?.men ?? 0) + (peakEntry?.people?.women ?? 0))} (M{peakEntry?.month})</span>
+										<span style="color:oklch(0.5 0.04 50);">Mois suivis</span>
+										<span style="color:oklch(0.32 0.04 40); font-weight:600;">{civilizationStats.length}</span>
+									</div>
+								</div>
+							</div>
+							<!-- Chart -->
+							<div style="position:relative; height:380px;">
+								{#if datasets.length}
+									{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
+										<Line data={{ labels, datasets }} options={CHART_OPTS} />
+									{/await}
+								{:else}
+									<div style="height:100%; display:flex; align-items:center; justify-content:center; color:oklch(0.5 0.03 50);">Pas encore de données historiques</div>
+								{/if}
+							</div>
+						</div>
+					{/await}
+
+				<!-- ── JOBS panel ──────────────────────────────────────────────── -->
+				{:else if activePanel === 'jobs'}
+					{#await data.lazy.stats.jobs}
+						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
+					{:then jobs}
+						{@const entries = Object.entries(jobs).sort(([,a],[,b]) => (b as number)-(a as number))}
+						{@const total = Object.values(jobs).reduce((s: number, v) => s + (v as number), 0)}
+						<div style="display:flex; flex-direction:column; gap:8px;">
+							<div style="display:grid; grid-template-columns:180px 1fr auto auto; gap:6px 16px; align-items:center; padding:8px 0; border-bottom:2px solid oklch(0.78 0.04 70); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.52 0.05 50);">
+								<span>Métier</span><span>Proportion</span><span>Effectif</span><span>Part</span>
+							</div>
+							{#each entries as [key, count], i}
+								{@const share = pct(count as number, total)}
+								<div style="display:grid; grid-template-columns:180px 1fr auto auto; gap:6px 16px; align-items:center; padding:10px 0; border-bottom:1px solid oklch(0.88 0.03 70);">
+									<span style="font-size:15px; color:oklch(0.36 0.04 42);">{OCCUPATIONS[key as OccupationTypes] ?? key}</span>
+									<div style="background:oklch(0.88 0.025 78); border-radius:2px; height:10px; overflow:hidden;">
+										<div style="height:100%; width:{share}%; background:{jobColors[i % jobColors.length]}; transition:width .3s;"></div>
+									</div>
+									<span style="font-size:15px; font-weight:600; color:oklch(0.32 0.04 40); text-align:right;">{fmt(count as number)}</span>
+									<span style="font-size:13px; color:oklch(0.5 0.04 50); text-align:right; min-width:36px;">{share}%</span>
+								</div>
+							{/each}
+							<div style="text-align:right; padding-top:8px; font-size:14px; color:oklch(0.5 0.04 50);">Total : <strong style="color:oklch(0.32 0.04 40);">{fmt(total)}</strong> actifs</div>
+						</div>
+					{/await}
+
+				<!-- ── GENDER panel ─────────────────────────────────────────────── -->
+				{:else if activePanel === 'gender'}
+					{#await data.lazy.stats.peopleRatio}
+						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
+					{:then peopleRatio}
+						{#if peopleRatio}
+							{@const men = peopleRatio.menAndWomen.men}
+							{@const women = peopleRatio.menAndWomen.women}
+							{@const pregnant = peopleRatio.pregnantWomen}
+							{@const total = men + women}
+							{@const ratio = women > 0 ? (men / women).toFixed(2) : '─'}
+							<div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">
+								<!-- Stats panel -->
+								<div style="background:oklch(0.91 0.025 78); border:1px solid oklch(0.78 0.045 70); border-radius:4px; padding:16px 18px;">
+									<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:12px;">Répartition</div>
+									<div style="display:flex; flex-direction:column; gap:14px;">
+										<div>
+											<div style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:oklch(0.5 0.06 240); margin-bottom:4px;">Hommes</div>
+											<div style="font-size:28px; font-family:'Marcellus',serif; color:oklch(0.38 0.08 240);">{fmt(men)}</div>
+											<div style="font-size:13px; color:oklch(0.5 0.04 50);">{pct(men, total)}% de la population</div>
+										</div>
+										<div style="border-top:1px solid oklch(0.82 0.03 72); padding-top:14px;">
+											<div style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:oklch(0.5 0.06 330); margin-bottom:4px;">Femmes</div>
+											<div style="font-size:28px; font-family:'Marcellus',serif; color:oklch(0.42 0.1 330);">{fmt(women)}</div>
+											<div style="font-size:13px; color:oklch(0.5 0.04 50);">{pct(women, total)}% de la population</div>
+											<div style="font-size:13px; color:oklch(0.5 0.04 50); margin-top:4px;">dont enceintes : <strong style="color:oklch(0.38 0.08 130);">{fmt(pregnant)}</strong> ({pct(pregnant, women)}%)</div>
+										</div>
+										<div style="border-top:1px solid oklch(0.82 0.03 72); padding-top:14px;">
+											<div style="font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:8px;">Équilibre</div>
+											<div style="display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-size:14px;">
+												<span style="color:oklch(0.5 0.04 50);">Rapport H/F</span>
+												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{ratio}</span>
+												<span style="color:oklch(0.5 0.04 50);">Pour 100 femmes</span>
+												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{women > 0 ? Math.round(men / women * 100) : '─'} hommes</span>
+												<span style="color:oklch(0.5 0.04 50);">Total</span>
+												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(total)}</span>
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- Chart -->
+								<div style="position:relative; height:340px;">
+									{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
+										<Doughnut
+											data={{
+												labels: ['Hommes', 'Femmes', 'Femmes enceintes'],
+												datasets: [{ data: [men, women - pregnant, pregnant] }]
+											}}
+											options={{ ...CHART_OPTS, plugins: { legend: { position: 'bottom', labels: { color: 'oklch(0.4 0.04 50)', padding: 16, font: { size: 14, family: "'EB Garamond', serif" } } } } }}
+										/>
+									{/await}
+								</div>
+							</div>
+						{/if}
+					{/await}
+				{/if}
+
+			</div><!-- /modal body -->
+		</div><!-- /modal card -->
+	</div><!-- /backdrop -->
+{/if}
+
+<!-- ── Page ─────────────────────────────────────────────────────────────────── -->
 <div class="civ-page-wrapper">
-	<!-- Back button -->
 	<a href="/my-civilizations" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-block; text-decoration:none; animation:screenIn .4s ease both;">‹ Retour aux civilisations</a>
 
 	<div class="civ-card" style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
@@ -98,7 +373,7 @@
 			</div>
 		</div>
 
-		<!-- Charts -->
+		<!-- Charts row -->
 		<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:24px;">
 			{#await data.lazy.stats.civilization}
 				<div style="height:180px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
@@ -109,8 +384,16 @@
 				{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
 
 				{#if resources.length}
-					<div class="civ-inner-card">
-						<h2 class="civ-section-title">Progression des ressources</h2>
+					<button
+						class="chart-panel civ-inner-card"
+						onclick={() => openPanel('resources')}
+						style="text-align:left; background:none; width:100%; font-family:inherit;"
+						title="Cliquer pour agrandir"
+					>
+						<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+							<h2 class="civ-section-title" style="margin:0;">Progression des ressources</h2>
+							<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
+						</div>
 						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
 							<Line
 								data={{
@@ -130,12 +413,20 @@
 								}}
 							/>
 						{/await}
-					</div>
+					</button>
 				{/if}
 
 				{#if peoples.length}
-					<div class="civ-inner-card">
-						<h2 class="civ-section-title">Progression de la population</h2>
+					<button
+						class="chart-panel civ-inner-card"
+						onclick={() => openPanel('population')}
+						style="text-align:left; background:none; width:100%; font-family:inherit;"
+						title="Cliquer pour agrandir"
+					>
+						<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+							<h2 class="civ-section-title" style="margin:0;">Progression de la population</h2>
+							<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
+						</div>
 						{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
 							<Line
 								data={{
@@ -154,18 +445,26 @@
 								}}
 							/>
 						{/await}
-					</div>
+					</button>
 				{/if}
 			{/await}
 		</div>
 
-		<!-- Jobs + Gender ratio -->
+		<!-- Jobs + Gender row -->
 		<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:20px;">
 			{#await data.lazy.stats.jobs}
 				<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then jobs}
-				<div class="civ-inner-card">
-					<h2 class="civ-section-title">Répartition des métiers</h2>
+				<button
+					class="chart-panel civ-inner-card"
+					onclick={() => openPanel('jobs')}
+					style="text-align:left; background:none; width:100%; font-family:inherit;"
+					title="Cliquer pour agrandir"
+				>
+					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+						<h2 class="civ-section-title" style="margin:0;">Répartition des métiers</h2>
+						<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
+					</div>
 					<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
 						{#each Object.entries(jobs).sort(([,a],[,b]) => (b as number)-(a as number)) as [key, count], i}
 							{@const total = Object.values(jobs).reduce((a: number, b) => a + (b as number), 0)}
@@ -180,15 +479,23 @@
 							</div>
 						{/each}
 					</div>
-				</div>
+				</button>
 			{/await}
 
 			{#await data.lazy.stats.peopleRatio}
 				<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then peopleRatio}
 				{#if peopleRatio}
-					<div class="civ-inner-card" style="display:flex; flex-direction:column; align-items:center;">
-						<h2 class="civ-section-title" style="align-self:flex-start;">Rapport homme/femme</h2>
+					<button
+						class="chart-panel civ-inner-card"
+						onclick={() => openPanel('gender')}
+						style="text-align:left; background:none; width:100%; font-family:inherit; display:flex; flex-direction:column; align-items:stretch;"
+						title="Cliquer pour agrandir"
+					>
+						<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+							<h2 class="civ-section-title" style="margin:0; align-self:flex-start;">Rapport homme/femme</h2>
+							<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
+						</div>
 						{#await import('$lib/components/charts/Doughnut.svelte') then { default: Doughnut }}
 							<Doughnut
 								data={{
@@ -203,7 +510,7 @@
 								}}
 							/>
 						{/await}
-					</div>
+					</button>
 				{/if}
 			{/await}
 		</div>
@@ -251,3 +558,24 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.chart-panel {
+		cursor: pointer;
+		transition: box-shadow 0.15s ease, transform 0.15s ease;
+		border: none;
+		appearance: none;
+		-webkit-appearance: none;
+	}
+	.chart-panel:hover {
+		transform: translateY(-2px);
+		box-shadow:
+			inset 0 0 0 5px oklch(0.93 0.03 84),
+			inset 0 0 0 6px oklch(0.68 0.07 60),
+			0 16px 40px rgba(60,40,20,.18);
+	}
+	.chart-panel:focus-visible {
+		outline: 2px solid oklch(0.5 0.13 34);
+		outline-offset: 2px;
+	}
+</style>

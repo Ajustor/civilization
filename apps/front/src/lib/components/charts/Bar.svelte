@@ -1,5 +1,5 @@
 <script module>
-	export const hydrate = 'visible' // ou 'visible' pour hydrater seulement quand l'élément est visible
+	export const hydrate = 'visible'
 </script>
 
 <script lang="ts">
@@ -11,6 +11,7 @@
 		ArcElement,
 		CategoryScale,
 		type ChartData,
+		type ChartOptions,
 		BarController,
 		Colors,
 		LinearScale,
@@ -22,10 +23,12 @@
 	import { onMount } from 'svelte'
 
 	interface Props {
-		data: ChartData<'bar'>;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		data: any; // supports mixed bar+line datasets
+		options?: Partial<ChartOptions<'bar'>>;
 	}
 
-	let { data }: Props = $props();
+	let { data, options = {} }: Props = $props();
 
 	ChartJS.register(
 		Title,
@@ -49,11 +52,8 @@
 			type: 'bar',
 			data,
 			options: {
-				scales: {
-					y: {
-						beginAtZero: true
-					}
-				}
+				scales: { y: { beginAtZero: true } },
+				...options
 			}
 		})
 	})

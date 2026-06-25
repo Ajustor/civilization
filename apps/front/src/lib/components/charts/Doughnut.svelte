@@ -1,5 +1,5 @@
 <script module>
-	export const hydrate = 'visible' // ou 'visible' pour hydrater seulement quand l'élément est visible
+	export const hydrate = 'visible'
 </script>
 
 <script lang="ts">
@@ -11,6 +11,7 @@
 		ArcElement,
 		CategoryScale,
 		type ChartData,
+		type ChartOptions,
 		DoughnutController,
 		Colors
 	} from 'chart.js'
@@ -18,9 +19,10 @@
 
 	interface Props {
 		data: ChartData<'doughnut'>;
+		options?: Partial<ChartOptions<'doughnut'>>;
 	}
 
-	let { data }: Props = $props();
+	let { data, options = {} }: Props = $props();
 
 	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, DoughnutController, Colors)
 
@@ -34,11 +36,10 @@
 				responsive: true,
 				plugins: {
 					legend: {
-						labels: {
-							color: 'black'
-						}
+						labels: { color: 'oklch(0.4 0.04 50)' }
 					}
-				}
+				},
+				...options
 			}
 		})
 	})
