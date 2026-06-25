@@ -674,6 +674,14 @@ export class Civilization {
       return
     }
 
+    // Defensive guard: an invalid stored building type (e.g. from a crafted
+    // request) would otherwise crash the monthly tick on the constructor
+    // lookup below. Drop the request instead.
+    if (!(chosen in BUILDING_CONSTRUCTORS)) {
+      this.config.NEXT_BUILDING_TO_BUILD = null
+      return
+    }
+
     // Unique buildings: skip if already built or already under construction.
     if (
       this.buildings.some((building) => building.getType() === chosen) ||
@@ -947,7 +955,7 @@ export class Civilization {
   }
 
   private recruitSoldiers(): void {
-    const ratio = this.config.MILITARY_RATIO
+    const ratio = this.config.MILITARY_RATIO ?? 0
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(
       (person) => person.work?.occupationType !== OccupationTypes.RETIRED,
     )

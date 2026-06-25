@@ -42,7 +42,7 @@ const ConfigSchema = new Schema({
     required: true,
     default: [],
   },
-  MILITARY_RATIO: Number,
+  MILITARY_RATIO: { type: Number, default: 0 },
   NEXT_BUILDING_TO_BUILD: { type: String, default: null },
   AT_WAR_WITH: {
     type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
