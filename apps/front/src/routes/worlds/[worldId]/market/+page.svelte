@@ -1,9 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types'
 	import { enhance } from '$app/forms'
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
-	import { Button } from '$lib/components/ui/button'
-	import { Input } from '$lib/components/ui/input'
 	import { ResourceTypes } from '@ajustor/simulation'
 	import { resourceNames } from '$lib/translations'
 
@@ -18,150 +15,190 @@
 		status: string
 	}
 
-	type Civilization = {
-		id: string
-		name: string
-	}
+	type WorldCiv = { id: string; name: string }
 
 	const resourceTypeValues = Object.values(ResourceTypes)
+	const civNameMap = $derived(
+		new Map((data.worldCivilizations as WorldCiv[]).map((c) => [c.id, c.name]))
+	)
+	const myCivIds = $derived(
+		new Set((data.myCivilizations as WorldCiv[]).map((c) => c.id))
+	)
+
+	function civName(id: string): string {
+		return civNameMap.get(id) ?? id
+	}
 
 	function formatResources(items: { resourceType: string; quantity: number }[]): string {
 		return items
-			.map((r) => {
-				const name = resourceNames[r.resourceType as ResourceTypes] ?? r.resourceType
-				return `${r.quantity} ${name}`
-			})
+			.map((r) => `${r.quantity} ${resourceNames[r.resourceType as ResourceTypes] ?? r.resourceType}`)
 			.join(', ')
 	}
 
-	function getOfferId(offer: Offer): string {
-		return offer._id
+	// Form multi-ressources
+	let giveLines = $state([{ resource: resourceTypeValues[0], quantity: 1 }])
+	let wantLines = $state([{ resource: resourceTypeValues[0], quantity: 1 }])
+
+	function addLine(lines: typeof giveLines) {
+		lines.push({ resource: resourceTypeValues[0], quantity: 1 })
 	}
+	function removeLine(lines: typeof giveLines, index: number) {
+		if (lines.length > 1) lines.splice(index, 1)
+	}
+
+	let showOnlyMine = $state(false)
+	const filteredOffers = $derived(
+		showOnlyMine
+			? (data.offers as Offer[]).filter((o) => myCivIds.has(o.fromCivilizationId))
+			: (data.offers as Offer[])
+	)
 </script>
 
 <svelte:head>
 	<title>Marché du monde</title>
-	<meta name="description" content="Le marché des échanges de ressources du monde" />
+	<meta name="description" content="Marché des échanges de ressources entre civilisations" />
 </svelte:head>
 
-<div class="m-auto flex w-full max-w-4xl flex-col gap-6 p-4">
-	<h1 class="text-3xl">Marché du monde</h1>
+<div class="civ-page-wrapper">
+	<a href="/my-civilizations" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-block; text-decoration:none; animation:screenIn .4s ease both;">‹ Mes civilisations</a>
 
-	<!-- Create offer form -->
-	<Card class="card bg-neutral text-neutral-content shadow-xl">
-		<CardHeader>
-			<CardTitle>Proposer un échange</CardTitle>
-		</CardHeader>
-		<CardContent>
-			{#if (data.myCivilizations as Civilization[]).length === 0}
-				<p>Vous n'avez aucune civilisation pour proposer un échange.</p>
+	<div class="civ-card" style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
+		<h1 style="font-family:'Marcellus',serif; font-size:clamp(28px,5vw,40px); margin:0 0 24px; color:oklch(0.3 0.04 40); border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:16px;">Marché du monde</h1>
+
+		<!-- Créer une offre -->
+		<div class="civ-inner-card" style="margin-bottom:24px;">
+			<h2 class="civ-section-title">Proposer un échange</h2>
+
+			{#if (data.myCivilizations as WorldCiv[]).length === 0}
+				<p style="color:oklch(0.5 0.03 50);">Vous n'avez aucune civilisation pour proposer un échange.</p>
 			{:else}
 				<form method="post" action="?/create" use:enhance class="flex flex-col gap-4">
 					<input type="hidden" name="worldId" value={data.worldId} />
 
-					<div class="flex flex-col gap-1">
-						<label for="create-civ" class="label">Votre civilisation</label>
+					<div style="display:flex; flex-direction:column; gap:6px;">
+						<label for="create-civ" style="font-size:15px; color:oklch(0.42 0.04 45);">Votre civilisation</label>
 						<select id="create-civ" name="civilizationId" class="select select-bordered w-full">
 							{#each data.myCivilizations as civ}
-								<option value={(civ as Civilization).id}>{(civ as Civilization).name}</option>
+								<option value={(civ as WorldCiv).id}>{(civ as WorldCiv).name}</option>
 							{/each}
 						</select>
 					</div>
 
-					<div class="flex flex-col gap-2">
-						<p class="font-semibold">Vous donnez</p>
-						<div class="flex gap-2">
-							<select name="giveResource" class="select select-bordered flex-1">
-								{#each resourceTypeValues as rt}
-									<option value={rt}>{resourceNames[rt]}</option>
-								{/each}
-							</select>
-							<Input type="number" name="giveQuantity" min="1" value={1} class="w-24" />
-						</div>
+					<!-- Vous donnez -->
+					<div style="display:flex; flex-direction:column; gap:8px;">
+						<p style="font-family:'Marcellus',serif; font-size:17px; color:oklch(0.38 0.04 40); margin:0;">Vous donnez</p>
+						{#each giveLines as line, i}
+							<div style="display:flex; gap:8px; align-items:center;">
+								<select name="giveResource" bind:value={line.resource} class="select select-bordered" style="flex:1;">
+									{#each resourceTypeValues as rt}
+										<option value={rt}>{resourceNames[rt]}</option>
+									{/each}
+								</select>
+								<input type="number" name="giveQuantity" bind:value={line.quantity} min="1" class="input input-bordered" style="width:80px;" />
+								{#if giveLines.length > 1}
+									<button type="button" onclick={() => removeLine(giveLines, i)} style="padding:6px 10px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); cursor:pointer;">×</button>
+								{/if}
+							</div>
+						{/each}
+						{#if giveLines.length < resourceTypeValues.length}
+							<button type="button" onclick={() => addLine(giveLines)} style="align-self:flex-start; padding:6px 12px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer;">+ Ajouter une ressource</button>
+						{/if}
 					</div>
 
-					<div class="flex flex-col gap-2">
-						<p class="font-semibold">Vous voulez</p>
-						<div class="flex gap-2">
-							<select name="wantResource" class="select select-bordered flex-1">
-								{#each resourceTypeValues as rt}
-									<option value={rt}>{resourceNames[rt]}</option>
-								{/each}
-							</select>
-							<Input type="number" name="wantQuantity" min="1" value={1} class="w-24" />
-						</div>
+					<!-- Vous voulez -->
+					<div style="display:flex; flex-direction:column; gap:8px;">
+						<p style="font-family:'Marcellus',serif; font-size:17px; color:oklch(0.38 0.04 40); margin:0;">Vous voulez</p>
+						{#each wantLines as line, i}
+							<div style="display:flex; gap:8px; align-items:center;">
+								<select name="wantResource" bind:value={line.resource} class="select select-bordered" style="flex:1;">
+									{#each resourceTypeValues as rt}
+										<option value={rt}>{resourceNames[rt]}</option>
+									{/each}
+								</select>
+								<input type="number" name="wantQuantity" bind:value={line.quantity} min="1" class="input input-bordered" style="width:80px;" />
+								{#if wantLines.length > 1}
+									<button type="button" onclick={() => removeLine(wantLines, i)} style="padding:6px 10px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); cursor:pointer;">×</button>
+								{/if}
+							</div>
+						{/each}
+						{#if wantLines.length < resourceTypeValues.length}
+							<button type="button" onclick={() => addLine(wantLines)} style="align-self:flex-start; padding:6px 12px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer;">+ Ajouter une ressource</button>
+						{/if}
 					</div>
 
-					<div class="flex flex-col gap-1">
-						<label for="target-civ" class="label">Civilisation cible (optionnel)</label>
+					<div style="display:flex; flex-direction:column; gap:6px;">
+						<label for="target-civ" style="font-size:15px; color:oklch(0.42 0.04 45);">Civilisation cible (optionnel)</label>
 						<select id="target-civ" name="toCivilizationId" class="select select-bordered w-full">
-							<option value="">Marché ouvert</option>
-							{#each data.myCivilizations as civ}
-								<option value={(civ as Civilization).id}>{(civ as Civilization).name}</option>
+							<option value="">Offre ouverte à tous</option>
+							{#each data.worldCivilizations as civ}
+								{#if !(myCivIds.has((civ as WorldCiv).id))}
+									<option value={(civ as WorldCiv).id}>{(civ as WorldCiv).name}</option>
+								{/if}
 							{/each}
 						</select>
 					</div>
 
-					<Button type="submit" class="btn btn-primary self-start">Proposer l'échange</Button>
+					<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Proposer l'échange</button>
 				</form>
 			{/if}
-		</CardContent>
-	</Card>
-
-	<!-- Offer list -->
-	<h2 class="text-2xl">Offres ouvertes</h2>
-
-	{#if (data.offers as Offer[]).length === 0}
-		<p class="text-base-content/70">Aucune offre ouverte pour ce monde.</p>
-	{:else}
-		<div class="flex flex-col gap-4">
-			{#each data.offers as offer}
-				{@const offerId = getOfferId(offer as Offer)}
-				<Card class="card bg-neutral text-neutral-content shadow-xl">
-					<CardHeader>
-						<CardTitle class="flex flex-wrap items-center gap-2 text-base">
-							<span>{formatResources((offer as Offer).give)}</span>
-							<span>→</span>
-							<span>{formatResources((offer as Offer).want)}</span>
-						</CardTitle>
-					</CardHeader>
-					<CardContent class="flex flex-col gap-4">
-						<p class="text-sm opacity-70">
-							De : <span class="font-mono">{(offer as Offer).fromCivilizationId}</span>
-						</p>
-						{#if (offer as Offer).toCivilizationId}
-							<p class="text-sm opacity-70">
-								Pour : <span class="font-mono">{(offer as Offer).toCivilizationId}</span>
-							</p>
-						{:else}
-							<p class="text-sm opacity-70">Offre ouverte à tous</p>
-						{/if}
-
-						<div class="flex flex-wrap gap-2">
-							<!-- Accept form -->
-							<form method="post" action="?/accept" use:enhance class="flex items-end gap-2">
-								<input type="hidden" name="offerId" value={offerId} />
-								{#if (data.myCivilizations as Civilization[]).length > 0}
-									<select name="civilizationId" class="select select-bordered select-sm">
-										{#each data.myCivilizations as civ}
-											<option value={(civ as Civilization).id}>{(civ as Civilization).name}</option>
-										{/each}
-									</select>
-								{/if}
-								<Button type="submit" class="btn btn-success btn-sm">Accepter</Button>
-							</form>
-
-							<!-- Cancel form -->
-							<form method="post" action="?/cancel" use:enhance>
-								<input type="hidden" name="offerId" value={offerId} />
-								<Button type="submit" variant="destructive" class="btn btn-error btn-sm">
-									Annuler
-								</Button>
-							</form>
-						</div>
-					</CardContent>
-				</Card>
-			{/each}
 		</div>
-	{/if}
+
+		<!-- Offres ouvertes -->
+		<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+			<h2 class="civ-section-title" style="margin:0;">Offres ouvertes</h2>
+			<label style="display:flex; align-items:center; gap:8px; font-size:15px; color:oklch(0.5 0.03 50); cursor:pointer;">
+				<input type="checkbox" bind:checked={showOnlyMine} class="checkbox checkbox-sm" />
+				Mes offres uniquement
+			</label>
+		</div>
+
+		{#if filteredOffers.length === 0}
+			<p style="color:oklch(0.5 0.03 50); font-size:16px;">Aucune offre ouverte.</p>
+		{:else}
+			<div style="display:flex; flex-direction:column; gap:12px;">
+				{#each filteredOffers as offer}
+					{@const isMyOffer = myCivIds.has((offer as Offer).fromCivilizationId)}
+					<div class="civ-inner-card">
+						<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:12px;">
+							<div>
+								<div style="font-family:'Marcellus',serif; font-size:18px; color:oklch(0.34 0.04 40);">
+									{formatResources((offer as Offer).give)}
+									<span style="color:oklch(0.6 0.05 60); margin:0 8px;">→</span>
+									{formatResources((offer as Offer).want)}
+								</div>
+								<div style="margin-top:6px; font-size:14px; color:oklch(0.54 0.03 50);">
+									De : <strong>{civName((offer as Offer).fromCivilizationId)}</strong>
+									{#if (offer as Offer).toCivilizationId}
+										· Pour : <strong>{civName((offer as Offer).toCivilizationId!)}</strong>
+									{:else}
+										· <em>Offre ouverte</em>
+									{/if}
+								</div>
+							</div>
+
+							<div style="display:flex; gap:8px; flex-wrap:wrap;">
+								{#if !isMyOffer}
+									<form method="post" action="?/accept" use:enhance style="display:flex; gap:6px; align-items:center;">
+										<input type="hidden" name="offerId" value={(offer as Offer)._id} />
+										<select name="civilizationId" class="select select-bordered select-sm">
+											{#each data.myCivilizations as civ}
+												<option value={(civ as WorldCiv).id}>{(civ as WorldCiv).name}</option>
+											{/each}
+										</select>
+										<button type="submit" style="padding:6px 14px; border:none; border-radius:4px; background:oklch(0.52 0.1 130); color:oklch(0.95 0.02 84); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer;">Accepter</button>
+									</form>
+								{/if}
+								{#if isMyOffer}
+									<form method="post" action="?/cancel" use:enhance>
+										<input type="hidden" name="offerId" value={(offer as Offer)._id} />
+										<button type="submit" style="padding:6px 14px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer;">Annuler</button>
+									</form>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
 </div>

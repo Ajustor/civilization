@@ -3,6 +3,7 @@ export const prerender = false
 import { error, fail, redirect } from '@sveltejs/kit'
 import { getWorldTradeOffers } from '../../../../services/api/trade-offer-api'
 import { getMyCivilizations } from '../../../../services/api/civilization-api'
+import { getWorldCivilizations } from '../../../../services/api/world-api'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
@@ -13,14 +14,16 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 	}
 
 	try {
-		const [offers, myCivilizations] = await Promise.all([
+		const [offers, myCivilizations, worldCivilizations] = await Promise.all([
 			getWorldTradeOffers(auth, params.worldId),
 			getMyCivilizations(auth),
+			getWorldCivilizations(params.worldId),
 		])
 
 		return {
 			offers: offers ?? [],
 			myCivilizations: myCivilizations ?? [],
+			worldCivilizations: worldCivilizations ?? [],
 			worldId: params.worldId,
 		}
 	} catch (requestError: any) {
@@ -40,7 +43,7 @@ export const actions: Actions = {
 			await acceptTradeOffer(auth, offerId, civilizationId)
 			return { success: true }
 		} catch (requestError: any) {
-			return fail(400, { message: requestError.value ?? 'Impossible d\'accepter l\'offre' })
+			return fail(400, { message: requestError.value ?? "Impossible d'accepter l'offre" })
 		}
 	},
 
@@ -54,7 +57,7 @@ export const actions: Actions = {
 			await cancelTradeOffer(auth, offerId)
 			return { success: true }
 		} catch (requestError: any) {
-			return fail(400, { message: requestError.value ?? 'Impossible d\'annuler l\'offre' })
+			return fail(400, { message: requestError.value ?? "Impossible d'annuler l'offre" })
 		}
 	},
 
@@ -64,25 +67,27 @@ export const actions: Actions = {
 		const civilizationId = data.get('civilizationId') as string
 		const worldId = data.get('worldId') as string
 		const toCivilizationId = (data.get('toCivilizationId') as string) || null
-		const giveResource = data.get('giveResource') as string
-		const giveQuantity = data.get('giveQuantity') as string
-		const wantResource = data.get('wantResource') as string
-		const wantQuantity = data.get('wantQuantity') as string
 
-		const give = [{ resourceType: giveResource, quantity: Number(giveQuantity) }]
-		const want = [{ resourceType: wantResource, quantity: Number(wantQuantity) }]
+		const giveResources = data.getAll('giveResource') as string[]
+		const giveQuantities = data.getAll('giveQuantity') as string[]
+		const wantResources = data.getAll('wantResource') as string[]
+		const wantQuantities = data.getAll('wantQuantity') as string[]
+
+		const give = giveResources.map((rt, i) => ({
+			resourceType: rt,
+			quantity: Math.max(1, Number(giveQuantities[i])),
+		}))
+		const want = wantResources.map((rt, i) => ({
+			resourceType: rt,
+			quantity: Math.max(1, Number(wantQuantities[i])),
+		}))
 
 		try {
 			const { createTradeOffer } = await import('../../../../services/api/trade-offer-api')
-			await createTradeOffer(auth, civilizationId, {
-				worldId,
-				toCivilizationId,
-				give,
-				want,
-			})
+			await createTradeOffer(auth, civilizationId, { worldId, toCivilizationId, give, want })
 			return { success: true }
 		} catch (requestError: any) {
-			return fail(400, { message: requestError.value ?? 'Impossible de créer l\'offre' })
+			return fail(400, { message: requestError.value ?? "Impossible de créer l'offre" })
 		}
 	},
 } satisfies Actions
