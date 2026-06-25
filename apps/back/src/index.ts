@@ -10,6 +10,7 @@ import { version } from '../package.json'
 import { worldModule } from './modules/world'
 import mongoose from 'mongoose'
 import { peopleModule } from './modules/people'
+import { tradeOffersModule } from './modules/trade-offers'
 
 import { serverTiming } from '@elysiajs/server-timing'
 
@@ -31,6 +32,7 @@ const app = new Elysia()
   .use(usersModule)
   .use(civilizationModule)
   .use(peopleModule)
+  .use(tradeOffersModule)
 
 
 app.listen(process.env.APP_PORT!)
