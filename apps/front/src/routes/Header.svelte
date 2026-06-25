@@ -10,7 +10,7 @@
 	]
 </script>
 
-<header>
+<header class="bg-base-200">
 	<nav class="navbar justify-between">
 		<a class="navbar-start max-w-24 p-4" href="/" aria-label="Logo du simulateur">
 			<enhanced:img src={logo} sizes="min(64px, 100%)" alt="Logo du simulateur de civilisation" />
@@ -78,10 +78,6 @@
 </header>
 
 <style>
-	header {
-		@apply bg-base-200;
-	}
-
 	li[aria-current='page'] {
 		text-decoration: underline;
 	}

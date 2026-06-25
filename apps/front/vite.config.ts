@@ -66,10 +66,8 @@ export default defineConfig({
 		__RELOAD_SW__: false,
 		'process.env.NODE_ENV': process.env.NODE_ENV === 'production' ? '"production"' : '"development"',
 	},
-	css: {
-		postcss: {
-			config: './postcss.config.cjs',
-		}
-	},
+	// PostCSS config is auto-discovered from postcss.config.cjs. Setting
+	// css.postcss to an inline object here ({ config: ... }) made vite treat it
+	// as an inline config with no plugins, so Tailwind never ran.
 	plugins
 })
