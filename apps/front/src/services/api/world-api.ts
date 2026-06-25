@@ -102,7 +102,7 @@ export async function getWorldStats(worldId: string, query: {
   }
 }
 
-export const getWorldCivilizations = async (worldId: string): Promise<{ id: string; name: string }[]> => {
+export async function getWorldCivilizations(worldId: string): Promise<{ id: string; name: string }[]> {
 	const { data, error } = await client.worlds({ worldId }).civilizations.get()
 
 	if (error) {
