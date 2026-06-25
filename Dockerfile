@@ -2,6 +2,8 @@ FROM oven/bun:slim AS base
 
 WORKDIR /home/bun/app
 
+ENV NX_DAEMON=false
+
 COPY . .
 
 RUN bun install
