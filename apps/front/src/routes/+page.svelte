@@ -13,9 +13,13 @@
 	} from '$lib/translations'
 	import Icon from '@iconify/svelte'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
 
-	let api: CarouselAPI
+	let { data }: Props = $props();
+
+	let api: CarouselAPI = $state()
 </script>
 
 <svelte:head>

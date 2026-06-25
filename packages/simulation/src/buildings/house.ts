@@ -9,6 +9,7 @@ import { ResourceTypes } from '../resource'
 
 export class House implements Building {
   static capacity = 4
+  public static timeToBuild: number = 2
 
   constructor(public count = 0) { }
 

@@ -18,7 +18,11 @@
 
 	import { newUserSchema } from '$lib/schemas/newUser'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	const form = superForm(data.newUserForm, {
 		validators: zodClient(newUserSchema)
@@ -50,10 +54,12 @@
 		<CardContent>
 			<form method="post" use:enhance>
 				<FormField {form} name="username">
-					<FormControl let:attrs>
-						<FormLabel>Nom d'utilisateur</FormLabel>
-						<Input {...attrs} bind:value={$formData.username} {...$constraints.username} />
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Nom d'utilisateur</FormLabel>
+							<Input {...props} bind:value={$formData.username} {...$constraints.username} />
+																	{/snippet}
+										</FormControl>
 					<FormDescription />
 					<FormFieldErrors>
 						{#if $errors.username}
@@ -63,10 +69,12 @@
 				</FormField>
 
 				<FormField {form} name="email">
-					<FormControl let:attrs>
-						<FormLabel>Email</FormLabel>
-						<Input {...attrs} bind:value={$formData.email} {...$constraints.email} />
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Email</FormLabel>
+							<Input {...props} bind:value={$formData.email} {...$constraints.email} />
+																	{/snippet}
+										</FormControl>
 					<FormDescription />
 					<FormFieldErrors>
 						{#if $errors.email}
@@ -76,15 +84,17 @@
 				</FormField>
 
 				<FormField {form} name="password">
-					<FormControl let:attrs>
-						<FormLabel>Mot de passe</FormLabel>
-						<Input
-							{...attrs}
-							bind:value={$formData.password}
-							type="password"
-							{...$constraints.password}
-						/>
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Mot de passe</FormLabel>
+							<Input
+								{...props}
+								bind:value={$formData.password}
+								type="password"
+								{...$constraints.password}
+							/>
+																	{/snippet}
+										</FormControl>
 					<FormDescription />
 					<FormFieldErrors>
 						{#if $errors.password}
@@ -94,15 +104,17 @@
 				</FormField>
 
 				<FormField {form} name="passwordVerif">
-					<FormControl let:attrs>
-						<FormLabel>Vérification du mot de passe</FormLabel>
-						<Input
-							{...attrs}
-							bind:value={$formData.passwordVerif}
-							type="password"
-							{...$constraints.passwordVerif}
-						/>
-					</FormControl>
+					<FormControl >
+						{#snippet children({ props })}
+												<FormLabel>Vérification du mot de passe</FormLabel>
+							<Input
+								{...props}
+								bind:value={$formData.passwordVerif}
+								type="password"
+								{...$constraints.passwordVerif}
+							/>
+																	{/snippet}
+										</FormControl>
 					<FormDescription />
 					<FormFieldErrors>
 						{#if $errors.passwordVerif}

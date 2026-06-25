@@ -1,13 +1,10 @@
-const tailwindcss = require('tailwindcss');
-const autoprefixer = require('autoprefixer');
-
-const config = {
-	plugins: [
-		//Some plugins, like tailwindcss/nesting, need to run before Tailwind,
-		tailwindcss(),
-		//But others, like autoprefixer, need to run after,
-		autoprefixer
-	]
-};
-
-module.exports = config;
+module.exports = {
+	// PostCSS plugins must be an object map (or an array of plugin names). The
+	// previous version put object-property syntax inside an array literal, which
+	// is a JS syntax error — PostCSS then failed to load and Tailwind never ran,
+	// leaving the whole site unstyled.
+	plugins: {
+		'@tailwindcss/postcss': {},
+		autoprefixer: {},
+	},
+}

@@ -1,4 +1,4 @@
-import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION, World } from './world'
+import { World, WorldConfig } from './world'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
@@ -7,6 +7,12 @@ import { People } from './people/people'
 import { formatCivilizations } from './formatters'
 
 describe('World', () => {
+
+  const worldConfig: WorldConfig = {
+    BASE_FOOD_GENERATION: 100,
+    BASE_WOOD_GENERATION: 200,
+    EVENT_CHANCE: 0
+  }
 
   // World instance initializes with default name and month
   it('should initialize with default name and month', () => {
@@ -140,7 +146,7 @@ describe('World', () => {
   // Passing a month updates the month and resources based on the season
   describe('should update month and resources based on season when passing a month', () => {
     it('spring', async () => {
-      const world = new World()
+      const world = new World("", 0, worldConfig)
       const civilization = new Civilization()
       world.addCivilization(civilization)
       const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
@@ -156,12 +162,12 @@ describe('World', () => {
       expect(month).toBe(1)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.5))
-      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.1))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_FOOD_GENERATION * 1.5))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_WOOD_GENERATION * 1.1))
     })
 
     it('summer', async () => {
-      const world = new World()
+      const world = new World("", 0, worldConfig)
       const civilization = new Civilization()
       world.addCivilization(civilization)
       const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
@@ -177,12 +183,12 @@ describe('World', () => {
       expect(month).toBe(3)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.75))
-      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 1.2))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_FOOD_GENERATION * 1.75))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_WOOD_GENERATION * 1.2))
     })
 
     it('automn', async () => {
-      const world = new World()
+      const world = new World('', 0, worldConfig)
       const civilization = new Civilization()
       world.addCivilization(civilization)
       const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
@@ -198,12 +204,12 @@ describe('World', () => {
       expect(month).toBe(6)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 1.2))
-      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_FOOD_GENERATION * 1.2))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_WOOD_GENERATION))
     })
 
     it('winter', async () => {
-      const world = new World()
+      const world = new World('', 0, worldConfig)
       const civilization = new Civilization()
       world.addCivilization(civilization)
       const mockFood = new Resource(ResourceTypes.RAW_FOOD, 100)
@@ -219,8 +225,8 @@ describe('World', () => {
       expect(month).toBe(9)
       expect(decreaseSpy).toHaveBeenCalledTimes(0)
       expect(increaseSpy).toHaveBeenCalledTimes(2)
-      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(BASE_FOOD_GENERATION * 0.5))
-      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(BASE_WOOD_GENERATION * 0.75))
+      expect(world.getResource(ResourceTypes.RAW_FOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_FOOD_GENERATION * 0.5))
+      expect(world.getResource(ResourceTypes.WOOD)?.quantity).toBe(100 + ~~(worldConfig.BASE_WOOD_GENERATION * 0.75))
     })
   })
 
@@ -242,7 +248,7 @@ describe('World', () => {
       id: '',
       name: 'The world',
       civilizations: [{
-        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
+        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, config: civilization1.config, pendingConstructions: [], resources: [
           food.formatToType(),
           wood.formatToType()
         ]
@@ -345,5 +351,46 @@ describe('World', () => {
       expect(civilization.livedMonths).toBe(1)
       expect(civilization.people.every(({ lifeCounter }) => lifeCounter === 11)).toBeTruthy()
     }
+  })
+
+  describe('resource exchange between civilizations', () => {
+    const buildCivilization = (id: string, openExchange: string[]) => {
+      const civilization = new Civilization(`Civilization ${id}`)
+      civilization.id = id
+      civilization.config = { ...civilization.config, OPEN_EXCHANGE: openExchange }
+      return civilization
+    }
+
+    it('should balance shared resources toward the average when exchange is mutual', () => {
+      const world = new World()
+      const firstCivilization = buildCivilization('a', ['b'])
+      const secondCivilization = buildCivilization('b', ['a'])
+
+      firstCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
+      secondCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 0))
+
+      world.addCivilization(firstCivilization, secondCivilization)
+
+      ;(world as unknown as { exchangeResources: () => void }).exchangeResources()
+
+      expect(firstCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(50)
+      expect(secondCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(50)
+    })
+
+    it('should not exchange resources when the agreement is not mutual', () => {
+      const world = new World()
+      const firstCivilization = buildCivilization('a', ['b'])
+      const secondCivilization = buildCivilization('b', [])
+
+      firstCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
+      secondCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 0))
+
+      world.addCivilization(firstCivilization, secondCivilization)
+
+      ;(world as unknown as { exchangeResources: () => void }).exchangeResources()
+
+      expect(firstCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(100)
+      expect(secondCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(0)
+    })
   })
 })

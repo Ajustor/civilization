@@ -1,8 +1,23 @@
+name: civilizations
+
 services:
-  front:
-    container_name: civilizations_front
-    image: oven/bun:slim
+
+  init:
+    container_name: civilizations_init
+    image: oven/bun:latest
     user: bun
+    working_dir: /home/bun/app
+    volumes:
+      - .:/home/bun/app:cached
+    command: bun install
+
+  front:
+    profiles: ["app"]
+    container_name: civilizations_front
+    image: oven/bun:latest
+    user: bun
+    extra_hosts:
+      - "localhost:172.17.0.1"
     ports:
       - "8080:8080"
     working_dir: /home/bun/app/apps/front
@@ -13,11 +28,12 @@ services:
       - civilizations
 
   back:
+    profiles: ["app"]
     container_name: civilizations_back
-    image: oven/bun:slim
+    image: oven/bun:latest
     user: bun
     ports:
-      - "${DOCKER_BACK_EXTERNAL_PORT}:3000"
+      - "3000:3000"
     working_dir: /home/bun/app/apps/back
     volumes:
       - .:/home/bun/app:cached
@@ -28,6 +44,7 @@ services:
       - mongo
 
   mongo:
+    profiles: ["app"]
     container_name: civilizations_mongo
     image: mongo
     restart: always

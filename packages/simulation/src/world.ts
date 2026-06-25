@@ -2,6 +2,7 @@ import { Fire, Migration, RatInvasion } from './events'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
+import { resolveBattle } from './combat'
 import type { CivilizationType } from './types/civilization'
 import { Earthquake } from './events/earthquake'
 import { Events } from './events/enum'
@@ -9,11 +10,6 @@ import { Starvation } from './events/starvation'
 import { WorldEvent } from './events/interface'
 import { formatCivilizations } from './formatters/civilization'
 import { isWithinChance } from './utils'
-
-export const BASE_FOOD_GENERATION = 30_000_000
-export const BASE_WOOD_GENERATION = 15_000_000
-
-const EVENT_CHANCE = 30
 
 export type WorldInfos = {
   id: string
@@ -23,6 +19,12 @@ export type WorldInfos = {
   year: number
   nextEvent: Events | null
   civilizations: CivilizationType[]
+}
+
+export type WorldConfig = {
+  BASE_FOOD_GENERATION: number
+  BASE_WOOD_GENERATION: number
+  EVENT_CHANCE: number
 }
 
 const seasons = {
@@ -42,6 +44,20 @@ const AVAILABLE_EVENTS: {
   [Events.RAT_INVASION]: () => new RatInvasion(),
 }
 
+const defaultConfig: WorldConfig = {
+  BASE_WOOD_GENERATION: 15_000,
+  BASE_FOOD_GENERATION: 30_000,
+  EVENT_CHANCE: 30,
+}
+
+// Fraction of the gap between two trading civilizations that is closed each
+// month. 1 fully equalizes their stocks toward the average every month.
+const RESOURCE_EXCHANGE_SHARE = 1
+
+const PLUNDER_RATIO = 0.25
+const CAPTURE_RATIO = 0.05
+const CAPTURE_CAP = 100
+
 export class World {
   id: string
   private resources: Resource[] = []
@@ -52,6 +68,7 @@ export class World {
   constructor(
     private readonly name = 'The world',
     private month = 0,
+    private config: WorldConfig = { ...defaultConfig },
   ) {
     this.id = ''
   }
@@ -122,11 +139,11 @@ export class World {
       case 'spring': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 1.5),
+          ~~(this.config.BASE_FOOD_GENERATION * 1.5),
         )
         this.increaseResource(
           ResourceTypes.WOOD,
-          ~~(BASE_WOOD_GENERATION * 1.1),
+          ~~(this.config.BASE_WOOD_GENERATION * 1.1),
         )
 
         break
@@ -134,30 +151,33 @@ export class World {
       case 'summer': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 1.75),
+          ~~(this.config.BASE_FOOD_GENERATION * 1.75),
         )
         this.increaseResource(
           ResourceTypes.WOOD,
-          ~~(BASE_WOOD_GENERATION * 1.2),
+          ~~(this.config.BASE_WOOD_GENERATION * 1.2),
         )
         break
       }
       case 'automn': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 1.2),
+          ~~(this.config.BASE_FOOD_GENERATION * 1.2),
         )
-        this.increaseResource(ResourceTypes.WOOD, ~~BASE_WOOD_GENERATION)
+        this.increaseResource(
+          ResourceTypes.WOOD,
+          ~~this.config.BASE_WOOD_GENERATION,
+        )
         break
       }
       case 'winter': {
         this.increaseResource(
           ResourceTypes.RAW_FOOD,
-          ~~(BASE_FOOD_GENERATION * 0.5),
+          ~~(this.config.BASE_FOOD_GENERATION * 0.5),
         )
         this.increaseResource(
           ResourceTypes.WOOD,
-          ~~(BASE_WOOD_GENERATION * 0.75),
+          ~~(this.config.BASE_WOOD_GENERATION * 0.75),
         )
         break
       }
@@ -171,9 +191,133 @@ export class World {
 
     this.createNextEvent()
 
+    this.exchangeResources()
+    this.resolveWars()
+
     await Promise.all(
       this._civilizations.map((civilization) => civilization.passAMonth(this)),
     )
+  }
+
+  /**
+   * Civilizations that have mutually opened exchange (each one lists the other
+   * in its `OPEN_EXCHANGE` config) share their resources. Every shared resource
+   * type is balanced toward the average of the two stocks so that allied
+   * civilizations help each other survive.
+   */
+  private exchangeResources(): void {
+    const civilizations = this._civilizations
+    for (let i = 0; i < civilizations.length; i++) {
+      for (let j = i + 1; j < civilizations.length; j++) {
+        const firstCivilization = civilizations[i]
+        const secondCivilization = civilizations[j]
+
+        if (
+          !this.haveMutualExchange(firstCivilization, secondCivilization)
+        ) {
+          continue
+        }
+
+        this.balanceResources(firstCivilization, secondCivilization)
+      }
+    }
+  }
+
+  private resolveWars(): void {
+    for (const attacker of this._civilizations) {
+      for (const targetId of attacker.config.AT_WAR_WITH) {
+        const defender = this.getCivilization(targetId)
+        if (!defender || defender === attacker) {
+          continue
+        }
+        this.resolveAttack(attacker, defender)
+      }
+    }
+  }
+
+  private resolveAttack(attacker: Civilization, defender: Civilization): void {
+    // A standing wall blocks one attack and is consumed.
+    const wall = defender.wall
+    if (wall && wall.count > 0) {
+      defender.removeBuilding(wall)
+      return
+    }
+
+    const outcome = resolveBattle(
+      { strength: attacker.militaryStrength },
+      { strength: defender.militaryStrength },
+    )
+    if (!outcome.fought) {
+      return
+    }
+
+    attacker.loseSoldiers(outcome.attackerLossRatio)
+    defender.loseSoldiers(outcome.defenderLossRatio)
+
+    if (!outcome.attackerWins) {
+      return
+    }
+
+    for (const resource of defender.resources) {
+      const plunder = Math.floor(resource.quantity * PLUNDER_RATIO)
+      if (plunder > 0) {
+        defender.decreaseResource(resource.type, plunder)
+        attacker.increaseResource(resource.type, plunder)
+      }
+    }
+
+    const captureCount = Math.min(
+      Math.floor(defender.people.length * CAPTURE_RATIO),
+      CAPTURE_CAP,
+    )
+    if (captureCount > 0) {
+      const captives = defender.releaseCaptives(captureCount)
+      attacker.addPeople(...captives)
+    }
+  }
+
+  private haveMutualExchange(
+    firstCivilization: Civilization,
+    secondCivilization: Civilization,
+  ): boolean {
+    return (
+      firstCivilization.config.OPEN_EXCHANGE.includes(secondCivilization.id) &&
+      secondCivilization.config.OPEN_EXCHANGE.includes(firstCivilization.id)
+    )
+  }
+
+  private balanceResources(
+    firstCivilization: Civilization,
+    secondCivilization: Civilization,
+  ): void {
+    const sharedResourceTypes = new Set<ResourceTypes>([
+      ...firstCivilization.resources.map((resource) => resource.type),
+      ...secondCivilization.resources.map((resource) => resource.type),
+    ])
+
+    for (const resourceType of sharedResourceTypes) {
+      const firstQuantity = firstCivilization.getResource(resourceType).quantity
+      const secondQuantity =
+        secondCivilization.getResource(resourceType).quantity
+
+      const gap = firstQuantity - secondQuantity
+      if (gap === 0) {
+        continue
+      }
+
+      const transfer = Math.floor((Math.abs(gap) / 2) * RESOURCE_EXCHANGE_SHARE)
+      if (transfer <= 0) {
+        continue
+      }
+
+      const [richer, poorer] =
+        gap > 0
+          ? [firstCivilization, secondCivilization]
+          : [secondCivilization, firstCivilization]
+
+      richer.decreaseResource(resourceType, transfer)
+      poorer.increaseResource(resourceType, transfer)
+    }
   }
 
   public getInfos(): WorldInfos {
@@ -192,7 +336,7 @@ export class World {
   }
 
   private createNextEvent() {
-    if (!isWithinChance(EVENT_CHANCE)) {
+    if (!isWithinChance(this.config.EVENT_CHANCE)) {
       this.nextEvent = null
       return
     }

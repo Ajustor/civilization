@@ -9,3 +9,5 @@ civ_server
 dist
 
 apps/front/core.1
+.qodo
+docs

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table'
-	import { readable } from 'svelte/store'
 	import {
 		Table,
 		TableBody,
@@ -11,109 +9,73 @@
 	} from '$lib/components/ui/table'
 	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
-	import { addPagination, addSortBy } from 'svelte-headless-table/plugins'
 	import { OCCUPATIONS } from '$lib/translations'
 	import ChildDetails from './childDetails.svelte'
-	import PeopleTableActions from './people-table-actions.svelte'
 	import { Button } from '$lib/components/ui/button'
-	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte'
+	import { ArrowUp, ArrowDown, ArrowUpDown } from '@lucide/svelte'
 
-	export let people: PeopleType[]
-	export let totalPeople: number
-	export let updateData: CallableFunction
-	export let pageIndex: number
-	export let pageSize: number
+	type SortKey = 'gender' | 'years' | 'lifeCounter' | 'occupation'
+	type SortOrder = 'asc' | 'desc' | null
 
-	const table = createTable(readable(people), {
-		sort: addSortBy(),
-		page: addPagination({
-			initialPageIndex: pageIndex,
-			initialPageSize: pageSize,
-			serverSide: true,
-			serverItemCount: readable(totalPeople)
-		})
-	})
+	type Props = {
+		people: PeopleType[]
+		totalPeople: number
+		updateData: (pageIndex: number, pageSize: number) => void
+		pageIndex: number
+		pageSize: number
+	}
 
-	const GenderIcons = {
+	let { people, totalPeople, updateData, pageIndex, pageSize }: Props = $props()
+
+	const GenderIcons: Record<string, string> = {
 		[Gender.FEMALE]: 'noto:female-sign',
 		[Gender.MALE]: 'noto:male-sign',
 		[Gender.UNKNOWN]: 'Inconnu'
 	}
 
-	const columns = table.createColumns([
-		table.column({
-			accessor: 'gender',
-			header: 'Genre',
-			cell: ({ value }) => {
-				if (!value) {
-					return ''
-				}
-				return createRender(Icon, { icon: GenderIcons[value] })
-			}
-		}),
-		table.column({
-			accessor: 'years',
-			header: 'Age'
-		}),
-		table.column({
-			accessor: 'lifeCounter',
-			header: 'Points de vie'
-		}),
-		table.column({
-			accessor: 'occupation',
-			header: 'Occupation',
-			cell: ({ value }) => {
-				if (!value) {
-					return ''
-				}
-				return OCCUPATIONS[value]
-			}
-		}),
-		table.column({
-			accessor: 'pregnancyMonthsLeft',
-			header: 'Mois avant accouchement',
-			cell: ({ value }) => {
-				if (!value) {
-					return ''
-				}
-				return value
-			}
-		}),
-		table.column({
-			accessor: 'child',
-			header: 'Enfant à naître',
-			cell: ({ value }) => {
-				if (!value) {
-					return ''
-				}
-				return createRender(ChildDetails, {
-					gender: value.gender,
-					occupation: value.occupation
-				})
-			}
-		})
-		// table.column({
-		// 	accessor: ({ id }) => id,
-		// 	header: 'Action sur le citoyen',
-		// 	cell: ({ value }) => {
-		// 		return createRender(PeopleTableActions, { id: value, people })
-		// 	},
-		// 	plugins: {
-		// 		sort: {
-		// 			disable: true
-		// 		}
-		// 	}
-		// })
-	])
+	let sortKey = $state<SortKey | null>(null)
+	let sortOrder = $state<SortOrder>(null)
 
-	const getNewPagination = (pageIndex: number, pageSize: number) => {
-		updateData(pageIndex, pageSize)
+	const pageCount = $derived(Math.ceil(totalPeople / pageSize))
+	const hasPreviousPage = $derived(pageIndex > 0)
+	const hasNextPage = $derived(pageIndex + 1 < pageCount)
+
+	function toggleSort(key: SortKey) {
+		if (sortKey === key) {
+			if (sortOrder === 'asc') {
+				sortOrder = 'desc'
+			} else {
+				sortKey = null
+				sortOrder = null
+			}
+		} else {
+			sortKey = key
+			sortOrder = 'asc'
+		}
 	}
 
-	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
-		table.createViewModel(columns)
-	const { hasNextPage, hasPreviousPage, pageCount } = pluginStates.page
-	const { sortKeys } = pluginStates.sort
+	const sortedPeople = $derived.by(() => {
+		if (!sortKey || !sortOrder) return people
+		const k = sortKey
+		const o = sortOrder
+		return [...people].sort((a, b) => {
+			const av = a[k] as string | number | null | undefined
+			const bv = b[k] as string | number | null | undefined
+			if (av == null && bv == null) return 0
+			if (av == null) return 1
+			if (bv == null) return -1
+			if (av < bv) return o === 'asc' ? -1 : 1
+			if (av > bv) return o === 'asc' ? 1 : -1
+			return 0
+		})
+	})
+
+	const sortableColumns: { key: SortKey; header: string }[] = [
+		{ key: 'gender', header: 'Genre' },
+		{ key: 'years', header: 'Age' },
+		{ key: 'lifeCounter', header: 'Points de vie' },
+		{ key: 'occupation', header: 'Occupation' }
+	]
 </script>
 
 <div class="rounded-md">
@@ -122,29 +84,25 @@
 			<Button
 				variant="outline"
 				size="sm"
-				on:click={() => {
-					getNewPagination(pageIndex - 1, pageSize)
-				}}
-				disabled={!$hasPreviousPage}
+				onclick={() => updateData(pageIndex - 1, pageSize)}
+				disabled={!hasPreviousPage}
 			>
 				Précédent
 			</Button>
-			<p>{pageIndex + 1}/{$pageCount}</p>
+			<p>{pageIndex + 1}/{pageCount}</p>
 			<Button
 				variant="outline"
 				size="sm"
-				disabled={!$hasNextPage}
-				on:click={() => {
-					getNewPagination(pageIndex + 1, pageSize)
-				}}
+				disabled={!hasNextPage}
+				onclick={() => updateData(pageIndex + 1, pageSize)}
 			>
 				Suivant
 			</Button>
 		</div>
 		<select
-			bind:value={pageSize}
+			value={pageSize}
 			class="select select-bordered w-full max-w-xs"
-			onchange={() => getNewPagination(0, pageSize)}
+			onchange={(e) => updateData(0, Number(e.currentTarget.value))}
 		>
 			<option disabled>Nombre d'éléments par page</option>
 			<option value={10}>10</option>
@@ -155,47 +113,44 @@
 		</select>
 	</div>
 	<Table class="bg-neutral text-neutral-content">
-		<TableHeader {...$tableAttrs}>
-			{#each $headerRows as headerRow}
-				<Subscribe rowAttrs={headerRow.attrs()}>
-					<TableRow>
-						{#each headerRow.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-								<TableHead {...attrs}>
-									{#if props.sort.disabled}
-										<Render of={cell.render()} />
-									{:else}
-										<Button variant="ghost" on:click={props.sort.toggle}>
-											<Render of={cell.render()} />
-											{#if props.sort.order === 'asc'}
-												<ArrowUp class="ml-2 h-4 w-4" />
-											{:else if props.sort.order === 'desc'}
-												<ArrowDown class="ml-2 h-4 w-4" />
-											{:else}
-												<ArrowUpDown class="ml-2 h-4 w-4" />
-											{/if}
-										</Button>
-									{/if}
-								</TableHead>
-							</Subscribe>
-						{/each}
-					</TableRow>
-				</Subscribe>
-			{/each}
+		<TableHeader>
+			<TableRow>
+				{#each sortableColumns as col (col.key)}
+					<TableHead>
+						<Button variant="ghost" onclick={() => toggleSort(col.key)}>
+							{col.header}
+							{#if sortKey === col.key && sortOrder === 'asc'}
+								<ArrowUp class="ml-2 h-4 w-4" />
+							{:else if sortKey === col.key && sortOrder === 'desc'}
+								<ArrowDown class="ml-2 h-4 w-4" />
+							{:else}
+								<ArrowUpDown class="ml-2 h-4 w-4" />
+							{/if}
+						</Button>
+					</TableHead>
+				{/each}
+				<TableHead>Mois avant accouchement</TableHead>
+				<TableHead>Enfant à naître</TableHead>
+			</TableRow>
 		</TableHeader>
-		<TableBody {...$tableBodyAttrs}>
-			{#each $pageRows as row (row.id)}
-				<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-					<TableRow {...rowAttrs}>
-						{#each row.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs>
-								<TableCell {...attrs}>
-									<Render of={cell.render()} />
-								</TableCell>
-							</Subscribe>
-						{/each}
-					</TableRow>
-				</Subscribe>
+		<TableBody>
+			{#each sortedPeople as person (person.id ?? Math.random())}
+				<TableRow>
+					<TableCell>
+						{#if person.gender}
+							<Icon icon={GenderIcons[person.gender]} />
+						{/if}
+					</TableCell>
+					<TableCell>{person.years}</TableCell>
+					<TableCell>{person.lifeCounter}</TableCell>
+					<TableCell>{person.occupation ? (OCCUPATIONS[person.occupation] ?? '') : ''}</TableCell>
+					<TableCell>{person.pregnancyMonthsLeft ?? ''}</TableCell>
+					<TableCell>
+						{#if person.child}
+							<ChildDetails gender={person.child.gender} occupation={person.child.occupation} />
+						{/if}
+					</TableCell>
+				</TableRow>
 			{/each}
 		</TableBody>
 	</Table>

@@ -6,19 +6,20 @@
 	import type { LayoutData } from './$types'
 	import { Toaster } from '$lib/components/ui/sonner'
 	import { fly } from 'svelte/transition'
-	import { page } from '$app/stores'
+	import { page } from '$app/state'
 	import { toast } from 'svelte-sonner'
 	import { pwaInfo } from 'virtual:pwa-info'
 
-	$: webManifest = pwaInfo ? pwaInfo.webManifest.linkTag : ''
+	let webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '')
 
-	export let data: LayoutData
+	let { data, children } = $props()
 
 	let userStore = useUser()
 
 	userStore.value = data.user
 
-	page.subscribe(({ error }) => {
+	$effect(() => {
+		const { error } = page
 		if (error) {
 			toast.error(error.message)
 		}
@@ -43,7 +44,7 @@
 				in:fly={{ delay: 300, x: -200, duration: 300 }}
 				out:fly={{ duration: 300 }}
 			>
-				<slot></slot>
+				{@render children()}
 			</span>
 		{/key}
 	</main>

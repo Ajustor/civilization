@@ -30,6 +30,27 @@ const BuildingSchema = new Schema({
   },
 })
 
+const ConfigSchema = new Schema({
+  PREGNANCY_PROBABILITY: Number,
+  MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: Number,
+  PEOPLE_CHARCOAL_CAN_HEAT: Number,
+  CHANCE_TO_EVOLVE: Number,
+  CHANCE_TO_BUILD_EVOLVED_BUILDING: Number,
+  MAXIMUM_CHILDREN: Number,
+  OPEN_EXCHANGE: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
+    required: true,
+    default: [],
+  },
+  MILITARY_RATIO: { type: Number, default: 0 },
+  NEXT_BUILDING_TO_BUILD: { type: String, default: null },
+  AT_WAR_WITH: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
+    required: true,
+    default: [],
+  },
+})
+
 const civilizationSchema = new Schema(
   {
     name: {
@@ -54,6 +75,32 @@ const civilizationSchema = new Schema(
     },
     resources: {
       type: [{ type: ResourceSchema }],
+      required: true,
+      default: [],
+    },
+    config: {
+      type: ConfigSchema,
+      required: true,
+      default: {
+        PREGNANCY_PROBABILITY: 60,
+        MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: 100_000,
+        PEOPLE_CHARCOAL_CAN_HEAT: 10,
+        CHANCE_TO_EVOLVE: 20,
+        CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
+        MAXIMUM_CHILDREN: 10,
+        OPEN_EXCHANGE: [],
+        MILITARY_RATIO: 0,
+        NEXT_BUILDING_TO_BUILD: null,
+        AT_WAR_WITH: [],
+      },
+    },
+    pendingConstructions: {
+      type: [
+        {
+          buildingType: { type: String, required: true },
+          monthsRemaining: { type: Number, required: true },
+        },
+      ],
       required: true,
       default: [],
     },

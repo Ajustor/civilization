@@ -3,7 +3,7 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button } from '$lib/components/ui/button'
-	import { Plus, Trash } from 'lucide-svelte'
+	import { Plus, Trash } from '@lucide/svelte'
 	import {
 		Dialog,
 		DialogTrigger,
@@ -40,7 +40,11 @@
 	import IconText from '$lib/components/IconText/icon-text.svelte'
 	import { resourceIcons, resourceNames } from '$lib/translations'
 
-	export let data: PageData
+	interface Props {
+		data: PageData;
+	}
+
+	let { data = $bindable() }: Props = $props();
 
 	const form = superForm(data.civilizationCreationForm, {
 		validators: zodClient(newCivilizationSchema),
@@ -59,8 +63,8 @@
 		}
 	})
 
-	let isDialogOpen = false
-	let deleteDialogOpen = false
+	let isDialogOpen = $state(false)
+	let deleteDialogOpen = $state(false)
 	let civilizationIdToDelete: string | null = null
 
 	const { form: formData, enhance } = form
@@ -102,7 +106,7 @@
 		</AlertDialogHeader>
 		<AlertDialogFooter>
 			<AlertDialogCancel>Annuler</AlertDialogCancel>
-			<AlertDialogAction class="btn btn-error" on:click={deleteCivilization}>
+			<AlertDialogAction class="btn btn-error" onclick={deleteCivilization}>
 				Supprimer
 			</AlertDialogAction>
 		</AlertDialogFooter>
@@ -119,10 +123,12 @@
 			<DialogDescription>
 				<form method="post" use:enhance action="?/createNewCivilization">
 					<FormField {form} name="name">
-						<FormControl let:attrs>
-							<FormLabel>Le nom de votre civilisation</FormLabel>
-							<Input {...attrs} bind:value={$formData.name} />
-						</FormControl>
+						<FormControl >
+							{#snippet children({ props })}
+														<FormLabel>Le nom de votre civilisation</FormLabel>
+								<Input {...props} bind:value={$formData.name} />
+																				{/snippet}
+												</FormControl>
 						<FormDescription />
 						<FormFieldErrors />
 					</FormField>
@@ -142,7 +148,7 @@
 					variant="destructive"
 					title="Supprimer cette civilisation"
 					class="transition-colors hover:bg-red-600"
-					on:click={() => openDeleteModal(civilization.id)}
+					onclick={() => openDeleteModal(civilization.id)}
 				>
 					<Trash size="24" />
 				</Button>

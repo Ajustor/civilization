@@ -3,6 +3,26 @@ import { defineConfig, type PluginOption } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 import { enhancedImages } from '@sveltejs/enhanced-img'
+import { createRequire } from 'node:module'
+import path from 'node:path'
+
+// The `sveltekit-superforms/adapters` barrel eagerly evaluates every adapter,
+// including the TypeBox one, which throws "Class extends value undefined" with
+// the installed typebox and 500s every form page. We only use Zod, so alias the
+// barrel to the Zod (v4) adapter module directly — this bypasses the barrel and
+// still lets Vite pre-bundle its deps (avoiding the memoize-weak CJS interop
+// error a relative import would cause).
+// Resolve the package location at runtime (it may be hoisted to the workspace
+// root or live in apps/front/node_modules depending on the install) so the
+// alias works both locally and on the Vercel build.
+const require = createRequire(import.meta.url)
+// Resolve the exported `./adapters` entry (this only resolves the path, it does
+// NOT evaluate the barrel, so the TypeBox crash isn't triggered) and take the
+// sibling zod4.js. `./package.json` isn't exported, so we can't resolve that.
+const superformsZodAdapter = path.join(
+	path.dirname(require.resolve('sveltekit-superforms/adapters')),
+	'zod4.js',
+)
 
 const generateSW = process.env.GENERATE_SW === 'true'
 
@@ -66,5 +86,13 @@ export default defineConfig({
 		__RELOAD_SW__: false,
 		'process.env.NODE_ENV': process.env.NODE_ENV === 'production' ? '"production"' : '"development"',
 	},
+	resolve: {
+		alias: {
+			'sveltekit-superforms/adapters': superformsZodAdapter,
+		},
+	},
+	// PostCSS config is auto-discovered from postcss.config.cjs. Setting
+	// css.postcss to an inline object here ({ config: ... }) made vite treat it
+	// as an inline config with no plugins, so Tailwind never ran.
 	plugins
 })

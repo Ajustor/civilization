@@ -10,11 +10,8 @@ import { version } from '../package.json'
 import { worldModule } from './modules/world'
 import mongoose from 'mongoose'
 import { peopleModule } from './modules/people'
+import { tradeOffersModule } from './modules/trade-offers'
 
-import { opentelemetry } from '@elysiajs/opentelemetry'
-
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
 import { serverTiming } from '@elysiajs/server-timing'
 
 
@@ -28,25 +25,20 @@ const app = new Elysia()
   .use(swagger({ version }))
   .use(jwtMiddleware)
   // .use(compression())
-  .use(
-    opentelemetry({
-      spanProcessors: [
-        new BatchSpanProcessor(
-          new OTLPTraceExporter()
-        )
-      ]
-    })
-  )
+
   .get('', () => `api-version: ${version}`)
   .use(worldModule)
   .use(authModule)
   .use(usersModule)
   .use(civilizationModule)
   .use(peopleModule)
+  .use(tradeOffersModule)
 
 
 app.listen(process.env.APP_PORT!)
 
 console.log(`🦄 Server started at ${app.server?.url}`)
 
-export type App = typeof app 
+export type App = typeof app
+
+export type { UpdateCivilizationDtoType } from './modules/civilizations/dto'

@@ -3,14 +3,16 @@ import {
   BuildingTypes,
   Civilization,
   CivilizationBuilder,
+  CivilizationConfig,
   CivilizationType,
   House,
   PeopleEntity,
   Resource,
   ResourceTypes,
   isExtractionBuilding,
+  defaultCivilizationConfig,
 } from '@ajustor/simulation'
-import { Campfire, Farm, Kiln, Mine, Sawmill, Cache } from '@ajustor/simulation'
+import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall } from '@ajustor/simulation'
 import {
   CivilizationModel,
   CivilizationStatsModel,
@@ -19,7 +21,7 @@ import {
   WorldModel,
 } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
-
+import { UpdateCivilizationDto, UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
 import { arrayToMap } from '../../utils'
 
@@ -33,6 +35,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.SAWMILL]: Sawmill,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.WALL]: Wall,
 }
 
 export type MongoCivilizationType = CivilizationType & {
@@ -49,6 +52,24 @@ export const civilizationMapper = (
     .withLivedMonths(civilization.livedMonths)
     .withName(civilization.name)
     .withCitizensCount(civilization.people?.length ?? 0)
+
+  if (civilization.config) {
+    builder.withConfig({
+      ...civilization.config,
+      // OPEN_EXCHANGE is stored as ObjectId refs, normalize to plain id strings
+      OPEN_EXCHANGE: (civilization.config.OPEN_EXCHANGE ?? []).map(String),
+      AT_WAR_WITH: (civilization.config.AT_WAR_WITH ?? []).map(String),
+    })
+  }
+
+  if (civilization.pendingConstructions?.length) {
+    builder.withPendingConstructions(
+      civilization.pendingConstructions.map(({ buildingType, monthsRemaining }) => ({
+        buildingType,
+        monthsRemaining,
+      })),
+    )
+  }
 
   for (const civilizationResource of civilization.resources) {
     const resource = new Resource(
@@ -361,13 +382,15 @@ export class CivilizationService {
   }
 
   async saveAll(civilizations: Civilization[]) {
-    for(const civilization of civilizations) {
+    await Promise.all(
+      civilizations.map(async (civilization) => {
         const bulkWriteOperations: AnyBulkWriteOperation<PeopleEntity>[] = []
-        // console.time(civilization.name)
-        // console.timeLog(civilization.name, `Saving civilization`)
-        const oldCivilization = await CivilizationModel.findOne({
-          _id: civilization.id,
-        })
+        // Only the people id list is needed to detect who died, no need to
+        // load the whole civilization document.
+        const oldCivilization = await CivilizationModel.findOne(
+          { _id: civilization.id },
+          'people',
+        )
 
         if (!oldCivilization) {
           throw new Error('Your civilization disapear from our data')
@@ -440,6 +463,7 @@ export class CivilizationService {
               buildingType: building.getType(),
             })),
             livedMonths: civilization.livedMonths,
+            pendingConstructions: civilization.pendingConstructions,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,
               quantity,
@@ -448,7 +472,8 @@ export class CivilizationService {
           },
         )
         // console.timeEnd(civilization.name)
-    }
+      }),
+    )
   }
 
   async delete(userId: string, civilizationId: string) {
@@ -475,6 +500,73 @@ export class CivilizationService {
     const exists = await CivilizationModel.exists({ name: civilizationName })
 
     return !!exists?._id
+  }
+
+  async update(userId: string, civilizationId: string, body: UpdateCivilizationDtoType) {
+    const user = await UserModel.findOne({ _id: userId }).populate<{
+      civilizations: CivilizationType[]
+    }>({
+      path: 'civilizations',
+    })
+
+    const civilizationToUpdate = user?.civilizations.find(
+      ({ id }) => id === civilizationId,
+    )
+
+    if (!user?.civilizations?.length || !civilizationToUpdate) {
+      throw new Error('No civilization found')
+    }
+
+    // The DTO exposes camelCase fields, while the stored config uses
+    // UPPER_SNAKE_CASE keys, so we map them explicitly. Each field falls back to
+    // its current value (or the default for civilizations created before the
+    // config existed), and only the fields present in the body override it.
+    const currentConfig = civilizationToUpdate.config ?? defaultCivilizationConfig
+
+    await CivilizationModel.findOneAndUpdate(
+      { _id: civilizationToUpdate.id },
+      {
+        config: {
+          PREGNANCY_PROBABILITY:
+            currentConfig.PREGNANCY_PROBABILITY ??
+            defaultCivilizationConfig.PREGNANCY_PROBABILITY,
+          PEOPLE_CHARCOAL_CAN_HEAT:
+            currentConfig.PEOPLE_CHARCOAL_CAN_HEAT ??
+            defaultCivilizationConfig.PEOPLE_CHARCOAL_CAN_HEAT,
+          CHANCE_TO_EVOLVE:
+            currentConfig.CHANCE_TO_EVOLVE ??
+            defaultCivilizationConfig.CHANCE_TO_EVOLVE,
+          CHANCE_TO_BUILD_EVOLVED_BUILDING:
+            currentConfig.CHANCE_TO_BUILD_EVOLVED_BUILDING ??
+            defaultCivilizationConfig.CHANCE_TO_BUILD_EVOLVED_BUILDING,
+          MAXIMUM_CHILDREN:
+            body.maximumChildren ??
+            currentConfig.MAXIMUM_CHILDREN ??
+            defaultCivilizationConfig.MAXIMUM_CHILDREN,
+          MAX_ACTIVE_PEOPLE_BY_CIVILIZATION:
+            body.maxActivePeopleByCivilization ??
+            currentConfig.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION ??
+            defaultCivilizationConfig.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
+          OPEN_EXCHANGE:
+            body.openExchange ??
+            currentConfig.OPEN_EXCHANGE ??
+            defaultCivilizationConfig.OPEN_EXCHANGE,
+          MILITARY_RATIO:
+            body.militaryRatio ??
+            currentConfig.MILITARY_RATIO ??
+            defaultCivilizationConfig.MILITARY_RATIO,
+          NEXT_BUILDING_TO_BUILD:
+            body.nextBuildingToBuild !== undefined
+              ? (body.nextBuildingToBuild as CivilizationConfig['NEXT_BUILDING_TO_BUILD'])
+              : (currentConfig.NEXT_BUILDING_TO_BUILD ??
+                defaultCivilizationConfig.NEXT_BUILDING_TO_BUILD),
+          AT_WAR_WITH:
+            body.atWarWith ??
+            currentConfig.AT_WAR_WITH ??
+            defaultCivilizationConfig.AT_WAR_WITH,
+        },
+      },
+    )
   }
 
   async getCivilizationStats(civilizationId: string, limit: number = 10) {

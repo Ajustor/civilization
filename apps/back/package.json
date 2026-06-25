@@ -21,21 +21,20 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/through2": "^2.0.41",
-    "react-email": "3.0.1"
+    "react-email": "5.0.4"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@ajustor/simulation": "1.0.0",
-    "@elysiajs/opentelemetry": "^1.1.5",
-    "@elysiajs/server-timing": "^1.1.0",
+    "@elysiajs/server-timing": "^1.4.0",
     "@elysiajs/stream": "^1.1.0",
-    "@libsql/client": "^0.10.0",
-    "@react-email/tailwind": "0.1.0",
+    "@libsql/client": "^0.15.15",
+    "@react-email/tailwind": "2.0.1",
     "elysia-compress": "^1.2.1",
-    "mongodb": "^6.9.0",
-    "mongoose": "^8.6.3",
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.20.0",
     "through2": "^4.0.2"
   }
 }

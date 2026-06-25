@@ -28,12 +28,21 @@ import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
+import { Wall } from './buildings/wall'
+import type { CivilizationConfig, PendingConstruction } from './types/civilization'
 
-const PREGNANCY_PROBABILITY = 60
-const MAX_ACTIVE_PEOPLE_BY_CIVILIZATION = 100_000
-const PEOPLE_CHARCOAL_CAN_HEAT = 10
-const CHANCE_TO_EVOLVE = 20
-const CHANCE_TO_BUILD_EVOLVED_BUILDING = 25
+export const defaultCivilizationConfig: CivilizationConfig = {
+  PEOPLE_CHARCOAL_CAN_HEAT: 10,
+  MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: 100_000,
+  PREGNANCY_PROBABILITY: 60,
+  CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
+  CHANCE_TO_EVOLVE: 20,
+  MAXIMUM_CHILDREN: 10,
+  OPEN_EXCHANGE: [],
+  AT_WAR_WITH: [],
+  MILITARY_RATIO: 0,
+  NEXT_BUILDING_TO_BUILD: null,
+}
 
 const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
@@ -43,6 +52,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.WALL]: Wall,
 }
 
 const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE]
@@ -61,6 +71,7 @@ export const isExtractionBuilding = (
 
 export class Civilization {
   public id = v4()
+  public pendingConstructions: PendingConstruction[] = []
   private _people: People[]
   private _resources: Resource[]
   private _livedMonths: number = 0
@@ -69,6 +80,11 @@ export class Civilization {
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
+    public config: CivilizationConfig = {
+      ...defaultCivilizationConfig,
+      OPEN_EXCHANGE: [...defaultCivilizationConfig.OPEN_EXCHANGE],
+      AT_WAR_WITH: [...defaultCivilizationConfig.AT_WAR_WITH],
+    },
   ) {
     this._people = []
     this._resources = []
@@ -85,6 +101,10 @@ export class Civilization {
 
   set citizensCount(citizenCount: number) {
     this._citizensCount = citizenCount
+  }
+
+  get childrenCount(): number {
+    return this.people.filter((person) => person.work?.occupationType === OccupationTypes.CHILD).length
   }
 
   get livedMonths(): number {
@@ -158,6 +178,12 @@ export class Civilization {
     return this.buildings.find<Campfire>(
       (building): building is Campfire =>
         building.getType() === BuildingTypes.CAMPFIRE,
+    )
+  }
+
+  get wall(): Wall | undefined {
+    return this.buildings.find<Wall>(
+      (building): building is Wall => building.getType() === BuildingTypes.WALL,
     )
   }
 
@@ -237,6 +263,27 @@ export class Civilization {
     )
   }
 
+  get militaryStrength(): number {
+    return this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
+      (strength, soldier) => strength + Math.max(0, soldier.lifeCounter),
+      0,
+    )
+  }
+
+  loseSoldiers(ratio: number): void {
+    const soldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER)
+    const toKill = Math.floor(soldiers.length * ratio)
+    const casualties = soldiers.slice(0, toKill).map(({ id }) => id)
+    this.removePeople(casualties)
+  }
+
+  releaseCaptives(count: number): People[] {
+    const candidates = this.getPeopleWithoutOccupation(OccupationTypes.SOLDIER)
+    const captured = candidates.slice(0, count)
+    this.removePeople(captured.map(({ id }) => id))
+    return captured
+  }
+
   getWorkersWhoCanRetire(): People[] {
     return this._people.filter((worker) => worker.canRetire())
   }
@@ -274,6 +321,12 @@ export class Civilization {
     this._buildings.push(...buildings)
   }
 
+  removeBuilding(building: Building): void {
+    this._buildings = this._buildings.filter(
+      (existingBuilding) => existingBuilding !== building,
+    )
+  }
+
   constructBuilding(type: BuildingTypes): void {
     const existingBuilding = this.buildings.find(
       (building) => building.getType() === type,
@@ -304,6 +357,37 @@ export class Civilization {
     }
 
     existingBuilding.count++
+  }
+
+  private startConstruction(buildingType: BuildingTypes, monthsToBuild: number): void {
+    this.pendingConstructions.push({
+      buildingType,
+      monthsRemaining: monthsToBuild,
+    })
+  }
+
+  private isBuildingPending(buildingType: BuildingTypes): boolean {
+    return this.pendingConstructions.some(
+      (pending) => pending.buildingType === buildingType,
+    )
+  }
+
+  private progressConstructions(): void {
+    const completed: PendingConstruction[] = []
+    for (const pending of this.pendingConstructions) {
+      pending.monthsRemaining--
+      if (pending.monthsRemaining <= 0) {
+        completed.push(pending)
+      }
+    }
+
+    for (const pending of completed) {
+      this.constructBuilding(pending.buildingType)
+    }
+
+    this.pendingConstructions = this.pendingConstructions.filter(
+      (pending) => pending.monthsRemaining > 0,
+    )
   }
 
   private collectResource(workers: People[], world: World): Promise<null> {
@@ -370,7 +454,7 @@ export class Civilization {
         }
 
         const peopleHeatedWithCharcoal = Math.min(
-          civilizationCharcoal.quantity * PEOPLE_CHARCOAL_CAN_HEAT,
+          civilizationCharcoal.quantity * this.config.PEOPLE_CHARCOAL_CAN_HEAT,
           people.length,
         )
 
@@ -381,7 +465,7 @@ export class Civilization {
           civilizationCharcoal.decrease(
             Math.ceil(
               (people.length - peopleDoesNotHaveHeat.length) /
-                PEOPLE_CHARCOAL_CAN_HEAT,
+                this.config.PEOPLE_CHARCOAL_CAN_HEAT,
             ),
           )
         }
@@ -438,7 +522,7 @@ export class Civilization {
     // Allow only half people to be child
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
     if (
-      activePeopleCount < MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
+      activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
       children.length < (adults.length * 1) / 3
     ) {
       await this.createNewPeople()
@@ -450,6 +534,7 @@ export class Civilization {
     this.produceResources()
 
     this.adaptPeopleJob()
+    this.progressConstructions()
     this.buildNewBuilding()
 
     if (!this.nobodyAlive()) {
@@ -529,9 +614,12 @@ export class Civilization {
   private extractResourcesFromBuilding(building: ExtractionBuilding) {
     const resourcesProbabilities = building.outputResources
     const requiredWorkers = building.workerTypeRequired
-    if (building.capacity && building.capacity <= 0) {
-      building.count = 0
-      building.capacity = 0
+
+    // An exhausted extraction building is destroyed so a fresh one (with a new
+    // random capacity) can be built in its place. `!= null` is used instead of
+    // truthiness so that a capacity of exactly 0 is treated as exhausted.
+    if (building.capacity != null && building.capacity <= 0) {
+      this.removeBuilding(building)
       return
     }
 
@@ -548,13 +636,14 @@ export class Civilization {
         if (isWithinChance(resource.probability)) {
           const amount = getRandomInt(1, 100)
           this.increaseResource(resource.resource, amount)
-          if (building.capacity) {
-            building.capacity -= amount
-          }
 
-          if (building.capacity && building.capacity <= 0) {
-            building.count = 0
-            building.capacity = 0
+          if (building.capacity != null) {
+            building.capacity -= amount
+
+            if (building.capacity <= 0) {
+              this.removeBuilding(building)
+              return
+            }
           }
         }
       }
@@ -579,11 +668,61 @@ export class Civilization {
     }
   }
 
+  private buildChosenBuilding(): void {
+    const chosen = this.config.NEXT_BUILDING_TO_BUILD
+    if (!chosen) {
+      return
+    }
+
+    // Defensive guard: an invalid stored building type (e.g. from a crafted
+    // request) would otherwise crash the monthly tick on the constructor
+    // lookup below. Drop the request instead.
+    if (!(chosen in BUILDING_CONSTRUCTORS)) {
+      this.config.NEXT_BUILDING_TO_BUILD = null
+      return
+    }
+
+    // Unique buildings: skip if already built or already under construction.
+    if (
+      this.buildings.some((building) => building.getType() === chosen) ||
+      this.isBuildingPending(chosen)
+    ) {
+      this.config.NEXT_BUILDING_TO_BUILD = null
+      return
+    }
+
+    // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
+    if (chosen === BuildingTypes.WALL) {
+      const builders = this.people.filter((person) => person.canWork()).length
+      if (builders < Wall.minBuilders) {
+        return // keep the request; retry next month
+      }
+    }
+
+    const constructor = BUILDING_CONSTRUCTORS[chosen] as {
+      constructionCosts: ConstructionCost[]
+      workerRequiredToBuild: WorkerRequiredToBuild[]
+      timeToBuild: number
+    }
+    this.buildNew(
+      chosen,
+      constructor.constructionCosts,
+      constructor.workerRequiredToBuild,
+      constructor.timeToBuild,
+    )
+
+    // Clear the request only if the chantier actually started.
+    if (this.isBuildingPending(chosen)) {
+      this.config.NEXT_BUILDING_TO_BUILD = null
+    }
+  }
+
   private buildNewBuilding() {
+    this.buildChosenBuilding()
     this.buildNewHouses()
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.cache?.count) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      if (!this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)) {
         this.buildNew(
           BuildingTypes.CACHE,
           Cache.constructionCosts,
@@ -594,7 +733,7 @@ export class Civilization {
     }
 
     // TODO: create a new function to determine if building is full
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.KILN,
         Kiln.constructionCosts,
@@ -603,7 +742,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.SAWMILL,
         Sawmill.constructionCosts,
@@ -612,7 +751,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.FARM,
         Farm.constructionCosts,
@@ -621,7 +760,7 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       this.buildNew(
         BuildingTypes.CAMPFIRE,
         Campfire.constructionCosts,
@@ -630,8 +769,8 @@ export class Civilization {
       )
     }
 
-    if (isWithinChance(CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.mine?.count) {
+    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
+      if (!this.mine?.count && !this.isBuildingPending(BuildingTypes.MINE)) {
         this.buildNew(
           BuildingTypes.MINE,
           Mine.constructionCosts,
@@ -650,7 +789,13 @@ export class Civilization {
       return
     }
 
-    const housesTotalCapacity = House.capacity * (this.houses?.count ?? 0)
+    // Count pending houses toward effective capacity so in-flight construction
+    // isn't re-queued every month until it completes.
+    const pendingHouses = this.pendingConstructions.filter(
+      (pending) => pending.buildingType === BuildingTypes.HOUSE,
+    ).length
+    const housesTotalCapacity =
+      House.capacity * ((this.houses?.count ?? 0) + pendingHouses)
     const workerNeeded = Math.ceil(
       (this._people.length - housesTotalCapacity) / House.capacity,
     )
@@ -677,8 +822,10 @@ export class Civilization {
         this.decreaseResource(cost.resource, cost.amount)
       }
 
-      worker.startBuilding()
-      this.constructBuilding(BuildingTypes.HOUSE)
+      // One pending entry is pushed per available worker: parallel
+      // construction sites are intended (one house per worker in flight).
+      worker.startBuilding(House.timeToBuild)
+      this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild)
     }
   }
 
@@ -729,7 +876,7 @@ export class Civilization {
       this.decreaseResource(cost.resource, cost.amount)
     }
 
-    this.constructBuilding(buildingType)
+    this.startConstruction(buildingType, timeToBuild)
   }
 
   private checkHousing() {
@@ -750,12 +897,24 @@ export class Civilization {
       citizen.setOccupation(OccupationTypes.RETIRED)
     }
 
-
-    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(({ work, hasWork }) => work?.occupationType !== OccupationTypes.RETIRED && work && ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(work.occupationType) && !hasWork)
+    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(
+      OccupationTypes.CHILD,
+    ).filter(
+      ({ work, hasWork }) =>
+        work?.occupationType !== OccupationTypes.RETIRED &&
+        work &&
+        ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(
+          work.occupationType,
+        ) &&
+        !hasWork,
+    )
     for (const peopleWhoHasNotWork of peoplesWhoHasNotWork) {
       for (const [key, jobs] of Object.entries(OCCUPATION_TREE)) {
         if (key === OccupationTypes.CHILD) continue
-        if (peopleWhoHasNotWork.work && jobs.includes(peopleWhoHasNotWork.work.occupationType)) {
+        if (
+          peopleWhoHasNotWork.work &&
+          jobs.includes(peopleWhoHasNotWork.work.occupationType)
+        ) {
           peopleWhoHasNotWork.setOccupation(key as OccupationTypes)
         }
       }
@@ -765,7 +924,7 @@ export class Civilization {
     for (const worker of workersCanUpgrade) {
       const hasChanceToEvolve =
         worker.work?.occupationType === OccupationTypes.CHILD ||
-        isWithinChance(CHANCE_TO_EVOLVE)
+        isWithinChance(this.config.CHANCE_TO_EVOLVE)
       if (hasChanceToEvolve && worker.work && worker.canUpgradeWork()) {
         const newPossibleOccupations =
           OCCUPATION_TREE[worker.work.occupationType] ?? []
@@ -792,10 +951,44 @@ export class Civilization {
       }
     }
 
+    this.recruitSoldiers()
+  }
+
+  private recruitSoldiers(): void {
+    const ratio = this.config.MILITARY_RATIO ?? 0
+    const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(
+      (person) => person.work?.occupationType !== OccupationTypes.RETIRED,
+    )
+    const targetSoldiers = Math.floor((adults.length * ratio) / 100)
+    const currentSoldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER)
+
+    if (currentSoldiers.length === targetSoldiers) {
+      return
+    }
+
+    if (currentSoldiers.length < targetSoldiers) {
+      const recruitable = adults.filter(
+        (person) => person.work?.occupationType !== OccupationTypes.SOLDIER,
+      )
+      const toRecruit = targetSoldiers - currentSoldiers.length
+      for (const person of recruitable.slice(0, toRecruit)) {
+        person.setOccupation(OccupationTypes.SOLDIER)
+      }
+    } else {
+      // Over target (ratio lowered): release the surplus back to gathering.
+      const toRelease = currentSoldiers.length - targetSoldiers
+      for (const person of currentSoldiers.slice(0, toRelease)) {
+        person.setOccupation(OccupationTypes.GATHERER)
+      }
+    }
   }
 
   private async createNewPeople() {
     // Handle pregnancy
+
+    if (this.config.MAXIMUM_CHILDREN <= this.childrenCount) {
+      return
+    }
 
     let eligiblePeople: [People, People][] = []
     const ableToConceivePeople = this._people.filter((person) =>
@@ -812,17 +1005,25 @@ export class Civilization {
     if (!women.length) {
       return
     }
-    for (const woman of women) {
-      const womanLineage = woman.getDirectLineage()
-      const eligibleManIndex = men.findIndex((man) => {
-        const manLineage = man.getDirectLineage()
-        const manAndWomanIntersection = hasElementInCommon(
-          womanLineage,
-          manLineage,
-        )
 
-        return !manAndWomanIntersection
-      })
+    // Direct lineage is recomputed for every (woman, man) comparison below,
+    // which is quadratic in the fertile population. Memoize it per person so
+    // each lineage is only built once per month.
+    const lineageCache = new Map<People, string[]>()
+    const lineageOf = (person: People): string[] => {
+      let lineage = lineageCache.get(person)
+      if (!lineage) {
+        lineage = person.getDirectLineage()
+        lineageCache.set(person, lineage)
+      }
+      return lineage
+    }
+
+    for (const woman of women) {
+      const womanLineage = lineageOf(woman)
+      const eligibleManIndex = men.findIndex(
+        (man) => !hasElementInCommon(womanLineage, lineageOf(man)),
+      )
 
       if (eligibleManIndex === -1) {
         continue
@@ -842,7 +1043,7 @@ export class Civilization {
       eligiblePeople.map(
         ([mother, father]) =>
           new Promise((resolve) => {
-            if (!isWithinChance(PREGNANCY_PROBABILITY) || !mother) {
+            if (!isWithinChance(this.config.PREGNANCY_PROBABILITY) || !mother) {
               return resolve(null)
             }
 

@@ -9,13 +9,14 @@ import {
   ResourceTypes,
   formatCivilizations,
 } from '@ajustor/simulation'
-import Elysia, { error, t } from 'elysia'
+import Elysia, { t } from 'elysia'
 
 import { CivilizationService } from './service'
 import { PeopleService } from '../people/service'
 import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
+import { UpdateCivilizationDto } from './dto'
 
 const INITIAL_CITIZEN_NUMBER = 50
 const INITIAL_CITIZEN_AGE = 12 * 16
@@ -41,7 +42,7 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   .use(logger())
   .use(jwtMiddleware)
   .decorate({ civilizationService: civilizationServiceInstance })
-  .get('', async ({ civilizationService, log }) => {
+  .get('', async ({ civilizationService }) => {
     const civilizations = await civilizationService.getAll({ people: true })
     return {
       count: civilizations.length,
@@ -73,13 +74,14 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   )
   .post(
     '',
-    async ({ civilizationService, body, log, user }) => {
+    async ({ civilizationService, body, log, user, set }) => {
       const civilizationWithThatNameExist = await civilizationService.exist(
         body.name,
       )
       if (civilizationWithThatNameExist) {
         log.error('Conflict a civilization with that name already exist')
-        throw error(409, 'A civilization with that name already exist')
+        set.status = 409
+        return 'A civilization with that name already exist'
       }
 
       const civilizationBuilder = new CivilizationBuilder()
@@ -132,6 +134,15 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     async ({ civilizationService, params: { civilizationId }, user }) => {
       await civilizationService.delete(user.id as string, civilizationId)
     },
+  )
+  .patch(
+    '/:civilizationId',
+    async ({ civilizationService, params: { civilizationId }, user, body }) => {
+      await civilizationService.update(user.id as string, civilizationId, body)
+    },
+    {
+      body: UpdateCivilizationDto
+    }
   )
   .get(
     '/:civilizationId/stats',

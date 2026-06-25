@@ -6,8 +6,9 @@ import type { PeopleEntity } from './types/people'
 import type { ResourceType } from './types/resources'
 import { World } from './world'
 
-export type { CivilizationType } from './types/civilization'
+export type { CivilizationType, CivilizationConfig } from './types/civilization'
 export type { BuildingType } from './types/building'
+export { defaultCivilizationConfig } from './civilization'
 
 export { BuildingTypes } from './buildings/enum'
 export * from './buildings'

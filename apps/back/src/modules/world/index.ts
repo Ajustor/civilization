@@ -19,7 +19,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     civilizationsDbClient: civilizationsDbClientInstance,
     peopleService: peopleServiceInstance
   })
-  .get('', async ({ log, worldDbClient, civilizationsDbClient }) => {
+  .get('', async ({ worldDbClient, civilizationsDbClient }) => {
     const worlds = await worldDbClient.getAll()
 
     if (!worlds.length) {
@@ -29,7 +29,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     const worldInfos = worlds.map((world) => world.getInfos())
     return worldInfos
   })
-  .get('/:worldId/aliveCivilizationsCount', async ({ log, worldDbClient, civilizationsDbClient, params: { worldId } }) => {
+  .get('/:worldId/aliveCivilizationsCount', async ({ worldDbClient, civilizationsDbClient, params: { worldId } }) => {
     const world = await worldDbClient.getById(worldId)
 
     if (!world) {
