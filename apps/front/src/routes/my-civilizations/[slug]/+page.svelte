@@ -53,6 +53,8 @@
 		'oklch(0.5 0.02 250)', 'oklch(0.55 0.11 45)'
 	]
 
+	const maxResourceQty = $derived(Math.max(...data.civilization.resources.map(r => r.quantity), 1))
+
 	const stringToColour = (str: string) => {
 		let hash = 0
 		for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
@@ -217,7 +219,7 @@
 							<span style="color:oklch(0.5 0.03 50);">{resource.quantity}</span>
 						</div>
 						<div class="civ-progress-bar">
-							<div class="civ-progress-fill" style="width:60%; background:oklch(0.55 0.1 130);"></div>
+							<div class="civ-progress-fill" style="width:{Math.round((resource.quantity / maxResourceQty) * 100)}%; background:oklch(0.55 0.1 130);"></div>
 						</div>
 					</div>
 				{/each}
@@ -237,6 +239,8 @@
 					{pageIndex}
 					{pageSize}
 				/>
+			{:catch}
+				<p style="color:oklch(0.5 0.03 50); font-size:15px;">Impossible de charger la liste des citoyens.</p>
 			{/await}
 		</div>
 
