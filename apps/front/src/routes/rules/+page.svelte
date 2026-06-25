@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { BASE_FOOD_GENERATION, BASE_WOOD_GENERATION } from '@ajustor/simulation'
 	import { Block, List, ListItem } from 'konsta/svelte'
 </script>
 
@@ -57,23 +56,23 @@
 					<ol class="list-inside list-decimal">
 						<li>
 							au printemps<br />
-							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 1.5
-							{BASE_WOOD_GENERATION} de bois, avec un facteur de 1.1
+							La génération de nourriture du monde est multiplié par un facteur de 1.5 La génération
+							de bois du monde est multiplié par un facteur de 1.1
 						</li>
 						<li>
 							en été<br />
-							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 1.75
-							{BASE_WOOD_GENERATION} de bois, avec un facteur de 1.2
+							La génération de nourriture du monde est multiplié par un facteur de 1.75 La génération
+							de bois du monde est multiplié par un facteur de 1.2
 						</li>
 						<li>
 							en automne<br />
-							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 1.2
-							{BASE_WOOD_GENERATION} de bois, avec un facteur de 1
+							La génération de nourriture du monde est multiplié par un facteur de 1.2 La génération
+							de bois du monde est multiplié par un facteur de 1
 						</li>
 						<li>
 							en hiver<br />
-							{BASE_FOOD_GENERATION} de nourriture, avec un facteur de 0.5
-							{BASE_WOOD_GENERATION} de bois, avec un facteur de 0.75
+							La génération de nourriture du monde est multiplié par un facteur de 0.5 La génération
+							de bois du monde est multiplié par un facteur de 0.75
 						</li>
 					</ol>
 				</li>
