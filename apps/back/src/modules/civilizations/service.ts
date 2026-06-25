@@ -41,6 +41,7 @@ const BUILDING_CONSTRUCTORS = {
 export type MongoCivilizationType = CivilizationType & {
   resources: { quantity: number; resourceType: ResourceTypes }[]
   buildings: MongoBuildingType[]
+  worldId?: string | null
 }
 
 export const civilizationMapper = (
@@ -225,11 +226,17 @@ export class CivilizationService {
   }
 
   async getWorldId(civilizationId: string): Promise<string | null> {
-    const world = await WorldModel.findOne(
-      { civilizations: civilizationId },
-      '_id',
-    )
-    return world ? world._id.toString() : null
+    const civ = await CivilizationModel.findById(civilizationId, 'worldId')
+    if (civ?.worldId) {
+      return civ.worldId.toString()
+    }
+    // Fallback for existing civs that predate the worldId field: reverse lookup + lazy backfill
+    const world = await WorldModel.findOne({ civilizations: civilizationId }, '_id')
+    if (world) {
+      await CivilizationModel.updateOne({ _id: civilizationId }, { worldId: world._id })
+      return world._id.toString()
+    }
+    return null
   }
 
   async countGenderForWorld(
@@ -378,6 +385,7 @@ export class CivilizationService {
         ...building.formatToType(),
         buildingType: building.getType(),
       })),
+      worldId: world._id,
     })
 
     user.civilizations ??= []
