@@ -83,7 +83,6 @@ export class Civilization {
     this._people = []
     this._resources = []
     this._buildings = []
-    this.pendingConstructions = []
   }
 
   nobodyAlive(): boolean {
@@ -327,11 +326,17 @@ export class Civilization {
     existingBuilding.count++
   }
 
-  private startConstruction(buildingType: BuildingTypes, timeToBuild: number): void {
+  private startConstruction(buildingType: BuildingTypes, monthsToBuild: number): void {
     this.pendingConstructions.push({
       buildingType,
-      monthsRemaining: timeToBuild,
+      monthsRemaining: monthsToBuild,
     })
+  }
+
+  private isBuildingPending(buildingType: BuildingTypes): boolean {
+    return this.pendingConstructions.some(
+      (pending) => pending.buildingType === buildingType,
+    )
   }
 
   private progressConstructions(): void {
@@ -634,7 +639,7 @@ export class Civilization {
     this.buildNewHouses()
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.cache?.count) {
+      if (!this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)) {
         this.buildNew(
           BuildingTypes.CACHE,
           Cache.constructionCosts,
@@ -682,7 +687,7 @@ export class Civilization {
     }
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.mine?.count) {
+      if (!this.mine?.count && !this.isBuildingPending(BuildingTypes.MINE)) {
         this.buildNew(
           BuildingTypes.MINE,
           Mine.constructionCosts,
@@ -701,7 +706,13 @@ export class Civilization {
       return
     }
 
-    const housesTotalCapacity = House.capacity * (this.houses?.count ?? 0)
+    // Count pending houses toward effective capacity so in-flight construction
+    // isn't re-queued every month until it completes.
+    const pendingHouses = this.pendingConstructions.filter(
+      (pending) => pending.buildingType === BuildingTypes.HOUSE,
+    ).length
+    const housesTotalCapacity =
+      House.capacity * ((this.houses?.count ?? 0) + pendingHouses)
     const workerNeeded = Math.ceil(
       (this._people.length - housesTotalCapacity) / House.capacity,
     )
@@ -728,6 +739,8 @@ export class Civilization {
         this.decreaseResource(cost.resource, cost.amount)
       }
 
+      // One pending entry is pushed per available worker: parallel
+      // construction sites are intended (one house per worker in flight).
       worker.startBuilding(House.timeToBuild)
       this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild)
     }
