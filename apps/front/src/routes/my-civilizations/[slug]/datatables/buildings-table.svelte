@@ -1,12 +1,4 @@
 <script lang="ts">
-	import {
-		Table,
-		TableBody,
-		TableCell,
-		TableHead,
-		TableHeader,
-		TableRow
-	} from '$lib/components/ui/table'
 	import { type BuildingType, BuildingTypes } from '@ajustor/simulation'
 
 	let { buildings }: { buildings: BuildingType[] } = $props()
@@ -22,23 +14,21 @@
 	}
 </script>
 
-<div class="rounded-md border border-slate-100 bg-slate-200">
-	<Table class="bg-neutral text-neutral-content">
-		<TableHeader>
-			<TableRow>
-				<TableHead>Type de bâtiment</TableHead>
-				<TableHead>Capacité / Unité restante</TableHead>
-				<TableHead>Nombre de bâtiment de ce type</TableHead>
-			</TableRow>
-		</TableHeader>
-		<TableBody>
-			{#each buildings as building (building.type)}
-				<TableRow>
-					<TableCell>{building.type ? (buildingLabels[building.type] ?? '') : ''}</TableCell>
-					<TableCell>{building.capacity ?? ''}</TableCell>
-					<TableCell>{building.count}</TableCell>
-				</TableRow>
-			{/each}
-		</TableBody>
-	</Table>
-</div>
+<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
+	<thead>
+		<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
+			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Type de bâtiment</th>
+			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Capacité / Unité restante</th>
+			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Nombre</th>
+		</tr>
+	</thead>
+	<tbody>
+		{#each buildings as building (building.type)}
+			<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
+				<td style="padding:8px 12px;">{building.type ? (buildingLabels[building.type] ?? '') : ''}</td>
+				<td style="padding:8px 12px;">{building.capacity ?? ''}</td>
+				<td style="padding:8px 12px;">{building.count}</td>
+			</tr>
+		{/each}
+	</tbody>
+</table>

@@ -4,9 +4,7 @@
 	import { superForm } from 'sveltekit-superforms'
 	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { newCivilizationSchema } from '$lib/schemas/newCivilization'
-	import { Input } from '$lib/components/ui/input'
 	import {
-		FormButton,
 		FormControl,
 		FormDescription,
 		FormField,
@@ -14,26 +12,10 @@
 		FormLabel
 	} from '$lib/components/ui/form'
 	import {
-		Dialog,
-		DialogTrigger,
-		DialogContent,
-		DialogHeader,
-		DialogDescription
-	} from '$lib/components/ui/dialog'
-	import {
-		AlertDialog,
-		AlertDialogHeader,
-		AlertDialogContent,
-		AlertDialogFooter,
-		AlertDialogCancel,
-		AlertDialogAction
-	} from '$lib/components/ui/alert-dialog'
-	import {
 		callDeleteCivilization,
 		callGetCivilizations
 	} from '../../services/sveltekit-api/civilization'
 	import { type CivilizationType, ResourceTypes } from '@ajustor/simulation'
-	import { resourceNames } from '$lib/translations'
 
 	interface Props {
 		data: PageData;
@@ -78,15 +60,11 @@
 		const { myCivilizations } = await callGetCivilizations()
 		data.myCivilizations = myCivilizations
 		civilizationIdToDelete = null
+		deleteDialogOpen = false
 	}
 
 	const getResourceQty = (civ: CivilizationType, type: ResourceTypes) =>
 		civ.resources.find((r) => r.type === type)?.quantity ?? 0
-
-	const getMaxResource = (civ: CivilizationType, type: ResourceTypes) => {
-		const qty = getResourceQty(civ, type)
-		return qty > 0 ? qty : 1
-	}
 </script>
 
 <svelte:head>
@@ -94,17 +72,83 @@
 	<meta name="description" content="La page pour gérer mes civilisations" />
 </svelte:head>
 
-<AlertDialog bind:open={deleteDialogOpen}>
-	<AlertDialogContent>
-		<AlertDialogHeader>
-			La suppression est irréversible, êtes vous sûr de vouloir supprimer votre civilisation ?
-		</AlertDialogHeader>
-		<AlertDialogFooter>
-			<AlertDialogCancel>Annuler</AlertDialogCancel>
-			<AlertDialogAction class="btn btn-error" onclick={deleteCivilization}>Supprimer</AlertDialogAction>
-		</AlertDialogFooter>
-	</AlertDialogContent>
-</AlertDialog>
+<!-- Create civilization modal -->
+{#if isDialogOpen}
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+	<div
+		style="position:fixed; inset:0; z-index:50; background:rgba(40,25,10,.45); display:flex; align-items:center; justify-content:center; padding:16px;"
+		onclick={() => (isDialogOpen = false)}
+	>
+		<div
+			style="background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.06), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.74 0.05 60), 0 20px 48px rgba(60,40,20,.24); border-radius:5px; padding:32px; width:100%; max-width:480px;"
+			onclick={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
+			<h2 style="font-family:'Marcellus',serif; font-size:22px; margin:0 0 8px; color:oklch(0.3 0.04 40);">Fonder une civilisation</h2>
+			<p style="font-size:16px; color:oklch(0.5 0.03 50); margin:0 0 20px;">Nommez votre civilisation, la simulation se charge du reste.</p>
+			<form method="post" use:enhance action="?/createNewCivilization" style="display:flex; flex-direction:column; gap:16px;">
+				<FormField {form} name="name">
+					<FormControl>
+						{#snippet children({ props })}
+							<FormLabel>Le nom de votre civilisation</FormLabel>
+							<input
+								type="text"
+								{...props}
+								bind:value={$formData.name}
+								style="width:100%; padding:10px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.98 0.01 84); color:oklch(0.3 0.04 40); font-family:'EB Garamond',serif; font-size:16px; box-sizing:border-box;"
+							/>
+						{/snippet}
+					</FormControl>
+					<FormDescription />
+					<FormFieldErrors />
+				</FormField>
+				<div style="display:flex; gap:10px; justify-content:flex-end;">
+					<button
+						type="button"
+						onclick={() => (isDialogOpen = false)}
+						style="padding:10px 18px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'Marcellus',serif; font-size:16px; cursor:pointer;"
+					>Annuler</button>
+					<button
+						type="submit"
+						style="padding:10px 20px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:16px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);"
+					>Créer ma civilisation</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
+
+<!-- Delete confirmation modal -->
+{#if deleteDialogOpen}
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+	<div
+		style="position:fixed; inset:0; z-index:50; background:rgba(40,25,10,.45); display:flex; align-items:center; justify-content:center; padding:16px;"
+		onclick={() => (deleteDialogOpen = false)}
+	>
+		<div
+			style="background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.06), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.74 0.05 60), 0 20px 48px rgba(60,40,20,.24); border-radius:5px; padding:32px; width:100%; max-width:420px;"
+			onclick={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
+			<h2 style="font-family:'Marcellus',serif; font-size:20px; margin:0 0 12px; color:oklch(0.3 0.04 40);">Supprimer la civilisation</h2>
+			<p style="font-size:16px; color:oklch(0.5 0.03 50); margin:0 0 24px; line-height:1.5;">La suppression est irréversible. Êtes-vous sûr de vouloir supprimer votre civilisation ?</p>
+			<div style="display:flex; gap:10px; justify-content:flex-end;">
+				<button
+					onclick={() => (deleteDialogOpen = false)}
+					style="padding:10px 18px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'Marcellus',serif; font-size:16px; cursor:pointer;"
+				>Annuler</button>
+				<button
+					onclick={deleteCivilization}
+					style="padding:10px 20px; border:none; border-radius:4px; background:oklch(0.52 0.2 30); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:16px; cursor:pointer; box-shadow:0 4px 12px rgba(120,30,10,.24);"
+				>Supprimer</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <div class="civ-page-wrapper">
 	<!-- Page header -->
@@ -114,31 +158,12 @@
 			<div style="font-size:18px; color:oklch(0.48 0.03 50); margin-top:4px;">Vos lignées sous votre regard.</div>
 		</div>
 
-		<Dialog bind:open={isDialogOpen}>
-			<DialogTrigger>
-				<button style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">
-					<span style="font-size:22px; line-height:1;">+</span> Fonder une civilisation
-				</button>
-			</DialogTrigger>
-			<DialogContent>
-				<DialogHeader>Nommez votre civilisation, la simulation se charge du reste</DialogHeader>
-				<DialogDescription>
-					<form method="post" use:enhance action="?/createNewCivilization">
-						<FormField {form} name="name">
-							<FormControl>
-								{#snippet children({ props })}
-									<FormLabel>Le nom de votre civilisation</FormLabel>
-									<Input {...props} bind:value={$formData.name} />
-								{/snippet}
-							</FormControl>
-							<FormDescription />
-							<FormFieldErrors />
-						</FormField>
-						<FormButton data-dialog-close>Créer ma civilisation</FormButton>
-					</form>
-				</DialogDescription>
-			</DialogContent>
-		</Dialog>
+		<button
+			onclick={() => (isDialogOpen = true)}
+			style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);"
+		>
+			<span style="font-size:22px; line-height:1;">+</span> Fonder une civilisation
+		</button>
 	</div>
 
 	<!-- Civilization cards grid -->

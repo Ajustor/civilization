@@ -17,8 +17,8 @@
 	let { gender, occupation }: Props = $props()
 </script>
 
-<span class="text-neutral-content">
-	<ul>
+<span style="color:oklch(0.4 0.04 50); font-size:14px;">
+	<ul style="margin:0; padding-left:16px; list-style:disc;">
 		<li>Genre: <Icon icon={GenderIcons[gender]} /></li>
 		{#if occupation}
 			<li>Occupation: {OCCUPATIONS[occupation]}</li>

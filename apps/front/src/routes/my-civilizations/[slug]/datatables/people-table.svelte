@@ -1,17 +1,8 @@
 <script lang="ts">
-	import {
-		Table,
-		TableBody,
-		TableCell,
-		TableHead,
-		TableHeader,
-		TableRow
-	} from '$lib/components/ui/table'
 	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
 	import { OCCUPATIONS } from '$lib/translations'
 	import ChildDetails from './childDetails.svelte'
-	import { Button } from '$lib/components/ui/button'
 	import { ArrowUp, ArrowDown, ArrowUpDown } from '@lucide/svelte'
 
 	type SortKey = 'gender' | 'years' | 'lifeCounter' | 'occupation'
@@ -78,33 +69,27 @@
 	]
 </script>
 
-<div class="rounded-md">
-	<div class="flex items-center justify-between space-x-4 py-4">
-		<div class="flex items-center justify-between gap-2">
-			<Button
-				variant="outline"
-				size="sm"
+<div>
+	<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 0;">
+		<div style="display:flex; align-items:center; gap:8px;">
+			<button
 				onclick={() => updateData(pageIndex - 1, pageSize)}
 				disabled={!hasPreviousPage}
-			>
-				Précédent
-			</Button>
-			<p>{pageIndex + 1}/{pageCount}</p>
-			<Button
-				variant="outline"
-				size="sm"
-				disabled={!hasNextPage}
+				style="padding:6px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer; opacity:{!hasPreviousPage ? 0.4 : 1};"
+			>Précédent</button>
+			<span style="font-size:15px; color:oklch(0.5 0.03 50);">{pageIndex + 1} / {pageCount}</span>
+			<button
 				onclick={() => updateData(pageIndex + 1, pageSize)}
-			>
-				Suivant
-			</Button>
+				disabled={!hasNextPage}
+				style="padding:6px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer; opacity:{!hasNextPage ? 0.4 : 1};"
+			>Suivant</button>
 		</div>
 		<select
 			value={pageSize}
-			class="select select-bordered w-full max-w-xs"
+			style="padding:6px 12px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.97 0.015 84); color:oklch(0.35 0.04 40); font-family:'EB Garamond',serif; font-size:15px;"
 			onchange={(e) => updateData(0, Number(e.currentTarget.value))}
 		>
-			<option disabled>Nombre d'éléments par page</option>
+			<option disabled>Éléments par page</option>
 			<option value={10}>10</option>
 			<option value={25}>25</option>
 			<option value={50}>50</option>
@@ -112,46 +97,46 @@
 			<option value={1000}>1000</option>
 		</select>
 	</div>
-	<Table class="bg-neutral text-neutral-content">
-		<TableHeader>
-			<TableRow>
+	<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
+		<thead>
+			<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
 				{#each sortableColumns as col (col.key)}
-					<TableHead>
-						<Button variant="ghost" onclick={() => toggleSort(col.key)}>
+					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">
+						<button onclick={() => toggleSort(col.key)} style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:inherit; color:inherit; padding:0;">
 							{col.header}
 							{#if sortKey === col.key && sortOrder === 'asc'}
-								<ArrowUp class="ml-2 h-4 w-4" />
+								<ArrowUp size="14" />
 							{:else if sortKey === col.key && sortOrder === 'desc'}
-								<ArrowDown class="ml-2 h-4 w-4" />
+								<ArrowDown size="14" />
 							{:else}
-								<ArrowUpDown class="ml-2 h-4 w-4" />
+								<ArrowUpDown size="14" />
 							{/if}
-						</Button>
-					</TableHead>
+						</button>
+					</th>
 				{/each}
-				<TableHead>Mois avant accouchement</TableHead>
-				<TableHead>Enfant à naître</TableHead>
-			</TableRow>
-		</TableHeader>
-		<TableBody>
+				<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Mois avant accouchement</th>
+				<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Enfant à naître</th>
+			</tr>
+		</thead>
+		<tbody>
 			{#each sortedPeople as person (person.id ?? Math.random())}
-				<TableRow>
-					<TableCell>
+				<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
+					<td style="padding:8px 12px;">
 						{#if person.gender}
 							<Icon icon={GenderIcons[person.gender]} />
 						{/if}
-					</TableCell>
-					<TableCell>{person.years}</TableCell>
-					<TableCell>{person.lifeCounter}</TableCell>
-					<TableCell>{person.occupation ? (OCCUPATIONS[person.occupation] ?? '') : ''}</TableCell>
-					<TableCell>{person.pregnancyMonthsLeft ?? ''}</TableCell>
-					<TableCell>
+					</td>
+					<td style="padding:8px 12px;">{person.years}</td>
+					<td style="padding:8px 12px;">{person.lifeCounter}</td>
+					<td style="padding:8px 12px;">{person.occupation ? (OCCUPATIONS[person.occupation] ?? '') : ''}</td>
+					<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
+					<td style="padding:8px 12px;">
 						{#if person.child}
 							<ChildDetails gender={person.child.gender} occupation={person.child.occupation} />
 						{/if}
-					</TableCell>
-				</TableRow>
+					</td>
+				</tr>
 			{/each}
-		</TableBody>
-	</Table>
+		</tbody>
+	</table>
 </div>
