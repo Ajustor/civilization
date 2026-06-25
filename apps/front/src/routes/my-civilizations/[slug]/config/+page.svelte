@@ -15,7 +15,7 @@
 		FormLegend
 	} from '$lib/components/ui/form'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zodClient } from '$lib/forms/zod-adapter'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import { toast } from 'svelte-sonner'
 	import { ArrowLeft } from '@lucide/svelte'

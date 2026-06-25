@@ -10,7 +10,7 @@
 
 	import { Input } from '$lib/components/ui/input'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zodClient } from '$lib/forms/zod-adapter'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { toast } from 'svelte-sonner'
 	import { iForgotSchema } from '$lib/schemas/iForgot'

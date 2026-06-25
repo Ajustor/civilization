@@ -13,7 +13,7 @@
 	} from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zodClient } from '$lib/forms/zod-adapter'
 	import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 	import {
 		FormButton,
