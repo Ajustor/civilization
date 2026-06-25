@@ -157,3 +157,10 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       }),
     },
   )
+  .get(
+    '/:civilizationId/world',
+    async ({ civilizationService, params: { civilizationId } }) => {
+      const worldId = await civilizationService.getWorldId(civilizationId)
+      return { worldId }
+    },
+  )
