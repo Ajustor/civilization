@@ -287,6 +287,12 @@ export class Civilization {
     this._buildings.push(...buildings)
   }
 
+  removeBuilding(building: Building): void {
+    this._buildings = this._buildings.filter(
+      (existingBuilding) => existingBuilding !== building,
+    )
+  }
+
   constructBuilding(type: BuildingTypes): void {
     const existingBuilding = this.buildings.find(
       (building) => building.getType() === type,
@@ -542,9 +548,12 @@ export class Civilization {
   private extractResourcesFromBuilding(building: ExtractionBuilding) {
     const resourcesProbabilities = building.outputResources
     const requiredWorkers = building.workerTypeRequired
-    if (building.capacity && building.capacity <= 0) {
-      building.count = 0
-      building.capacity = 0
+
+    // An exhausted extraction building is destroyed so a fresh one (with a new
+    // random capacity) can be built in its place. `!= null` is used instead of
+    // truthiness so that a capacity of exactly 0 is treated as exhausted.
+    if (building.capacity != null && building.capacity <= 0) {
+      this.removeBuilding(building)
       return
     }
 
@@ -561,13 +570,14 @@ export class Civilization {
         if (isWithinChance(resource.probability)) {
           const amount = getRandomInt(1, 100)
           this.increaseResource(resource.resource, amount)
-          if (building.capacity) {
-            building.capacity -= amount
-          }
 
-          if (building.capacity && building.capacity <= 0) {
-            building.count = 0
-            building.capacity = 0
+          if (building.capacity != null) {
+            building.capacity -= amount
+
+            if (building.capacity <= 0) {
+              this.removeBuilding(building)
+              return
+            }
           }
         }
       }
