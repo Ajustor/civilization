@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types'
-	import { Button } from '$lib/components/ui/button'
 	import { Input } from '$lib/components/ui/input'
 	import { Checkbox } from '$lib/components/ui/checkbox'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
@@ -18,8 +17,8 @@
 	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import { toast } from 'svelte-sonner'
-	import { ArrowLeft } from '@lucide/svelte'
 	import { BuildingTypes } from '@ajustor/simulation'
+	import { buildingNames } from '$lib/translations'
 
 	interface Props {
 		data: PageData;
@@ -63,10 +62,11 @@
 	<meta name="description" content="Configurer le comportement de ma civilisation" />
 </svelte:head>
 
-<Button variant="ghost" href="/my-civilizations/{data.civilization.id}"><ArrowLeft />Retour</Button>
+<div class="civ-page-wrapper">
+<a href="/my-civilizations/{data.civilization.id}" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-flex; align-items:center; gap:6px; text-decoration:none; animation:screenIn .4s ease both;">‹ Retour à {data.civilization.name}</a>
 
-<div class="m-auto flex w-full max-w-2xl flex-col gap-5">
-	<h1 class="text-3xl">Configuration de {data.civilization.name}</h1>
+<div class="civ-card" style="max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
+	<h1 style="font-family:'Marcellus',serif; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Configuration de {data.civilization.name}</h1>
 
 	<form method="post" use:enhance action="?/updateConfig" class="flex flex-col gap-6">
 		<Card class="card bg-neutral text-neutral-content shadow-xl">
@@ -198,7 +198,7 @@
 							>
 								<option value="">Aucun</option>
 								{#each Object.values(BuildingTypes) as buildingType}
-									<option value={buildingType}>{buildingType}</option>
+									<option value={buildingType}>{buildingNames[buildingType]}</option>
 								{/each}
 							</select>
 																	{/snippet}
@@ -213,4 +213,5 @@
 
 		<FormButton class="btn btn-primary self-start">Enregistrer la configuration</FormButton>
 	</form>
+</div>
 </div>
