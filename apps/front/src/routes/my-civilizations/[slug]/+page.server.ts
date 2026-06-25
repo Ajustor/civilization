@@ -2,7 +2,8 @@ export const prerender = false
 
 import {
 	getCivilizationStats,
-	getMyCivilizationFromId
+	getMyCivilizationFromId,
+	getCivilizationWorld
 } from '../../../services/api/civilization-api'
 import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
@@ -21,8 +22,11 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		redirect(302, '/')
 	}
 
+	const worldId = await getCivilizationWorld(cookies.get('auth') ?? '', params.slug).catch(() => null)
+
 	return {
 		civilization,
+		worldId,
 		lazy: {
 			people: getPeopleFromCivilizationPaginated(cookies.get('auth') ?? '', params.slug, {
 				page: 0,
