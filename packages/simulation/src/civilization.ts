@@ -647,7 +647,49 @@ export class Civilization {
     }
   }
 
+  private buildChosenBuilding(): void {
+    const chosen = this.config.NEXT_BUILDING_TO_BUILD
+    if (!chosen) {
+      return
+    }
+
+    // Unique buildings: skip if already built or already under construction.
+    if (
+      this.buildings.some((building) => building.getType() === chosen) ||
+      this.isBuildingPending(chosen)
+    ) {
+      this.config.NEXT_BUILDING_TO_BUILD = null
+      return
+    }
+
+    // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
+    if (chosen === BuildingTypes.WALL) {
+      const builders = this.people.filter((person) => person.canWork()).length
+      if (builders < Wall.minBuilders) {
+        return // keep the request; retry next month
+      }
+    }
+
+    const constructor = BUILDING_CONSTRUCTORS[chosen] as {
+      constructionCosts: ConstructionCost[]
+      workerRequiredToBuild: WorkerRequiredToBuild[]
+      timeToBuild: number
+    }
+    this.buildNew(
+      chosen,
+      constructor.constructionCosts,
+      constructor.workerRequiredToBuild,
+      constructor.timeToBuild,
+    )
+
+    // Clear the request only if the chantier actually started.
+    if (this.isBuildingPending(chosen)) {
+      this.config.NEXT_BUILDING_TO_BUILD = null
+    }
+  }
+
   private buildNewBuilding() {
+    this.buildChosenBuilding()
     this.buildNewHouses()
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
