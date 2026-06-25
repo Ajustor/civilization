@@ -109,6 +109,10 @@ const civilizationSchema = new Schema(
       ref: 'World',
       default: null,
     },
+    lastViewedCombats: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
