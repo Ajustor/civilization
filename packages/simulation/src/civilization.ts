@@ -871,6 +871,37 @@ export class Civilization {
         }
       }
     }
+
+    this.recruitSoldiers()
+  }
+
+  private recruitSoldiers(): void {
+    const ratio = this.config.MILITARY_RATIO
+    const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(
+      (person) => person.work?.occupationType !== OccupationTypes.RETIRED,
+    )
+    const targetSoldiers = Math.floor((adults.length * ratio) / 100)
+    const currentSoldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER)
+
+    if (currentSoldiers.length === targetSoldiers) {
+      return
+    }
+
+    if (currentSoldiers.length < targetSoldiers) {
+      const recruitable = adults.filter(
+        (person) => person.work?.occupationType !== OccupationTypes.SOLDIER,
+      )
+      const toRecruit = targetSoldiers - currentSoldiers.length
+      for (const person of recruitable.slice(0, toRecruit)) {
+        person.setOccupation(OccupationTypes.SOLDIER)
+      }
+    } else {
+      // Over target (ratio lowered): release the surplus back to gathering.
+      const toRelease = currentSoldiers.length - targetSoldiers
+      for (const person of currentSoldiers.slice(0, toRelease)) {
+        person.setOccupation(OccupationTypes.GATHERER)
+      }
+    }
   }
 
   private async createNewPeople() {
