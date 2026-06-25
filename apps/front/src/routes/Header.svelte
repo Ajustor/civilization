@@ -10,7 +10,8 @@
 
 	const navLinks = [
 		{ url: '/', label: 'Les mondes', match: (p: string) => p === '/' || p.startsWith('/worlds') },
-		{ url: '/my-civilizations', label: 'Mes civilisations', match: (p: string) => p.startsWith('/my-civilizations') }
+		{ url: '/my-civilizations', label: 'Mes civilisations', match: (p: string) => p.startsWith('/my-civilizations') },
+		{ url: '/rules', label: 'Les règles', match: (p: string) => p.startsWith('/rules') }
 	]
 
 	let menuOpen = $state(false)
@@ -20,7 +21,7 @@
 	<!-- Brand -->
 	<a href="/" aria-label="Accueil" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
 		<div style="width:40px; height:40px; border-radius:50%; background:radial-gradient(circle at 35% 30%, oklch(0.55 0.14 38), oklch(0.4 0.13 34)); color:oklch(0.94 0.03 84); display:flex; align-items:center; justify-content:center; font-family:'Marcellus',serif; font-size:21px; box-shadow:inset 0 1px 4px rgba(255,220,180,.4);">V</div>
-		<span style="font-family:'Marcellus',serif; font-size:22px; color:oklch(0.32 0.04 40); letter-spacing:.02em;">Valombre</span>
+		<span style="font-family:'Marcellus',serif; font-size:22px; color:oklch(0.32 0.04 40); letter-spacing:.02em;">Civilizations</span>
 	</a>
 
 	<!-- Desktop nav -->

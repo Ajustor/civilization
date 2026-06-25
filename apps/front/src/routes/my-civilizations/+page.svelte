@@ -90,7 +90,7 @@
 </script>
 
 <svelte:head>
-	<title>Mes civilisations — Valombre</title>
+	<title>Mes civilisations — Civilizations</title>
 	<meta name="description" content="La page pour gérer mes civilisations" />
 </svelte:head>
 

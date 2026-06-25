@@ -30,7 +30,7 @@
 </script>
 
 <svelte:head>
-	<title>Les mondes — Valombre</title>
+	<title>Les mondes — Civilizations</title>
 	<meta name="description" content="Une simulation d'un monde avec des civilisations qui vivent seule" />
 </svelte:head>
 

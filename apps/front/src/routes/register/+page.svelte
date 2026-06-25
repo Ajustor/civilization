@@ -28,16 +28,15 @@
 </script>
 
 <svelte:head>
-	<title>Inscription — Valombre</title>
+	<title>Inscription — Civilizations</title>
 </svelte:head>
 
-<div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; background:radial-gradient(ellipse at 50% -20%, oklch(0.92 0.025 78), oklch(0.84 0.035 66)); background-attachment:fixed;">
+<div style="display:flex; align-items:center; justify-content:center; min-height:100%; padding:24px;">
 	<div style="width:min(440px,100%); padding:clamp(28px,5vw,44px); border-radius:5px; background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.07), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 6px oklch(0.93 0.03 84), inset 0 0 0 7px oklch(0.74 0.05 60), 0 22px 60px rgba(60,40,20,.22); animation:loginIn .5s cubic-bezier(.22,.72,.2,1) both;">
 		<!-- Logo + Brand -->
 		<div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:26px;">
 			<div style="width:72px; height:72px; border-radius:50%; background:radial-gradient(circle at 35% 30%, oklch(0.55 0.14 38), oklch(0.4 0.13 34)); color:oklch(0.94 0.03 84); display:flex; align-items:center; justify-content:center; font-family:'Marcellus',serif; font-size:34px; box-shadow:0 6px 16px rgba(80,30,20,.3), inset 0 2px 6px rgba(255,220,180,.4);">V</div>
-			<h1 style="font-family:'Marcellus',serif; font-size:38px; margin:18px 0 4px; color:oklch(0.3 0.04 40);">Valombre</h1>
-			<div style="font-size:17px; color:oklch(0.48 0.03 50); font-style:italic;">Un monde qui vit sans vous.</div>
+			<h1 style="font-family:'Marcellus',serif; font-size:38px; margin:18px 0 4px; color:oklch(0.3 0.04 40);">Civilizations</h1>
 		</div>
 
 		<!-- Auth tabs -->

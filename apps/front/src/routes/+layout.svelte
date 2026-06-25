@@ -44,13 +44,13 @@
 
 	<main class:auth-main={isAuthPage}>
 		{#key data.url}
-			<span
-				class="h-full w-full"
+			<div
+				class="page-trans"
 				in:fly={{ delay: 300, x: -200, duration: 300 }}
 				out:fly={{ duration: 300 }}
 			>
 				{@render children()}
-			</span>
+			</div>
 		{/key}
 	</main>
 </div>
@@ -68,12 +68,14 @@
 
 	main {
 		flex: 1;
-		display: flex;
-		flex-direction: column;
-		width: 100%;
+		position: relative;
+		overflow: hidden;
+		min-height: 0;
 	}
 
-	main.auth-main {
-		padding: 0;
+	:global(.page-trans) {
+		position: absolute;
+		inset: 0;
+		overflow-y: auto;
 	}
 </style>
