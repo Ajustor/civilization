@@ -128,3 +128,26 @@ describe('uniform construction pipeline', () => {
     }
   })
 })
+
+import { CivilizationBuilder } from './builders/civilizationBuilder'
+import { formatCivilizations } from './formatters'
+
+describe('pending construction round-trip', () => {
+  it('builder restores pending constructions and formatter exposes them', () => {
+    const civ = new CivilizationBuilder()
+      .withName('Restored')
+      .withPendingConstructions([
+        { buildingType: BuildingTypes.MINE, monthsRemaining: 4 },
+      ])
+      .build()
+
+    expect(civ.pendingConstructions).toEqual([
+      { buildingType: BuildingTypes.MINE, monthsRemaining: 4 },
+    ])
+
+    const [formatted] = formatCivilizations([civ])
+    expect(formatted.pendingConstructions).toEqual([
+      { buildingType: BuildingTypes.MINE, monthsRemaining: 4 },
+    ])
+  })
+})

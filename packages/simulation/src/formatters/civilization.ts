@@ -11,6 +11,6 @@ export function formatCivilizations(civilizations: Civilization[]): Civilization
     resources: civilization.resources.map((resource) => resource.formatToType()),
     buildings: civilization.buildings.map((building) => building.formatToType()),
     config: civilization.config,
-    pendingConstructions: []
+    pendingConstructions: civilization.pendingConstructions
   }))
 }

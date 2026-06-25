@@ -2,7 +2,7 @@ import { countries, uniqueNamesGenerator } from 'unique-names-generator'
 
 import type { Building } from '../types/building'
 import { Civilization } from '../civilization'
-import type { CivilizationConfig } from '../types/civilization'
+import type { CivilizationConfig, PendingConstruction } from '../types/civilization'
 import { People } from '../people/people'
 import { Resource } from '../resource'
 
@@ -15,6 +15,7 @@ export class CivilizationBuilder {
   private livedMonths: number
   private citizenCount: number = 0
   private config?: CivilizationConfig
+  private pendingConstructions: PendingConstruction[] = []
 
   constructor() {
     this.name = uniqueNamesGenerator({ dictionaries: [countries] })
@@ -70,6 +71,11 @@ export class CivilizationBuilder {
     return this
   }
 
+  withPendingConstructions(pendingConstructions: PendingConstruction[]): this {
+    this.pendingConstructions = pendingConstructions
+    return this
+  }
+
   withConfig(config?: CivilizationConfig): this {
     if (config) {
       this.config = config
@@ -82,6 +88,7 @@ export class CivilizationBuilder {
     if (this.config) {
       civilization.config = this.config
     }
+    civilization.pendingConstructions = this.pendingConstructions
     for (const person of this.people) {
       civilization.addPeople(person)
     }
@@ -108,6 +115,7 @@ export class CivilizationBuilder {
     this.id = ''
     this.citizenCount = 0
     this.config = undefined
+    this.pendingConstructions = []
 
     return civilization
   }
