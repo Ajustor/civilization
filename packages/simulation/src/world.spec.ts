@@ -10,7 +10,8 @@ describe('World', () => {
 
   const worldConfig: WorldConfig = {
     BASE_FOOD_GENERATION: 100,
-    BASE_WOOD_GENERATION: 200
+    BASE_WOOD_GENERATION: 200,
+    EVENT_CHANCE: 0
   }
 
   // World instance initializes with default name and month
@@ -247,7 +248,7 @@ describe('World', () => {
       id: '',
       name: 'The world',
       civilizations: [{
-        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, resources: [
+        name: 'FORMATTED Civilization 1', people: [], livedMonths: 0, buildings: [], id: 'civilizationId', citizensCount: 0, config: civilization1.config, resources: [
           food.formatToType(),
           wood.formatToType()
         ]
@@ -350,5 +351,46 @@ describe('World', () => {
       expect(civilization.livedMonths).toBe(1)
       expect(civilization.people.every(({ lifeCounter }) => lifeCounter === 11)).toBeTruthy()
     }
+  })
+
+  describe('resource exchange between civilizations', () => {
+    const buildCivilization = (id: string, openExchange: string[]) => {
+      const civilization = new Civilization(`Civilization ${id}`)
+      civilization.id = id
+      civilization.config = { ...civilization.config, OPEN_EXCHANGE: openExchange }
+      return civilization
+    }
+
+    it('should balance shared resources toward the average when exchange is mutual', () => {
+      const world = new World()
+      const firstCivilization = buildCivilization('a', ['b'])
+      const secondCivilization = buildCivilization('b', ['a'])
+
+      firstCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
+      secondCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 0))
+
+      world.addCivilization(firstCivilization, secondCivilization)
+
+      ;(world as unknown as { exchangeResources: () => void }).exchangeResources()
+
+      expect(firstCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(50)
+      expect(secondCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(50)
+    })
+
+    it('should not exchange resources when the agreement is not mutual', () => {
+      const world = new World()
+      const firstCivilization = buildCivilization('a', ['b'])
+      const secondCivilization = buildCivilization('b', [])
+
+      firstCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 100))
+      secondCivilization.addResource(new Resource(ResourceTypes.RAW_FOOD, 0))
+
+      world.addCivilization(firstCivilization, secondCivilization)
+
+      ;(world as unknown as { exchangeResources: () => void }).exchangeResources()
+
+      expect(firstCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(100)
+      expect(secondCivilization.getResource(ResourceTypes.RAW_FOOD).quantity).toBe(0)
+    })
   })
 })

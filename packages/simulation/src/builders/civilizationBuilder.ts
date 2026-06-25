@@ -2,6 +2,7 @@ import { countries, uniqueNamesGenerator } from 'unique-names-generator'
 
 import type { Building } from '../types/building'
 import { Civilization } from '../civilization'
+import type { CivilizationConfig } from '../types/civilization'
 import { People } from '../people/people'
 import { Resource } from '../resource'
 
@@ -13,6 +14,7 @@ export class CivilizationBuilder {
   private buildings: Building[] = []
   private livedMonths: number
   private citizenCount: number = 0
+  private config?: CivilizationConfig
 
   constructor() {
     this.name = uniqueNamesGenerator({ dictionaries: [countries] })
@@ -68,8 +70,18 @@ export class CivilizationBuilder {
     return this
   }
 
+  withConfig(config?: CivilizationConfig): this {
+    if (config) {
+      this.config = config
+    }
+    return this
+  }
+
   build(): Civilization {
     const civilization = new Civilization()
+    if (this.config) {
+      civilization.config = this.config
+    }
     for (const person of this.people) {
       civilization.addPeople(person)
     }
@@ -95,6 +107,7 @@ export class CivilizationBuilder {
     this.livedMonths = 0
     this.id = ''
     this.citizenCount = 0
+    this.config = undefined
 
     return civilization
   }

@@ -9,6 +9,7 @@ import {
   Resource,
   ResourceTypes,
   isExtractionBuilding,
+  defaultCivilizationConfig,
 } from '@ajustor/simulation'
 import { Campfire, Farm, Kiln, Mine, Sawmill, Cache } from '@ajustor/simulation'
 import {
@@ -49,6 +50,14 @@ export const civilizationMapper = (
     .withLivedMonths(civilization.livedMonths)
     .withName(civilization.name)
     .withCitizensCount(civilization.people?.length ?? 0)
+
+  if (civilization.config) {
+    builder.withConfig({
+      ...civilization.config,
+      // OPEN_EXCHANGE is stored as ObjectId refs, normalize to plain id strings
+      OPEN_EXCHANGE: (civilization.config.OPEN_EXCHANGE ?? []).map(String),
+    })
+  }
 
   for (const civilizationResource of civilization.resources) {
     const resource = new Resource(
@@ -492,12 +501,40 @@ export class CivilizationService {
       throw new Error('No civilization found')
     }
 
+    // The DTO exposes camelCase fields, while the stored config uses
+    // UPPER_SNAKE_CASE keys, so we map them explicitly. Each field falls back to
+    // its current value (or the default for civilizations created before the
+    // config existed), and only the fields present in the body override it.
+    const currentConfig = civilizationToUpdate.config ?? defaultCivilizationConfig
+
     await CivilizationModel.findOneAndUpdate(
       { _id: civilizationToUpdate.id },
       {
         config: {
-          ...civilizationToUpdate.config,
-          ...body,
+          PREGNANCY_PROBABILITY:
+            currentConfig.PREGNANCY_PROBABILITY ??
+            defaultCivilizationConfig.PREGNANCY_PROBABILITY,
+          PEOPLE_CHARCOAL_CAN_HEAT:
+            currentConfig.PEOPLE_CHARCOAL_CAN_HEAT ??
+            defaultCivilizationConfig.PEOPLE_CHARCOAL_CAN_HEAT,
+          CHANCE_TO_EVOLVE:
+            currentConfig.CHANCE_TO_EVOLVE ??
+            defaultCivilizationConfig.CHANCE_TO_EVOLVE,
+          CHANCE_TO_BUILD_EVOLVED_BUILDING:
+            currentConfig.CHANCE_TO_BUILD_EVOLVED_BUILDING ??
+            defaultCivilizationConfig.CHANCE_TO_BUILD_EVOLVED_BUILDING,
+          MAXIMUM_CHILDREN:
+            body.maximumChildren ??
+            currentConfig.MAXIMUM_CHILDREN ??
+            defaultCivilizationConfig.MAXIMUM_CHILDREN,
+          MAX_ACTIVE_PEOPLE_BY_CIVILIZATION:
+            body.maxActivePeopleByCivilization ??
+            currentConfig.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION ??
+            defaultCivilizationConfig.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
+          OPEN_EXCHANGE:
+            body.openExchange ??
+            currentConfig.OPEN_EXCHANGE ??
+            defaultCivilizationConfig.OPEN_EXCHANGE,
         },
       },
     )

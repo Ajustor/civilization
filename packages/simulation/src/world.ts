@@ -49,6 +49,10 @@ const defaultConfig: WorldConfig = {
   EVENT_CHANCE: 30,
 }
 
+// Fraction of the gap between two trading civilizations that is closed each
+// month. 1 fully equalizes their stocks toward the average every month.
+const RESOURCE_EXCHANGE_SHARE = 1
+
 export class World {
   id: string
   private resources: Resource[] = []
@@ -182,9 +186,79 @@ export class World {
 
     this.createNextEvent()
 
+    this.exchangeResources()
+
     await Promise.all(
       this._civilizations.map((civilization) => civilization.passAMonth(this)),
     )
+  }
+
+  /**
+   * Civilizations that have mutually opened exchange (each one lists the other
+   * in its `OPEN_EXCHANGE` config) share their resources. Every shared resource
+   * type is balanced toward the average of the two stocks so that allied
+   * civilizations help each other survive.
+   */
+  private exchangeResources(): void {
+    const civilizations = this._civilizations
+    for (let i = 0; i < civilizations.length; i++) {
+      for (let j = i + 1; j < civilizations.length; j++) {
+        const firstCivilization = civilizations[i]
+        const secondCivilization = civilizations[j]
+
+        if (
+          !this.haveMutualExchange(firstCivilization, secondCivilization)
+        ) {
+          continue
+        }
+
+        this.balanceResources(firstCivilization, secondCivilization)
+      }
+    }
+  }
+
+  private haveMutualExchange(
+    firstCivilization: Civilization,
+    secondCivilization: Civilization,
+  ): boolean {
+    return (
+      firstCivilization.config.OPEN_EXCHANGE.includes(secondCivilization.id) &&
+      secondCivilization.config.OPEN_EXCHANGE.includes(firstCivilization.id)
+    )
+  }
+
+  private balanceResources(
+    firstCivilization: Civilization,
+    secondCivilization: Civilization,
+  ): void {
+    const sharedResourceTypes = new Set<ResourceTypes>([
+      ...firstCivilization.resources.map((resource) => resource.type),
+      ...secondCivilization.resources.map((resource) => resource.type),
+    ])
+
+    for (const resourceType of sharedResourceTypes) {
+      const firstQuantity = firstCivilization.getResource(resourceType).quantity
+      const secondQuantity =
+        secondCivilization.getResource(resourceType).quantity
+
+      const gap = firstQuantity - secondQuantity
+      if (gap === 0) {
+        continue
+      }
+
+      const transfer = Math.floor((Math.abs(gap) / 2) * RESOURCE_EXCHANGE_SHARE)
+      if (transfer <= 0) {
+        continue
+      }
+
+      const [richer, poorer] =
+        gap > 0
+          ? [firstCivilization, secondCivilization]
+          : [secondCivilization, firstCivilization]
+
+      richer.decreaseResource(resourceType, transfer)
+      poorer.increaseResource(resourceType, transfer)
+    }
   }
 
   public getInfos(): WorldInfos {

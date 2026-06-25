@@ -16,7 +16,7 @@
 	import ChildDetails from './childDetails.svelte'
 	import PeopleTableActions from './people-table-actions.svelte'
 	import { Button } from '$lib/components/ui/button'
-	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte'
+	import { ArrowUp, ArrowDown, ArrowUpDown } from '@lucide/svelte'
 
 	export let people: PeopleType[]
 	export let totalPeople: number

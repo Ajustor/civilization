@@ -1,4 +1,5 @@
 import { client } from './client'
+import type { UpdateCivilizationDtoType } from '@ajustor/civ-api'
 
 export const getMyCivilizations = async (authToken: string) => {
 	const { data: civilizationsInfos, error } = await client.civilizations.mine.get({

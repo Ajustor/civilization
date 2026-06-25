@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import type { PageData } from './$types'
-	import { ArrowLeft } from 'lucide-svelte'
+	import { ArrowLeft, Settings } from '@lucide/svelte'
 
 	import {
 		Resource,
@@ -90,7 +90,12 @@
 <Button variant="ghost" href="/my-civilizations"><ArrowLeft />Retour</Button>
 
 <div class="flex w-full flex-col gap-5">
-	<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
+	<div class="flex items-center justify-between gap-4">
+		<h1 class="text-3xl">Détail de la civilisation {data.civilization.name}</h1>
+		<Button variant="outline" href="/my-civilizations/{data.civilization.id}/config">
+			<Settings />Configurer
+		</Button>
+	</div>
 	<span
 		>Votre civilisation vit depuis {~~(data.civilization.livedMonths / 12)} années et {~~(
 			data.civilization.livedMonths % 12

@@ -3,7 +3,7 @@
 	import { Root, Content, Item, Next, Previous } from '$lib/components/ui/carousel'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Button } from '$lib/components/ui/button'
-	import { Plus, Trash } from 'lucide-svelte'
+	import { Plus, Trash } from '@lucide/svelte'
 	import {
 		Dialog,
 		DialogTrigger,

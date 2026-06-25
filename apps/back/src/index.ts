@@ -37,4 +37,6 @@ app.listen(process.env.APP_PORT!)
 
 console.log(`🦄 Server started at ${app.server?.url}`)
 
-export type App = typeof app 
+export type App = typeof app
+
+export type { UpdateCivilizationDtoType } from './modules/civilizations/dto'

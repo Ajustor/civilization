@@ -28,9 +28,9 @@ import { Mine } from './buildings/mine'
 import { isExtractionOrProductionBuilding } from './buildings'
 import { Campfire } from './buildings/campfire'
 import { Cache } from './buildings/cache'
-import { CivilizationConfig } from './types/civilization'
+import type { CivilizationConfig } from './types/civilization'
 
-const defaultCivilizationConfig: CivilizationConfig = {
+export const defaultCivilizationConfig: CivilizationConfig = {
   PEOPLE_CHARCOAL_CAN_HEAT: 10,
   MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: 100_000,
   PREGNANCY_PROBABILITY: 60,
