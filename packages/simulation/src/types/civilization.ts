@@ -1,6 +1,12 @@
 import type { BuildingType } from './building'
 import type { PeopleType } from '..'
 import type { ResourceType } from './resources'
+import { BuildingTypes } from '../buildings/enum'
+
+export type PendingConstruction = {
+  buildingType: BuildingTypes
+  monthsRemaining: number
+}
 
 export type CivilizationConfig = {
   PREGNANCY_PROBABILITY: number
@@ -22,4 +28,5 @@ export type CivilizationType = {
   buildings: BuildingType[],
   citizensCount?: number,
   config: CivilizationConfig
+  pendingConstructions: PendingConstruction[]
 }
