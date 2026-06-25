@@ -63,7 +63,7 @@ export class World {
   constructor(
     private readonly name = 'The world',
     private month = 0,
-    private config: WorldConfig = defaultConfig,
+    private config: WorldConfig = { ...defaultConfig },
   ) {
     this.id = ''
   }

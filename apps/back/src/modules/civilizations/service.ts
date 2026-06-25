@@ -370,13 +370,15 @@ export class CivilizationService {
   }
 
   async saveAll(civilizations: Civilization[]) {
-    for(const civilization of civilizations) {
+    await Promise.all(
+      civilizations.map(async (civilization) => {
         const bulkWriteOperations: AnyBulkWriteOperation<PeopleEntity>[] = []
-        // console.time(civilization.name)
-        // console.timeLog(civilization.name, `Saving civilization`)
-        const oldCivilization = await CivilizationModel.findOne({
-          _id: civilization.id,
-        })
+        // Only the people id list is needed to detect who died, no need to
+        // load the whole civilization document.
+        const oldCivilization = await CivilizationModel.findOne(
+          { _id: civilization.id },
+          'people',
+        )
 
         if (!oldCivilization) {
           throw new Error('Your civilization disapear from our data')
@@ -457,7 +459,8 @@ export class CivilizationService {
           },
         )
         // console.timeEnd(civilization.name)
-    }
+      }),
+    )
   }
 
   async delete(userId: string, civilizationId: string) {

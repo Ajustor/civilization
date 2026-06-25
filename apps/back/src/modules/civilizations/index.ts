@@ -74,13 +74,14 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   )
   .post(
     '',
-    async ({ civilizationService, body, log, user, error }) => {
+    async ({ civilizationService, body, log, user, set }) => {
       const civilizationWithThatNameExist = await civilizationService.exist(
         body.name,
       )
       if (civilizationWithThatNameExist) {
         log.error('Conflict a civilization with that name already exist')
-        throw error(409, 'A civilization with that name already exist')
+        set.status = 409
+        return 'A civilization with that name already exist'
       }
 
       const civilizationBuilder = new CivilizationBuilder()

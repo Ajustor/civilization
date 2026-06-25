@@ -3,6 +3,7 @@ import { WorldsTable } from './src/modules/world/database'
 import { parseArgs } from "util"
 import './src/libs/database'
 import { PeopleService } from './src/modules/people/service'
+import { attachAliveCivilizations } from './src/modules/world/monthRunner'
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -27,15 +28,21 @@ console.timeLog('skipYears', `Prepare passing ${values.years} years`)
 const worldDbClient = new WorldsTable()
 const civilizationsDbClient = new CivilizationService(new PeopleService())
 
+const monthsToPass = +values.years * 12
+
 const worlds = await worldDbClient.getAll()
 for (const world of worlds) {
+  // Attach civilizations once, then simulate every month on the same instances.
+  const worldCivilizations = await attachAliveCivilizations(
+    world,
+    civilizationsDbClient,
+  )
 
-  const worldCivilizations = await civilizationsDbClient.getAllByWorldId(world.id, { people: true })
-  for (let i = 0; i < +values.years * 12; i++) {
-    world.addCivilization(...worldCivilizations.filter((civilization) => civilization.people.length).sort(() => Math.random() - 0.5))
-    console.timeLog('skipYears', `Passing a month ${i}/${+values.years * 12 - 1}`)
+  for (let i = 0; i < monthsToPass; i++) {
+    console.timeLog('skipYears', `Passing a month ${i}/${monthsToPass - 1}`)
     await world.passAMonth()
   }
+
   await civilizationsDbClient.saveAll(worldCivilizations)
 }
 

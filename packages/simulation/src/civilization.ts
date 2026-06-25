@@ -74,7 +74,10 @@ export class Civilization {
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
-    public config: CivilizationConfig = defaultCivilizationConfig,
+    public config: CivilizationConfig = {
+      ...defaultCivilizationConfig,
+      OPEN_EXCHANGE: [...defaultCivilizationConfig.OPEN_EXCHANGE],
+    },
   ) {
     this._people = []
     this._resources = []
@@ -837,17 +840,25 @@ export class Civilization {
     if (!women.length) {
       return
     }
-    for (const woman of women) {
-      const womanLineage = woman.getDirectLineage()
-      const eligibleManIndex = men.findIndex((man) => {
-        const manLineage = man.getDirectLineage()
-        const manAndWomanIntersection = hasElementInCommon(
-          womanLineage,
-          manLineage,
-        )
 
-        return !manAndWomanIntersection
-      })
+    // Direct lineage is recomputed for every (woman, man) comparison below,
+    // which is quadratic in the fertile population. Memoize it per person so
+    // each lineage is only built once per month.
+    const lineageCache = new Map<People, string[]>()
+    const lineageOf = (person: People): string[] => {
+      let lineage = lineageCache.get(person)
+      if (!lineage) {
+        lineage = person.getDirectLineage()
+        lineageCache.set(person, lineage)
+      }
+      return lineage
+    }
+
+    for (const woman of women) {
+      const womanLineage = lineageOf(woman)
+      const eligibleManIndex = men.findIndex(
+        (man) => !hasElementInCommon(womanLineage, lineageOf(man)),
+      )
 
       if (eligibleManIndex === -1) {
         continue
