@@ -2,6 +2,7 @@ import { Fire, Migration, RatInvasion } from './events'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
+import { resolveBattle } from './combat'
 import type { CivilizationType } from './types/civilization'
 import { Earthquake } from './events/earthquake'
 import { Events } from './events/enum'
@@ -52,6 +53,10 @@ const defaultConfig: WorldConfig = {
 // Fraction of the gap between two trading civilizations that is closed each
 // month. 1 fully equalizes their stocks toward the average every month.
 const RESOURCE_EXCHANGE_SHARE = 1
+
+const PLUNDER_RATIO = 0.25
+const CAPTURE_RATIO = 0.05
+const CAPTURE_CAP = 100
 
 export class World {
   id: string
@@ -187,6 +192,7 @@ export class World {
     this.createNextEvent()
 
     this.exchangeResources()
+    this.resolveWars()
 
     await Promise.all(
       this._civilizations.map((civilization) => civilization.passAMonth(this)),
@@ -214,6 +220,59 @@ export class World {
 
         this.balanceResources(firstCivilization, secondCivilization)
       }
+    }
+  }
+
+  private resolveWars(): void {
+    for (const attacker of this._civilizations) {
+      for (const targetId of attacker.config.AT_WAR_WITH) {
+        const defender = this.getCivilization(targetId)
+        if (!defender || defender === attacker) {
+          continue
+        }
+        this.resolveAttack(attacker, defender)
+      }
+    }
+  }
+
+  private resolveAttack(attacker: Civilization, defender: Civilization): void {
+    // A standing wall blocks one attack and is consumed.
+    const wall = defender.wall
+    if (wall && wall.count > 0) {
+      defender.removeBuilding(wall)
+      return
+    }
+
+    const outcome = resolveBattle(
+      { strength: attacker.militaryStrength },
+      { strength: defender.militaryStrength },
+    )
+    if (!outcome.fought) {
+      return
+    }
+
+    attacker.loseSoldiers(outcome.attackerLossRatio)
+    defender.loseSoldiers(outcome.defenderLossRatio)
+
+    if (!outcome.attackerWins) {
+      return
+    }
+
+    for (const resource of defender.resources) {
+      const plunder = Math.floor(resource.quantity * PLUNDER_RATIO)
+      if (plunder > 0) {
+        defender.decreaseResource(resource.type, plunder)
+        attacker.increaseResource(resource.type, plunder)
+      }
+    }
+
+    const captureCount = Math.min(
+      Math.floor(defender.people.length * CAPTURE_RATIO),
+      CAPTURE_CAP,
+    )
+    if (captureCount > 0) {
+      const captives = defender.releaseCaptives(captureCount)
+      attacker.addPeople(...captives)
     }
   }
 

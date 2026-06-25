@@ -263,6 +263,27 @@ export class Civilization {
     )
   }
 
+  get militaryStrength(): number {
+    return this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
+      (strength, soldier) => strength + Math.max(0, soldier.lifeCounter),
+      0,
+    )
+  }
+
+  loseSoldiers(ratio: number): void {
+    const soldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER)
+    const toKill = Math.floor(soldiers.length * ratio)
+    const casualties = soldiers.slice(0, toKill).map(({ id }) => id)
+    this.removePeople(casualties)
+  }
+
+  releaseCaptives(count: number): People[] {
+    const candidates = this.getPeopleWithoutOccupation(OccupationTypes.SOLDIER)
+    const captured = candidates.slice(0, count)
+    this.removePeople(captured.map(({ id }) => id))
+    return captured
+  }
+
   getWorkersWhoCanRetire(): People[] {
     return this._people.filter((worker) => worker.canRetire())
   }
