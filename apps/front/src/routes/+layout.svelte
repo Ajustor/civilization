@@ -18,6 +18,9 @@
 
 	userStore.value = data.user
 
+	const authRoutes = ['/login', '/register', '/i-forgot']
+	let isAuthPage = $derived(authRoutes.some((r) => page.url.pathname.startsWith(r)))
+
 	$effect(() => {
 		const { error } = page
 		if (error) {
@@ -35,9 +38,11 @@
 <Toaster richColors />
 
 <div class="app">
-	<Header user={userStore.value} />
+	{#if !isAuthPage}
+		<Header user={userStore.value} />
+	{/if}
 
-	<main>
+	<main class:auth-main={isAuthPage}>
 		{#key data.url}
 			<span
 				class="h-full w-full"
@@ -65,11 +70,10 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
 		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-		align-items: center;
+	}
+
+	main.auth-main {
+		padding: 0;
 	}
 </style>
