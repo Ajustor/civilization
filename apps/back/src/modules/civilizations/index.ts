@@ -85,6 +85,17 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       civilizationService.getRecap(user.id as string, civilizationId),
   )
   .post(
+    '/:civilizationId/technologies/:techId',
+    async ({ user, civilizationService, params: { civilizationId, techId }, set }) => {
+      try {
+        return await civilizationService.unlockTech(user.id as string, civilizationId, techId)
+      } catch (error) {
+        set.status = 400
+        return { error: error instanceof Error ? error.message : 'Unable to unlock technology' }
+      }
+    },
+  )
+  .post(
     '',
     async ({ civilizationService, body, log, user, set }) => {
       const civilizationWithThatNameExist = await civilizationService.exist(

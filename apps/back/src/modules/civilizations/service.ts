@@ -11,6 +11,8 @@ import {
   ResourceTypes,
   isExtractionBuilding,
   defaultCivilizationConfig,
+  TechId,
+  getTechNode,
 } from '@ajustor/simulation'
 import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
 import {
@@ -57,6 +59,7 @@ export const civilizationMapper = (
     .withId(civilization.id)
     .withLivedMonths(civilization.livedMonths)
     .withResearchPoints((civilization as { researchPoints?: number }).researchPoints ?? 0)
+    .withResearchedTechs(((civilization as { researchedTechs?: string[] }).researchedTechs ?? []) as TechId[])
     .withName(civilization.name)
     .withCitizensCount(civilization.people?.length ?? 0)
 
@@ -498,6 +501,7 @@ export class CivilizationService {
             })),
             livedMonths: civilization.livedMonths,
             researchPoints: civilization.researchPoints,
+            researchedTechs: civilization.researchedTechs,
             pendingConstructions: civilization.pendingConstructions,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,
@@ -771,5 +775,41 @@ export class CivilizationService {
 
     await CivilizationModel.updateOne({ _id: civilizationId }, { lastSeenMonth: toMonth })
     return recap
+  }
+
+  async unlockTech(userId: string, civilizationId: string, techId: string) {
+    const user = await UserModel.findOne({ _id: userId }).populate<{
+      civilizations: (CivilizationType & { researchPoints?: number; researchedTechs?: string[] })[]
+    }>({ path: 'civilizations' })
+    const civilization = user?.civilizations.find(({ id }) => id === civilizationId)
+    if (!user || !civilization) {
+      throw new Error('No civilization found')
+    }
+
+    const node = getTechNode(techId as TechId)
+    if (!node) {
+      throw new Error('Unknown technology')
+    }
+
+    const researched = civilization.researchedTechs ?? []
+    if (researched.includes(techId)) {
+      throw new Error('Technology already researched')
+    }
+    if (!node.prerequisites.every((pre) => researched.includes(pre))) {
+      throw new Error('Prerequisites not met')
+    }
+    const points = civilization.researchPoints ?? 0
+    if (points < node.cost) {
+      throw new Error('Not enough research points')
+    }
+
+    await CivilizationModel.updateOne(
+      { _id: civilizationId },
+      {
+        researchPoints: points - node.cost,
+        researchedTechs: [...researched, techId],
+      },
+    )
+    return { researchPoints: points - node.cost, researchedTechs: [...researched, techId] }
   }
 }

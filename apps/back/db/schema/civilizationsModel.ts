@@ -68,6 +68,11 @@ const civilizationSchema = new Schema(
       required: true,
       default: 0,
     },
+    researchedTechs: {
+      type: [String],
+      required: true,
+      default: [],
+    },
     buildings: {
       type: [{ type: BuildingSchema }],
       required: true,
