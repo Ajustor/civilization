@@ -455,6 +455,8 @@
 			{#await data.lazy.stats.jobs}
 				<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then jobs}
+				{@const activeEntries = Object.entries(jobs).filter(([k]) => k !== 'child')}
+				{@const activeTotal = activeEntries.reduce((a: number, [, b]) => a + (b as number), 0)}
 				<button
 					class="chart-panel civ-inner-card"
 					onclick={() => openPanel('jobs')}
@@ -465,8 +467,6 @@
 						<h2 class="civ-section-title" style="margin:0;">Répartition des métiers</h2>
 						<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
 					</div>
-					{@const activeEntries = Object.entries(jobs).filter(([k]) => k !== 'child')}
-					{@const activeTotal = activeEntries.reduce((a: number, [, b]) => a + (b as number), 0)}
 					<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
 						{#each activeEntries.sort(([,a],[,b]) => (b as number)-(a as number)) as [key, count], i}
 							{@const total = activeTotal}
