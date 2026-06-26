@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 
   return {
     user,
+    authToken: cookies.get('auth'),
     passwordChangeForm: await superValidate(zod(passwordChangeSchema))
   }
 }

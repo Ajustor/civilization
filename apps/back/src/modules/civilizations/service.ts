@@ -25,6 +25,7 @@ import { PeopleService, personMapper } from '../people/service'
 import { UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
 import { arrayToMap } from '../../utils'
+import { pushSender } from '../../libs/services/pushSender'
 
 type MongoBuildingType = BuildingType & { buildingType: BuildingTypes }
 
@@ -599,6 +600,65 @@ export class CivilizationService {
             defaultCivilizationConfig.AT_WAR_WITH,
         },
       },
+    )
+
+    // Warn the owners of newly targeted civilizations that a war was just
+    // declared against them, so they can react (walls, military ratio) before
+    // the attack resolves on the next month. Best-effort: never fails the update.
+    if (body.atWarWith) {
+      const previousTargets = new Set(
+        (currentConfig.AT_WAR_WITH ?? []).map(String),
+      )
+      const newTargets = body.atWarWith.filter(
+        (targetId) => !previousTargets.has(String(targetId)),
+      )
+      if (newTargets.length) {
+        await this.notifyWarTargets(
+          civilizationToUpdate.name,
+          civilizationToUpdate.id,
+          newTargets,
+        ).catch((error) =>
+          console.error('[CivilizationService] Failed to notify war targets', error),
+        )
+      }
+    }
+  }
+
+  /**
+   * Sends a push notification to the owner of each newly attacked civilization.
+   * Skips civilizations owned by the attacker (e.g. attacking your own second
+   * civilization).
+   */
+  private async notifyWarTargets(
+    attackerName: string,
+    attackerCivId: string,
+    targetCivIds: string[],
+  ): Promise<void> {
+    await Promise.all(
+      targetCivIds.map(async (targetCivId) => {
+        const [targetCiv, owner] = await Promise.all([
+          CivilizationModel.findById(targetCivId, { name: 1 }).lean(),
+          UserModel.findOne(
+            { civilizations: targetCivId },
+            { _id: 1, civilizations: 1 },
+          ).lean(),
+        ])
+
+        if (!targetCiv || !owner) {
+          return
+        }
+
+        // Don't notify a player about attacking their own civilization.
+        if (owner.civilizations?.map(String).includes(String(attackerCivId))) {
+          return
+        }
+
+        await pushSender.sendToUser(String(owner._id), {
+          title: '⚔️ Attaque imminente !',
+          body: `${attackerName} a déclaré la guerre à ${targetCiv.name}. Préparez vos défenses !`,
+          url: `/my-civilizations/${targetCivId}`,
+        })
+      }),
     )
   }
 

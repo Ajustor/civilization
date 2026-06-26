@@ -12,6 +12,7 @@
 		FormFieldErrors,
 		FormLabel
 	} from '$lib/components/ui/form'
+	import NotificationToggle from '$lib/components/NotificationToggle.svelte'
 
 	interface Props {
 		data: PageData;
@@ -52,6 +53,8 @@
 		{#if userStore.value}
 			<p style="font-size:18px; color:oklch(0.48 0.03 50); margin:0;">Bonjour, <strong style="color:oklch(0.38 0.06 40);">{userStore.value.username}</strong></p>
 		{/if}
+
+		<NotificationToggle authToken={data.authToken} />
 
 		<div class="civ-inner-card">
 			<h2 class="civ-section-title">Changer mon mot de passe</h2>

@@ -11,6 +11,7 @@ import { jwtMiddleware } from "./libs/jwt";
 import { authModule } from "./modules/auth";
 import { civilizationModule } from "./modules/civilizations";
 import { peopleModule } from "./modules/people";
+import { pushModule } from "./modules/push";
 import { tradeOffersModule } from "./modules/trade-offers";
 import { usersModule } from "./modules/users";
 import { worldModule } from "./modules/world";
@@ -32,6 +33,7 @@ const app = new Elysia()
   .use(usersModule)
   .use(civilizationModule)
   .use(peopleModule)
+  .use(pushModule)
   .use(tradeOffersModule);
 
 
@@ -42,3 +44,4 @@ console.log(`🦄 Server started at ${app.server?.url}`);
 export type App = typeof app;
 
 export type { UpdateCivilizationDtoType } from './modules/civilizations/dto';
+export type { PushSubscriptionDtoType } from './modules/push';
