@@ -10,5 +10,6 @@ export const OCCUPATIONS: { [key in OccupationTypes]: string } = {
   [OccupationTypes.CHILD]: 'Enfant',
   [OccupationTypes.MINER]: 'Mineur',
   [OccupationTypes.KITCHEN_ASSISTANT]: 'Commis de cuisine',
-  [OccupationTypes.SOLDIER]: 'Soldat'
+  [OccupationTypes.SOLDIER]: 'Soldat',
+  [OccupationTypes.ERUDIT]: 'Érudit'
 }
