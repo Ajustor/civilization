@@ -259,8 +259,8 @@
 					{#await data.lazy.stats.jobs}
 						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 					{:then jobs}
-						{@const entries = Object.entries(jobs).sort(([,a],[,b]) => (b as number)-(a as number))}
-						{@const total = Object.values(jobs).reduce((s: number, v) => s + (v as number), 0)}
+						{@const entries = Object.entries(jobs).filter(([k]) => k !== 'child').sort(([,a],[,b]) => (b as number)-(a as number))}
+						{@const total = entries.reduce((s: number, [, v]) => s + (v as number), 0)}
 						<div style="display:flex; flex-direction:column; gap:8px;">
 							<div style="display:grid; grid-template-columns:180px 1fr auto auto; gap:6px 16px; align-items:center; padding:8px 0; border-bottom:2px solid oklch(0.78 0.04 70); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.52 0.05 50);">
 								<span>Métier</span><span>Proportion</span><span>Effectif</span><span>Part</span>
@@ -465,9 +465,11 @@
 						<h2 class="civ-section-title" style="margin:0;">Répartition des métiers</h2>
 						<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
 					</div>
+					{@const activeEntries = Object.entries(jobs).filter(([k]) => k !== 'child')}
+					{@const activeTotal = activeEntries.reduce((a: number, [, b]) => a + (b as number), 0)}
 					<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
-						{#each Object.entries(jobs).sort(([,a],[,b]) => (b as number)-(a as number)) as [key, count], i}
-							{@const total = Object.values(jobs).reduce((a: number, b) => a + (b as number), 0)}
+						{#each activeEntries.sort(([,a],[,b]) => (b as number)-(a as number)) as [key, count], i}
+							{@const total = activeTotal}
 							<div>
 								<div style="display:flex; justify-content:space-between; font-size:16px; margin-bottom:4px;">
 									<span>{OCCUPATIONS[key as OccupationTypes]}</span>

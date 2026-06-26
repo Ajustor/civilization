@@ -20,7 +20,7 @@
 <header style="position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; align-items:center; gap:18px; padding:14px clamp(16px,3vw,36px); background:oklch(0.93 0.025 80 / 0.9); backdrop-filter:blur(10px); border-bottom:1px solid oklch(0.76 0.05 60); animation:navIn .5s cubic-bezier(.22,.72,.2,1) both;">
 	<!-- Brand -->
 	<a href="/" aria-label="Accueil" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
-		<div style="width:40px; height:40px; border-radius:50%; background:radial-gradient(circle at 35% 30%, oklch(0.55 0.14 38), oklch(0.4 0.13 34)); color:oklch(0.94 0.03 84); display:flex; align-items:center; justify-content:center; font-family:'Marcellus',serif; font-size:21px; box-shadow:inset 0 1px 4px rgba(255,220,180,.4);">V</div>
+		<div style="width:40px; height:40px; border-radius:50%; background:radial-gradient(circle at 35% 30%, oklch(0.55 0.14 38), oklch(0.4 0.13 34)); color:oklch(0.94 0.03 84); display:flex; align-items:center; justify-content:center; font-family:'Marcellus',serif; font-size:21px; box-shadow:inset 0 1px 4px rgba(255,220,180,.4);">C</div>
 		<span style="font-family:'Marcellus',serif; font-size:22px; color:oklch(0.32 0.04 40); letter-spacing:.02em;">Civilizations</span>
 	</a>
 
