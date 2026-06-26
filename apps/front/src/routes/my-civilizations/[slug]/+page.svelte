@@ -743,7 +743,7 @@
 			<h2 class="civ-section-title">Ressources actuelles</h2>
 			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
 				{#each data.civilization.resources as resource}
-					{@const capacity = cacheCount * (STORAGE_PER_CACHE[resource.type] ?? 0)}
+					{@const capacity = Math.floor(cacheCount * (STORAGE_PER_CACHE[resource.type] ?? 0) * storageMultiplier)}
 					{@const over = Math.max(0, resource.quantity - capacity)}
 					{@const total = Math.max(resource.quantity, capacity, 1)}
 					{@const storedW = (Math.min(resource.quantity, capacity) / total) * 100}
