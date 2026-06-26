@@ -5,6 +5,7 @@ import { Civilization } from '../civilization'
 import type { CivilizationConfig, PendingConstruction } from '../types/civilization'
 import { People } from '../people/people'
 import { Resource } from '../resource'
+import { TechId } from '../technology/techTree'
 
 export class CivilizationBuilder {
   private id?: string
@@ -14,6 +15,7 @@ export class CivilizationBuilder {
   private buildings: Building[] = []
   private livedMonths: number
   private researchPoints: number = 0
+  private researchedTechs: TechId[] = []
   private citizenCount: number = 0
   private config?: CivilizationConfig
   private pendingConstructions: PendingConstruction[] = []
@@ -35,6 +37,11 @@ export class CivilizationBuilder {
 
   withResearchPoints(researchPoints: number): this {
     this.researchPoints = researchPoints
+    return this
+  }
+
+  withResearchedTechs(researchedTechs: TechId[]): this {
+    this.researchedTechs = [...researchedTechs]
     return this
   }
 
@@ -103,6 +110,7 @@ export class CivilizationBuilder {
 
     civilization.livedMonths = this.livedMonths
     civilization.researchPoints = this.researchPoints
+    civilization.researchedTechs = this.researchedTechs
     civilization.citizensCount ||= this.citizenCount
 
     if (this.id) {
@@ -120,6 +128,7 @@ export class CivilizationBuilder {
     this.name = ''
     this.livedMonths = 0
     this.researchPoints = 0
+    this.researchedTechs = []
     this.id = ''
     this.citizenCount = 0
     this.config = undefined

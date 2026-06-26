@@ -19,6 +19,7 @@ import { OccupationTypes } from "./people/work/enum";
 import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
+import { TECH_TREE, TechId, getTechNode, getBuildingGate } from "./technology/techTree";
 import {
   AbstractExtractionBuilding, AbstractStorageBuilding, Building, ConstructionCost,
   ExtractionBuilding, ProductionBuilding, WorkerRequiredToBuild
@@ -76,6 +77,7 @@ export class Civilization {
   private _resources: Resource[];
   private _livedMonths: number = 0;
   private _researchPoints: number = 0;
+  private _researchedTechs: TechId[] = [];
   private _buildings: Building[];
   private _citizensCount: number = 0;
   // Deaths collected during the current month (war casualties + natural deaths),
@@ -131,6 +133,65 @@ export class Civilization {
 
   set researchPoints(value: number) {
     this._researchPoints = value;
+  }
+
+  get researchedTechs(): TechId[] {
+    return this._researchedTechs;
+  }
+
+  set researchedTechs(value: TechId[]) {
+    this._researchedTechs = value;
+  }
+
+  hasTech(id: TechId): boolean {
+    return this._researchedTechs.includes(id);
+  }
+
+  canUnlock(id: TechId): boolean {
+    const node = getTechNode(id);
+    if (!node || this.hasTech(id)) {
+      return false;
+    }
+    return node.prerequisites.every((pre) => this.hasTech(pre));
+  }
+
+  isBuildingUnlocked(building: BuildingTypes): boolean {
+    const gate = getBuildingGate(building);
+    return gate === undefined || this.hasTech(gate);
+  }
+
+  private effectsOfKind<K extends import('./technology/techTree').TechEffect['kind']>(
+    kind: K,
+  ): Extract<import('./technology/techTree').TechEffect, { kind: K }>[] {
+    const effects: Extract<import('./technology/techTree').TechEffect, { kind: K }>[] = [];
+    for (const id of this._researchedTechs) {
+      for (const effect of getTechNode(id)?.effects ?? []) {
+        if (effect.kind === kind) {
+          effects.push(effect as Extract<import('./technology/techTree').TechEffect, { kind: K }>);
+        }
+      }
+    }
+    return effects;
+  }
+
+  get productionMultiplier(): number {
+    return this.effectsOfKind('productionMultiplier').reduce((m, e) => m * e.factor, 1);
+  }
+
+  get storageMultiplier(): number {
+    return this.effectsOfKind('storageMultiplier').reduce((m, e) => m * e.factor, 1);
+  }
+
+  get militaryMultiplier(): number {
+    return this.effectsOfKind('militaryMultiplier').reduce((m, e) => m * e.factor, 1);
+  }
+
+  get maxChildrenBonus(): number {
+    return this.effectsOfKind('maxChildrenBonus').reduce((s, e) => s + e.amount, 0);
+  }
+
+  get pregnancyProbabilityBonus(): number {
+    return this.effectsOfKind('pregnancyProbabilityBonus').reduce((s, e) => s + e.amount, 0);
   }
 
   get people(): People[] {
