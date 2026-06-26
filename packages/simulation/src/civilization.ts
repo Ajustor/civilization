@@ -18,7 +18,7 @@ import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
 import {
   AbstractExtractionBuilding, AbstractStorageBuilding, Building, ConstructionCost,
-  ExtractionBuilding, ProductionBuilding, type, type, type, type, WorkerRequiredToBuild
+  ExtractionBuilding, ProductionBuilding, WorkerRequiredToBuild
 } from "./types/building";
 import { isWithinChance } from "./utils";
 import { hasElementInCommon } from "./utils/array";
@@ -622,25 +622,34 @@ export class Civilization {
     }
 
     for (const requiredWorker of requiredWorkers) {
-      const worker = this.getPeopleWithOccupation(
+      // The building employs up to `count` workers per unit built. Each working
+      // miner gets an independent extraction roll, so output scales with the
+      // size of the available workforce instead of a single token worker.
+      const maxWorkers = requiredWorker.count * Math.max(building.count, 1);
+      const availableWorkers = this.getPeopleWithOccupation(
         requiredWorker.occupation,
-      ).find((people) => people.canWork());
+      )
+        .filter((people) => people.canWork())
+        .slice(0, maxWorkers);
 
-      if (!worker) {
-        return;
+      if (!availableWorkers.length) {
+        continue;
       }
-      worker.hasWork = true;
-      for (const resource of resourcesProbabilities) {
-        if (isWithinChance(resource.probability)) {
-          const amount = getRandomInt(1, 100);
-          this.increaseResource(resource.resource, amount);
 
-          if (building.capacity != null) {
-            building.capacity -= amount;
+      for (const worker of availableWorkers) {
+        worker.hasWork = true;
+        for (const resource of resourcesProbabilities) {
+          if (isWithinChance(resource.probability)) {
+            const amount = getRandomInt(1, 100);
+            this.increaseResource(resource.resource, amount);
 
-            if (building.capacity <= 0) {
-              this.removeBuilding(building);
-              return;
+            if (building.capacity != null) {
+              building.capacity -= amount;
+
+              if (building.capacity <= 0) {
+                this.removeBuilding(building);
+                return;
+              }
             }
           }
         }
