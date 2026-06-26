@@ -204,6 +204,13 @@
 					<p style="color:oklch(0.5 0.03 50);">Aucune autre civilisation dans ce monde.</p>
 				{/if}
 
+				</div>
+			</div>
+
+			<!-- Construction -->
+			<div class="civ-inner-card">
+				<h3 class="civ-section-title">Construction</h3>
+				<div style="display:flex; flex-direction:column; gap:16px;">
 				<FormField {form} name="nextBuildingToBuild">
 					<FormControl>
 						{#snippet children({ props })}
