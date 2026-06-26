@@ -56,11 +56,21 @@ export const civilizationMapper = (
     .withCitizensCount(civilization.people?.length ?? 0)
 
   if (civilization.config) {
+    // Access each field explicitly rather than spreading the Mongoose subdocument,
+    // which does not reliably enumerate virtual/getter-backed properties.
+    const c = civilization.config
     builder.withConfig({
-      ...civilization.config,
-      // OPEN_EXCHANGE is stored as ObjectId refs, normalize to plain id strings
-      OPEN_EXCHANGE: (civilization.config.OPEN_EXCHANGE ?? []).map(String),
-      AT_WAR_WITH: (civilization.config.AT_WAR_WITH ?? []).map(String),
+      PREGNANCY_PROBABILITY: c.PREGNANCY_PROBABILITY,
+      MAX_ACTIVE_PEOPLE_BY_CIVILIZATION: c.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
+      PEOPLE_CHARCOAL_CAN_HEAT: c.PEOPLE_CHARCOAL_CAN_HEAT,
+      CHANCE_TO_EVOLVE: c.CHANCE_TO_EVOLVE,
+      CHANCE_TO_BUILD_EVOLVED_BUILDING: c.CHANCE_TO_BUILD_EVOLVED_BUILDING,
+      MAXIMUM_CHILDREN: c.MAXIMUM_CHILDREN,
+      // OPEN_EXCHANGE and AT_WAR_WITH are stored as ObjectId refs
+      OPEN_EXCHANGE: (c.OPEN_EXCHANGE ?? []).map(String),
+      AT_WAR_WITH: (c.AT_WAR_WITH ?? []).map(String),
+      MILITARY_RATIO: c.MILITARY_RATIO ?? 0,
+      NEXT_BUILDING_TO_BUILD: c.NEXT_BUILDING_TO_BUILD ?? null,
     })
   }
 
@@ -488,6 +498,10 @@ export class CivilizationService {
               quantity,
             })),
             people: [...alivePeople],
+            // Persist the simulation-modified config field so that the next
+            // monthly tick doesn't re-read a stale NEXT_BUILDING_TO_BUILD
+            // from the DB and re-queue the same building.
+            'config.NEXT_BUILDING_TO_BUILD': civilization.config.NEXT_BUILDING_TO_BUILD,
           },
         )
         // console.timeEnd(civilization.name)
