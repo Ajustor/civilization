@@ -21,6 +21,7 @@ export type WorldInfos = {
   year: number
   nextEvent: Events | null
   civilizations: CivilizationType[]
+  config: WorldConfig
 }
 
 export type WorldConfig = {
@@ -68,12 +69,25 @@ export class World {
   public nextEvent: Events | null = null
   public lastBattles: CombatRecord[] = []
 
+  private config: WorldConfig
+
   constructor(
     private readonly name = 'The world',
     private month = 0,
-    private config: WorldConfig = { ...defaultConfig },
+    config: Partial<WorldConfig> = {},
   ) {
     this.id = ''
+    // Merge with defaults so a partial (custom) config can override only some
+    // fields; a missing field falls back to the default rather than clobbering it.
+    this.config = {
+      BASE_FOOD_GENERATION: config.BASE_FOOD_GENERATION ?? defaultConfig.BASE_FOOD_GENERATION,
+      BASE_WOOD_GENERATION: config.BASE_WOOD_GENERATION ?? defaultConfig.BASE_WOOD_GENERATION,
+      EVENT_CHANCE: config.EVENT_CHANCE ?? defaultConfig.EVENT_CHANCE,
+    }
+  }
+
+  getConfig(): WorldConfig {
+    return this.config
   }
 
   get season(): string {
@@ -359,6 +373,7 @@ export class World {
       })),
       nextEvent: this.nextEvent,
       year: this.getYear(),
+      config: this.config,
     }
   }
 
