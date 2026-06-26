@@ -59,6 +59,10 @@ export function buildCivilizationStats(
       })),
       civilizationId,
       people: { men, women, pregnantWomen },
+      buildings: civilization.buildings.map((building) => ({
+        buildingType: building.getType(),
+        count: building.count,
+      })),
     }
   })
 }
