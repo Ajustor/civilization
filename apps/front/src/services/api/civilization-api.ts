@@ -106,3 +106,24 @@ export const getCivilizationWorld = async (authToken: string, civilizationId: st
 
 	return data.worldId
 }
+
+export const getCombatLogs = async (
+  authToken: string,
+  civilizationId: string,
+  limit = 20,
+  offset = 0,
+) => {
+  const { data, error } = await client
+    .civilizations({ civilizationId })
+    ['combat-logs'].get({
+      headers: { authorization: `Bearer ${authToken}` },
+      query: { limit, offset },
+    })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return data.logs
+}
