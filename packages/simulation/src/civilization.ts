@@ -969,7 +969,10 @@ export class Civilization {
 
     if (currentSoldiers.length < targetSoldiers) {
       const recruitable = adults.filter(
-        (person) => person.work?.occupationType !== OccupationTypes.SOLDIER,
+        (person) =>
+          person.work?.occupationType !== OccupationTypes.SOLDIER &&
+          // Une femme enceinte ne peut pas devenir soldat.
+          person.pregnancyMonthsLeft <= 0,
       )
       const toRecruit = targetSoldiers - currentSoldiers.length
       for (const person of recruitable.slice(0, toRecruit)) {

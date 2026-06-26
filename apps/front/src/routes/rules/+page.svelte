@@ -273,6 +273,7 @@
 				<h2 class="civ-section-title">Guerre &amp; combat</h2>
 				<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Le <strong>ratio militaire</strong> (configurable) définit la part des adultes (hors enfants et retraités) entretenus comme <strong>soldats</strong>.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Une <strong>femme enceinte</strong> ne peut pas être recrutée comme soldat.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Lors d'une bataille, la <strong>force</strong> de chaque camp est la somme des points de vie de ses soldats. Le camp le plus fort l'emporte ; les pertes sont proportionnelles à la force adverse.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>En cas de victoire, l'attaquant <strong>pille 25 %</strong> de chaque ressource et <strong>capture 5 %</strong> de la population adverse (100 captifs maximum).</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Une <strong>Muraille</strong> bloque entièrement une attaque, mais elle est détruite dans l'opération.</span></li>
