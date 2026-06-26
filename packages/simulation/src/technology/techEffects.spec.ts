@@ -181,3 +181,51 @@ describe('new prerequisite chains', () => {
     expect(civ.storageMultiplier).toBeCloseTo(1.5 * 1.75)
   })
 })
+
+describe('tier-4 techs', () => {
+  it('alchemy requires metallurgy AND medicine', () => {
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.METALLURGY).canUnlock(TechId.ALCHEMY)).toBe(false)
+    expect(withTechs(TechId.MEDICINE).canUnlock(TechId.ALCHEMY)).toBe(false)
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.METALLURGY, TechId.MEDICINE).canUnlock(TechId.ALCHEMY)).toBe(true)
+  })
+  it('alchemy adds production multiplier and pregnancy bonus', () => {
+    const civ = withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.METALLURGY, TechId.MEDICINE, TechId.ALCHEMY)
+    expect(civ.productionMultiplier).toBeCloseTo(1.20)
+    expect(civ.pregnancyProbabilityBonus).toBe(10 + 5)
+  })
+  it('hydraulics requires irrigation AND masonry', () => {
+    expect(withTechs(TechId.AGRONOMY, TechId.IRRIGATION).canUnlock(TechId.HYDRAULICS)).toBe(false)
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY).canUnlock(TechId.HYDRAULICS)).toBe(false)
+    expect(withTechs(TechId.AGRONOMY, TechId.IRRIGATION, TechId.CRAFTSMANSHIP, TechId.MASONRY).canUnlock(TechId.HYDRAULICS)).toBe(true)
+  })
+  it('hydraulics adds storage and production multipliers', () => {
+    const civ = withTechs(TechId.AGRONOMY, TechId.IRRIGATION, TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.HYDRAULICS)
+    expect(civ.storageMultiplier).toBeCloseTo(1.30)
+    expect(civ.productionMultiplier).toBeCloseTo(1.15 * 1.20 * 1.15)
+  })
+  it('astronomy requires sciences', () => {
+    expect(withTechs(TechId.PHILOSOPHY).canUnlock(TechId.ASTRONOMY)).toBe(false)
+    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).canUnlock(TechId.ASTRONOMY)).toBe(true)
+  })
+  it('astronomy stacks on philosophy and sciences for ×3.75 total research', () => {
+    const civ = withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.ASTRONOMY)
+    expect(civ.researchMultiplier).toBeCloseTo(1.25 * 1.5 * 2.0)
+  })
+  it('urbanism requires engineering', () => {
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION).canUnlock(TechId.URBANISM)).toBe(false)
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION, TechId.ENGINEERING).canUnlock(TechId.URBANISM)).toBe(true)
+  })
+  it('urbanism adds children and pregnancy bonus', () => {
+    const civ = withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION, TechId.ENGINEERING, TechId.URBANISM)
+    expect(civ.maxChildrenBonus).toBe(4)
+    expect(civ.pregnancyProbabilityBonus).toBe(10)
+  })
+  it('commerce requires logistics', () => {
+    expect(withTechs(TechId.WAREHOUSING).canUnlock(TechId.COMMERCE)).toBe(false)
+    expect(withTechs(TechId.WAREHOUSING, TechId.LOGISTICS).canUnlock(TechId.COMMERCE)).toBe(true)
+  })
+  it('commerce stacks on warehousing and logistics', () => {
+    const civ = withTechs(TechId.WAREHOUSING, TechId.LOGISTICS, TechId.COMMERCE)
+    expect(civ.storageMultiplier).toBeCloseTo(1.5 * 1.75 * 1.50)
+  })
+})

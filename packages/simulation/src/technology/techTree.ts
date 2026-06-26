@@ -15,6 +15,11 @@ export enum TechId {
   ARMORY = 'armory',
   ENGINEERING = 'engineering',
   SCIENCES = 'sciences',
+  ALCHEMY = 'alchemy',
+  HYDRAULICS = 'hydraulics',
+  ASTRONOMY = 'astronomy',
+  URBANISM = 'urbanism',
+  COMMERCE = 'commerce',
 }
 
 export type TechEffect =
@@ -159,6 +164,55 @@ export const TECH_TREE: TechNode[] = [
     cost: 30,
     prerequisites: [TechId.PHILOSOPHY],
     effects: [{ kind: 'researchMultiplier', factor: 1.5 }],
+  },
+  {
+    id: TechId.ALCHEMY,
+    name: 'Alchimie',
+    description: '+20 % de production et +5 % de chances de conception.',
+    cost: 25,
+    prerequisites: [TechId.METALLURGY, TechId.MEDICINE],
+    effects: [
+      { kind: 'productionMultiplier', factor: 1.20 },
+      { kind: 'pregnancyProbabilityBonus', amount: 5 },
+    ],
+  },
+  {
+    id: TechId.HYDRAULICS,
+    name: 'Hydraulique',
+    description: '+30 % de stockage et +15 % de production.',
+    cost: 20,
+    prerequisites: [TechId.IRRIGATION, TechId.MASONRY],
+    effects: [
+      { kind: 'storageMultiplier', factor: 1.30 },
+      { kind: 'productionMultiplier', factor: 1.15 },
+    ],
+  },
+  {
+    id: TechId.ASTRONOMY,
+    name: 'Astronomie',
+    description: '×2 de production de savoir.',
+    cost: 30,
+    prerequisites: [TechId.SCIENCES],
+    effects: [{ kind: 'researchMultiplier', factor: 2.0 }],
+  },
+  {
+    id: TechId.URBANISM,
+    name: 'Urbanisme',
+    description: '+4 enfants simultanés et +10 % de chances de conception.',
+    cost: 25,
+    prerequisites: [TechId.ENGINEERING],
+    effects: [
+      { kind: 'maxChildrenBonus', amount: 4 },
+      { kind: 'pregnancyProbabilityBonus', amount: 10 },
+    ],
+  },
+  {
+    id: TechId.COMMERCE,
+    name: 'Commerce',
+    description: '+50 % de capacité de stockage.',
+    cost: 15,
+    prerequisites: [TechId.LOGISTICS],
+    effects: [{ kind: 'storageMultiplier', factor: 1.50 }],
   },
 ]
 

@@ -15,4 +15,9 @@ export const techNames: Record<string, string> = {
   [TechId.ARMORY]: 'Armurerie',
   [TechId.ENGINEERING]: 'Ingénierie',
   [TechId.SCIENCES]: 'Sciences',
+  [TechId.ALCHEMY]: 'Alchimie',
+  [TechId.HYDRAULICS]: 'Hydraulique',
+  [TechId.ASTRONOMY]: 'Astronomie',
+  [TechId.URBANISM]: 'Urbanisme',
+  [TechId.COMMERCE]: 'Commerce',
 }
