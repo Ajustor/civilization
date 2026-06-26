@@ -959,6 +959,10 @@ export class Civilization {
     workerRequiredToBuild: WorkerRequiredToBuild[],
     timeToBuild: number,
   ) {
+    if (!this.isBuildingUnlocked(buildingType)) {
+      return;
+    }
+
     const canBuild =
       constructionCosts.every(
         (cost) => this.getResource(cost.resource).quantity >= cost.amount,

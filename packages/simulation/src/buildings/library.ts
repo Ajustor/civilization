@@ -37,7 +37,7 @@ export class Library extends AbstractProductionBuilding {
 
   public static constructionCosts: ConstructionCost[] = [
     {
-      resource: ResourceTypes.PLANK,
+      resource: ResourceTypes.WOOD,
       amount: 15,
     },
     {

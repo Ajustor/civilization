@@ -1,6 +1,10 @@
 import { Civilization } from '../civilization'
 import { TechId } from './techTree'
 import { BuildingTypes } from '../buildings/enum'
+import { People } from '../people/people'
+import { Gender } from '../people/enum'
+import { Resource, ResourceTypes } from '../resource'
+import { OccupationTypes } from '../people/work/enum'
 
 const withTechs = (...techs: TechId[]) => {
   const civ = new Civilization('Techs')
@@ -33,5 +37,35 @@ describe('civilization tech aggregates', () => {
     expect(withTechs().canUnlock(TechId.MASONRY)).toBe(false) // needs CRAFTSMANSHIP
     expect(withTechs(TechId.CRAFTSMANSHIP).canUnlock(TechId.MASONRY)).toBe(true)
     expect(withTechs(TechId.CRAFTSMANSHIP).canUnlock(TechId.CRAFTSMANSHIP)).toBe(false) // already owned
+  })
+})
+
+describe('building gating', () => {
+  it('does not build a gated building (Kiln) without its tech, even if chosen', () => {
+    const civ = new Civilization('Locked')
+    civ.config = { ...civ.config, NEXT_BUILDING_TO_BUILD: BuildingTypes.KILN }
+    civ.addResource(new Resource(ResourceTypes.STONE, 1000))
+    for (let i = 0; i < 5; i++) {
+      const p = new People({ month: 12 * 30, gender: Gender.MALE, lifeCounter: 10 })
+      p.id = `w-${i}`
+      p.setOccupation(OccupationTypes.WOODCUTTER)
+      civ.addPeople(p)
+    }
+    civ['buildNewBuilding']()
+    expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.KILN)).toBe(false)
+  })
+  it('builds the gated building once its tech is researched', () => {
+    const civ = new Civilization('Unlocked')
+    civ.researchedTechs = [TechId.CRAFTSMANSHIP]
+    civ.config = { ...civ.config, NEXT_BUILDING_TO_BUILD: BuildingTypes.KILN }
+    civ.addResource(new Resource(ResourceTypes.STONE, 1000))
+    for (let i = 0; i < 5; i++) {
+      const p = new People({ month: 12 * 30, gender: Gender.MALE, lifeCounter: 10 })
+      p.id = `w-${i}`
+      p.setOccupation(OccupationTypes.WOODCUTTER)
+      civ.addPeople(p)
+    }
+    civ['buildChosenBuilding']()
+    expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.KILN)).toBe(true)
   })
 })
