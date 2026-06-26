@@ -50,7 +50,7 @@
 	<!-- Mobile hamburger -->
 	<button
 		onclick={() => menuOpen = !menuOpen}
-		style="display:none; background:none; border:none; cursor:pointer; padding:4px;"
+		style="display:none; background:none; border:none; cursor:pointer; padding:10px;"
 		aria-label="Menu"
 		class="mobile-menu-btn"
 	>
@@ -67,13 +67,13 @@
 				<a
 					href={link.url}
 					onclick={() => menuOpen = false}
-					style="font-family:'Marcellus',serif; font-size:17px; text-decoration:none; padding:8px 4px; color:{active ? 'oklch(0.4 0.12 34)' : 'oklch(0.44 0.03 45)'}; border-bottom:1px solid oklch(0.86 0.03 76);"
+					style="font-family:'Marcellus',serif; font-size:17px; text-decoration:none; padding:12px 8px; color:{active ? 'oklch(0.4 0.12 34)' : 'oklch(0.44 0.03 45)'}; border-bottom:1px solid oklch(0.86 0.03 76); display:block;"
 				>{link.label}</a>
 			{/each}
 			{#if user?.id}
-				<a href="/me" onclick={() => menuOpen = false} style="font-family:'EB Garamond',serif; font-size:16px; text-decoration:none; padding:8px 4px; color:oklch(0.45 0.06 40);">{user.username ?? user.email} · Mon compte</a>
+				<a href="/me" onclick={() => menuOpen = false} style="font-family:'EB Garamond',serif; font-size:16px; text-decoration:none; padding:12px 8px; color:oklch(0.45 0.06 40); display:block;">{user.username ?? user.email} · Mon compte</a>
 			{:else}
-				<a href="/login" onclick={() => menuOpen = false} style="font-family:'EB Garamond',serif; font-size:16px; text-decoration:none; padding:8px 4px; color:oklch(0.45 0.06 40);">Se connecter</a>
+				<a href="/login" onclick={() => menuOpen = false} style="font-family:'EB Garamond',serif; font-size:16px; text-decoration:none; padding:12px 8px; color:oklch(0.45 0.06 40); display:block;">Se connecter</a>
 			{/if}
 		</div>
 	{/if}

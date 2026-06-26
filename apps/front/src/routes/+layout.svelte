@@ -57,6 +57,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100vh;
+		height: 100dvh;
 		overflow: hidden;
 	}
 
@@ -66,5 +67,6 @@
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
+		padding-bottom: env(safe-area-inset-bottom, 0px);
 	}
 </style>

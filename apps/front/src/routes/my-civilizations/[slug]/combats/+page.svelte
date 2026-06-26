@@ -93,13 +93,13 @@
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
           {#if data.page > 0}
-            <a href="?page={data.page - 1}" style="padding:8px 16px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.45 0.06 40); font-family:'Marcellus',serif; font-size:15px; text-decoration:none;">← Précédent</a>
+            <a href="?page={data.page - 1}" style="padding:12px 16px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.45 0.06 40); font-family:'Marcellus',serif; font-size:15px; text-decoration:none;">← Précédent</a>
           {:else}
             <span></span>
           {/if}
           <span style="font-size:14px; color:oklch(0.55 0.03 50);">Page {data.page + 1}</span>
           {#if data.logs.length === data.pageSize}
-            <a href="?page={data.page + 1}" style="padding:8px 16px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.45 0.06 40); font-family:'Marcellus',serif; font-size:15px; text-decoration:none;">Suivant →</a>
+            <a href="?page={data.page + 1}" style="padding:12px 16px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.45 0.06 40); font-family:'Marcellus',serif; font-size:15px; text-decoration:none;">Suivant →</a>
           {:else}
             <span></span>
           {/if}
