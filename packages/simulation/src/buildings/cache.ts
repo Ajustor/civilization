@@ -34,7 +34,7 @@ export class Cache extends AbstractStorageBuilding {
     },
   ];
 
-  timeToBuild = 6;
+  public static timeToBuild = 6;
 
   public static constructionCosts: ConstructionCost[] = [
     { amount: 200, resource: ResourceTypes.WOOD },
@@ -44,7 +44,7 @@ export class Cache extends AbstractStorageBuilding {
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
       occupation: OccupationTypes.GATHERER,
-      amount: 1,
+      amount: 15,
     },
   ];
 
