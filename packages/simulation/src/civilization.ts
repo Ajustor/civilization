@@ -13,7 +13,7 @@ import { Mine } from "./buildings/mine";
 import { Sawmill } from "./buildings/sawmill";
 import { Wall } from "./buildings/wall";
 import { Gender } from "./people/enum";
-import { People } from "./people/people";
+import { People, MAX_NUMBER_OF_CHILD } from "./people/people";
 import { DeathCause, type DeathRecord } from "./people/death";
 import { OccupationTypes } from "./people/work/enum";
 import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
@@ -398,8 +398,12 @@ export class Civilization {
     return Math.floor(base * this.storageMultiplier)
   }
 
-  get effectiveMaxChildren(): number {
-    return this.config.MAXIMUM_CHILDREN + this.maxChildrenBonus;
+  // Per-woman lifetime child limit (people.ts MAX_NUMBER_OF_CHILD), raised by
+  // the Medicine tech's maxChildrenBonus. The civilization-wide simultaneous cap
+  // is governed solely by the user config (MAXIMUM_CHILDREN) and is not affected
+  // by this bonus.
+  get effectiveMaxChildrenPerWoman(): number {
+    return MAX_NUMBER_OF_CHILD + this.maxChildrenBonus;
   }
 
   get effectivePregnancyProbability(): number {
@@ -624,7 +628,7 @@ export class Civilization {
     // cap defensively.
     if (
       activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
-      this.childrenCount < this.effectiveMaxChildren
+      this.childrenCount < this.config.MAXIMUM_CHILDREN
     ) {
       await this.createNewPeople();
     }
@@ -1141,13 +1145,14 @@ export class Civilization {
   private async createNewPeople() {
     // Handle pregnancy
 
-    if (this.effectiveMaxChildren <= this.childrenCount) {
+    if (this.config.MAXIMUM_CHILDREN <= this.childrenCount) {
       return;
     }
 
     let eligiblePeople: [People, People][] = [];
+    const maxChildrenPerWoman = this.effectiveMaxChildrenPerWoman;
     const ableToConceivePeople = this._people.filter((person) =>
-      person.canConceive(),
+      person.canConceive(maxChildrenPerWoman),
     );
 
     const women = ableToConceivePeople.filter(

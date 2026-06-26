@@ -25,6 +25,8 @@
 		Cache,
 		Wall,
 		Library,
+		getBuildingGate,
+		getTechNode,
 		type ResourceTypes,
 		type OccupationTypes
 	} from '@ajustor/simulation'
@@ -91,6 +93,20 @@
 		[BuildingTypes.WALL]: Wall,
 		[BuildingTypes.LIBRARY]: Library
 	}
+
+	// Bâtiments verrouillés par l'arbre de technologies : pour chaque type gardé
+	// par une techno non encore recherchée, on garde le nom (FR) de cette techno.
+	const researchedTechs = $derived<string[]>(data.civilization.researchedTechs ?? [])
+	const lockedBuildings = $derived.by(() => {
+		const locked = new Map<BuildingTypes, string>()
+		for (const buildingType of Object.values(BuildingTypes)) {
+			const gate = getBuildingGate(buildingType)
+			if (gate && !researchedTechs.includes(gate)) {
+				locked.set(buildingType, getTechNode(gate)?.name ?? gate)
+			}
+		}
+		return locked
+	})
 
 	const selectedBuildingInfo = $derived.by(() => {
 		const type = $formData.nextBuildingToBuild
@@ -229,7 +245,12 @@
 							>
 								<option value="">Aucun</option>
 								{#each Object.values(BuildingTypes) as buildingType}
-									<option value={buildingType}>{buildingNames[buildingType]}</option>
+									{@const lockedBy = lockedBuildings.get(buildingType)}
+									<option
+										value={buildingType}
+										disabled={!!lockedBy}
+										title={lockedBy ? `Recherche manquante : ${lockedBy}` : undefined}
+									>{buildingNames[buildingType]}{lockedBy ? ` 🔒 (recherche : ${lockedBy})` : ''}</option>
 								{/each}
 							</select>
 						{/snippet}

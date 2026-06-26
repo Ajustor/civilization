@@ -1,7 +1,7 @@
 import { Civilization } from '../civilization'
 import { TechId } from './techTree'
 import { BuildingTypes } from '../buildings/enum'
-import { People } from '../people/people'
+import { People, MAX_NUMBER_OF_CHILD } from '../people/people'
 import { Gender } from '../people/enum'
 import { Resource, ResourceTypes } from '../resource'
 import { OccupationTypes } from '../people/work/enum'
@@ -111,11 +111,17 @@ describe('military and population effects', () => {
     civ.researchedTechs = [TechId.MASONRY, TechId.METALLURGY] // +25%
     expect(civ.militaryStrength).toBe(Math.floor(base * 1.25))
   })
-  it('effective max children includes the bonus', () => {
+  it('medicine raises the per-woman child limit by 5', () => {
     const civ = new Civilization('Pop')
-    const baseMax = civ.config.MAXIMUM_CHILDREN
+    expect(civ.effectiveMaxChildrenPerWoman).toBe(MAX_NUMBER_OF_CHILD)
     civ.researchedTechs = [TechId.MEDICINE] // +5
-    expect(civ.effectiveMaxChildren).toBe(baseMax + 5)
+    expect(civ.effectiveMaxChildrenPerWoman).toBe(MAX_NUMBER_OF_CHILD + 5)
     expect(civ.effectivePregnancyProbability).toBe(Math.min(100, civ.config.PREGNANCY_PROBABILITY + 10))
+  })
+  it('a woman past the base limit can still conceive with the medicine bonus', () => {
+    const woman = new People({ month: 25 * 12, gender: Gender.FEMALE, lifeCounter: 10 })
+    woman.numberOfChild = MAX_NUMBER_OF_CHILD + 1 // 4 children: beyond the base cap of 3
+    expect(woman.canConceive()).toBe(false)
+    expect(woman.canConceive(MAX_NUMBER_OF_CHILD + 5)).toBe(true)
   })
 })

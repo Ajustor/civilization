@@ -875,9 +875,12 @@
 			{/await}
 		</div>
 
-		<!-- Cemetery -->
+		<!-- Cemetery (aperçu — page dédiée) -->
 		<div class="civ-inner-card" style="margin-top:24px;">
-			<h2 class="civ-section-title" style="margin:0 0 16px;">Cimetière</h2>
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+				<h2 class="civ-section-title" style="margin:0;">Cimetière</h2>
+				<a href="/my-civilizations/{data.civilization.id}/cemetery" style="font-size:15px; color:oklch(0.5 0.13 34); font-family:'EB Garamond',serif; text-decoration:none;">Voir le cimetière →</a>
+			</div>
 
 			{#await cemeteryPromise}
 				<p style="color:oklch(0.55 0.03 50); font-size:15px;">Chargement…</p>
@@ -893,9 +896,9 @@
 							</span>
 						{/each}
 					</div>
-					<!-- Recent deaths -->
-					<div style="display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto;">
-						{#each cemetery.graves as grave}
+					<!-- Recent deaths (aperçu des plus récents) -->
+					<div style="display:flex; flex-direction:column; gap:6px;">
+						{#each cemetery.graves.slice(0, 6) as grave}
 							<div style="display:flex; align-items:center; gap:12px; padding:8px 14px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.85 0.03 70);">
 								<span style="font-size:16px; flex-shrink:0;">🪦</span>
 								<span style="flex:1; min-width:0; font-family:'Marcellus',serif; font-size:15px; color:oklch(0.35 0.04 40);">{grave.name}</span>

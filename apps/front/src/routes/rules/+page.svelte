@@ -48,19 +48,32 @@
 		{ name: 'Charbonnier', age: '21 à 60 ans', eat: 3, role: 'Exploite un Four à chaux (produit du charbon)' },
 		{ name: 'Commis de cuisine', age: '21 à 70 ans', eat: 2, role: 'Exploite un Feu de camp (produit de la nourriture préparée)' },
 		{ name: 'Mineur', age: '25 à 50 ans', eat: 3, role: 'Exploite une Mine (produit de la pierre)' },
+		{ name: 'Érudit', age: '21 à 80 ans', eat: 2, role: 'Exploite une Bibliothèque (produit des points de recherche)' },
 		{ name: 'Soldat', age: '18 à 60 ans', eat: 3, role: 'Défend la civilisation et mène les attaques' },
 		{ name: 'Retraité', age: 'après la vie active', eat: 1, role: 'Ne travaille plus' }
 	]
 
 	const BUILDING_RULES = [
-		{ name: 'Maison', cost: '15 bois', time: '2 mois', build: '—', operate: '—', effect: 'Loge 4 citoyens (un logement évite la perte de point de vie)' },
-		{ name: 'Ferme', cost: '10 planches + 10 pierre', time: '2 mois', build: '2 récolteurs', operate: '5 fermiers', effect: 'Produit 100 nourriture / mois' },
-		{ name: 'Four à chaux', cost: '20 pierre', time: '4 mois', build: '2 coupeurs de bois', operate: '2 charbonniers', effect: '5 bois → 10 charbon' },
-		{ name: 'Scierie', cost: '15 pierre', time: '4 mois', build: '—', operate: '2 charpentiers', effect: '1 bois → 5 planches' },
-		{ name: 'Mine', cost: 'aucun', time: '10 mois', build: '5 récolteurs', operate: '10 mineurs', effect: 'Produit de la pierre (1 à 100 par mineur)' },
-		{ name: 'Feu de camp', cost: '15 bois', time: '2 mois', build: '2 récolteurs', operate: '1 commis de cuisine', effect: '10 nourriture → 7 nourriture préparée' },
-		{ name: 'Entrepôt', cost: 'aucun', time: '1 mois', build: '1 récolteur', operate: '—', effect: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible.' },
-		{ name: 'Muraille', cost: '2000 pierre + 1500 bois', time: '12 mois', build: '250 bâtisseurs', operate: '—', effect: 'Bloque une attaque entière, puis est détruite' }
+		{ name: 'Maison', cost: '15 bois', time: '2 mois', build: '—', operate: '—', unlock: '', effect: 'Loge 4 citoyens (un logement évite la perte de point de vie)' },
+		{ name: 'Ferme', cost: '10 planches + 10 pierre', time: '2 mois', build: '2 récolteurs', operate: '5 fermiers', unlock: '', effect: 'Produit 100 nourriture / mois' },
+		{ name: 'Bibliothèque', cost: '15 bois + 10 pierre', time: '4 mois', build: '2 récolteurs', operate: '2 érudits', unlock: '', effect: 'Produit 2 points de recherche par mois (bibliothèque pleinement dotée)' },
+		{ name: 'Four à chaux', cost: '20 pierre', time: '4 mois', build: '2 coupeurs de bois', operate: '2 charbonniers', unlock: 'Artisanat', effect: '5 bois → 10 charbon' },
+		{ name: 'Scierie', cost: '15 pierre', time: '4 mois', build: '—', operate: '2 charpentiers', unlock: 'Artisanat', effect: '1 bois → 5 planches' },
+		{ name: 'Mine', cost: 'aucun', time: '10 mois', build: '5 récolteurs', operate: '10 mineurs', unlock: 'Maçonnerie', effect: 'Produit de la pierre (1 à 100 par mineur)' },
+		{ name: 'Feu de camp', cost: '15 bois', time: '2 mois', build: '2 récolteurs', operate: '1 commis de cuisine', unlock: '', effect: '10 nourriture → 7 nourriture préparée' },
+		{ name: 'Entrepôt', cost: 'aucun', time: '1 mois', build: '1 récolteur', operate: '—', unlock: '', effect: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible.' },
+		{ name: 'Muraille', cost: '2000 pierre + 1500 bois', time: '12 mois', build: '250 bâtisseurs', operate: '—', unlock: 'Maçonnerie', effect: 'Bloque une attaque entière, puis est détruite' }
+	]
+
+	// Arbre de technologies — valeurs miroir de TECH_TREE (packages/simulation).
+	const TECHNOLOGIES = [
+		{ name: 'Artisanat', cost: 5, prereq: '—', effect: 'Débloque la Scierie et le Four à chaux.' },
+		{ name: 'Maçonnerie', cost: 10, prereq: 'Artisanat', effect: 'Débloque la Mine et la Muraille.' },
+		{ name: 'Agronomie', cost: 8, prereq: '—', effect: '+15 % de production des bâtiments.' },
+		{ name: 'Mécanisation', cost: 20, prereq: 'Agronomie', effect: '+25 % de production supplémentaire.' },
+		{ name: 'Entreposage', cost: 8, prereq: '—', effect: '+50 % de capacité de stockage.' },
+		{ name: 'Médecine', cost: 12, prereq: '—', effect: '+5 enfants simultanés et +10 % de conception.' },
+		{ name: 'Métallurgie', cost: 15, prereq: 'Maçonnerie', effect: '+25 % de force militaire.' }
 	]
 
 	const eventEntries = Object.entries(eventsName) as [Events, string][]
@@ -246,9 +259,45 @@
 								<span style="color:oklch(0.55 0.04 55);">Durée</span><span>{b.time}</span>
 								<span style="color:oklch(0.55 0.04 55);">Construit par</span><span>{b.build}</span>
 								<span style="color:oklch(0.55 0.04 55);">Exploité par</span><span>{b.operate}</span>
+								{#if b.unlock}
+									<span style="color:oklch(0.55 0.04 55);">Technologie</span><span style="color:oklch(0.5 0.1 280);">{b.unlock}</span>
+								{/if}
 							</div>
 						</div>
 					{/each}
+				</div>
+			</section>
+
+			<!-- Recherche & technologies -->
+			<section class="civ-inner-card">
+				<h2 class="civ-section-title">Recherche &amp; technologies</h2>
+				<ul style="list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>La <strong>Bibliothèque</strong> est le cœur de la recherche. Dotée de ses <strong>2 érudits</strong>, elle produit <strong>2 points de recherche par mois</strong> ; la production est proportionnelle au nombre d'érudits en poste, et plusieurs bibliothèques se cumulent.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>L'<strong>érudit</strong> est un métier spécialisé : un <strong>récolteur</strong> peut évoluer vers érudit (dès 21 ans), exactement comme vers les autres métiers de production.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les points accumulés se <strong>dépensent</strong> pour débloquer des technologies dans l'<strong>arbre de technologies</strong>. Chaque technologie a un <strong>coût</strong> en points et d'éventuels <strong>prérequis</strong> : on ne peut la rechercher qu'une fois ces prérequis acquis et avec assez de points. Le coût est alors déduit, et la technologie est acquise <strong>définitivement</strong>.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Certaines technologies <strong>débloquent des bâtiments</strong> (voir la colonne « Technologie » ci-dessus), d'autres apportent des <strong>bonus permanents</strong>. Les bonus se <strong>cumulent</strong> : les multiplicateurs se multiplient entre eux, les bonus chiffrés s'additionnent.</span></li>
+				</ul>
+				<div style="overflow-x:auto;">
+					<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:15px; color:oklch(0.4 0.03 50);">
+						<thead>
+							<tr style="border-bottom:2px solid oklch(0.78 0.04 70);">
+								<th style="text-align:left; padding:8px 12px; font-family:'Marcellus',serif; font-weight:400; color:oklch(0.45 0.05 50);">Technologie</th>
+								<th style="text-align:center; padding:8px 12px; font-family:'Marcellus',serif; font-weight:400; color:oklch(0.45 0.05 50);">Coût (points)</th>
+								<th style="text-align:left; padding:8px 12px; font-family:'Marcellus',serif; font-weight:400; color:oklch(0.45 0.05 50);">Prérequis</th>
+								<th style="text-align:left; padding:8px 12px; font-family:'Marcellus',serif; font-weight:400; color:oklch(0.45 0.05 50);">Effet</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each TECHNOLOGIES as tech}
+								<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
+									<td style="padding:8px 12px; font-family:'Marcellus',serif; color:oklch(0.34 0.04 40);">{tech.name}</td>
+									<td style="padding:8px 12px; text-align:center;">{tech.cost}</td>
+									<td style="padding:8px 12px;">{tech.prereq}</td>
+									<td style="padding:8px 12px;">{tech.effect}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
 				</div>
 			</section>
 
