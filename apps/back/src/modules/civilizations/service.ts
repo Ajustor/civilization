@@ -21,7 +21,7 @@ import {
   UserModel,
   WorldModel,
 } from '../../libs/database/models'
-import { computeRecap, emptyRecap, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
+import { computeRecap, emptyRecap, RECAP_MIN_MONTHS, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
 import { PeopleService, personMapper } from '../people/service'
 import { UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
@@ -723,6 +723,12 @@ export class CivilizationService {
       return emptyRecap()
     }
     if (toMonth <= fromMonth) {
+      return emptyRecap()
+    }
+    // Absence trop courte (un seul mois écoulé) : pas de récap. On n'avance pas
+    // la référence pour laisser la période s'accumuler jusqu'à la prochaine
+    // visite, afin de ne pas perdre ce mois si une vraie absence suit.
+    if (toMonth - fromMonth < RECAP_MIN_MONTHS) {
       return emptyRecap()
     }
 
