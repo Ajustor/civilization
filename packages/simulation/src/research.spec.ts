@@ -5,11 +5,11 @@ describe('Erudit work', () => {
   it('has the ERUDIT occupation type', () => {
     expect(new Erudit().occupationType).toBe(OccupationTypes.ERUDIT)
   })
-  it('can work before 70 and retires at 70', () => {
+  it('can work before 80 and retires at 80', () => {
     const erudit = new Erudit()
     expect(erudit.canWork(40)).toBe(true)
-    expect(erudit.canWork(70)).toBe(false)
-    expect(erudit.canRetire(70)).toBe(true)
+    expect(erudit.canWork(80)).toBe(false)
+    expect(erudit.canRetire(80)).toBe(true)
   })
   it('can upgrade after 21', () => {
     expect(new Erudit().canUpgrade(22)).toBe(true)
