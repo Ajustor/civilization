@@ -44,6 +44,11 @@
 
 	const { form: formData, enhance } = form
 
+	// Pré-sélectionne le premier monde pour que la création cible toujours un monde.
+	if (worlds.length && !$formData.worldId) {
+		$formData.worldId = worlds[0].id
+	}
+
 	const openDeleteModal = (id: string) => {
 		civilizationIdToDelete = id
 		deleteDialogOpen = true
@@ -106,7 +111,7 @@
 					<FormDescription />
 					<FormFieldErrors />
 				</FormField>
-				{#if worlds.length > 1}
+				{#if worlds.length}
 					<FormField {form} name="worldId">
 						<FormControl>
 							{#snippet children({ props })}
@@ -125,8 +130,8 @@
 						</FormControl>
 						<FormFieldErrors />
 					</FormField>
-				{:else if worlds.length === 1}
-					<input type="hidden" name="worldId" value={worlds[0].id} />
+				{:else}
+					<p style="font-size:14px; color:oklch(0.5 0.03 50); margin:0;">Aucun monde disponible pour le moment.</p>
 				{/if}
 				<div style="display:flex; gap:10px; justify-content:flex-end;">
 					<button
