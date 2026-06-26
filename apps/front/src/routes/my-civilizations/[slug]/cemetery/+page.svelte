@@ -12,9 +12,11 @@
 	const fmt = (n: number) => n.toLocaleString('fr-FR')
 
 	const graves = $derived(data.cemetery?.graves ?? [])
-	const causes = $derived(data.cemetery?.causes ?? {})
+	const causes = $derived<Record<string, number>>(
+		(data.cemetery?.causes ?? {}) as Record<string, number>
+	)
 	const totalDeaths = $derived(
-		Object.values(causes).reduce((sum, count) => sum + (count as number), 0)
+		Object.values(causes).reduce((sum: number, count) => sum + count, 0)
 	)
 	const causeName = (cause: string) => deathCauseNames[cause as DeathCause] ?? cause
 </script>
