@@ -208,7 +208,14 @@
 					<div style="padding:26px; border-radius:5px; background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.06), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.74 0.05 60), 0 12px 32px rgba(60,40,20,.12); display:flex; flex-direction:column;">
 						<div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid oklch(0.8 0.04 70); padding-bottom:14px;">
 							<h2 style="font-family:'Marcellus',serif; font-size:25px; margin:0; color:oklch(0.32 0.04 40);">{civ.name}</h2>
-							<span style="font-size:14px; color:oklch(0.5 0.03 50); text-align:right; line-height:1.3;">{~~(civ.livedMonths / 12)} ans · {civ.livedMonths % 12} mois</span>
+							<div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+								<span style="font-size:14px; color:oklch(0.5 0.03 50); text-align:right; line-height:1.3;">{~~(civ.livedMonths / 12)} ans · {civ.livedMonths % 12} mois</span>
+								{#if (civ as any).recentAttacksCount > 0}
+									<span style="font-size:12px; font-family:'Marcellus',serif; background:oklch(0.52 0.22 30); color:oklch(0.97 0.01 84); border-radius:10px; padding:2px 8px; white-space:nowrap;">
+										⚔ {(civ as any).recentAttacksCount} attaque{(civ as any).recentAttacksCount > 1 ? 's' : ''}
+									</span>
+								{/if}
+							</div>
 						</div>
 
 						<div style="display:flex; gap:24px; margin:16px 0;">
