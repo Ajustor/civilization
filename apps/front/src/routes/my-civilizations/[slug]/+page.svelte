@@ -27,6 +27,9 @@
 
 	let pageIndex = $state(0)
 	let pageSize = $state(10)
+	// Drive the citizens table from local state: reassigning the SvelteKit `data`
+	// prop's nested promise is NOT reactive in Svelte 5, so the table never updated.
+	let peoplePromise = $state<Promise<PeopleType[]>>(data.lazy.people)
 
 	// Which panel is expanded: null = closed
 	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
@@ -36,18 +39,18 @@
 	const closePanel = () => { activePanel = null }
 
 	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
-		const oldPeople = await data.lazy.people
+		const previous = peoplePromise
 		pageIndex = newPageIndex
 		pageSize = newPageSize
-		data.lazy.people = new Promise(async (resolve) => {
+		peoplePromise = (async () => {
 			try {
-				const { people } = await callGetPeople(data.civilization.id, pageIndex, pageSize)
-				resolve(people)
+				const { people } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize)
+				return people
 			} catch (error) {
 				console.error(error)
-				resolve(oldPeople)
+				return previous
 			}
-		})
+		})()
 	}
 
 	// Live refresh: the world advances a month every ~15 min server-side. Subscribe
@@ -58,11 +61,10 @@
 		}
 		const source = new EventSource(`${PUBLIC_BACK_URL}/worlds/${data.worldId}/events`)
 		source.addEventListener('month', async () => {
+			// Refresh civilization stats/resources (data is replaced -> reactive) and
+			// re-fetch the citizens page currently shown.
 			await invalidateAll()
-			// invalidateAll reloads page-0 citizens; refresh the page being viewed.
-			if (pageIndex !== 0) {
-				retrievePeople(pageIndex, pageSize)
-			}
+			retrievePeople(pageIndex, pageSize)
 		})
 		return () => source.close()
 	})
@@ -602,7 +604,7 @@
 		<!-- People table -->
 		<div class="civ-inner-card" style="margin-top:20px;">
 			<h2 class="civ-section-title">Citoyens ({data.civilization.citizensCount} au total)</h2>
-			{#await data.lazy.people}
+			{#await peoplePromise}
 				<div style="height:120px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then people}
 				<PeopleTable
