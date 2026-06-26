@@ -9,7 +9,8 @@
 		type OccupationTypes,
 		type PeopleType,
 		type DeathCause,
-		Events
+		Events,
+		TECH_TREE
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames, deathCauseNames } from '$lib/translations'
@@ -197,6 +198,17 @@
 		data.civilization.buildings
 			.filter((b) => b.type === BuildingTypes.CACHE)
 			.reduce((sum, b) => sum + b.count, 0)
+	)
+
+	// Multiplicateur de stockage issu des technologies recherchées (ex. Entreposage
+	// +50 %). Mirroir de `Civilization.storageMultiplier` côté simulation : produit
+	// des facteurs `storageMultiplier` de chaque techno acquise, défaut 1. Sans ça,
+	// la jauge sous-estimerait la capacité réelle après recherche.
+	const storageMultiplier = $derived(
+		TECH_TREE.filter((node) => (data.civilization.researchedTechs ?? []).includes(node.id))
+			.flatMap((node) => node.effects)
+			.filter((effect) => effect.kind === 'storageMultiplier')
+			.reduce((multiplier, effect) => multiplier * effect.factor, 1)
 	)
 
 	// ── Constructions en cours ─────────────────────────────────────────────────
@@ -582,6 +594,7 @@
 						Marché
 					</a>
 				{/if}
+				<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
 				<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
 					<Settings size="16" /> Configurer
 				</a>
