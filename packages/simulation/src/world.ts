@@ -106,6 +106,14 @@ export class World {
     this._civilizations.push(...civilizations)
   }
 
+  // Detach all civilizations from the world. Used when the same world instance
+  // is reused across several simulated months (e.g. the skipYears script) so
+  // freshly reloaded civilizations replace the previous ones instead of piling
+  // up as duplicates.
+  public clearCivilizations() {
+    this._civilizations = []
+  }
+
   public getYear(): number {
     return ~~(this.month / 12)
   }
