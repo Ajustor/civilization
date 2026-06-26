@@ -16,6 +16,7 @@
 	import { toast } from 'svelte-sonner'
 	import { BuildingTypes } from '@ajustor/simulation'
 	import { buildingNames } from '$lib/translations'
+	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
 	interface Props {
 		data: PageData;
@@ -24,6 +25,9 @@
 	let { data }: Props = $props();
 
 	const form = superForm(data.configForm, {
+		// openExchange / atWarWith are arrays driven by checkboxes (no native form
+		// inputs), so they only reach the server when the whole form is posted as JSON.
+		dataType: 'json',
 		validators: zodClient(civilizationConfigSchema),
 		onError({ result }) {
 			toast.error(result.error?.message ?? 'Une erreur est survenue')
@@ -60,10 +64,14 @@
 </svelte:head>
 
 <div class="civ-page-wrapper">
-<a href="/my-civilizations/{data.civilization.id}" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-flex; align-items:center; gap:6px; text-decoration:none; animation:screenIn .4s ease both;">‹ Retour à {data.civilization.name}</a>
+<Breadcrumb items={[
+	{ label: 'Mes civilisations', href: '/my-civilizations' },
+	{ label: data.civilization.name, href: `/my-civilizations/${data.civilization.id}` },
+	{ label: 'Configuration' }
+]} />
 
 <div class="civ-card" style="max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
-	<h1 style="font-family:'Marcellus',serif; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Configuration de {data.civilization.name}</h1>
+	<h1 style="font-family:'Tangerine',cursive; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Configuration de {data.civilization.name}</h1>
 
 	<form method="post" use:formEnhance action="?/updateConfig" class="flex flex-col gap-4">
 

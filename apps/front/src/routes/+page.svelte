@@ -50,7 +50,7 @@
 				<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:24px; border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:22px;">
 					<div>
 						<div style="font-family:'Marcellus',serif; font-size:13px; letter-spacing:.4em; text-transform:uppercase; color:oklch(0.5 0.09 40);">Chronique du monde</div>
-						<h1 style="font-family:'Marcellus',serif; font-size:clamp(40px,7vw,52px); margin:6px 0 0; color:oklch(0.3 0.04 40);">{world.name}</h1>
+						<h1 style="font-family:'Tangerine',cursive; font-size:clamp(40px,7vw,52px); margin:6px 0 0; color:oklch(0.3 0.04 40);">{world.name}</h1>
 						<div style="font-size:19px; color:oklch(0.46 0.03 50); margin-top:4px;">An {world.year} du monde</div>
 					</div>
 					<div style="width:104px; height:104px; border-radius:50%; background:radial-gradient(circle at 35% 30%, oklch(0.55 0.14 38), oklch(0.4 0.13 34)); color:oklch(0.94 0.03 84); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(80,30,20,.35), inset 0 2px 6px rgba(255,220,180,.35); border:2px solid oklch(0.6 0.12 40); flex-shrink:0;">
@@ -79,13 +79,13 @@
 						<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:24px;">
 							{#await worldStats.aliveCivilizations then alive}
 								<div class="civ-inner-card">
-									<div style="font-family:'Marcellus',serif; font-size:40px; color:oklch(0.45 0.09 150);">{alive}</div>
+									<div style="font-family:'Tangerine',cursive; font-size:40px; color:oklch(0.45 0.09 150);">{alive}</div>
 									<div style="font-size:16px; color:oklch(0.48 0.03 50);">civilisations en vie</div>
 								</div>
 							{/await}
 							{#await worldStats.deadCivilizations then dead}
 								<div class="civ-inner-card">
-									<div style="font-family:'Marcellus',serif; font-size:40px; color:oklch(0.42 0.06 40);">{dead}</div>
+									<div style="font-family:'Tangerine',cursive; font-size:40px; color:oklch(0.42 0.06 40);">{dead}</div>
 									<div style="font-size:16px; color:oklch(0.48 0.03 50);">civilisations éteintes</div>
 								</div>
 							{/await}

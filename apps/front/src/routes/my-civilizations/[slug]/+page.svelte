@@ -13,7 +13,11 @@
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
+	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
+	import { onMount } from 'svelte'
+	import { invalidateAll } from '$app/navigation'
+	import { PUBLIC_BACK_URL } from '$env/static/public'
 
 	interface Props {
 		data: PageData;
@@ -45,6 +49,23 @@
 			}
 		})
 	}
+
+	// Live refresh: the world advances a month every ~15 min server-side. Subscribe
+	// to its SSE stream and refresh the on-screen data whenever a month passes.
+	onMount(() => {
+		if (!data.worldId) {
+			return
+		}
+		const source = new EventSource(`${PUBLIC_BACK_URL}/worlds/${data.worldId}/events`)
+		source.addEventListener('month', async () => {
+			await invalidateAll()
+			// invalidateAll reloads page-0 citizens; refresh the page being viewed.
+			if (pageIndex !== 0) {
+				retrievePeople(pageIndex, pageSize)
+			}
+		})
+		return () => source.close()
+	})
 
 	const RESOURCES_INDEXES = {
 		[ResourceTypes.RAW_FOOD]: 0,
@@ -338,12 +359,12 @@
 									<div style="display:flex; flex-direction:column; gap:14px;">
 										<div>
 											<div style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:oklch(0.5 0.06 240); margin-bottom:4px;">Hommes</div>
-											<div style="font-size:28px; font-family:'Marcellus',serif; color:oklch(0.38 0.08 240);">{fmt(men)}</div>
+											<div style="font-size:28px; font-family:'Tangerine',cursive; color:oklch(0.38 0.08 240);">{fmt(men)}</div>
 											<div style="font-size:13px; color:oklch(0.5 0.04 50);">{pct(men, total)}% de la population</div>
 										</div>
 										<div style="border-top:1px solid oklch(0.82 0.03 72); padding-top:14px;">
 											<div style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:oklch(0.5 0.06 330); margin-bottom:4px;">Femmes</div>
-											<div style="font-size:28px; font-family:'Marcellus',serif; color:oklch(0.42 0.1 330);">{fmt(women)}</div>
+											<div style="font-size:28px; font-family:'Tangerine',cursive; color:oklch(0.42 0.1 330);">{fmt(women)}</div>
 											<div style="font-size:13px; color:oklch(0.5 0.04 50);">{pct(women, total)}% de la population</div>
 											<div style="font-size:13px; color:oklch(0.5 0.04 50); margin-top:4px;">dont enceintes : <strong style="color:oklch(0.38 0.08 130);">{fmt(pregnant)}</strong> ({pct(pregnant, women)}%)</div>
 										</div>
@@ -384,22 +405,25 @@
 
 <!-- ── Page ─────────────────────────────────────────────────────────────────── -->
 <div class="civ-page-wrapper">
-	<a href="/my-civilizations" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-block; text-decoration:none; animation:screenIn .4s ease both;">‹ Retour aux civilisations</a>
+	<Breadcrumb items={[
+		{ label: 'Mes civilisations', href: '/my-civilizations' },
+		{ label: data.civilization.name }
+	]} />
 
 	<div class="civ-card" style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
 		<!-- Civ header -->
 		<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:20px; border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:20px;">
 			<div>
-				<h1 style="font-family:'Marcellus',serif; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
+				<h1 style="font-family:'Tangerine',cursive; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
 				<div style="font-size:18px; color:oklch(0.46 0.03 50); margin-top:4px;">Prospère depuis {~~(data.civilization.livedMonths / 12)} ans et {data.civilization.livedMonths % 12} mois</div>
 			</div>
 			<div style="display:flex; gap:26px; text-align:center; align-items:center;">
 				<div>
-					<div style="font-family:'Marcellus',serif; font-size:32px; color:oklch(0.42 0.09 150);">{data.civilization.citizensCount}</div>
+					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.42 0.09 150);">{data.civilization.citizensCount}</div>
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
 				</div>
 				<div>
-					<div style="font-family:'Marcellus',serif; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce((a, b) => a + b.count, 0)}</div>
+					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce((a, b) => a + b.count, 0)}</div>
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
 				</div>
 				{#if data.worldId}

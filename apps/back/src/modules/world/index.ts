@@ -5,6 +5,7 @@ import { WorldsTable } from './database'
 import { logger } from '@bogeychan/elysia-logger'
 import { WorldService } from './service'
 import { PeopleService } from '../people/service'
+import { monthWatcher } from '../../libs/services/monthWatcher'
 
 const worldDbClientInstance = new WorldsTable()
 const peopleServiceInstance = new PeopleService()
@@ -113,6 +114,44 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       withTopCivilizations: t.Optional(t.Boolean()),
       withMenAndWomenRatio: t.Optional(t.Boolean()),
     }))
+  })
+  // Server-Sent Events: pushes a `month` event whenever this world advances a
+  // month, so connected browsers can refresh on-screen data live. Public (only
+  // exposes a month number) so the browser's EventSource works without a bearer.
+  .get('/:worldId/events', ({ params: { worldId }, set }) => {
+    const encoder = new TextEncoder()
+    let unsubscribe: () => void = () => { }
+    let keepAlive: ReturnType<typeof setInterval>
+
+    const stream = new ReadableStream({
+      start(controller) {
+        const send = (chunk: string) => {
+          try {
+            controller.enqueue(encoder.encode(chunk))
+          } catch {
+            // Connection already closed; nothing to do.
+          }
+        }
+
+        send(`event: connected\ndata: {}\n\n`)
+
+        unsubscribe = monthWatcher.onWorldMonthChange(worldId, (month) => {
+          send(`event: month\ndata: ${JSON.stringify({ month })}\n\n`)
+        })
+
+        // Comment line keeps proxies from dropping the idle connection.
+        keepAlive = setInterval(() => send(`: keep-alive\n\n`), 25_000)
+      },
+      cancel() {
+        unsubscribe()
+        clearInterval(keepAlive)
+      },
+    })
+
+    set.headers['content-type'] = 'text/event-stream'
+    set.headers['cache-control'] = 'no-cache'
+    set.headers['connection'] = 'keep-alive'
+    return stream
   })
   .get('/:worldId/civilizations', async ({ civilizationsDbClient, params: { worldId } }) => {
     const civilizations = await civilizationsDbClient.getAllRawByWorldId(worldId, { people: false })

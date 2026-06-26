@@ -11,6 +11,7 @@ import { isCollectWork, type Work } from './work/interface'
 import type { UpgradedWork } from './work/interface'
 import type { World } from '../world'
 import { isWithinChance } from '../utils'
+import { names, uniqueNamesGenerator } from 'unique-names-generator'
 import { WoodCutter } from './work/woodCutter'
 import { CharcoalBurner } from './work/charcoalBurner'
 import { Gatherer } from './work/gatherer'
@@ -59,6 +60,7 @@ export const MAX_LIFE = 12
 export const MINIMAL_AGE_TO_WORK = 4
 
 export type PeopleConstructorParams = {
+  name?: string
   month: number
   gender: Gender
   lifeCounter: number
@@ -82,6 +84,7 @@ export type Lineage = {
 }
 export class People {
   public id!: string
+  name: string
   month: number
   work: Work | UpgradedWork | null = null
   lifeCounter: number
@@ -97,6 +100,7 @@ export class People {
   tree: Tree<string> | null = null
 
   constructor({
+    name = uniqueNamesGenerator({ dictionaries: [names] }),
     month,
     gender,
     lifeCounter = 3,
@@ -106,6 +110,7 @@ export class People {
     lineage,
     numberOfChild = 0,
   }: PeopleConstructorParams) {
+    this.name = name
     this.month = month
     this.lifeCounter = lifeCounter
     this.isBuilding = isBuilding
@@ -291,6 +296,7 @@ export class People {
 
   formatToEntity(): PeopleEntity {
     return {
+      name: this.name,
       buildingMonthsLeft: this.buildingMonthsLeft,
       isBuilding: this.isBuilding,
       lifeCounter: this.lifeCounter,
