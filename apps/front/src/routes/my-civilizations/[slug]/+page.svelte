@@ -556,6 +556,52 @@
 			<h2 class="civ-section-title">Bâtiments ({data.civilization.buildings.reduce((a, { count }) => a + count, 0)} au total)</h2>
 			<BuildingsTable buildings={data.civilization.buildings} />
 		</div>
+
+		<!-- Combat Log Summary -->
+		<div class="civ-inner-card" style="margin-top:24px;">
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+				<h2 class="civ-section-title" style="margin:0;">Conflits récents</h2>
+				<a href="/my-civilizations/{data.civilization.id}/combats" style="font-size:15px; color:oklch(0.5 0.13 34); font-family:'EB Garamond',serif; text-decoration:none;">Voir tous les combats →</a>
+			</div>
+
+			{#await data.lazy.combatLogs}
+				<p style="color:oklch(0.55 0.03 50); font-size:15px;">Chargement…</p>
+			{:then logs}
+				{#if !logs || logs.length === 0}
+					<p style="color:oklch(0.55 0.03 50); font-size:15px; font-style:italic;">Aucun conflit enregistré.</p>
+				{:else}
+					<div style="display:flex; flex-direction:column; gap:10px;">
+						{#each logs as log}
+							{@const isAttacker = log.role === 'attacker'}
+							{@const won = isAttacker ? log.attackerWins : !log.attackerWins}
+							{@const totalPlunder = log.plunderedResources.reduce((s: number, r: { amount: number }) => s + r.amount, 0)}
+							<div style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70);">
+								<span style="font-size:20px; flex-shrink:0;">{isAttacker ? '⚔' : '🛡'}</span>
+								<div style="flex:1; min-width:0;">
+									<div style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.35 0.04 40);">
+										{isAttacker ? 'Attaque contre' : 'Défense contre'} <strong>{log.opponentName}</strong>
+									</div>
+									<div style="font-size:13px; color:oklch(0.55 0.03 50);">Mois {log.month}</div>
+								</div>
+								<div style="text-align:right; flex-shrink:0;">
+									<div style="font-family:'Marcellus',serif; font-size:14px; color:{won ? 'oklch(0.42 0.14 145)' : 'oklch(0.5 0.18 30)'}; font-weight:600;">
+										{won ? 'Victoire' : 'Défaite'}
+									</div>
+									{#if isAttacker && log.attackerWins && totalPlunder > 0}
+										<div style="font-size:12px; color:oklch(0.5 0.09 70);">+{totalPlunder} ressources</div>
+									{/if}
+									{#if isAttacker && log.attackerWins && log.captivesTaken > 0}
+										<div style="font-size:12px; color:oklch(0.5 0.08 50);">{log.captivesTaken} captif{log.captivesTaken > 1 ? 's' : ''}</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{:catch}
+				<p style="color:oklch(0.5 0.18 30); font-size:15px;">Impossible de charger les conflits.</p>
+			{/await}
+		</div>
 	</div>
 </div>
 
