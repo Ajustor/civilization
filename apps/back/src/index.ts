@@ -45,3 +45,4 @@ export type App = typeof app;
 
 export type { UpdateCivilizationDtoType } from './modules/civilizations/dto';
 export type { PushSubscriptionDtoType } from './modules/push';
+export type { RecapData } from './modules/civilizations/recap';

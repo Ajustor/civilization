@@ -79,6 +79,11 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       return { civilization: formatCivilizations([civilization])[0] }
     },
   )
+  .get(
+    '/:civilizationId/recap',
+    async ({ user, civilizationService, params: { civilizationId } }) =>
+      civilizationService.getRecap(user.id as string, civilizationId),
+  )
   .post(
     '',
     async ({ civilizationService, body, log, user, set }) => {
