@@ -684,11 +684,10 @@ export class Civilization {
       return
     }
 
-    // Unique buildings: skip if already built or already under construction.
-    if (
-      this.buildings.some((building) => building.getType() === chosen) ||
-      this.isBuildingPending(chosen)
-    ) {
+    // Buildings stack via their `count`, so an existing one of this type is NOT a
+    // blocker for a player-chosen build. Only skip if a build of this type is
+    // already under construction, to avoid double-queueing the same chantier.
+    if (this.isBuildingPending(chosen)) {
       this.config.NEXT_BUILDING_TO_BUILD = null
       return
     }
