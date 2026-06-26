@@ -111,6 +111,16 @@ describe('military and population effects', () => {
     civ.researchedTechs = [TechId.MASONRY, TechId.METALLURGY] // +25%
     expect(civ.militaryStrength).toBe(Math.floor(base * 1.25))
   })
+  it('armory stacks on top of metallurgy for +87.5% total', () => {
+    const civ = new Civilization('Army2')
+    const soldier = new People({ month: 12 * 30, gender: Gender.MALE, lifeCounter: 10 })
+    soldier.id = 'sold2'
+    soldier.setOccupation(OccupationTypes.SOLDIER)
+    civ.addPeople(soldier)
+    const base = civ.militaryStrength
+    civ.researchedTechs = [TechId.MASONRY, TechId.METALLURGY, TechId.ARMORY]
+    expect(civ.militaryStrength).toBe(Math.floor(base * 1.25 * 1.5))
+  })
   it('medicine raises the per-woman child limit by 5', () => {
     const civ = new Civilization('Pop')
     expect(civ.effectiveMaxChildrenPerWoman).toBe(MAX_NUMBER_OF_CHILD)
@@ -118,10 +128,56 @@ describe('military and population effects', () => {
     expect(civ.effectiveMaxChildrenPerWoman).toBe(MAX_NUMBER_OF_CHILD + 5)
     expect(civ.effectivePregnancyProbability).toBe(Math.min(100, civ.config.PREGNANCY_PROBABILITY + 10))
   })
+  it('demography stacks on medicine for +8 children total', () => {
+    const civ = new Civilization('Pop2')
+    civ.researchedTechs = [TechId.MEDICINE, TechId.DEMOGRAPHY]
+    expect(civ.effectiveMaxChildrenPerWoman).toBe(MAX_NUMBER_OF_CHILD + 5 + 3)
+    expect(civ.effectivePregnancyProbability).toBe(Math.min(100, civ.config.PREGNANCY_PROBABILITY + 10 + 15))
+  })
   it('a woman past the base limit can still conceive with the medicine bonus', () => {
     const woman = new People({ month: 25 * 12, gender: Gender.FEMALE, lifeCounter: 10 })
     woman.numberOfChild = MAX_NUMBER_OF_CHILD + 1 // 4 children: beyond the base cap of 3
     expect(woman.canConceive()).toBe(false)
     expect(woman.canConceive(MAX_NUMBER_OF_CHILD + 5)).toBe(true)
+  })
+})
+
+describe('research multiplier effects', () => {
+  it('defaults to 1 with no techs', () => {
+    expect(withTechs().researchMultiplier).toBe(1)
+  })
+  it('philosophy gives ×1.25 research multiplier', () => {
+    expect(withTechs(TechId.PHILOSOPHY).researchMultiplier).toBeCloseTo(1.25)
+  })
+  it('philosophy + sciences stack multiplicatively to ×1.875', () => {
+    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).researchMultiplier).toBeCloseTo(1.25 * 1.5)
+  })
+  it('sciences requires philosophy as prerequisite', () => {
+    expect(withTechs().canUnlock(TechId.SCIENCES)).toBe(false)
+    expect(withTechs(TechId.PHILOSOPHY).canUnlock(TechId.SCIENCES)).toBe(true)
+  })
+})
+
+describe('new prerequisite chains', () => {
+  it('irrigation requires agronomy', () => {
+    expect(withTechs().canUnlock(TechId.IRRIGATION)).toBe(false)
+    expect(withTechs(TechId.AGRONOMY).canUnlock(TechId.IRRIGATION)).toBe(true)
+  })
+  it('logistics requires warehousing', () => {
+    expect(withTechs().canUnlock(TechId.LOGISTICS)).toBe(false)
+    expect(withTechs(TechId.WAREHOUSING).canUnlock(TechId.LOGISTICS)).toBe(true)
+  })
+  it('engineering requires masonry AND mechanization', () => {
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY).canUnlock(TechId.ENGINEERING)).toBe(false)
+    expect(withTechs(TechId.AGRONOMY, TechId.MECHANIZATION).canUnlock(TechId.ENGINEERING)).toBe(false)
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION).canUnlock(TechId.ENGINEERING)).toBe(true)
+  })
+  it('irrigation and mechanization stack multiplicatively', () => {
+    const civ = withTechs(TechId.AGRONOMY, TechId.IRRIGATION, TechId.MECHANIZATION)
+    expect(civ.productionMultiplier).toBeCloseTo(1.15 * 1.20 * 1.25)
+  })
+  it('logistics stacks on warehousing', () => {
+    const civ = withTechs(TechId.WAREHOUSING, TechId.LOGISTICS)
+    expect(civ.storageMultiplier).toBeCloseTo(1.5 * 1.75)
   })
 })

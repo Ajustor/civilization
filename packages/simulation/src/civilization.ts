@@ -194,6 +194,10 @@ export class Civilization {
     return this.effectsOfKind('pregnancyProbabilityBonus').reduce((s, e) => s + e.amount, 0);
   }
 
+  get researchMultiplier(): number {
+    return this.effectsOfKind('researchMultiplier').reduce((m, e) => m * e.factor, 1);
+  }
+
   get people(): People[] {
     return this._people;
   }
@@ -810,7 +814,7 @@ export class Civilization {
     }
 
     this._researchPoints += Math.floor(
-      Library.researchOutput * (staffed / requiredPerLibrary),
+      Library.researchOutput * (staffed / requiredPerLibrary) * this.researchMultiplier,
     )
   }
 

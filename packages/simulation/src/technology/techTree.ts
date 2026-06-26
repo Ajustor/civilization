@@ -8,6 +8,13 @@ export enum TechId {
   MECHANIZATION = 'mechanization',
   MEDICINE = 'medicine',
   METALLURGY = 'metallurgy',
+  PHILOSOPHY = 'philosophy',
+  IRRIGATION = 'irrigation',
+  DEMOGRAPHY = 'demography',
+  LOGISTICS = 'logistics',
+  ARMORY = 'armory',
+  ENGINEERING = 'engineering',
+  SCIENCES = 'sciences',
 }
 
 export type TechEffect =
@@ -17,6 +24,7 @@ export type TechEffect =
   | { kind: 'militaryMultiplier'; factor: number }
   | { kind: 'maxChildrenBonus'; amount: number }
   | { kind: 'pregnancyProbabilityBonus'; amount: number }
+  | { kind: 'researchMultiplier'; factor: number }
 
 export type TechNode = {
   id: TechId
@@ -92,6 +100,65 @@ export const TECH_TREE: TechNode[] = [
     cost: 15,
     prerequisites: [TechId.MASONRY],
     effects: [{ kind: 'militaryMultiplier', factor: 1.25 }],
+  },
+  {
+    id: TechId.PHILOSOPHY,
+    name: 'Philosophie',
+    description: '+25 % de production de savoir.',
+    cost: 10,
+    prerequisites: [],
+    effects: [{ kind: 'researchMultiplier', factor: 1.25 }],
+  },
+  {
+    id: TechId.IRRIGATION,
+    name: 'Irrigation',
+    description: '+20 % de production des bâtiments.',
+    cost: 12,
+    prerequisites: [TechId.AGRONOMY],
+    effects: [{ kind: 'productionMultiplier', factor: 1.20 }],
+  },
+  {
+    id: TechId.DEMOGRAPHY,
+    name: 'Démographie',
+    description: '+3 enfants simultanés et +15 % de chances de conception.',
+    cost: 15,
+    prerequisites: [TechId.MEDICINE],
+    effects: [
+      { kind: 'maxChildrenBonus', amount: 3 },
+      { kind: 'pregnancyProbabilityBonus', amount: 15 },
+    ],
+  },
+  {
+    id: TechId.LOGISTICS,
+    name: 'Logistique',
+    description: '+75 % de capacité de stockage supplémentaire.',
+    cost: 15,
+    prerequisites: [TechId.WAREHOUSING],
+    effects: [{ kind: 'storageMultiplier', factor: 1.75 }],
+  },
+  {
+    id: TechId.ARMORY,
+    name: 'Armurerie',
+    description: '+50 % de force militaire.',
+    cost: 20,
+    prerequisites: [TechId.METALLURGY],
+    effects: [{ kind: 'militaryMultiplier', factor: 1.5 }],
+  },
+  {
+    id: TechId.ENGINEERING,
+    name: 'Ingénierie',
+    description: '+30 % de production des bâtiments.',
+    cost: 25,
+    prerequisites: [TechId.MASONRY, TechId.MECHANIZATION],
+    effects: [{ kind: 'productionMultiplier', factor: 1.30 }],
+  },
+  {
+    id: TechId.SCIENCES,
+    name: 'Sciences',
+    description: '+50 % de production de savoir.',
+    cost: 30,
+    prerequisites: [TechId.PHILOSOPHY],
+    effects: [{ kind: 'researchMultiplier', factor: 1.5 }],
   },
 ]
 

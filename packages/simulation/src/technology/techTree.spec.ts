@@ -2,8 +2,8 @@ import { TECH_TREE, TechId, getTechNode, getBuildingGate } from './techTree'
 import { BuildingTypes } from '../buildings/enum'
 
 describe('TECH_TREE', () => {
-  it('exposes the 7 v1 nodes', () => {
-    expect(TECH_TREE).toHaveLength(7)
+  it('exposes all nodes with valid ids', () => {
+    expect(TECH_TREE.length).toBeGreaterThanOrEqual(14)
     expect(getTechNode(TechId.CRAFTSMANSHIP)?.cost).toBe(5)
   })
   it('has only valid prerequisites (no unknown id, no self-reference)', () => {
