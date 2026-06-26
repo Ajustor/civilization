@@ -8,6 +8,7 @@ import { BuildingTypes } from "./buildings/enum";
 import { Farm } from "./buildings/farm";
 import { House } from "./buildings/house";
 import { Kiln } from "./buildings/kiln";
+import { Library } from "./buildings/library";
 import { Mine } from "./buildings/mine";
 import { Sawmill } from "./buildings/sawmill";
 import { Wall } from "./buildings/wall";
@@ -49,6 +50,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
   [BuildingTypes.WALL]: Wall,
+  [BuildingTypes.LIBRARY]: Library,
 };
 
 const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE];
@@ -71,6 +73,7 @@ export class Civilization {
   private _people: People[];
   private _resources: Resource[];
   private _livedMonths: number = 0;
+  private _researchPoints: number = 0;
   private _buildings: Building[];
   private _citizensCount: number = 0;
 
@@ -109,6 +112,14 @@ export class Civilization {
 
   set livedMonths(livedMonths: number) {
     this._livedMonths = livedMonths;
+  }
+
+  get researchPoints(): number {
+    return this._researchPoints;
+  }
+
+  set researchPoints(value: number) {
+    this._researchPoints = value;
   }
 
   get people(): People[] {
@@ -530,6 +541,7 @@ export class Civilization {
 
     this.extractResources();
     this.produceResources();
+    this.produceResearch();
 
     this.adaptPeopleJob();
     this.progressConstructions();
@@ -673,6 +685,37 @@ export class Civilization {
     if (this.campfire) {
       this.useProductionBuilding(this.campfire);
     }
+  }
+
+  private produceResearch(): void {
+    const library = this.buildings.find(
+      (building) => building.getType() === BuildingTypes.LIBRARY,
+    ) as Library | undefined
+    if (!library) {
+      return
+    }
+
+    const requiredPerLibrary =
+      library.workerTypeRequired.find(
+        (worker) => worker.occupation === OccupationTypes.ERUDIT,
+      )?.count ?? 0
+    if (requiredPerLibrary === 0) {
+      return
+    }
+
+    const totalCapacity = requiredPerLibrary * library.count
+    const erudits = this.getPeopleWithOccupation(OccupationTypes.ERUDIT).filter(
+      (person) => person.work?.canWork(person.years),
+    )
+    const staffed = Math.min(erudits.length, totalCapacity)
+
+    for (const erudit of erudits.slice(0, staffed)) {
+      erudit.hasWork = true
+    }
+
+    this._researchPoints += Math.floor(
+      Library.researchOutput * (staffed / requiredPerLibrary),
+    )
   }
 
   private buildChosenBuilding(): void {

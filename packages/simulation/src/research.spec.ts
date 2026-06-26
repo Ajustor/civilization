@@ -40,3 +40,47 @@ describe('Library building', () => {
     expect(isExtractionOrProductionBuilding(new Library(1))).toBe(true)
   })
 })
+
+import { Civilization } from './civilization'
+import { Library as Lib } from './buildings/library'
+import { People } from './people/people'
+import { Gender } from './people/enum'
+
+const addErudits = (civ: Civilization, n: number) => {
+  for (let i = 0; i < n; i++) {
+    const p = new People({ month: 12 * 30, gender: Gender.MALE, lifeCounter: 10 })
+    p.id = `e-${i}`
+    p.setOccupation(OccupationTypes.ERUDIT)
+    civ.addPeople(p)
+  }
+}
+
+describe('research production', () => {
+  it('credits researchOutput points for a fully staffed library', () => {
+    const civ = new Civilization('Academy')
+    civ.addBuilding(new Lib(1))
+    addErudits(civ, 2)
+    civ['produceResearch']()
+    expect(civ.researchPoints).toBe(2)
+  })
+  it('scales with partial staffing (1 of 2 érudits → 1 point)', () => {
+    const civ = new Civilization('Academy')
+    civ.addBuilding(new Lib(1))
+    addErudits(civ, 1)
+    civ['produceResearch']()
+    expect(civ.researchPoints).toBe(1)
+  })
+  it('produces nothing without a library', () => {
+    const civ = new Civilization('NoLib')
+    addErudits(civ, 2)
+    civ['produceResearch']()
+    expect(civ.researchPoints).toBe(0)
+  })
+  it('stacks: 2 libraries with 4 érudits → 4 points', () => {
+    const civ = new Civilization('BigAcademy')
+    civ.addBuilding(new Lib(2))
+    addErudits(civ, 4)
+    civ['produceResearch']()
+    expect(civ.researchPoints).toBe(4)
+  })
+})
