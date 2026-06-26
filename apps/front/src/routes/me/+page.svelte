@@ -13,6 +13,7 @@
 		FormLabel
 	} from '$lib/components/ui/form'
 	import NotificationToggle from '$lib/components/NotificationToggle.svelte'
+	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
 	interface Props {
 		data: PageData;
@@ -48,8 +49,12 @@
 </svelte:head>
 
 <div class="civ-page-wrapper">
+	<Breadcrumb items={[
+		{ label: 'Mes civilisations', href: '/my-civilizations' },
+		{ label: 'Mon compte' }
+	]} />
 	<div class="civ-card" style="max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:20px; animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
-		<h1 style="font-family:'Marcellus',serif; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Mon compte</h1>
+		<h1 style="font-family:'Tangerine',cursive; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Mon compte</h1>
 		{#if userStore.value}
 			<p style="font-size:18px; color:oklch(0.48 0.03 50); margin:0;">Bonjour, <strong style="color:oklch(0.38 0.06 40);">{userStore.value.username}</strong></p>
 		{/if}

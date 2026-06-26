@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types'
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
   interface Props {
     data: PageData;
@@ -29,13 +30,13 @@
 
 <div class="civ-page-wrapper">
   <div style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
-    <div style="font-size:15px; color:oklch(0.55 0.03 50); margin-bottom:20px;">
-      <a href="/my-civilizations/{data.slug}" style="color:oklch(0.5 0.1 40); text-decoration:none;">{data.civilization.name}</a>
-      <span style="margin:0 6px;">›</span>
-      <span>Journal des conflits</span>
-    </div>
+    <Breadcrumb items={[
+      { label: 'Mes civilisations', href: '/my-civilizations' },
+      { label: data.civilization.name, href: `/my-civilizations/${data.slug}` },
+      { label: 'Journal des conflits' }
+    ]} />
 
-    <h1 style="font-family:'Marcellus',serif; font-size:clamp(26px,4vw,36px); margin:0 0 24px; color:oklch(0.3 0.04 40);">Journal des conflits</h1>
+    <h1 style="font-family:'Tangerine',cursive; font-size:clamp(26px,4vw,36px); margin:0 0 24px; color:oklch(0.3 0.04 40);">Journal des conflits</h1>
 
     <div class="civ-inner-card">
       {#if data.logs.length === 0}

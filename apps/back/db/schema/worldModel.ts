@@ -23,6 +23,16 @@ export const worldSchema = new Schema({
     required: true,
     default: []
   },
+  // Per-world simulation config. Defaults mirror the simulation's defaultConfig so
+  // existing worlds keep their behaviour; set custom values to tune a single world.
+  config: {
+    type: new Schema({
+      BASE_FOOD_GENERATION: { type: Number, default: 30000 },
+      BASE_WOOD_GENERATION: { type: Number, default: 15000 },
+      EVENT_CHANCE: { type: Number, default: 30 },
+    }, { _id: false }),
+    default: () => ({})
+  },
   civilizations: [{
     type: Schema.Types.ObjectId,
     ref: 'Civilization'

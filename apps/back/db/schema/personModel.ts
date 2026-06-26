@@ -2,6 +2,7 @@ import { Gender, OccupationTypes, PeopleEntity } from '@ajustor/simulation'
 import { Schema } from 'mongoose'
 
 const PersonSchema = new Schema<PeopleEntity>({
+  name: String,
   gender: {
     type: String,
     enum: Gender

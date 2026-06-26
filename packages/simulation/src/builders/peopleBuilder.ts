@@ -15,6 +15,11 @@ export class PeopleBuilder {
     return this
   }
 
+  withName(name: string): PeopleBuilder {
+    this.peopleEntity.name = name
+    return this
+  }
+
   withMonth(month: number): PeopleBuilder {
     this.peopleEntity.month = month
     return this
@@ -57,6 +62,10 @@ export class PeopleBuilder {
     const peopleBuilder = new PeopleBuilder()
       .withGender(child?.gender)
       .withLifeCounter(child.lifeCounter)
+
+    if (child.name) {
+      peopleBuilder.withName(child.name)
+    }
 
     if (child.occupation) {
       peopleBuilder.withOccupation(child.occupation)

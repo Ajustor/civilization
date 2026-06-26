@@ -3,6 +3,9 @@ FROM oven/bun:slim AS base
 WORKDIR /home/bun/app
 
 ENV NX_DAEMON=false
+# NX 22 isolates plugins in worker processes that fail to spawn in this restricted
+# build environment ("Failed to start plugin worker"). Run plugins in-process instead.
+ENV NX_ISOLATE_PLUGINS=false
 
 COPY . .
 

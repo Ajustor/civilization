@@ -20,7 +20,16 @@ export const actions: Actions = {
         form,
       })
     }
-    await createNewUser(form.data.email, form.data.password, form.data.username).catch(error => message(form, { status: 'error', text: error.value }, error))
+    try {
+      await createNewUser(form.data.email, form.data.password, form.data.username)
+    } catch (error) {
+      // Surface the real failure instead of silently redirecting to /login.
+      return message(
+        form,
+        { status: 'error', text: (error as { value?: string })?.value ?? 'Impossible de créer le compte' },
+        { status: 409 }
+      )
+    }
 
     throw redirect(302, '/login')
   }

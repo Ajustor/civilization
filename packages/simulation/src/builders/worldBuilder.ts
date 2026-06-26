@@ -1,7 +1,7 @@
 import type { Civilization } from '../civilization'
 import { Events } from '../events/enum'
 import { Resource } from '../resource'
-import { World } from '../world'
+import { World, type WorldConfig } from '../world'
 
 export class WorldBuilder {
   private id: string = ''
@@ -10,6 +10,14 @@ export class WorldBuilder {
   private resources: Resource[] = [];
   private civilizations: Civilization[] = [];
   private nextEvent: Events | null = null
+  private config?: WorldConfig
+
+  withConfig(config?: Partial<WorldConfig> | null): this {
+    if (config) {
+      this.config = config as WorldConfig
+    }
+    return this
+  }
 
   withId(id: string): this {
     this.id = id
@@ -42,7 +50,7 @@ export class WorldBuilder {
   }
 
   build(): World {
-    const world = new World(this.name, this.month)
+    const world = new World(this.name, this.month, this.config)
     world.id = this.id
 
     world.nextEvent = this.nextEvent

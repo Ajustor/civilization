@@ -259,7 +259,12 @@ describe('World', () => {
         worldFood.formatToType(),
         worldWood.formatToType()
       ],
-      year: 0
+      year: 0,
+      config: {
+        BASE_FOOD_GENERATION: 30000,
+        BASE_WOOD_GENERATION: 15000,
+        EVENT_CHANCE: 30
+      }
     }
 
     expect(world.getInfos()).toEqual(expectedInfos)

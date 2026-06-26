@@ -1,28 +1,25 @@
-import { EmailSender } from './src/libs/services/emailSender'
-import { ResourceTypes } from '@ajustor/simulation'
-import { WorldDestructionEmailTemplate } from './src/emailTemplates/worldDestruction'
-import {
-  CivilizationModel,
-  PersonModel,
-  UserModel,
-  WorldModel,
-} from './src/libs/database/models'
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
+
+import { ResourceTypes } from "@ajustor/simulation";
+
+import { WorldDestructionEmailTemplate } from "./src/emailTemplates/worldDestruction";
+import { CivilizationModel, PersonModel, UserModel, WorldModel } from "./src/libs/database/models";
+import { EmailSender } from "./src/libs/services/emailSender";
 
 mongoose.connection.on(
   'error',
   console.error.bind(console, 'MongoDB connection error:'),
-)
-await mongoose.connect(Bun.env.mongoConnectString ?? '')
+);
+await mongoose.connect(Bun.env.mongoConnectString ?? '');
 
 const topCivilizations = await CivilizationModel.find().sort({
   livedMonths: 'desc',
-})
+});
 
-await PersonModel.deleteMany()
-await CivilizationModel.deleteMany()
+await PersonModel.deleteMany();
+await CivilizationModel.deleteMany();
 
-await WorldModel.deleteMany()
+await WorldModel.deleteMany();
 await WorldModel.create({
   name: 'The Holy kingdom',
   month: 0,
@@ -40,13 +37,13 @@ await WorldModel.create({
       quantity: 5000,
     },
   ],
-})
+});
 
-console.log(`Seeding complete.`)
-console.log('Sending emails')
-const emailService = new EmailSender()
-const users = await UserModel.find()
-const emails = users.map(({ email }) => email)
+console.log(`Seeding complete.`);
+console.log('Sending emails');
+const emailService = new EmailSender();
+const users = await UserModel.find();
+const emails = users.map(({ email }) => email);
 
 await emailService.sendBatch(
   emails,
@@ -54,4 +51,4 @@ await emailService.sendBatch(
   WorldDestructionEmailTemplate({
     topCivilizationsNames: topCivilizations.map(({ name }) => name),
   }),
-)
+).catch((error) => console.error(error));

@@ -44,6 +44,11 @@
 
 	const { form: formData, enhance } = form
 
+	// Pré-sélectionne le premier monde pour que la création cible toujours un monde.
+	if (worlds.length && !$formData.worldId) {
+		$formData.worldId = worlds[0].id
+	}
+
 	const openDeleteModal = (id: string) => {
 		civilizationIdToDelete = id
 		deleteDialogOpen = true
@@ -106,7 +111,7 @@
 					<FormDescription />
 					<FormFieldErrors />
 				</FormField>
-				{#if worlds.length > 1}
+				{#if worlds.length}
 					<FormField {form} name="worldId">
 						<FormControl>
 							{#snippet children({ props })}
@@ -125,8 +130,8 @@
 						</FormControl>
 						<FormFieldErrors />
 					</FormField>
-				{:else if worlds.length === 1}
-					<input type="hidden" name="worldId" value={worlds[0].id} />
+				{:else}
+					<p style="font-size:14px; color:oklch(0.5 0.03 50); margin:0;">Aucun monde disponible pour le moment.</p>
 				{/if}
 				<div style="display:flex; gap:10px; justify-content:flex-end;">
 					<button
@@ -178,7 +183,7 @@
 	<!-- Page header -->
 	<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:24px;" class="civ-animate-in">
 		<div>
-			<h1 style="font-family:'Marcellus',serif; font-size:clamp(32px,5vw,42px); margin:0; color:oklch(0.3 0.04 40);">Mes civilisations</h1>
+			<h1 style="font-family:'Tangerine',cursive; font-size:clamp(32px,5vw,42px); margin:0; color:oklch(0.3 0.04 40);">Mes civilisations</h1>
 			<div style="font-size:18px; color:oklch(0.48 0.03 50); margin-top:4px;">Vos lignées sous votre regard.</div>
 		</div>
 
@@ -220,11 +225,11 @@
 
 						<div style="display:flex; gap:24px; margin:16px 0;">
 							<div>
-								<div style="font-family:'Marcellus',serif; font-size:28px; color:oklch(0.45 0.09 150);">{civ.citizensCount}</div>
+								<div style="font-family:'Tangerine',cursive; font-size:28px; color:oklch(0.45 0.09 150);">{civ.citizensCount}</div>
 								<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
 							</div>
 							<div>
-								<div style="font-family:'Marcellus',serif; font-size:28px; color:oklch(0.45 0.1 38);">{civ.buildings.reduce((a, b) => a + b.count, 0)}</div>
+								<div style="font-family:'Tangerine',cursive; font-size:28px; color:oklch(0.45 0.1 38);">{civ.buildings.reduce((a, b) => a + b.count, 0)}</div>
 								<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
 							</div>
 						</div>

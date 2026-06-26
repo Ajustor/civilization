@@ -3,6 +3,7 @@ import type { Lineage } from '../people/people'
 import type { OccupationTypes } from '../people/work/enum'
 
 export interface PeopleEntity {
+  name?: string
   month: number
   occupation?: OccupationTypes
   lifeCounter: number

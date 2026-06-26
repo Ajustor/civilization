@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms'
 	import { ResourceTypes } from '@ajustor/simulation'
 	import { resourceNames } from '$lib/translations'
+	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
 	let { data }: { data: PageData } = $props()
 
@@ -60,10 +61,13 @@
 </svelte:head>
 
 <div class="civ-page-wrapper">
-	<a href="/my-civilizations" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-block; text-decoration:none; animation:screenIn .4s ease both;">‹ Mes civilisations</a>
+	<Breadcrumb items={[
+		{ label: 'Mes civilisations', href: '/my-civilizations' },
+		{ label: 'Marché du monde' }
+	]} />
 
 	<div class="civ-card" style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
-		<h1 style="font-family:'Marcellus',serif; font-size:clamp(28px,5vw,40px); margin:0 0 24px; color:oklch(0.3 0.04 40); border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:16px;">Marché du monde</h1>
+		<h1 style="font-family:'Tangerine',cursive; font-size:clamp(28px,5vw,40px); margin:0 0 24px; color:oklch(0.3 0.04 40); border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:16px;">Marché du monde</h1>
 
 		<!-- Créer une offre -->
 		<div class="civ-inner-card" style="margin-bottom:24px;">
@@ -160,20 +164,31 @@
 					{@const isMyOffer = myCivIds.has((offer as Offer).fromCivilizationId)}
 					<div class="civ-inner-card">
 						<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:12px;">
-							<div>
-								<div style="font-family:'Marcellus',serif; font-size:18px; color:oklch(0.34 0.04 40);">
-									{formatResources((offer as Offer).give)}
-									<span style="color:oklch(0.6 0.05 60); margin:0 8px;">→</span>
-									{formatResources((offer as Offer).want)}
-								</div>
-								<div style="margin-top:6px; font-size:14px; color:oklch(0.54 0.03 50);">
+							<div style="flex:1; min-width:240px;">
+								<div style="margin-bottom:8px; font-size:14px; color:oklch(0.54 0.03 50);">
 									De : <strong>{civName((offer as Offer).fromCivilizationId)}</strong>
 									{#if (offer as Offer).toCivilizationId}
-										· Pour : <strong>{civName((offer as Offer).toCivilizationId!)}</strong>
+										· Réservée à : <strong>{civName((offer as Offer).toCivilizationId!)}</strong>
 									{:else}
-										· <em>Offre ouverte</em>
+										· <em>Offre ouverte à tous</em>
 									{/if}
 								</div>
+								<div style="display:flex; flex-wrap:wrap; align-items:stretch; gap:10px;">
+									<div style="flex:1; min-width:140px; border:1px solid oklch(0.82 0.06 145); border-radius:4px; padding:8px 12px; background:oklch(0.96 0.03 145);">
+										<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.45 0.09 150); margin-bottom:2px;">Offre</div>
+										<div style="font-family:'Marcellus',serif; font-size:17px; color:oklch(0.34 0.05 145);">{formatResources((offer as Offer).give)}</div>
+									</div>
+									<div style="display:flex; align-items:center; color:oklch(0.6 0.05 60); font-size:20px;">⇄</div>
+									<div style="flex:1; min-width:140px; border:1px solid oklch(0.82 0.07 60); border-radius:4px; padding:8px 12px; background:oklch(0.97 0.03 70);">
+										<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.5 0.1 55); margin-bottom:2px;">En échange de</div>
+										<div style="font-family:'Marcellus',serif; font-size:17px; color:oklch(0.4 0.07 50);">{formatResources((offer as Offer).want)}</div>
+									</div>
+								</div>
+								{#if !isMyOffer}
+									<div style="margin-top:8px; font-size:13px; color:oklch(0.5 0.03 50); font-style:italic;">
+										En acceptant, vous donnez <strong style="font-style:normal; color:oklch(0.42 0.07 50);">{formatResources((offer as Offer).want)}</strong> et recevez <strong style="font-style:normal; color:oklch(0.4 0.07 145);">{formatResources((offer as Offer).give)}</strong>.
+									</div>
+								{/if}
 							</div>
 
 							<div style="display:flex; gap:8px; flex-wrap:wrap;">

@@ -33,3 +33,4 @@ type CivilizationEntity = typeof Civilization
 
 export { World, Civilization, People, Resource, ResourceTypes, isExtractionBuilding }
 export type { CivilizationEntity, PeopleType, ResourceType, PeopleEntity }
+export type { WorldInfos, WorldConfig } from './world'

@@ -14,8 +14,21 @@
 	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import { toast } from 'svelte-sonner'
-	import { BuildingTypes } from '@ajustor/simulation'
-	import { buildingNames } from '$lib/translations'
+	import {
+		BuildingTypes,
+		House,
+		Farm,
+		Kiln,
+		Sawmill,
+		Mine,
+		Campfire,
+		Cache,
+		Wall,
+		type ResourceTypes,
+		type OccupationTypes
+	} from '@ajustor/simulation'
+	import { buildingNames, resourceNames, OCCUPATIONS } from '$lib/translations'
+	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
 	interface Props {
 		data: PageData;
@@ -24,6 +37,13 @@
 	let { data }: Props = $props();
 
 	const form = superForm(data.configForm, {
+		// openExchange / atWarWith are arrays driven by checkboxes (no native form
+		// inputs), so they only reach the server when the whole form is posted as JSON.
+		dataType: 'json',
+		// Keep the just-submitted values on screen instead of resetting to the
+		// initial (often default) load snapshot — the action returns the freshly
+		// persisted config, which we want to remain displayed.
+		resetForm: false,
 		validators: zodClient(civilizationConfigSchema),
 		onError({ result }) {
 			toast.error(result.error?.message ?? 'Une erreur est survenue')
@@ -52,6 +72,35 @@
 			$formData.atWarWith = $formData.atWarWith.filter((id) => id !== civilizationId)
 		}
 	}
+
+	// Construction requirements come from the static fields on each building class.
+	type BuildingMeta = {
+		constructionCosts?: { resource: ResourceTypes; amount: number }[]
+		workerRequiredToBuild?: { occupation: OccupationTypes; amount: number }[]
+		timeToBuild?: number
+	}
+	const BUILDING_CLASSES: Record<BuildingTypes, BuildingMeta> = {
+		[BuildingTypes.HOUSE]: House,
+		[BuildingTypes.FARM]: Farm,
+		[BuildingTypes.KILN]: Kiln,
+		[BuildingTypes.SAWMILL]: Sawmill,
+		[BuildingTypes.MINE]: Mine,
+		[BuildingTypes.CAMPFIRE]: Campfire,
+		[BuildingTypes.CACHE]: Cache,
+		[BuildingTypes.WALL]: Wall
+	}
+
+	const selectedBuildingInfo = $derived.by(() => {
+		const type = $formData.nextBuildingToBuild
+		if (!type) return null
+		const meta = BUILDING_CLASSES[type as BuildingTypes]
+		if (!meta) return null
+		return {
+			costs: meta.constructionCosts ?? [],
+			workers: meta.workerRequiredToBuild ?? [],
+			timeToBuild: meta.timeToBuild
+		}
+	})
 </script>
 
 <svelte:head>
@@ -60,10 +109,14 @@
 </svelte:head>
 
 <div class="civ-page-wrapper">
-<a href="/my-civilizations/{data.civilization.id}" style="background:none; border:none; cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.5 0.06 40); padding:0; margin-bottom:14px; display:inline-flex; align-items:center; gap:6px; text-decoration:none; animation:screenIn .4s ease both;">‹ Retour à {data.civilization.name}</a>
+<Breadcrumb items={[
+	{ label: 'Mes civilisations', href: '/my-civilizations' },
+	{ label: data.civilization.name, href: `/my-civilizations/${data.civilization.id}` },
+	{ label: 'Configuration' }
+]} />
 
 <div class="civ-card" style="max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
-	<h1 style="font-family:'Marcellus',serif; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Configuration de {data.civilization.name}</h1>
+	<h1 style="font-family:'Tangerine',cursive; font-size:clamp(26px,4vw,36px); margin:0; color:oklch(0.3 0.04 40);">Configuration de {data.civilization.name}</h1>
 
 	<form method="post" use:formEnhance action="?/updateConfig" class="flex flex-col gap-4">
 
@@ -155,6 +208,13 @@
 					<p style="color:oklch(0.5 0.03 50);">Aucune autre civilisation dans ce monde.</p>
 				{/if}
 
+				</div>
+			</div>
+
+			<!-- Construction -->
+			<div class="civ-inner-card">
+				<h3 class="civ-section-title">Construction</h3>
+				<div style="display:flex; flex-direction:column; gap:16px;">
 				<FormField {form} name="nextBuildingToBuild">
 					<FormControl>
 						{#snippet children({ props })}
@@ -173,6 +233,36 @@
 						{/snippet}
 					</FormControl>
 					<FormDescription>Bâtiment que la civilisation cherchera à construire en priorité.</FormDescription>
+					{#if selectedBuildingInfo}
+						<div style="margin-top:10px; padding:12px 14px; border:1px solid oklch(0.8 0.04 70); border-radius:4px; background:oklch(0.97 0.015 84); display:flex; flex-direction:column; gap:10px;">
+							<div style="display:flex; align-items:baseline; gap:8px;">
+								<span style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50);">Temps de construction</span>
+								<span style="font-size:15px; font-weight:600; color:oklch(0.32 0.04 40);">{selectedBuildingInfo.timeToBuild ?? '?'} mois</span>
+							</div>
+							<div>
+								<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ressources requises</div>
+								{#if selectedBuildingInfo.costs.length}
+									<div style="display:flex; flex-wrap:wrap; gap:6px;">
+										{#each selectedBuildingInfo.costs as cost}
+											<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{cost.amount} {resourceNames[cost.resource]}</span>
+										{/each}
+									</div>
+								{:else}
+									<span style="font-size:14px; color:oklch(0.5 0.03 50);">Aucune ressource requise</span>
+								{/if}
+							</div>
+							{#if selectedBuildingInfo.workers.length}
+								<div>
+									<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ouvriers requis pour la construction</div>
+									<div style="display:flex; flex-wrap:wrap; gap:6px;">
+										{#each selectedBuildingInfo.workers as worker}
+											<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{worker.amount} {OCCUPATIONS[worker.occupation]}</span>
+										{/each}
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
 					<FormFieldErrors />
 				</FormField>
 			</div>

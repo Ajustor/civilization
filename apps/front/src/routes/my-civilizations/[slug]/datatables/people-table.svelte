@@ -5,7 +5,7 @@
 	import ChildDetails from './childDetails.svelte'
 	import { ArrowUp, ArrowDown, ArrowUpDown } from '@lucide/svelte'
 
-	type SortKey = 'gender' | 'years' | 'lifeCounter' | 'occupation'
+	type SortKey = 'name' | 'gender' | 'years' | 'lifeCounter' | 'occupation'
 	type SortOrder = 'asc' | 'desc' | null
 
 	type Props = {
@@ -62,6 +62,7 @@
 	})
 
 	const sortableColumns: { key: SortKey; header: string }[] = [
+		{ key: 'name', header: 'Nom' },
 		{ key: 'gender', header: 'Genre' },
 		{ key: 'years', header: 'Age' },
 		{ key: 'lifeCounter', header: 'Points de vie' },
@@ -121,6 +122,7 @@
 		<tbody>
 			{#each sortedPeople as person (person.id ?? Math.random())}
 				<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
+					<td style="padding:8px 12px;">{person.name ?? '—'}</td>
 					<td style="padding:8px 12px;">
 						{#if person.gender}
 							<Icon icon={GenderIcons[person.gender]} />
