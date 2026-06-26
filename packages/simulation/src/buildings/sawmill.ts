@@ -5,6 +5,7 @@ import {
   BuildingType,
   ConstructionCost,
   WorkerRequired,
+  WorkerRequiredToBuild,
 } from '../types/building'
 import { BuildingTypes } from './enum'
 
@@ -34,6 +35,13 @@ export class Sawmill extends AbstractProductionBuilding {
   ]
 
   public static timeToBuild: number = 4
+
+  public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
+    {
+      occupation: OccupationTypes.GATHERER,
+      amount: 2,
+    },
+  ]
 
   public static constructionCosts: ConstructionCost[] = [
     {
