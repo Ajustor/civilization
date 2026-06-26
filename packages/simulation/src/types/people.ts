@@ -14,4 +14,5 @@ export interface PeopleEntity {
   child: null | PeopleEntity
   lineage?: Lineage
   numberOfChild?: number
+  originCivilizationId?: string
 }

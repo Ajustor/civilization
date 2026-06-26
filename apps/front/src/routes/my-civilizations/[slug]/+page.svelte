@@ -8,10 +8,11 @@
 		BuildingTypes,
 		type OccupationTypes,
 		type PeopleType,
+		type DeathCause,
 		Events
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
-	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames } from '$lib/translations'
+	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames, deathCauseNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
@@ -43,6 +44,7 @@
 	let jobsPromise = $state(data.lazy.stats.jobs)
 	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
 	let combatLogsPromise = $state(data.lazy.combatLogs)
+	let cemeteryPromise = $state(data.lazy.cemetery)
 
 	const refreshStats = () => {
 		const stats = callGetStats(data.civilization.id)
@@ -50,6 +52,7 @@
 		jobsPromise = stats.then((s) => s.jobs)
 		peopleRatioPromise = stats.then((s) => s.peopleRatio)
 		combatLogsPromise = stats.then((s) => s.combatLogs)
+		cemeteryPromise = stats.then((s) => s.cemetery)
 	}
 
 	// Which panel is expanded: null = closed
@@ -768,6 +771,7 @@
 					updateData={retrievePeople}
 					{pageIndex}
 					{pageSize}
+					currentCivilizationId={data.civilization.id}
 				/>
 			{:catch}
 				<p style="color:oklch(0.5 0.03 50); font-size:15px;">Impossible de charger la liste des citoyens.</p>
@@ -855,6 +859,41 @@
 				{/if}
 			{:catch}
 				<p style="color:oklch(0.5 0.18 30); font-size:15px;">Impossible de charger les conflits.</p>
+			{/await}
+		</div>
+
+		<!-- Cemetery -->
+		<div class="civ-inner-card" style="margin-top:24px;">
+			<h2 class="civ-section-title" style="margin:0 0 16px;">Cimetière</h2>
+
+			{#await cemeteryPromise}
+				<p style="color:oklch(0.55 0.03 50); font-size:15px;">Chargement…</p>
+			{:then cemetery}
+				{#if !cemetery || !cemetery.graves || cemetery.graves.length === 0}
+					<p style="color:oklch(0.55 0.03 50); font-size:15px; font-style:italic;">Aucun défunt pour le moment.</p>
+				{:else}
+					<!-- Cause breakdown -->
+					<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+						{#each Object.entries(cemetery.causes) as [cause, count]}
+							<span style="font-size:14px; padding:4px 12px; border-radius:3px; background:oklch(0.92 0.03 60); color:oklch(0.35 0.04 42);">
+								{deathCauseNames[cause as DeathCause] ?? cause} : <strong>{count}</strong>
+							</span>
+						{/each}
+					</div>
+					<!-- Recent deaths -->
+					<div style="display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto;">
+						{#each cemetery.graves as grave}
+							<div style="display:flex; align-items:center; gap:12px; padding:8px 14px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.85 0.03 70);">
+								<span style="font-size:16px; flex-shrink:0;">🪦</span>
+								<span style="flex:1; min-width:0; font-family:'Marcellus',serif; font-size:15px; color:oklch(0.35 0.04 40);">{grave.name}</span>
+								<span style="font-size:13px; color:oklch(0.5 0.06 40);">{deathCauseNames[grave.cause as DeathCause] ?? grave.cause}</span>
+								<span style="font-size:13px; color:oklch(0.55 0.03 50); flex-shrink:0;">Mois {grave.month}</span>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{:catch}
+				<p style="color:oklch(0.5 0.18 30); font-size:15px;">Impossible de charger le cimetière.</p>
 			{/await}
 		</div>
 	</div>

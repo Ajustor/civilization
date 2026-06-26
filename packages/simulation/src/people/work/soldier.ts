@@ -7,7 +7,7 @@ export class Soldier implements UpgradedWork {
   public RETIREMENT_AGE = 60
 
   canUpgrade(personAge: number): boolean {
-    return personAge > SOLDIER_REQUIRED_AGE
+    return personAge >= SOLDIER_REQUIRED_AGE
   }
 
   get occupationType() {

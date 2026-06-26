@@ -5,7 +5,7 @@ export const ERUDIT_REQUIRED_AGE = 21
 
 export class Erudit implements UpgradedWork {
   canUpgrade(personAge: number): boolean {
-    return personAge > ERUDIT_REQUIRED_AGE
+    return personAge >= ERUDIT_REQUIRED_AGE
   }
 
   public RETIREMENT_AGE = 70

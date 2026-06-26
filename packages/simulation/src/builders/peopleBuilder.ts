@@ -84,6 +84,11 @@ export class PeopleBuilder {
     return this
   }
 
+  withOriginCivilizationId(originCivilizationId?: string): PeopleBuilder {
+    this.peopleEntity.originCivilizationId = originCivilizationId
+    return this
+  }
+
   build(): People {
     return this.peopleEntity
   }

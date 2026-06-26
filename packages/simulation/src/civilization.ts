@@ -14,7 +14,9 @@ import { Sawmill } from "./buildings/sawmill";
 import { Wall } from "./buildings/wall";
 import { Gender } from "./people/enum";
 import { People } from "./people/people";
+import { DeathCause, type DeathRecord } from "./people/death";
 import { OccupationTypes } from "./people/work/enum";
+import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
 import {
@@ -76,6 +78,9 @@ export class Civilization {
   private _researchPoints: number = 0;
   private _buildings: Building[];
   private _citizensCount: number = 0;
+  // Deaths collected during the current month (war casualties + natural deaths),
+  // read back after passAMonth to fill the cemetery. Per-instance and transient.
+  private _deaths: DeathRecord[] = [];
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
@@ -108,6 +113,12 @@ export class Civilization {
 
   get livedMonths(): number {
     return this._livedMonths;
+  }
+
+  // Deaths recorded since this instance was loaded (one month's worth in the
+  // monthly tick, since civilizations are reloaded fresh each month).
+  get deaths(): DeathRecord[] {
+    return this._deaths;
   }
 
   set livedMonths(livedMonths: number) {
@@ -280,8 +291,11 @@ export class Civilization {
   loseSoldiers(ratio: number): void {
     const soldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER);
     const toKill = Math.floor(soldiers.length * ratio);
-    const casualties = soldiers.slice(0, toKill).map(({ id }) => id);
-    this.removePeople(casualties);
+    const casualties = soldiers.slice(0, toKill);
+    for (const soldier of casualties) {
+      this._deaths.push({ name: soldier.name, cause: DeathCause.WAR });
+    }
+    this.removePeople(casualties.map(({ id }) => id));
   }
 
   releaseCaptives(count: number): People[] {
@@ -436,7 +450,7 @@ export class Civilization {
           }
         }
 
-        person.decreaseLife(4);
+        person.decreaseLife(4, DeathCause.STARVATION);
       }
       resolve(null);
     });
@@ -485,7 +499,7 @@ export class Civilization {
           if (civilizationWood.quantity >= requiredWoodQuantity) {
             civilizationWood.decrease(requiredWoodQuantity);
           } else {
-            person.decreaseLife();
+            person.decreaseLife(1, DeathCause.COLD);
           }
         }
       }
@@ -935,8 +949,9 @@ export class Civilization {
     }
     const citizenWithoutHouse = this.people.slice(lastCitizenWithoutHouseIndex);
 
+    // Being unsheltered is exposure to the elements, recorded under "cold".
     for (const citizen of citizenWithoutHouse) {
-      citizen.decreaseLife();
+      citizen.decreaseLife(1, DeathCause.COLD);
     }
   }
 
@@ -975,8 +990,14 @@ export class Civilization {
         worker.work?.occupationType === OccupationTypes.CHILD ||
         isWithinChance(this.config.CHANCE_TO_EVOLVE);
       if (hasChanceToEvolve && worker.work && worker.canUpgradeWork()) {
-        const newPossibleOccupations =
-          OCCUPATION_TREE[worker.work.occupationType] ?? [];
+        // Only keep target trades the worker is actually old enough to take up.
+        // This enforces each job's own entry age (e.g. miners at 25) instead of
+        // relying solely on the source job's upgrade age.
+        const newPossibleOccupations = (
+          OCCUPATION_TREE[worker.work.occupationType] ?? []
+        ).filter(
+          (occupation) => worker.years >= MINIMAL_AGE_TO_BECOME[occupation],
+        );
 
         if (!newPossibleOccupations.length) {
           continue;
@@ -1110,6 +1131,7 @@ export class Civilization {
                 )
                 ],
               lifeCounter: 2,
+              originCivilizationId: this.id,
               lineage: {
                 mother: {
                   id: mother.id,
@@ -1162,6 +1184,21 @@ export class Civilization {
   }
 
   private removeDeadPeople() {
-    this._people = this._people.filter((person) => person.isAlive());
+    const survivors: People[] = [];
+    for (const person of this._people) {
+      // isAlive() rolls for old-age death, so call it exactly once per person.
+      if (person.isAlive()) {
+        survivors.push(person);
+        continue;
+      }
+      // lifeCounter <= 0 means a damage cause killed them (tagged on the killing
+      // blow); a still-positive life means they died of old age.
+      const cause =
+        person.lifeCounter <= 0
+          ? (person.deathCause ?? DeathCause.STARVATION)
+          : DeathCause.OLD_AGE;
+      this._deaths.push({ name: person.name, cause });
+    }
+    this._people = survivors;
   }
 }

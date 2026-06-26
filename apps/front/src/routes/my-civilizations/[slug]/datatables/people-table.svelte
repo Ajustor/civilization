@@ -14,9 +14,10 @@
 		updateData: (pageIndex: number, pageSize: number) => void
 		pageIndex: number
 		pageSize: number
+		currentCivilizationId?: string
 	}
 
-	let { people, totalPeople, updateData, pageIndex, pageSize }: Props = $props()
+	let { people, totalPeople, updateData, pageIndex, pageSize, currentCivilizationId }: Props = $props()
 
 	const GenderIcons: Record<string, string> = {
 		[Gender.FEMALE]: 'noto:female-sign',
@@ -122,7 +123,12 @@
 		<tbody>
 			{#each sortedPeople as person (person.id ?? Math.random())}
 				<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
-					<td style="padding:8px 12px;">{person.name ?? '—'}</td>
+					<td style="padding:8px 12px;">
+						{person.name ?? '—'}
+						{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
+							<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="margin-left:6px; font-size:11px; padding:1px 6px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Enlevé(e)</span>
+						{/if}
+					</td>
 					<td style="padding:8px 12px;">
 						{#if person.gender}
 							<Icon icon={GenderIcons[person.gender]} />

@@ -17,6 +17,7 @@ import {
   CivilizationModel,
   CivilizationStatsModel,
   CombatLogModel,
+  GraveModel,
   PersonModel,
   UserModel,
   WorldModel,
@@ -24,7 +25,7 @@ import {
 import { computeRecap, emptyRecap, RECAP_MIN_MONTHS, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
 import { PeopleService, personMapper } from '../people/service'
 import { UpdateCivilizationDtoType } from './dto'
-import { AnyBulkWriteOperation } from 'mongoose'
+import { AnyBulkWriteOperation, Types } from 'mongoose'
 import { arrayToMap } from '../../utils'
 import { pushSender } from '../../libs/services/pushSender'
 
@@ -531,6 +532,7 @@ export class CivilizationService {
 
     await PersonModel.deleteMany({ _id: { $in: civilizationToDelete.people } })
     await CivilizationStatsModel.deleteMany({ civilizationId })
+    await GraveModel.deleteMany({ civilizationId })
     await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
   }
 
@@ -680,6 +682,22 @@ export class CivilizationService {
       .skip(offset)
       .limit(limit)
       .lean()
+  }
+
+  async getGraves(civilizationId: string, limit = 20, offset = 0) {
+    return GraveModel.find({ civilizationId }, 'name cause month')
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean()
+  }
+
+  async getDeathCauseCounts(civilizationId: string): Promise<Record<string, number>> {
+    const grouped = await GraveModel.aggregate<{ _id: string; count: number }>([
+      { $match: { civilizationId: new Types.ObjectId(civilizationId) } },
+      { $group: { _id: '$cause', count: { $sum: 1 } } },
+    ])
+    return Object.fromEntries(grouped.map(({ _id, count }) => [_id, count]))
   }
 
   async markCombatLogsViewed(civilizationId: string): Promise<void> {
