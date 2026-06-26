@@ -17,13 +17,21 @@ export const usersModule = new Elysia({ prefix: '/users' })
   .post('', async ({ log, userDbClient, body, set, emailSender }) => {
     try {
       await userDbClient.create({ ...body, password: await Bun.password.hash(body.password) })
-      await emailSender.sendEmail(body.email, 'Un nouvel arrivant !', NewUserEmailTemplate({ username: body.username, frontUrl: Bun.env.frontUrl ?? '' }))
-      set.status = 201
     } catch (error) {
       log.error(error)
       set.status = 409
       throw new Error('An error occured while create your account', { cause: error?.message })
     }
+
+    // The welcome email is best-effort: a failure here must never roll back or
+    // block the account that was just created.
+    try {
+      await emailSender.sendEmail(body.email, 'Un nouvel arrivant !', NewUserEmailTemplate({ username: body.username, frontUrl: Bun.env.frontUrl ?? '' }))
+    } catch (error) {
+      log.error('Welcome email failed to send (account was still created)', error)
+    }
+
+    set.status = 201
   }
     , {
       body: t.Object({
