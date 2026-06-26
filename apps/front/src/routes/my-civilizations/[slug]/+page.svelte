@@ -243,7 +243,37 @@
 	const signedFmt = (d: number) => (d > 0 ? '+' : '') + fmt(d)
 
 	const CHART_OPTS = { maintainAspectRatio: false, responsive: true }
+
+	// ── Chart time window ───────────────────────────────────────────────────────
+	// Keep the progression charts readable by showing a configurable number of
+	// recent months rather than the whole history. `null` shows everything.
+	// Default to the last 7 months.
+	const CHART_RANGES = [
+		{ label: '7 mois', value: 7 as number | null },
+		{ label: '12 mois', value: 12 as number | null },
+		{ label: '24 mois', value: 24 as number | null },
+		{ label: 'Tout', value: null as number | null }
+	]
+	let chartMonths = $state<number | null>(7)
+	function sliceRecent<T>(stats: T[], months: number | null): T[] {
+		return months == null ? stats : stats.slice(-months)
+	}
 </script>
+
+<!-- Range selector shared by the progression charts (small cards + zoom panels). -->
+{#snippet rangeSelector()}
+	<div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+		<span style="font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:oklch(0.5 0.04 50); margin-right:2px;">Durée</span>
+		{#each CHART_RANGES as range}
+			{@const active = chartMonths === range.value}
+			<button
+				type="button"
+				onclick={() => (chartMonths = range.value)}
+				style="padding:4px 10px; border:1px solid {active ? 'oklch(0.5 0.13 34)' : 'oklch(0.74 0.05 60)'}; border-radius:4px; background:{active ? 'oklch(0.5 0.13 34)' : 'none'}; color:{active ? 'oklch(0.96 0.02 84)' : 'oklch(0.45 0.06 40)'}; font-family:'EB Garamond',serif; font-size:13px; cursor:pointer;"
+			>{range.label}</button>
+		{/each}
+	</div>
+{/snippet}
 
 <!-- ── Récap "pendant ton absence" ─────────────────────────────────────────── -->
 {#if recap}
@@ -292,8 +322,9 @@
 						{@const last = civilizationStats[civilizationStats.length - 1]}
 						{@const prev = civilizationStats[civilizationStats.length - 2]}
 						{@const events = civilizationStats.filter(s => s.event)}
-						{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
-						{@const datasets = buildResourceDatasets(civilizationStats)}
+						{@const shownStats = sliceRecent(civilizationStats, chartMonths)}
+						{@const labels = shownStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
+						{@const datasets = buildResourceDatasets(shownStats)}
 						<div style="display:grid; grid-template-columns:260px 1fr; gap:20px;">
 							<!-- Stats panel -->
 							<div style="background:oklch(0.91 0.025 78); border:1px solid oklch(0.78 0.045 70); border-radius:4px; padding:16px 18px; display:flex; flex-direction:column; gap:12px;">
@@ -336,6 +367,7 @@
 							</div>
 							<!-- Chart -->
 							<div style="display:flex; flex-direction:column; gap:12px;">
+								<div style="display:flex; justify-content:flex-end;">{@render rangeSelector()}</div>
 								<div style="position:relative; height:380px;">
 									{#if datasets.length}
 										{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
@@ -356,8 +388,9 @@
 					{:then civilizationStats}
 						{@const last = civilizationStats[civilizationStats.length - 1]}
 						{@const first = civilizationStats[0]}
-						{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
-						{@const datasets = civilizationStats.reduce<{ data: number[]; type: string; label: string }[]>(
+						{@const shownStats = sliceRecent(civilizationStats, chartMonths)}
+						{@const labels = shownStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
+						{@const datasets = shownStats.reduce<{ data: number[]; type: string; label: string }[]>(
 							(acc, { people: p }) => {
 								acc[0] ??= { data: [], type: 'line', label: 'Hommes' }
 								acc[1] ??= { data: [], type: 'line', label: 'Femmes' }
@@ -411,14 +444,17 @@
 								</div>
 							</div>
 							<!-- Chart -->
-							<div style="position:relative; height:380px;">
-								{#if datasets.length}
-									{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
-										<Line data={{ labels, datasets }} options={CHART_OPTS} />
-									{/await}
-								{:else}
-									<div style="height:100%; display:flex; align-items:center; justify-content:center; color:oklch(0.5 0.03 50);">Pas encore de données historiques</div>
-								{/if}
+							<div style="display:flex; flex-direction:column; gap:12px;">
+								<div style="display:flex; justify-content:flex-end;">{@render rangeSelector()}</div>
+								<div style="position:relative; height:380px;">
+									{#if datasets.length}
+										{#await import('$lib/components/charts/Bar.svelte') then { default: Line }}
+											<Line data={{ labels, datasets }} options={CHART_OPTS} />
+										{/await}
+									{:else}
+										<div style="height:100%; display:flex; align-items:center; justify-content:center; color:oklch(0.5 0.03 50);">Pas encore de données historiques</div>
+									{/if}
+								</div>
 							</div>
 						</div>
 					{/await}
@@ -550,14 +586,18 @@
 		</div>
 
 		<!-- Charts row -->
-		<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:24px;">
+		<div style="display:flex; justify-content:flex-end; align-items:center; margin-top:24px;">
+			{@render rangeSelector()}
+		</div>
+		<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:12px;">
 			{#await statsPromise}
 				<div style="height:180px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 				<div style="height:180px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then civilizationStats}
-				{@const resources = civilizationStats.map(({ resources }) => resources)}
-				{@const peoples = civilizationStats.map(({ people }) => people)}
-				{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
+				{@const shownStats = sliceRecent(civilizationStats, chartMonths)}
+				{@const resources = shownStats.map(({ resources }) => resources)}
+				{@const peoples = shownStats.map(({ people }) => people)}
+				{@const labels = shownStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
 
 				{#if resources.length}
 					<button
@@ -574,7 +614,7 @@
 							<Line
 								data={{
 									labels,
-									datasets: buildResourceDatasets(civilizationStats)
+									datasets: buildResourceDatasets(shownStats)
 								}}
 							/>
 						{/await}
