@@ -10,18 +10,7 @@ export class Fire implements WorldEvent {
     for (const civilization of civilizations) {
       const wood = civilization.getResource(ResourceTypes.WOOD)
 
-      const unburnableWood = civilization
-        .getStorageBuildings()
-        .reduce<number>((sum, building) => {
-          return (
-            sum +
-            (building.storedResources.find(
-              (storedResource) =>
-                storedResource.resource === ResourceTypes.WOOD,
-            )?.maxQuantity ?? 0) *
-              building.count
-          )
-        }, 0)
+      const unburnableWood = civilization.getStorageCapacity(ResourceTypes.WOOD)
       if (wood.quantity && unburnableWood < wood.quantity) {
         wood.decrease(wood.quantity - unburnableWood)
       }

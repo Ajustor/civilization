@@ -5,6 +5,8 @@ import { People } from '../people/people'
 import { Gender } from '../people/enum'
 import { Resource, ResourceTypes } from '../resource'
 import { OccupationTypes } from '../people/work/enum'
+import { Farm } from '../buildings/farm'
+import { Cache } from '../buildings/cache'
 
 const withTechs = (...techs: TechId[]) => {
   const civ = new Civilization('Techs')
@@ -67,5 +69,33 @@ describe('building gating', () => {
     }
     civ['buildChosenBuilding']()
     expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.KILN)).toBe(true)
+  })
+})
+
+describe('economy effects', () => {
+  it('production multiplier increases farm output', () => {
+    const base = new Civilization('Base')
+    const boosted = new Civilization('Boosted')
+    boosted.researchedTechs = [TechId.AGRONOMY] // +15%
+    for (const civ of [base, boosted]) {
+      civ.addBuilding(new Farm(1))
+      for (let i = 0; i < 5; i++) {
+        const p = new People({ month: 12 * 30, gender: Gender.MALE, lifeCounter: 10 })
+        p.id = `${civ.name}-f-${i}`
+        p.setOccupation(OccupationTypes.FARMER)
+        civ.addPeople(p)
+      }
+      civ['produceResources']()
+    }
+    const baseFood = base.getResource(ResourceTypes.RAW_FOOD).quantity
+    const boostedFood = boosted.getResource(ResourceTypes.RAW_FOOD).quantity
+    expect(boostedFood).toBeGreaterThan(baseFood)
+  })
+  it('storage capacity scales with storageMultiplier', () => {
+    const civ = new Civilization('Store')
+    civ.addBuilding(new Cache())
+    const baseCap = civ.getStorageCapacity(ResourceTypes.WOOD)
+    civ.researchedTechs = [TechId.WAREHOUSING] // +50%
+    expect(civ.getStorageCapacity(ResourceTypes.WOOD)).toBe(Math.floor(baseCap * 1.5))
   })
 })

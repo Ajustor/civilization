@@ -389,6 +389,14 @@ export class Civilization {
     ) as AbstractStorageBuilding[];
   }
 
+  getStorageCapacity(resource: ResourceTypes): number {
+    const base = this.getStorageBuildings().reduce((sum, building) => {
+      const stored = building.storedResources.find((s) => s.resource === resource)
+      return sum + (stored?.maxQuantity ?? 0) * building.count
+    }, 0)
+    return Math.floor(base * this.storageMultiplier)
+  }
+
   addPeople(...peoples: People[]): void {
     for (const people of peoples) {
       this._people.push(people);
@@ -684,7 +692,7 @@ export class Civilization {
       for (const producedResource of building.outputResources) {
         this.increaseResource(
           producedResource.resource,
-          Math.ceil(producedResource.amount * productionRatio),
+          Math.ceil(producedResource.amount * productionRatio * this.productionMultiplier),
         );
       }
     }
