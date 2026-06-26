@@ -1,16 +1,17 @@
 <script lang="ts">
 	import type { PageData } from './$types'
-	import { Settings, ZoomIn } from '@lucide/svelte'
+	import { Settings, ZoomIn, Hammer } from '@lucide/svelte'
 	import {
 		Resource,
 		ResourceTypes,
 		type BuildingType,
+		BuildingTypes,
 		type OccupationTypes,
 		type PeopleType,
 		Events
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
-	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription } from '$lib/translations'
+	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
 
@@ -61,6 +62,45 @@
 	]
 
 	const maxResourceQty = $derived(Math.max(...data.civilization.resources.map(r => r.quantity), 1))
+
+	// ── Constructions en cours ─────────────────────────────────────────────────
+	// Group pending constructions by building type, and within each type by the
+	// number of months remaining, so a player sees how many of each building are
+	// coming and when.
+	type PendingGroup = {
+		buildingType: BuildingTypes
+		count: number
+		breakdown: { monthsRemaining: number; count: number }[]
+	}
+	const pendingConstructions = $derived<{ buildingType: BuildingTypes; monthsRemaining: number }[]>(
+		data.civilization.pendingConstructions ?? []
+	)
+	const pendingGroups = $derived<PendingGroup[]>(
+		Object.values(
+			pendingConstructions.reduce<Record<string, PendingGroup>>((acc, { buildingType, monthsRemaining }) => {
+				const group = (acc[buildingType] ??= { buildingType, count: 0, breakdown: [] })
+				group.count++
+				const slot = group.breakdown.find((b) => b.monthsRemaining === monthsRemaining)
+				if (slot) {
+					slot.count++
+				} else {
+					group.breakdown.push({ monthsRemaining, count: 1 })
+				}
+				return acc
+			}, {})
+		)
+			.map((group) => ({
+				...group,
+				breakdown: group.breakdown.sort((a, b) => a.monthsRemaining - b.monthsRemaining)
+			}))
+			.sort((a, b) => b.count - a.count)
+	)
+	const monthsLabel = (monthsRemaining: number) =>
+		monthsRemaining <= 0
+			? 'Bientôt prête'
+			: monthsRemaining === 1
+				? 'Prête le mois prochain'
+				: `Prête dans ${monthsRemaining} mois`
 
 	// ── Stat helpers ──────────────────────────────────────────────────────────
 	const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
@@ -557,6 +597,38 @@
 		<div class="civ-inner-card" style="margin-top:20px;">
 			<h2 class="civ-section-title">Bâtiments ({data.civilization.buildings.reduce((a, { count }) => a + count, 0)} au total)</h2>
 			<BuildingsTable buildings={data.civilization.buildings} />
+		</div>
+
+		<!-- Constructions en cours -->
+		<div class="civ-inner-card" style="margin-top:20px;">
+			<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+				<Hammer size="18" style="color:oklch(0.5 0.1 50); flex-shrink:0;" />
+				<h2 class="civ-section-title" style="margin:0;">Constructions en cours ({pendingConstructions.length} au total)</h2>
+			</div>
+
+			{#if pendingGroups.length === 0}
+				<p style="color:oklch(0.55 0.03 50); font-size:15px; font-style:italic; margin-top:8px;">Aucune construction en cours pour le moment.</p>
+			{:else}
+				<div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+					{#each pendingGroups as group (group.buildingType)}
+						<div style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70);">
+							<div style="flex:1; min-width:0;">
+								<div style="font-family:'Marcellus',serif; font-size:16px; color:oklch(0.35 0.04 40);">
+									{buildingNames[group.buildingType] ?? group.buildingType}
+									{#if group.count > 1}<span style="color:oklch(0.5 0.03 50); font-size:14px;"> ×{group.count}</span>{/if}
+								</div>
+								<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+									{#each group.breakdown as slot}
+										<span style="font-size:13px; color:oklch(0.42 0.06 50); background:oklch(0.92 0.03 78); border:1px solid oklch(0.82 0.04 70); border-radius:999px; padding:2px 10px;">
+											{#if group.breakdown.length > 1 || slot.count > 1}{slot.count} · {/if}{monthsLabel(slot.monthsRemaining)}
+										</span>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<!-- Combat Log Summary -->
