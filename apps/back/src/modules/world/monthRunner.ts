@@ -1,7 +1,25 @@
 import { Gender, World } from '@ajustor/simulation'
 import type { CombatRecord } from '@ajustor/simulation'
-import { CivilizationStatsModel, CombatLogModel } from '../../libs/database/models'
+import { CivilizationStatsModel, CombatLogModel, GraveModel } from '../../libs/database/models'
 import type { CivilizationService } from '../civilizations/service'
+
+// Cap on how many graves are kept per civilization so the cemetery doesn't grow
+// without bound. Older graves beyond this are pruned after each month.
+const GRAVES_PER_CIVILIZATION = 200
+
+// Keep only the most recent graves of a civilization, deleting the oldest excess.
+async function pruneGraves(civilizationId: string) {
+  const total = await GraveModel.countDocuments({ civilizationId })
+  if (total <= GRAVES_PER_CIVILIZATION) {
+    return
+  }
+  const toRemove = total - GRAVES_PER_CIVILIZATION
+  const oldest = await GraveModel.find({ civilizationId }, '_id')
+    .sort({ createdAt: 1, _id: 1 })
+    .limit(toRemove)
+    .lean()
+  await GraveModel.deleteMany({ _id: { $in: oldest.map((grave) => grave._id) } })
+}
 
 /**
  * Loads the alive civilizations of a world (with their people) and attaches
@@ -134,6 +152,28 @@ export async function runMonthForWorld(
     if (stats.length) {
       await CivilizationStatsModel.insertMany(stats)
     }
+  }
+
+  // Record this month's deaths in each civilization's cemetery, then prune.
+  const deathMonth = world.getMonth()
+  const graveDocs = world.civilizations.flatMap((civilization) =>
+    civilization.deaths.map((death) => ({
+      civilizationId: civilization.id,
+      name: death.name,
+      cause: death.cause,
+      month: deathMonth,
+    })),
+  )
+  if (graveDocs.length) {
+    await GraveModel.insertMany(graveDocs)
+    const civilizationIdsWithDeaths = [
+      ...new Set(
+        world.civilizations
+          .filter((civilization) => civilization.deaths.length)
+          .map((civilization) => civilization.id),
+      ),
+    ]
+    await Promise.all(civilizationIdsWithDeaths.map(pruneGraves))
   }
 
   await civilizationService.saveAll(worldCivilizations)

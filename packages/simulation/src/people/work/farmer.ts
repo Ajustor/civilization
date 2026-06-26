@@ -5,7 +5,7 @@ export const FARMER_REQUIRED_AGE = 21
 
 export class Farmer implements UpgradedWork {
   canUpgrade(personAge: number): boolean {
-    return personAge > FARMER_REQUIRED_AGE
+    return personAge >= FARMER_REQUIRED_AGE
   }
 
   public RETIREMENT_AGE = 70

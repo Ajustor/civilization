@@ -4,6 +4,7 @@ import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
 import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
+import { DeathCause } from './death'
 import { Retired } from './work/retired'
 import { Tree } from '../utils/tree/tree'
 import { isCollectWork, type Work } from './work/interface'
@@ -72,6 +73,7 @@ export type PeopleConstructorParams = {
   pregnancyMonthsLeft?: number
   lineage?: Lineage
   numberOfChild?: number
+  originCivilizationId?: string
 }
 
 // renommer
@@ -99,6 +101,12 @@ export class People {
   lineage?: Lineage
   numberOfChild: number
   public hasWork: boolean = false
+  // Civilization the person was born into. Preserved when they are captured in a
+  // war, so a citizen living in another civilization can be recognised as taken.
+  originCivilizationId?: string
+  // Transient: cause of the killing blow this month, used to fill the cemetery.
+  // Not persisted on the person document.
+  deathCause: DeathCause | null = null
 
   tree: Tree<string> | null = null
 
@@ -112,6 +120,7 @@ export class People {
     pregnancyMonthsLeft = 0,
     lineage,
     numberOfChild = 0,
+    originCivilizationId,
   }: PeopleConstructorParams) {
     this.name = name
     this.month = month
@@ -122,6 +131,7 @@ export class People {
     this.pregnancyMonthsLeft = pregnancyMonthsLeft
     this.lineage = lineage
     this.numberOfChild = numberOfChild
+    this.originCivilizationId = originCivilizationId
   }
 
   setOccupation(occupationType: OccupationTypes) {
@@ -146,8 +156,14 @@ export class People {
     }
   }
 
-  decreaseLife(amount = 1): void {
+  decreaseLife(amount = 1, cause?: DeathCause): void {
+    const wasAlive = this.lifeCounter > 0
     this.lifeCounter -= amount
+    // Record the cause of the blow that actually kills the person (crosses 0).
+    // A later loss in the same month won't overwrite it.
+    if (cause && wasAlive && this.lifeCounter <= 0) {
+      this.deathCause = cause
+    }
   }
 
   increaseLife(amount: number): void {
@@ -310,6 +326,7 @@ export class People {
       child: this.child?.formatToEntity() ?? null,
       numberOfChild: this.numberOfChild,
       ...(this.lineage && { lineage: this.lineage }),
+      ...(this.originCivilizationId && { originCivilizationId: this.originCivilizationId }),
     }
   }
 

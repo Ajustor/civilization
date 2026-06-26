@@ -25,6 +25,10 @@ const PersonSchema = new Schema<PeopleEntity>({
   child: {
     type: Schema.Types.Mixed,
     default: null
+  },
+  originCivilizationId: {
+    type: String,
+    default: null
   }
 })
 

@@ -199,3 +199,23 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       }),
     },
   )
+  .get(
+    '/:civilizationId/cemetery',
+    async ({
+      civilizationService,
+      params: { civilizationId },
+      query: { limit = 20, offset = 0 },
+    }) => {
+      const [graves, causes] = await Promise.all([
+        civilizationService.getGraves(civilizationId, limit, offset),
+        civilizationService.getDeathCauseCounts(civilizationId),
+      ])
+      return { graves, causes }
+    },
+    {
+      query: t.Object({
+        limit: t.Optional(t.Number()),
+        offset: t.Optional(t.Number()),
+      }),
+    },
+  )

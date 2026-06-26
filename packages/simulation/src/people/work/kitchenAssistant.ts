@@ -5,7 +5,7 @@ export const KITCHEN_ASSISTANT_REQUIRED_AGE = 21
 
 export class KitchenAssistant implements UpgradedWork {
   canUpgrade(personAge: number): boolean {
-    return personAge > KITCHEN_ASSISTANT_REQUIRED_AGE
+    return personAge >= KITCHEN_ASSISTANT_REQUIRED_AGE
   }
 
   public RETIREMENT_AGE = 70

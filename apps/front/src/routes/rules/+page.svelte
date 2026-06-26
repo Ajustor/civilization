@@ -40,15 +40,15 @@
 
 	// ── Données de règles (valeurs issues de la simulation) ────────────────────
 	const OCCUPATION_RULES = [
-		{ name: 'Enfant', age: 'dès 4 ans (peut évoluer à 12 ans)', eat: 1, role: 'Récolte 5 nourriture ou pierre par mois' },
-		{ name: 'Récolteur', age: "jusqu'à 70 ans", eat: 2, role: 'Récolte 20 nourriture ou pierre par mois' },
-		{ name: 'Coupeur de bois', age: "jusqu'à 60 ans", eat: 2, role: 'Récolte 10 bois par mois' },
-		{ name: 'Fermier', age: "jusqu'à 70 ans", eat: 3, role: 'Exploite une Ferme (jusqu’à 100 nourriture / mois)' },
-		{ name: 'Charpentier', age: "jusqu'à 60 ans", eat: 3, role: 'Exploite une Scierie (produit des planches)' },
-		{ name: 'Charbonnier', age: '12 à 60 ans', eat: 3, role: 'Exploite un Four à chaux (produit du charbon)' },
-		{ name: 'Commis de cuisine', age: "jusqu'à 70 ans", eat: 2, role: 'Exploite un Feu de camp (produit de la nourriture préparée)' },
-		{ name: 'Mineur', age: "jusqu'à 50 ans", eat: 3, role: 'Exploite une Mine (produit de la pierre)' },
-		{ name: 'Soldat', age: "jusqu'à 60 ans", eat: 3, role: 'Défend la civilisation et mène les attaques' },
+		{ name: 'Enfant', age: 'dès 4 ans (peut évoluer dès 12 ans)', eat: 1, role: 'Récolte 5 nourriture ou pierre par mois' },
+		{ name: 'Récolteur', age: '12 à 70 ans', eat: 2, role: 'Récolte 20 nourriture ou pierre par mois' },
+		{ name: 'Coupeur de bois', age: '12 à 60 ans', eat: 2, role: 'Récolte 10 bois par mois' },
+		{ name: 'Fermier', age: '21 à 70 ans', eat: 3, role: 'Exploite une Ferme (jusqu’à 100 nourriture / mois)' },
+		{ name: 'Charpentier', age: '21 à 60 ans', eat: 3, role: 'Exploite une Scierie (produit des planches)' },
+		{ name: 'Charbonnier', age: '21 à 60 ans', eat: 3, role: 'Exploite un Four à chaux (produit du charbon)' },
+		{ name: 'Commis de cuisine', age: '21 à 70 ans', eat: 2, role: 'Exploite un Feu de camp (produit de la nourriture préparée)' },
+		{ name: 'Mineur', age: '25 à 50 ans', eat: 3, role: 'Exploite une Mine (produit de la pierre)' },
+		{ name: 'Soldat', age: '18 à 60 ans', eat: 3, role: 'Défend la civilisation et mène les attaques' },
 		{ name: 'Retraité', age: 'après la vie active', eat: 1, role: 'Ne travaille plus' }
 	]
 
@@ -207,7 +207,7 @@
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Métiers</h2>
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
-					Les enfants, récolteurs et coupeurs de bois peuvent <strong>évoluer</strong> vers un métier spécialisé (20 % de chance par mois). Les métiers spécialisés font fonctionner les bâtiments de production.
+					Les enfants, récolteurs et coupeurs de bois peuvent <strong>évoluer</strong> vers un métier spécialisé (20 % de chance par mois), à condition d'avoir <strong>l'âge requis</strong> pour ce métier (voir colonne Âge). Les métiers spécialisés font fonctionner les bâtiments de production.
 				</p>
 				<div style="overflow-x:auto;">
 					<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:15px; color:oklch(0.4 0.03 50);">

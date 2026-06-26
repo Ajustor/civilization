@@ -127,3 +127,24 @@ export const getCombatLogs = async (
 
   return data.logs
 }
+
+export const getCemetery = async (
+  authToken: string,
+  civilizationId: string,
+  limit = 20,
+  offset = 0,
+) => {
+  const { data, error } = await client
+    .civilizations({ civilizationId })
+    .cemetery.get({
+      headers: { authorization: `Bearer ${authToken}` },
+      query: { limit, offset },
+    })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return data
+}
