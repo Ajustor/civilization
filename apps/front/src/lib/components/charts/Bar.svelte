@@ -20,7 +20,6 @@
 		LineElement,
 		BarElement
 	} from 'chart.js'
-	import { onMount } from 'svelte'
 
 	interface Props {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,8 +46,11 @@
 
 	let chart: HTMLCanvasElement = $state()
 
-	onMount(() => {
-		new ChartJS(chart, {
+	// Rebuild the chart whenever `data`/`options` change. The previous version only
+	// drew once in onMount, so the live auto-refresh (and any reactive data update)
+	// never reached the canvas. Destroying the prior instance avoids leaking charts.
+	$effect(() => {
+		const instance = new ChartJS(chart, {
 			type: 'bar',
 			data,
 			options: {
@@ -56,6 +58,7 @@
 				...options
 			}
 		})
+		return () => instance.destroy()
 	})
 </script>
 

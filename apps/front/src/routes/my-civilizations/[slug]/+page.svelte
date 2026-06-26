@@ -15,6 +15,7 @@
 	import PeopleTable from './datatables/people-table.svelte'
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
+	import { callGetStats } from '../../../services/sveltekit-api/civilization'
 	import { onMount } from 'svelte'
 	import { invalidateAll } from '$app/navigation'
 	import { PUBLIC_BACK_URL } from '$env/static/public'
@@ -34,6 +35,22 @@
 	// prop's nested promise is NOT reactive in Svelte 5, so the table never updated.
 	let peoplePromise = $state<Promise<PeopleType[]>>(data.lazy.people)
 	let recap = $state<RecapData | null>(null)
+
+	// Same reasoning as `peoplePromise`: the server-streamed stat promises captured
+	// here are not reactive, so the charts/combat-log never refreshed live. We hold
+	// them in local state and re-fetch via the client `/stats` endpoint on refresh.
+	let statsPromise = $state(data.lazy.stats.civilization)
+	let jobsPromise = $state(data.lazy.stats.jobs)
+	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
+	let combatLogsPromise = $state(data.lazy.combatLogs)
+
+	const refreshStats = () => {
+		const stats = callGetStats(data.civilization.id)
+		statsPromise = stats.then((s) => s.civilization)
+		jobsPromise = stats.then((s) => s.jobs)
+		peopleRatioPromise = stats.then((s) => s.peopleRatio)
+		combatLogsPromise = stats.then((s) => s.combatLogs)
+	}
 
 	// Which panel is expanded: null = closed
 	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
@@ -76,10 +93,12 @@
 		const worldId = data.worldId
 
 		const refresh = async () => {
-			// Refresh civilization stats/resources (data is replaced -> reactive) and
-			// re-fetch the citizens page currently shown.
+			// Refresh top-level civilization data (current resources, building/people
+			// counts) via invalidation, re-fetch the citizens page currently shown, and
+			// pull fresh chart/combat-log stats into local state.
 			await invalidateAll()
 			retrievePeople(pageIndex, pageSize)
+			refreshStats()
 		}
 
 		// Primary path: SSE push as soon as the world advances a month.
@@ -121,6 +140,30 @@
 		[ResourceTypes.PLANK]: 4,
 		[ResourceTypes.CHARCOAL]: 5
 	}
+
+	// Build dense, label-aligned line datasets for the resource charts.
+	// Indexing a sparse array by RESOURCES_INDEXES used to leave holes (undefined
+	// slots) whenever a resource type was absent — e.g. a civ that has charcoal but
+	// no planks. Chart.js chokes on those holes and the chart silently fails to
+	// render (which then breaks the zoom panel). Here we emit exactly one dataset
+	// per resource type that ever appears, with one value per tracked month (0 when
+	// missing) so every series stays aligned with the month labels.
+	const buildResourceDatasets = (
+		stats: { resources: { resourceType?: ResourceTypes; quantity?: number }[] }[]
+	) =>
+		(Object.entries(RESOURCES_INDEXES) as [ResourceTypes, number][])
+			.sort(([, a], [, b]) => a - b)
+			.map(([resourceType]) => resourceType)
+			.filter((resourceType) =>
+				stats.some(({ resources }) => resources.some((r) => r?.resourceType === resourceType))
+			)
+			.map((resourceType) => ({
+				type: 'line' as const,
+				label: resourceNames[resourceType],
+				data: stats.map(
+					({ resources }) => resources.find((r) => r?.resourceType === resourceType)?.quantity ?? 0
+				)
+			}))
 
 	const jobColors = [
 		'oklch(0.52 0.1 130)', 'oklch(0.55 0.1 110)', 'oklch(0.6 0.04 60)',
@@ -243,23 +286,14 @@
 
 				<!-- ── RESOURCES panel ──────────────────────────────────────── -->
 				{#if activePanel === 'resources'}
-					{#await data.lazy.stats.civilization}
+					{#await statsPromise}
 						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 					{:then civilizationStats}
 						{@const last = civilizationStats[civilizationStats.length - 1]}
 						{@const prev = civilizationStats[civilizationStats.length - 2]}
 						{@const events = civilizationStats.filter(s => s.event)}
 						{@const labels = civilizationStats.map(({ month, event }) => `M${month}${event ? ` (${eventsName[event as Events]})` : ''}`)}
-						{@const datasets = civilizationStats.reduce<{ data: number[]; label: string; type: string }[]>(
-							(acc, { resources }) => {
-								for (const r of resources) {
-									if (!r?.resourceType) continue
-									acc[RESOURCES_INDEXES[r.resourceType as ResourceTypes]] ??= { data: [], label: resourceNames[r.resourceType as ResourceTypes], type: 'line' }
-									acc[RESOURCES_INDEXES[r.resourceType as ResourceTypes]].data.push(r.quantity ?? 0)
-								}
-								return acc
-							}, []
-						)}
+						{@const datasets = buildResourceDatasets(civilizationStats)}
 						<div style="display:grid; grid-template-columns:260px 1fr; gap:20px;">
 							<!-- Stats panel -->
 							<div style="background:oklch(0.91 0.025 78); border:1px solid oklch(0.78 0.045 70); border-radius:4px; padding:16px 18px; display:flex; flex-direction:column; gap:12px;">
@@ -317,7 +351,7 @@
 
 				<!-- ── POPULATION panel ──────────────────────────────────────── -->
 				{:else if activePanel === 'population'}
-					{#await data.lazy.stats.civilization}
+					{#await statsPromise}
 						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 					{:then civilizationStats}
 						{@const last = civilizationStats[civilizationStats.length - 1]}
@@ -391,7 +425,7 @@
 
 				<!-- ── JOBS panel ──────────────────────────────────────────────── -->
 				{:else if activePanel === 'jobs'}
-					{#await data.lazy.stats.jobs}
+					{#await jobsPromise}
 						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 					{:then jobs}
 						{@const entries = Object.entries(jobs).filter(([k]) => k !== 'child').sort(([,a],[,b]) => (b as number)-(a as number))}
@@ -417,7 +451,7 @@
 
 				<!-- ── GENDER panel ─────────────────────────────────────────────── -->
 				{:else if activePanel === 'gender'}
-					{#await data.lazy.stats.peopleRatio}
+					{#await peopleRatioPromise}
 						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 					{:then peopleRatio}
 						{#if peopleRatio}
@@ -513,7 +547,7 @@
 
 		<!-- Charts row -->
 		<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:24px;">
-			{#await data.lazy.stats.civilization}
+			{#await statsPromise}
 				<div style="height:180px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 				<div style="height:180px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then civilizationStats}
@@ -536,18 +570,7 @@
 							<Line
 								data={{
 									labels,
-									datasets: resources.reduce<{ data: number[]; label: string; type: string }[]>(
-										(datasets, civResources) => {
-											for (const resource of civResources) {
-												if (!resource?.resourceType) continue
-												datasets[RESOURCES_INDEXES[resource.resourceType as ResourceTypes]] ??= {
-													data: [], label: resourceNames[resource.resourceType as ResourceTypes], type: 'line'
-												}
-												datasets[RESOURCES_INDEXES[resource.resourceType as ResourceTypes]].data.push(resource.quantity ?? 0)
-											}
-											return datasets
-										}, []
-									)
+									datasets: buildResourceDatasets(civilizationStats)
 								}}
 							/>
 						{/await}
@@ -590,7 +613,7 @@
 
 		<!-- Jobs + Gender row -->
 		<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:20px;">
-			{#await data.lazy.stats.jobs}
+			{#await jobsPromise}
 				<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then jobs}
 				{@const activeEntries = Object.entries(jobs).filter(([k]) => k !== 'child')}
@@ -622,7 +645,7 @@
 				</button>
 			{/await}
 
-			{#await data.lazy.stats.peopleRatio}
+			{#await peopleRatioPromise}
 				<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then peopleRatio}
 				{#if peopleRatio}
@@ -752,7 +775,7 @@
 				<a href="/my-civilizations/{data.civilization.id}/combats" style="font-size:15px; color:oklch(0.5 0.13 34); font-family:'EB Garamond',serif; text-decoration:none;">Voir tous les combats →</a>
 			</div>
 
-			{#await data.lazy.combatLogs}
+			{#await combatLogsPromise}
 				<p style="color:oklch(0.55 0.03 50); font-size:15px;">Chargement…</p>
 			{:then logs}
 				{#if !logs || logs.length === 0}

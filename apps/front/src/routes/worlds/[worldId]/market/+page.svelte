@@ -16,15 +16,43 @@
 		status: string
 	}
 
+	type CivResource = { type: string; quantity: number }
 	type WorldCiv = { id: string; name: string }
+	type MyCiv = WorldCiv & { resources?: CivResource[] }
 
 	const resourceTypeValues = Object.values(ResourceTypes)
+	const myCivs = $derived(data.myCivilizations as MyCiv[])
 	const civNameMap = $derived(
 		new Map((data.worldCivilizations as WorldCiv[]).map((c) => [c.id, c.name]))
 	)
 	const myCivIds = $derived(
-		new Set((data.myCivilizations as WorldCiv[]).map((c) => c.id))
+		new Set(myCivs.map((c) => c.id))
 	)
+
+	const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
+
+	// Current stock of the civilization selected in the "create offer" form, so a
+	// player can see how much they actually hold before proposing to give it away.
+	let selectedCivId = $state('')
+	$effect(() => {
+		if ((!selectedCivId || !myCivIds.has(selectedCivId)) && myCivs.length) {
+			selectedCivId = myCivs[0].id
+		}
+	})
+	const selectedCiv = $derived(myCivs.find((c) => c.id === selectedCivId))
+	const stockMap = $derived(
+		new Map((selectedCiv?.resources ?? []).map((r) => [r.type, r.quantity]))
+	)
+	const stockOf = (resourceType: string) => stockMap.get(resourceType) ?? 0
+
+	// Quick-select helpers: set a give line's quantity to a fraction of the current
+	// stock of its resource (rounded down, at least 1 if any stock is held).
+	const stockFractions = [0.1, 0.5, 1] as const
+	function setGiveFromStock(line: { resource: string; quantity: number }, fraction: number) {
+		const stock = stockOf(line.resource)
+		if (stock <= 0) return
+		line.quantity = Math.max(1, Math.floor(stock * fraction))
+	}
 
 	function civName(id: string): string {
 		return civNameMap.get(id) ?? id
@@ -81,27 +109,60 @@
 
 					<div style="display:flex; flex-direction:column; gap:6px;">
 						<label for="create-civ" style="font-size:15px; color:oklch(0.42 0.04 45);">Votre civilisation</label>
-						<select id="create-civ" name="civilizationId" class="select select-bordered w-full">
-							{#each data.myCivilizations as civ}
-								<option value={(civ as WorldCiv).id}>{(civ as WorldCiv).name}</option>
+						<select id="create-civ" name="civilizationId" bind:value={selectedCivId} class="select select-bordered w-full">
+							{#each myCivs as civ}
+								<option value={civ.id}>{civ.name}</option>
 							{/each}
 						</select>
+					</div>
+
+					<!-- Stock courant de la civilisation sélectionnée -->
+					<div style="border:1px solid oklch(0.78 0.045 70); border-radius:4px; padding:10px 14px; background:oklch(0.96 0.02 84);">
+						<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.5 0.05 50); margin-bottom:6px;">Stock courant</div>
+						<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:4px 16px;">
+							{#each resourceTypeValues as rt}
+								<div style="display:flex; justify-content:space-between; font-size:14px;">
+									<span style="color:oklch(0.45 0.04 48);">{resourceNames[rt]}</span>
+									<span style="color:oklch(0.3 0.04 40); font-weight:600;">{fmt(stockOf(rt))}</span>
+								</div>
+							{/each}
+						</div>
 					</div>
 
 					<!-- Vous donnez -->
 					<div style="display:flex; flex-direction:column; gap:8px;">
 						<p style="font-family:'Marcellus',serif; font-size:17px; color:oklch(0.38 0.04 40); margin:0;">Vous donnez</p>
 						{#each giveLines as line, i}
-							<div style="display:flex; gap:8px; align-items:center;">
-								<select name="giveResource" bind:value={line.resource} class="select select-bordered" style="flex:1;">
-									{#each resourceTypeValues as rt}
-										<option value={rt}>{resourceNames[rt]}</option>
-									{/each}
-								</select>
-								<input type="number" name="giveQuantity" bind:value={line.quantity} min="1" class="input input-bordered" style="width:80px;" />
-								{#if giveLines.length > 1}
-									<button type="button" onclick={() => removeLine(giveLines, i)} style="padding:6px 10px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); cursor:pointer;">×</button>
-								{/if}
+							{@const stock = stockOf(line.resource)}
+							{@const exceeds = line.quantity > stock}
+							<div style="display:flex; flex-direction:column; gap:2px;">
+								<div style="display:flex; gap:8px; align-items:center;">
+									<select name="giveResource" bind:value={line.resource} class="select select-bordered" style="flex:1;">
+										{#each resourceTypeValues as rt}
+											<option value={rt}>{resourceNames[rt]} (stock : {fmt(stockOf(rt))})</option>
+										{/each}
+									</select>
+									<input type="number" name="giveQuantity" bind:value={line.quantity} min="1" class="input input-bordered" style="width:80px;" />
+									{#if giveLines.length > 1}
+										<button type="button" onclick={() => removeLine(giveLines, i)} style="padding:6px 10px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); cursor:pointer;">×</button>
+									{/if}
+								</div>
+								<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+									<span style="font-size:13px; color:{exceeds ? 'oklch(0.52 0.2 30)' : 'oklch(0.5 0.03 50)'};">
+										Stock disponible : {fmt(stock)}{#if exceeds} — quantité supérieure au stock{/if}
+									</span>
+									{#if stock > 0}
+										<div style="display:flex; gap:4px;">
+											{#each stockFractions as fraction}
+												<button
+													type="button"
+													onclick={() => setGiveFromStock(line, fraction)}
+													style="padding:2px 8px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:13px; cursor:pointer;"
+												>{Math.round(fraction * 100)}%</button>
+											{/each}
+										</div>
+									{/if}
+								</div>
 							</div>
 						{/each}
 						{#if giveLines.length < resourceTypeValues.length}

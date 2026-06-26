@@ -11,3 +11,16 @@ export const callGetCivilizations = async () => {
 
   return response.json()
 }
+
+// Fresh snapshot of the lazily-loaded stats (charts + combat logs), used by the
+// live auto-refresh since the server-streamed promises don't update on their own.
+export const callGetStats = async (civilizationId: string) => {
+  const response = await fetch(`/my-civilizations/${civilizationId}/stats`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json'
+    }
+  })
+
+  return response.json()
+}

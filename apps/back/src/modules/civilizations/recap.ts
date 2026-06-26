@@ -1,5 +1,10 @@
 import type { BuildingTypes, Events, ResourceTypes } from '@ajustor/simulation'
 
+// Nombre minimum de mois écoulés depuis la dernière visite pour afficher le
+// récap "pendant ton absence". En dessous (un seul mois), l'absence est trop
+// courte pour mériter une notification.
+export const RECAP_MIN_MONTHS = 2
+
 export type RecapStatsSnapshot = {
   month: number
   people?: { men: number; women: number; pregnantWomen: number } | null
