@@ -84,7 +84,30 @@
 		'oklch(0.5 0.02 250)', 'oklch(0.55 0.11 45)'
 	]
 
-	const maxResourceQty = $derived(Math.max(...data.civilization.resources.map(r => r.quantity), 1))
+	// Storage capacity per resource = (number of Entrepôts) × the cache's per-resource
+	// max. Values mirror the Cache building in the simulation (buildings/cache.ts).
+	const STORAGE_PER_CACHE: Record<ResourceTypes, number> = {
+		[ResourceTypes.RAW_FOOD]: 300,
+		[ResourceTypes.COOKED_FOOD]: 100,
+		[ResourceTypes.WOOD]: 150,
+		[ResourceTypes.STONE]: 300,
+		[ResourceTypes.PLANK]: 150,
+		[ResourceTypes.CHARCOAL]: 150
+	}
+	const RESOURCE_COLORS: Record<ResourceTypes, string> = {
+		[ResourceTypes.RAW_FOOD]: 'oklch(0.58 0.13 135)',
+		[ResourceTypes.COOKED_FOOD]: 'oklch(0.62 0.13 60)',
+		[ResourceTypes.WOOD]: 'oklch(0.5 0.08 55)',
+		[ResourceTypes.STONE]: 'oklch(0.55 0.02 250)',
+		[ResourceTypes.PLANK]: 'oklch(0.62 0.07 85)',
+		[ResourceTypes.CHARCOAL]: 'oklch(0.42 0.02 250)'
+	}
+	const OVERFLOW_COLOR = 'oklch(0.55 0.2 28)'
+	const cacheCount = $derived(
+		data.civilization.buildings
+			.filter((b) => b.type === BuildingTypes.CACHE)
+			.reduce((sum, b) => sum + b.count, 0)
+	)
 
 	// ── Constructions en cours ─────────────────────────────────────────────────
 	// Group pending constructions by building type, and within each type by the
@@ -588,14 +611,30 @@
 			<h2 class="civ-section-title">Ressources actuelles</h2>
 			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
 				{#each data.civilization.resources as resource}
+					{@const capacity = cacheCount * (STORAGE_PER_CACHE[resource.type] ?? 0)}
+					{@const over = Math.max(0, resource.quantity - capacity)}
+					{@const total = Math.max(resource.quantity, capacity, 1)}
+					{@const storedW = (Math.min(resource.quantity, capacity) / total) * 100}
+					{@const overW = (over / total) * 100}
 					<div>
-						<div style="display:flex; justify-content:space-between; font-size:16px; margin-bottom:4px;">
+						<div style="display:flex; justify-content:space-between; align-items:baseline; font-size:16px; margin-bottom:4px;">
 							<span>{resourceNames[resource.type]}</span>
-							<span style="color:oklch(0.5 0.03 50);">{resource.quantity}</span>
+							<span style="font-size:14px;">
+								<span style="color:{over > 0 ? OVERFLOW_COLOR : 'oklch(0.4 0.04 40)'}; font-weight:600;">{resource.quantity.toLocaleString('fr-FR')}</span>
+								<span style="color:oklch(0.55 0.03 50);"> / {capacity.toLocaleString('fr-FR')}</span>
+							</span>
 						</div>
-						<div class="civ-progress-bar">
-							<div class="civ-progress-fill" style="width:{Math.round((resource.quantity / maxResourceQty) * 100)}%; background:oklch(0.55 0.1 130);"></div>
+						<div class="civ-progress-bar" style="display:flex; overflow:hidden;">
+							<div style="width:{storedW}%; height:100%; background:{RESOURCE_COLORS[resource.type] ?? 'oklch(0.55 0.1 130)'}; transition:width .3s;"></div>
+							{#if overW > 0}
+								<div style="width:{overW}%; height:100%; background:{OVERFLOW_COLOR}; transition:width .3s;" title="Surplus au-delà de la capacité"></div>
+							{/if}
 						</div>
+						{#if capacity === 0}
+							<div style="font-size:13px; color:{OVERFLOW_COLOR}; margin-top:4px;">⚠ Aucune capacité de stockage (construisez un Entrepôt)</div>
+						{:else if over > 0}
+							<div style="font-size:13px; color:{OVERFLOW_COLOR}; margin-top:4px;">⚠ Surplus : +{over.toLocaleString('fr-FR')} au-delà de la capacité de stockage</div>
+						{/if}
 					</div>
 				{/each}
 			</div>
