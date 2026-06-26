@@ -1,5 +1,6 @@
 import { Gender, World } from '@ajustor/simulation'
-import { CivilizationStatsModel } from '../../libs/database/models'
+import type { CombatRecord } from '@ajustor/simulation'
+import { CivilizationStatsModel, CombatLogModel } from '../../libs/database/models'
 import type { CivilizationService } from '../civilizations/service'
 
 /**
@@ -78,6 +79,47 @@ export async function runMonthForWorld(
 
   const event = world.nextEvent
   await world.passAMonth()
+
+  if (world.lastBattles.length > 0) {
+    const civNameMap = new Map(worldCivilizations.map((c) => [c.id, c.name]))
+
+    const combatDocs = world.lastBattles.flatMap((record: CombatRecord) => [
+      {
+        battleId: record.battleId,
+        worldId: record.worldId,
+        civilizationId: record.attackerCivId,
+        role: 'attacker' as const,
+        opponentCivId: record.defenderCivId,
+        opponentName: civNameMap.get(record.defenderCivId) ?? 'Inconnu',
+        month: record.month,
+        attackerStrength: record.attackerStrength,
+        defenderStrength: record.defenderStrength,
+        attackerWins: record.attackerWins,
+        myLossRatio: record.attackerLossRatio,
+        opponentLossRatio: record.defenderLossRatio,
+        plunderedResources: record.plunderedResources,
+        captivesTaken: record.captivesTaken,
+      },
+      {
+        battleId: record.battleId,
+        worldId: record.worldId,
+        civilizationId: record.defenderCivId,
+        role: 'defender' as const,
+        opponentCivId: record.attackerCivId,
+        opponentName: civNameMap.get(record.attackerCivId) ?? 'Inconnu',
+        month: record.month,
+        attackerStrength: record.attackerStrength,
+        defenderStrength: record.defenderStrength,
+        attackerWins: record.attackerWins,
+        myLossRatio: record.defenderLossRatio,
+        opponentLossRatio: record.attackerLossRatio,
+        plunderedResources: record.attackerWins ? record.plunderedResources : [],
+        captivesTaken: record.attackerWins ? record.captivesTaken : 0,
+      },
+    ])
+
+    await CombatLogModel.insertMany(combatDocs)
+  }
 
   if (withStats) {
     const stats = buildCivilizationStats(world, event)
