@@ -840,8 +840,6 @@ export class Civilization {
       return;
     }
 
-    console.info('Start building', { buildingType, constructionCosts, workerRequiredToBuild, timeToBuild });
-
     const workers = workerRequiredToBuild.reduce<People[]>(
       (workers, workerRequired) => {
         const availableWorkers = this.getPeopleWithOccupation(
