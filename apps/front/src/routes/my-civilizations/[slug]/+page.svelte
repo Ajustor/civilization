@@ -53,20 +53,49 @@
 		})()
 	}
 
-	// Live refresh: the world advances a month every ~15 min server-side. Subscribe
-	// to its SSE stream and refresh the on-screen data whenever a month passes.
+	// Live refresh: the world advances a month every ~15 min server-side.
 	onMount(() => {
 		if (!data.worldId) {
 			return
 		}
-		const source = new EventSource(`${PUBLIC_BACK_URL}/worlds/${data.worldId}/events`)
-		source.addEventListener('month', async () => {
+		const worldId = data.worldId
+
+		const refresh = async () => {
 			// Refresh civilization stats/resources (data is replaced -> reactive) and
 			// re-fetch the citizens page currently shown.
 			await invalidateAll()
 			retrievePeople(pageIndex, pageSize)
+		}
+
+		// Primary path: SSE push as soon as the world advances a month.
+		const source = new EventSource(`${PUBLIC_BACK_URL}/worlds/${worldId}/events`)
+		source.addEventListener('month', () => {
+			void refresh()
 		})
-		return () => source.close()
+
+		// Fallback: poll the world's month in case SSE is blocked/buffered by a
+		// reverse proxy. Cheap endpoint, only triggers a refresh on an actual change.
+		let knownMonth: number | null = null
+		const poll = setInterval(async () => {
+			try {
+				const response = await fetch(`${PUBLIC_BACK_URL}/worlds/${worldId}/month`)
+				if (!response.ok) {
+					return
+				}
+				const { month } = await response.json()
+				if (knownMonth !== null && month !== knownMonth) {
+					void refresh()
+				}
+				knownMonth = month
+			} catch (error) {
+				console.error(error)
+			}
+		}, 60_000)
+
+		return () => {
+			source.close()
+			clearInterval(poll)
+		}
 	})
 
 	const RESOURCES_INDEXES = {

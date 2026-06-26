@@ -6,6 +6,7 @@ import { logger } from '@bogeychan/elysia-logger'
 import { WorldService } from './service'
 import { PeopleService } from '../people/service'
 import { monthWatcher } from '../../libs/services/monthWatcher'
+import { WorldModel } from '../../libs/database/models'
 
 const worldDbClientInstance = new WorldsTable()
 const peopleServiceInstance = new PeopleService()
@@ -151,7 +152,15 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
     set.headers['content-type'] = 'text/event-stream'
     set.headers['cache-control'] = 'no-cache'
     set.headers['connection'] = 'keep-alive'
+    // Disable proxy buffering (nginx & co) so events are flushed immediately.
+    set.headers['x-accel-buffering'] = 'no'
     return stream
+  })
+  // Lightweight current-month endpoint, used as a polling fallback for the live
+  // refresh when SSE is blocked/buffered by a reverse proxy.
+  .get('/:worldId/month', async ({ params: { worldId } }) => {
+    const world = await WorldModel.findOne({ _id: worldId }, 'month')
+    return { month: world?.month ?? 0 }
   })
   .get('/:worldId/civilizations', async ({ civilizationsDbClient, params: { worldId } }) => {
     const civilizations = await civilizationsDbClient.getAllRawByWorldId(worldId, { people: false })
