@@ -54,9 +54,16 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     const civilizations = await civilizationService.getByUserId(user.id, {
       people: false,
     })
+    const formatted = formatCivilizations(civilizations)
+    const counts = await Promise.all(
+      civilizations.map((civ) => civilizationService.getRecentAttacksCount(civ.id)),
+    )
     return {
       count: civilizations.length,
-      civilizations: formatCivilizations(civilizations),
+      civilizations: formatted.map((civ, i) => ({
+        ...civ,
+        recentAttacksCount: counts[i],
+      })),
     }
   })
   .get(
@@ -167,5 +174,23 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
         throw new NotFoundError('Civilization not found in any world')
       }
       return { worldId }
+    },
+  )
+  .get(
+    '/:civilizationId/combat-logs',
+    async ({
+      civilizationService,
+      params: { civilizationId },
+      query: { limit = 20, offset = 0 },
+    }) => {
+      await civilizationService.markCombatLogsViewed(civilizationId)
+      const logs = await civilizationService.getCombatLogs(civilizationId, limit, offset)
+      return { logs }
+    },
+    {
+      query: t.Object({
+        limit: t.Optional(t.Number()),
+        offset: t.Optional(t.Number()),
+      }),
     },
   )
