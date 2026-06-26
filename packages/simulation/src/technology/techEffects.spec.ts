@@ -182,6 +182,76 @@ describe('new prerequisite chains', () => {
   })
 })
 
+describe('tier-2 / tier-3 new roots', () => {
+  it('husbandry and pottery have no prerequisites', () => {
+    expect(withTechs().canUnlock(TechId.HUSBANDRY)).toBe(true)
+    expect(withTechs().canUnlock(TechId.POTTERY)).toBe(true)
+  })
+  it('hunting requires husbandry', () => {
+    expect(withTechs().canUnlock(TechId.HUNTING)).toBe(false)
+    expect(withTechs(TechId.HUSBANDRY).canUnlock(TechId.HUNTING)).toBe(true)
+  })
+  it('hunting stacks production with husbandry', () => {
+    const civ = withTechs(TechId.HUSBANDRY, TechId.HUNTING)
+    expect(civ.productionMultiplier).toBeCloseTo(1.10 * 1.15)
+    expect(civ.pregnancyProbabilityBonus).toBe(5)
+  })
+  it('pottery adds storage multiplier', () => {
+    expect(withTechs(TechId.POTTERY).storageMultiplier).toBeCloseTo(1.20)
+  })
+  it('fortification requires masonry', () => {
+    expect(withTechs(TechId.CRAFTSMANSHIP).canUnlock(TechId.FORTIFICATION)).toBe(false)
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY).canUnlock(TechId.FORTIFICATION)).toBe(true)
+  })
+  it('theology requires philosophy AND sciences', () => {
+    expect(withTechs(TechId.PHILOSOPHY).canUnlock(TechId.THEOLOGY)).toBe(false)
+    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).canUnlock(TechId.THEOLOGY)).toBe(true)
+  })
+  it('theology stacks multiplicatively with philosophy and sciences', () => {
+    const civ = withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.THEOLOGY)
+    expect(civ.researchMultiplier).toBeCloseTo(1.25 * 1.5 * 1.40)
+    expect(civ.pregnancyProbabilityBonus).toBe(5)
+  })
+  it('navigation requires commerce', () => {
+    expect(withTechs(TechId.WAREHOUSING, TechId.LOGISTICS).canUnlock(TechId.NAVIGATION)).toBe(false)
+    expect(withTechs(TechId.WAREHOUSING, TechId.LOGISTICS, TechId.COMMERCE).canUnlock(TechId.NAVIGATION)).toBe(true)
+  })
+  it('navigation stacks on warehousing, logistics, commerce', () => {
+    const civ = withTechs(TechId.WAREHOUSING, TechId.LOGISTICS, TechId.COMMERCE, TechId.NAVIGATION)
+    expect(civ.storageMultiplier).toBeCloseTo(1.5 * 1.75 * 1.50 * 1.30)
+  })
+  it('cartography requires astronomy', () => {
+    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).canUnlock(TechId.CARTOGRAPHY)).toBe(false)
+    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.ASTRONOMY).canUnlock(TechId.CARTOGRAPHY)).toBe(true)
+  })
+  it('cartography stacks on philosophy, sciences, astronomy', () => {
+    const civ = withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.ASTRONOMY, TechId.CARTOGRAPHY)
+    expect(civ.researchMultiplier).toBeCloseTo(1.25 * 1.5 * 2.0 * 1.30)
+  })
+  it('industry requires engineering', () => {
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION).canUnlock(TechId.INDUSTRY)).toBe(false)
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION, TechId.ENGINEERING).canUnlock(TechId.INDUSTRY)).toBe(true)
+  })
+  it('artillery requires armory AND engineering', () => {
+    expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.METALLURGY, TechId.ARMORY).canUnlock(TechId.ARTILLERY)).toBe(false)
+    expect(
+      withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION, TechId.METALLURGY, TechId.ARMORY, TechId.ENGINEERING).canUnlock(TechId.ARTILLERY)
+    ).toBe(true)
+  })
+  it('advanced_medicine requires demography AND alchemy', () => {
+    expect(withTechs(TechId.MEDICINE, TechId.DEMOGRAPHY).canUnlock(TechId.ADVANCED_MEDICINE)).toBe(false)
+    expect(
+      withTechs(TechId.MEDICINE, TechId.DEMOGRAPHY, TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.METALLURGY, TechId.ALCHEMY).canUnlock(TechId.ADVANCED_MEDICINE)
+    ).toBe(true)
+  })
+  it('diplomacy requires urbanism AND commerce', () => {
+    expect(withTechs(TechId.WAREHOUSING, TechId.LOGISTICS, TechId.COMMERCE).canUnlock(TechId.DIPLOMACY)).toBe(false)
+    expect(
+      withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION, TechId.ENGINEERING, TechId.URBANISM, TechId.WAREHOUSING, TechId.LOGISTICS, TechId.COMMERCE).canUnlock(TechId.DIPLOMACY)
+    ).toBe(true)
+  })
+})
+
 describe('tier-4 techs', () => {
   it('alchemy requires metallurgy AND medicine', () => {
     expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.METALLURGY).canUnlock(TechId.ALCHEMY)).toBe(false)
