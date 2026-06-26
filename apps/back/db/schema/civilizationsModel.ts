@@ -113,6 +113,10 @@ const civilizationSchema = new Schema(
       type: Date,
       default: null,
     },
+    lastSeenMonth: {
+      type: Number,
+      default: null,
+    },
   },
   {
     timestamps: true,

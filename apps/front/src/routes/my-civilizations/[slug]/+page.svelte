@@ -18,6 +18,9 @@
 	import { onMount } from 'svelte'
 	import { invalidateAll } from '$app/navigation'
 	import { PUBLIC_BACK_URL } from '$env/static/public'
+	import RecapModal from '$lib/components/RecapModal.svelte'
+	import { callGetRecap } from '../../../services/sveltekit-api/recap'
+	import type { RecapData } from '@ajustor/civ-api'
 
 	interface Props {
 		data: PageData;
@@ -30,6 +33,7 @@
 	// Drive the citizens table from local state: reassigning the SvelteKit `data`
 	// prop's nested promise is NOT reactive in Svelte 5, so the table never updated.
 	let peoplePromise = $state<Promise<PeopleType[]>>(data.lazy.people)
+	let recap = $state<RecapData | null>(null)
 
 	// Which panel is expanded: null = closed
 	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
@@ -55,6 +59,17 @@
 
 	// Live refresh: the world advances a month every ~15 min server-side.
 	onMount(() => {
+		// Récap "pendant ton absence" : récupéré une seule fois (pas via load, donc
+		// non rejoué par l'auto-refresh). Marque la période vue côté serveur. Placé
+		// avant le retour anticipé worldId pour fonctionner même pour une civ hors monde.
+		void callGetRecap(data.civilization.id)
+			.then((result) => {
+				if (result?.hasRecap) {
+					recap = result
+				}
+			})
+			.catch((error) => console.error(error))
+
 		if (!data.worldId) {
 			return
 		}
@@ -186,6 +201,11 @@
 
 	const CHART_OPTS = { maintainAspectRatio: false, responsive: true }
 </script>
+
+<!-- ── Récap "pendant ton absence" ─────────────────────────────────────────── -->
+{#if recap}
+	<RecapModal {recap} onClose={() => (recap = null)} />
+{/if}
 
 <!-- ── Modal backdrop ──────────────────────────────────────────────────────── -->
 {#if activePanel}

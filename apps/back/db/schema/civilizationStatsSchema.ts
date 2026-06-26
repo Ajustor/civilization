@@ -31,6 +31,15 @@ const civilizationStatsSchema = new Schema(
     people: {
       type: statsPeopleSchema,
     },
+    buildings: {
+      type: [
+        {
+          buildingType: { type: String },
+          count: { type: Number },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

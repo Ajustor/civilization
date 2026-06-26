@@ -3,6 +3,7 @@ import { People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 import { BuildingTypes } from './buildings/enum'
 import { Wall } from './buildings/wall'
+import { Cache } from './buildings/cache'
 import { Gender } from './people/enum'
 import { OccupationTypes } from './people/work/enum'
 
@@ -37,6 +38,18 @@ describe('player-chosen next building', () => {
     civ['buildNewBuilding']()
 
     expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.WALL)).toBe(true)
+    expect(civ.config.NEXT_BUILDING_TO_BUILD).toBe(null)
+  })
+
+  it('builds another Entrepôt (Cache) even though one already exists (buildings stack)', () => {
+    const civ = new Civilization('Storage')
+    civ.addBuilding(new Cache()) // civilizations start with an Entrepôt
+    civ.config = { ...civ.config, NEXT_BUILDING_TO_BUILD: BuildingTypes.CACHE }
+    builders(civ, 5) // free gatherers (a Cache needs 1 to build)
+
+    civ['buildNewBuilding']()
+
+    expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.CACHE)).toBe(true)
     expect(civ.config.NEXT_BUILDING_TO_BUILD).toBe(null)
   })
 })
