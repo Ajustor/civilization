@@ -1,16 +1,12 @@
-import { OccupationTypes } from '../people/work/enum'
-import { ResourceTypes } from '../resource'
+import { OccupationTypes } from "../people/work/enum";
+import { ResourceTypes } from "../resource";
 import {
-  AbstractStorageBuilding,
-  BuildingType,
-  ConstructionCost,
-  StoredResource,
-  WorkerRequiredToBuild,
-} from '../types/building'
-import { BuildingTypes } from './enum'
+  AbstractStorageBuilding, BuildingType, ConstructionCost, StoredResource, WorkerRequiredToBuild
+} from "../types/building";
+import { BuildingTypes } from "./enum";
 
 export class Cache extends AbstractStorageBuilding {
-  count = 1
+  count = 1;
   storedResources: StoredResource[] = [
     {
       resource: ResourceTypes.WOOD,
@@ -36,25 +32,30 @@ export class Cache extends AbstractStorageBuilding {
       resource: ResourceTypes.STONE,
       maxQuantity: 300,
     },
-  ]
+  ];
 
-  public static constructionCosts: ConstructionCost[] = []
+  timeToBuild = 6;
+
+  public static constructionCosts: ConstructionCost[] = [
+    { amount: 200, resource: ResourceTypes.WOOD },
+    { amount: 600, resource: ResourceTypes.PLANK },
+  ];
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
       occupation: OccupationTypes.GATHERER,
       amount: 1,
     },
-  ]
+  ];
 
   getType(): BuildingTypes {
-    return BuildingTypes.CACHE
+    return BuildingTypes.CACHE;
   }
 
   formatToType(): BuildingType {
     return {
       count: this.count,
       type: this.getType(),
-    }
+    };
   }
 }
