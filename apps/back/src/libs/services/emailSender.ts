@@ -51,4 +51,4 @@ export class EmailSender {
 
 export const emailSender = new Elysia({ name: 'EmailSender' }).derive(({ }) => {
   return { emailSender: new EmailSender() }
-}).as('plugin')
+}).as('scoped')
