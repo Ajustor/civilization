@@ -9,7 +9,7 @@ import {
   ResourceTypes,
   formatCivilizations,
 } from '@ajustor/simulation'
-import Elysia, { t } from 'elysia'
+import Elysia, { NotFoundError, t } from 'elysia'
 
 import { CivilizationService } from './service'
 import { PeopleService } from '../people/service'
@@ -54,9 +54,16 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     const civilizations = await civilizationService.getByUserId(user.id, {
       people: false,
     })
+    const formatted = formatCivilizations(civilizations)
+    const counts = await Promise.all(
+      civilizations.map((civ) => civilizationService.getRecentAttacksCount(civ.id)),
+    )
     return {
       count: civilizations.length,
-      civilizations: formatCivilizations(civilizations),
+      civilizations: formatted.map((civ, i) => ({
+        ...civ,
+        recentAttacksCount: counts[i],
+      })),
     }
   })
   .get(
@@ -121,11 +128,13 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       await civilizationService.create(
         user.id as string,
         civilizationBuilder.build(),
+        body.worldId,
       )
     },
     {
       body: t.Object({
         name: t.String({ minLength: 3 }),
+        worldId: t.Optional(t.String()),
       }),
     },
   )
@@ -154,6 +163,34 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     {
       query: t.Object({
         limit: t.Optional(t.Number()),
+      }),
+    },
+  )
+  .get(
+    '/:civilizationId/world',
+    async ({ civilizationService, params: { civilizationId } }) => {
+      const worldId = await civilizationService.getWorldId(civilizationId)
+      if (!worldId) {
+        throw new NotFoundError('Civilization not found in any world')
+      }
+      return { worldId }
+    },
+  )
+  .get(
+    '/:civilizationId/combat-logs',
+    async ({
+      civilizationService,
+      params: { civilizationId },
+      query: { limit = 20, offset = 0 },
+    }) => {
+      await civilizationService.markCombatLogsViewed(civilizationId)
+      const logs = await civilizationService.getCombatLogs(civilizationId, limit, offset)
+      return { logs }
+    },
+    {
+      query: t.Object({
+        limit: t.Optional(t.Number()),
+        offset: t.Optional(t.Number()),
       }),
     },
   )

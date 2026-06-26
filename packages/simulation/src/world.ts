@@ -4,6 +4,8 @@ import { Resource, ResourceTypes } from './resource'
 import { Civilization } from './civilization'
 import { resolveBattle } from './combat'
 import type { CivilizationType } from './types/civilization'
+import { v4 as randomUUID } from 'uuid'
+import type { CombatRecord, PlunderedResource } from './types/combat'
 import { Earthquake } from './events/earthquake'
 import { Events } from './events/enum'
 import { Starvation } from './events/starvation'
@@ -64,6 +66,7 @@ export class World {
   private _civilizations: Civilization[] = []
 
   public nextEvent: Events | null = null
+  public lastBattles: CombatRecord[] = []
 
   constructor(
     private readonly name = 'The world',
@@ -224,55 +227,79 @@ export class World {
   }
 
   private resolveWars(): void {
+    this.lastBattles = []
     for (const attacker of this._civilizations) {
       for (const targetId of attacker.config.AT_WAR_WITH) {
         const defender = this.getCivilization(targetId)
         if (!defender || defender === attacker) {
           continue
         }
-        this.resolveAttack(attacker, defender)
+        const record = this.resolveAttack(attacker, defender)
+        if (record) {
+          this.lastBattles.push(record)
+        }
       }
     }
   }
 
-  private resolveAttack(attacker: Civilization, defender: Civilization): void {
-    // A standing wall blocks one attack and is consumed.
+  private resolveAttack(attacker: Civilization, defender: Civilization): CombatRecord | null {
     const wall = defender.wall
     if (wall && wall.count > 0) {
       defender.removeBuilding(wall)
-      return
+      return null
     }
 
+    const attackerStrength = attacker.militaryStrength
+    const defenderStrength = defender.militaryStrength
+
     const outcome = resolveBattle(
-      { strength: attacker.militaryStrength },
-      { strength: defender.militaryStrength },
+      { strength: attackerStrength },
+      { strength: defenderStrength },
     )
     if (!outcome.fought) {
-      return
+      return null
     }
 
     attacker.loseSoldiers(outcome.attackerLossRatio)
     defender.loseSoldiers(outcome.defenderLossRatio)
 
-    if (!outcome.attackerWins) {
-      return
-    }
+    const plunderedResources: PlunderedResource[] = []
+    let captivesTaken = 0
 
-    for (const resource of defender.resources) {
-      const plunder = Math.floor(resource.quantity * PLUNDER_RATIO)
-      if (plunder > 0) {
-        defender.decreaseResource(resource.type, plunder)
-        attacker.increaseResource(resource.type, plunder)
+    if (outcome.attackerWins) {
+      for (const resource of defender.resources) {
+        const plunder = Math.floor(resource.quantity * PLUNDER_RATIO)
+        if (plunder > 0) {
+          defender.decreaseResource(resource.type, plunder)
+          attacker.increaseResource(resource.type, plunder)
+          plunderedResources.push({ type: resource.type, amount: plunder })
+        }
+      }
+
+      const captureCount = Math.min(
+        Math.floor(defender.people.length * CAPTURE_RATIO),
+        CAPTURE_CAP,
+      )
+      if (captureCount > 0) {
+        const captives = defender.releaseCaptives(captureCount)
+        attacker.addPeople(...captives)
+        captivesTaken = captives.length
       }
     }
 
-    const captureCount = Math.min(
-      Math.floor(defender.people.length * CAPTURE_RATIO),
-      CAPTURE_CAP,
-    )
-    if (captureCount > 0) {
-      const captives = defender.releaseCaptives(captureCount)
-      attacker.addPeople(...captives)
+    return {
+      battleId: randomUUID(),
+      month: this.getMonth(),
+      worldId: this.id,
+      attackerCivId: attacker.id,
+      defenderCivId: defender.id,
+      attackerStrength,
+      defenderStrength,
+      attackerWins: outcome.attackerWins,
+      attackerLossRatio: outcome.attackerLossRatio,
+      defenderLossRatio: outcome.defenderLossRatio,
+      plunderedResources,
+      captivesTaken,
     }
   }
 

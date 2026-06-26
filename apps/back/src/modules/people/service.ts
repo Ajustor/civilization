@@ -112,7 +112,7 @@ export class PeopleService {
 
     const rawPeopleRequest = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id')
 
-    if (sort) {
+    if (sort?.field) {
       rawPeopleRequest.sort({ [sort.field]: sort.order })
     }
 

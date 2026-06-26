@@ -1,22 +1,22 @@
-import { Elysia } from 'elysia'
-import { authModule } from './modules/auth'
-import { civilizationModule } from './modules/civilizations'
-import { cors } from '@elysiajs/cors'
-import { jwtMiddleware } from './libs/jwt'
-import { logger } from "@bogeychan/elysia-logger"
-import { swagger } from '@elysiajs/swagger'
-import { usersModule } from './modules/users'
-import { version } from '../package.json'
-import { worldModule } from './modules/world'
-import mongoose from 'mongoose'
-import { peopleModule } from './modules/people'
-import { tradeOffersModule } from './modules/trade-offers'
+import { Elysia } from "elysia";
+import mongoose from "mongoose";
 
-import { serverTiming } from '@elysiajs/server-timing'
+import { logger } from "@bogeychan/elysia-logger";
+import { cors } from "@elysiajs/cors";
+import { serverTiming } from "@elysiajs/server-timing";
+import { swagger } from "@elysiajs/swagger";
 
+import { version } from "../package.json";
+import { jwtMiddleware } from "./libs/jwt";
+import { authModule } from "./modules/auth";
+import { civilizationModule } from "./modules/civilizations";
+import { peopleModule } from "./modules/people";
+import { tradeOffersModule } from "./modules/trade-offers";
+import { usersModule } from "./modules/users";
+import { worldModule } from "./modules/world";
 
-mongoose.connect(Bun.env.mongoConnectString ?? '')
-mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
+mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
+mongoose.connect(Bun.env.mongoConnectString ?? '');
 
 const app = new Elysia()
   .use(serverTiming())
@@ -32,13 +32,13 @@ const app = new Elysia()
   .use(usersModule)
   .use(civilizationModule)
   .use(peopleModule)
-  .use(tradeOffersModule)
+  .use(tradeOffersModule);
 
 
-app.listen(process.env.APP_PORT!)
+app.listen(process.env.APP_PORT!);
 
-console.log(`🦄 Server started at ${app.server?.url}`)
+console.log(`🦄 Server started at ${app.server?.url}`);
 
-export type App = typeof app
+export type App = typeof app;
 
-export type { UpdateCivilizationDtoType } from './modules/civilizations/dto'
+export type { UpdateCivilizationDtoType } from './modules/civilizations/dto';

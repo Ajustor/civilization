@@ -31,9 +31,9 @@ export const getMyCivilizationFromId = async (authToken: string, civilizationId:
 	return civilizationInfos.civilization
 }
 
-export const createCivilization = async (authToken: string, civilizationName: string) => {
+export const createCivilization = async (authToken: string, civilizationName: string, worldId?: string) => {
 	const { error } = await client.civilizations.post(
-		{ name: civilizationName },
+		{ name: civilizationName, ...(worldId ? { worldId } : {}) },
 		{
 			headers: {
 				authorization: `Bearer ${authToken}`
@@ -92,4 +92,38 @@ export const updateCivilization = async (authToken: string, civilizationId: stri
 		console.error(error)
 		throw error
 	}
+}
+
+export const getCivilizationWorld = async (authToken: string, civilizationId: string): Promise<string | null> => {
+	const { data, error } = await client.civilizations({ civilizationId }).world.get({
+		headers: { authorization: `Bearer ${authToken}` }
+	})
+
+	if (error) {
+		console.error(error)
+		throw error
+	}
+
+	return data.worldId
+}
+
+export const getCombatLogs = async (
+  authToken: string,
+  civilizationId: string,
+  limit = 20,
+  offset = 0,
+) => {
+  const { data, error } = await client
+    .civilizations({ civilizationId })
+    ['combat-logs'].get({
+      headers: { authorization: `Bearer ${authToken}` },
+      query: { limit, offset },
+    })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return data.logs
 }

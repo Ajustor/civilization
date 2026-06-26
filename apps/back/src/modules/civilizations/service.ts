@@ -16,12 +16,13 @@ import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall } from '@ajustor/simul
 import {
   CivilizationModel,
   CivilizationStatsModel,
+  CombatLogModel,
   PersonModel,
   UserModel,
   WorldModel,
 } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
-import { UpdateCivilizationDto, UpdateCivilizationDtoType } from './dto'
+import { UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
 import { arrayToMap } from '../../utils'
 
@@ -41,6 +42,7 @@ const BUILDING_CONSTRUCTORS = {
 export type MongoCivilizationType = CivilizationType & {
   resources: { quantity: number; resourceType: ResourceTypes }[]
   buildings: MongoBuildingType[]
+  worldId?: string | null
 }
 
 export const civilizationMapper = (
@@ -224,6 +226,20 @@ export class CivilizationService {
     return civilizations
   }
 
+  async getWorldId(civilizationId: string): Promise<string | null> {
+    const civ = await CivilizationModel.findById(civilizationId, 'worldId')
+    if (civ?.worldId) {
+      return civ.worldId.toString()
+    }
+    // Fallback for existing civs that predate the worldId field: reverse lookup + lazy backfill
+    const world = await WorldModel.findOne({ civilizations: civilizationId }, '_id')
+    if (world) {
+      await CivilizationModel.updateOne({ _id: civilizationId }, { worldId: world._id })
+      return world._id.toString()
+    }
+    return null
+  }
+
   async countGenderForWorld(
     worldId: string,
   ): Promise<{ men: number; women: number }> {
@@ -345,9 +361,11 @@ export class CivilizationService {
     return civilizationMapper(civilization, populate)
   }
 
-  async create(userId: string, civilization: Civilization) {
+  async create(userId: string, civilization: Civilization, worldId?: string) {
     const user = await UserModel.findOne({ _id: userId })
-    const world = await WorldModel.findOne()
+    const world = worldId
+      ? await WorldModel.findById(worldId)
+      : await WorldModel.findOne()
     if (!user) {
       throw new Error('No user found for this id')
     }
@@ -370,6 +388,7 @@ export class CivilizationService {
         ...building.formatToType(),
         buildingType: building.getType(),
       })),
+      worldId: world._id,
     })
 
     user.civilizations ??= []
@@ -575,5 +594,38 @@ export class CivilizationService {
       .limit(limit)
       .lean()
     return result.reverse()
+  }
+
+  async getCombatLogs(civilizationId: string, limit = 20, offset = 0) {
+    return CombatLogModel.find({ civilizationId })
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean()
+  }
+
+  async markCombatLogsViewed(civilizationId: string): Promise<void> {
+    await CivilizationModel.updateOne(
+      { _id: civilizationId },
+      { lastViewedCombats: new Date() },
+    )
+  }
+
+  async getRecentAttacksCount(civilizationId: string): Promise<number> {
+    const civ = await CivilizationModel.findById(civilizationId, {
+      lastViewedCombats: 1,
+    }).lean()
+
+    const filter: Record<string, unknown> = {
+      civilizationId,
+      role: 'defender',
+      attackerWins: true,
+    }
+
+    if (civ?.lastViewedCombats) {
+      filter.createdAt = { $gt: civ.lastViewedCombats }
+    }
+
+    return CombatLogModel.countDocuments(filter)
   }
 }

@@ -104,6 +104,15 @@ const civilizationSchema = new Schema(
       required: true,
       default: [],
     },
+    worldId: {
+      type: Schema.Types.ObjectId,
+      ref: 'World',
+      default: null,
+    },
+    lastViewedCombats: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -8,6 +8,7 @@ import { World } from './world'
 
 export type { CivilizationType, CivilizationConfig } from './types/civilization'
 export type { BuildingType } from './types/building'
+export type { CombatRecord, PlunderedResource } from './types/combat'
 export { defaultCivilizationConfig } from './civilization'
 
 export { BuildingTypes } from './buildings/enum'

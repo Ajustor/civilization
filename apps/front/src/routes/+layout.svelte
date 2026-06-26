@@ -5,7 +5,6 @@
 	import { useUser } from '../stores/user'
 	import type { LayoutData } from './$types'
 	import { Toaster } from '$lib/components/ui/sonner'
-	import { fly } from 'svelte/transition'
 	import { page } from '$app/state'
 	import { toast } from 'svelte-sonner'
 	import { pwaInfo } from 'virtual:pwa-info'
@@ -16,7 +15,12 @@
 
 	let userStore = useUser()
 
-	userStore.value = data.user
+	$effect(() => {
+		userStore.value = data.user
+	})
+
+	const authRoutes = ['/login', '/register', '/i-forgot']
+	let isAuthPage = $derived(authRoutes.some((r) => page.url.pathname.startsWith(r)))
 
 	$effect(() => {
 		const { error } = page
@@ -32,21 +36,15 @@
 	{@html webManifest}
 </svelte:head>
 
-<Toaster richColors />
+<Toaster />
 
 <div class="app">
-	<Header user={userStore.value} />
+	{#if !isAuthPage}
+		<Header user={userStore.value} />
+	{/if}
 
-	<main>
-		{#key data.url}
-			<span
-				class="h-full w-full"
-				in:fly={{ delay: 300, x: -200, duration: 300 }}
-				out:fly={{ duration: 300 }}
-			>
-				{@render children()}
-			</span>
-		{/key}
+	<main class:auth-main={isAuthPage}>
+		{@render children()}
 	</main>
 </div>
 
@@ -58,18 +56,17 @@
 	.app {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
 	}
 
 	main {
 		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-		align-items: center;
+		padding-bottom: env(safe-area-inset-bottom, 0px);
 	}
 </style>

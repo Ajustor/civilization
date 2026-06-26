@@ -4,8 +4,10 @@ import { fail, message, superValidate } from 'sveltekit-superforms'
 import {
 	getMyCivilizationFromId,
 	getMyCivilizations,
+	getCivilizationWorld,
 	updateCivilization
 } from '../../../../services/api/civilization-api'
+import { getWorldCivilizations } from '../../../../services/api/world-api'
 import type { Actions, PageServerLoad } from './$types'
 import { zod } from 'sveltekit-superforms/adapters'
 import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
@@ -23,12 +25,21 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		redirect(302, '/my-civilizations')
 	}
 
-	const myCivilizations = await getMyCivilizations(auth).catch(() => [])
+	const [myCivilizations, worldId] = await Promise.all([
+		getMyCivilizations(auth).catch(() => [] as Awaited<ReturnType<typeof getMyCivilizations>>),
+		getCivilizationWorld(auth, params.slug).catch(() => null),
+	])
 
-	// Other civilizations the player owns are the candidates to open exchange with.
+	// Échanges : uniquement ses propres autres civilisations
 	const otherCivilizations = (myCivilizations as CivilizationType[])
 		.filter((other) => other.id !== civilization.id)
 		.map((other) => ({ id: other.id, name: other.name }))
+
+	// Guerre : toutes les civilisations du monde sauf les siennes
+	const myIds = new Set((myCivilizations as CivilizationType[]).map((c) => c.id))
+	const worldCivilizations = worldId
+		? (await getWorldCivilizations(worldId).catch(() => [])).filter((c) => !myIds.has(c.id))
+		: []
 
 	const configForm = await superValidate(
 		{
@@ -45,6 +56,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 	return {
 		civilization,
 		otherCivilizations,
+		worldCivilizations,
 		configForm
 	}
 }
