@@ -11,6 +11,9 @@ import { getRandomInt } from '../utils/random'
 import { BuildingTypes } from './enum'
 
 export class Mine extends AbstractExtractionBuilding {
+  constructor(public count = 0) {
+    super()
+  }
   workerTypeRequired: WorkerRequired[] = [
     { occupation: OccupationTypes.MINER, count: 10 },
   ]
@@ -40,11 +43,14 @@ export class Mine extends AbstractExtractionBuilding {
   public generateOutput(possibleOutput: ResourceTypes[]) {
     let percent = 0
     for (const resource of possibleOutput) {
-      if (percent === 100) {
+      if (percent >= 100) {
         return
       }
 
-      const currentPercent = getRandomInt(0, 100 - percent)
+      // Each resource gets at least a 1% extraction chance so a freshly built
+      // mine is never inert (which would let it produce nothing and never
+      // deplete, so it could never be replaced).
+      const currentPercent = getRandomInt(1, 100 - percent)
       percent += currentPercent
 
       this.outputResources.push({ resource, probability: currentPercent })
