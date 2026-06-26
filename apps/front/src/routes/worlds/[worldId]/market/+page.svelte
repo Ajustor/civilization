@@ -45,6 +45,15 @@
 	)
 	const stockOf = (resourceType: string) => stockMap.get(resourceType) ?? 0
 
+	// Quick-select helpers: set a give line's quantity to a fraction of the current
+	// stock of its resource (rounded down, at least 1 if any stock is held).
+	const stockFractions = [0.1, 0.5, 1] as const
+	function setGiveFromStock(line: { resource: string; quantity: number }, fraction: number) {
+		const stock = stockOf(line.resource)
+		if (stock <= 0) return
+		line.quantity = Math.max(1, Math.floor(stock * fraction))
+	}
+
 	function civName(id: string): string {
 		return civNameMap.get(id) ?? id
 	}
@@ -138,9 +147,22 @@
 										<button type="button" onclick={() => removeLine(giveLines, i)} style="padding:6px 10px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); cursor:pointer;">×</button>
 									{/if}
 								</div>
-								<span style="font-size:13px; color:{exceeds ? 'oklch(0.52 0.2 30)' : 'oklch(0.5 0.03 50)'};">
-									Stock disponible : {fmt(stock)}{#if exceeds} — quantité supérieure au stock{/if}
-								</span>
+								<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+									<span style="font-size:13px; color:{exceeds ? 'oklch(0.52 0.2 30)' : 'oklch(0.5 0.03 50)'};">
+										Stock disponible : {fmt(stock)}{#if exceeds} — quantité supérieure au stock{/if}
+									</span>
+									{#if stock > 0}
+										<div style="display:flex; gap:4px;">
+											{#each stockFractions as fraction}
+												<button
+													type="button"
+													onclick={() => setGiveFromStock(line, fraction)}
+													style="padding:2px 8px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:13px; cursor:pointer;"
+												>{Math.round(fraction * 100)}%</button>
+											{/each}
+										</div>
+									{/if}
+								</div>
 							</div>
 						{/each}
 						{#if giveLines.length < resourceTypeValues.length}
