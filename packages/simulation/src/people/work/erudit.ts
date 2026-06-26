@@ -1,24 +1,25 @@
-import { OccupationTypes } from './enum'
-import type { UpgradedWork } from './interface'
+import { OccupationTypes } from "./enum";
 
-export const ERUDIT_REQUIRED_AGE = 21
+import type { UpgradedWork } from './interface';
+
+export const ERUDIT_REQUIRED_AGE = 21;
 
 export class Erudit implements UpgradedWork {
   canUpgrade(personAge: number): boolean {
-    return personAge >= ERUDIT_REQUIRED_AGE
+    return personAge >= ERUDIT_REQUIRED_AGE;
   }
 
-  public RETIREMENT_AGE = 70
+  public RETIREMENT_AGE = 80;
 
   get occupationType() {
-    return OccupationTypes.ERUDIT
+    return OccupationTypes.ERUDIT;
   }
 
   canRetire(personAge: number): boolean {
-    return personAge >= this.RETIREMENT_AGE
+    return personAge >= this.RETIREMENT_AGE;
   }
 
   canWork(personAge: number): boolean {
-    return personAge < this.RETIREMENT_AGE
+    return personAge < this.RETIREMENT_AGE;
   }
 }
