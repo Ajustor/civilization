@@ -19,7 +19,7 @@ import { OccupationTypes } from "./people/work/enum";
 import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
-import { TECH_TREE, TechId, getTechNode, getBuildingGate } from "./technology/techTree";
+import { TechId, getTechNode, getBuildingGate } from "./technology/techTree";
 import {
   AbstractExtractionBuilding, AbstractStorageBuilding, type Building, type ConstructionCost,
   type ExtractionBuilding, type ProductionBuilding, type WorkerRequiredToBuild
@@ -752,7 +752,7 @@ export class Civilization {
         worker.hasWork = true;
         for (const resource of resourcesProbabilities) {
           if (isWithinChance(resource.probability)) {
-            const amount = getRandomInt(1, 100);
+            const amount = Math.floor(getRandomInt(1, 100) * this.productionMultiplier);
             this.increaseResource(resource.resource, amount);
 
             if (building.capacity != null) {

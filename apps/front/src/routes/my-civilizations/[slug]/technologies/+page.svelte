@@ -149,6 +149,27 @@
 		off: 'oklch(0.62 0.03 60)'
 	}
 
+	// ── Synthèse des effets actifs ─────────────────────────────────────────────
+	// Tous les multiplicateurs/bonus issus des technologies acquises, calculés
+	// côté client à partir du TECH_TREE (miroir exact de la simulation).
+	const activeEffects = $derived(() => {
+		let prod = 1, stor = 1, mil = 1, research = 1, children = 0, pregnancy = 0
+		for (const id of researched) {
+			const node = byId.get(id)
+			if (!node) continue
+			for (const e of node.effects) {
+				if (e.kind === 'productionMultiplier') prod *= e.factor
+				else if (e.kind === 'storageMultiplier') stor *= e.factor
+				else if (e.kind === 'militaryMultiplier') mil *= e.factor
+				else if (e.kind === 'researchMultiplier') research *= e.factor
+				else if (e.kind === 'maxChildrenBonus') children += e.amount
+				else if (e.kind === 'pregnancyProbabilityBonus') pregnancy += e.amount
+			}
+		}
+		return { prod, stor, mil, research, children, pregnancy }
+	})
+	const fmtMult = (v: number) => v === 1 ? '×1' : `×${v.toFixed(2).replace(/\.?0+$/, '')}`
+
 	const unlock = async (node: TechNode) => {
 		if (stateOf(node) !== 'available') return
 		busy = node.id
@@ -188,6 +209,50 @@
 			<h1>Arbre des savoirs</h1>
 			<div class="tt-points"><span class="gem">◈</span> {points} <span class="lbl">points de recherche</span></div>
 		</div>
+
+		<!-- Synthèse des effets actifs -->
+		{#if researched.length > 0}
+			{@const fx = activeEffects()}
+			<div class="tt-synthesis">
+				<div class="synth-label">Effets actifs</div>
+				<div class="synth-chips">
+					<div class="synth-chip" class:boosted={fx.prod > 1} title="Multiplicateur de production des bâtiments (Ferme, Scierie, Four, Feu de camp, Mine)">
+						<span class="synth-icon">⚙️</span>
+						<span class="synth-name">Production</span>
+						<span class="synth-val">{fmtMult(fx.prod)}</span>
+					</div>
+					<div class="synth-chip" class:boosted={fx.stor > 1} title="Multiplicateur de capacité de stockage (Entrepôts)">
+						<span class="synth-icon">📦</span>
+						<span class="synth-name">Stockage</span>
+						<span class="synth-val">{fmtMult(fx.stor)}</span>
+					</div>
+					<div class="synth-chip" class:boosted={fx.mil > 1} title="Multiplicateur de force militaire (soldats)">
+						<span class="synth-icon">⚔️</span>
+						<span class="synth-name">Militaire</span>
+						<span class="synth-val">{fmtMult(fx.mil)}</span>
+					</div>
+					<div class="synth-chip" class:boosted={fx.research > 1} title="Multiplicateur de points de recherche par mois (Bibliothèque)">
+						<span class="synth-icon">🔭</span>
+						<span class="synth-name">Recherche</span>
+						<span class="synth-val">{fmtMult(fx.research)}</span>
+					</div>
+					{#if fx.children > 0}
+						<div class="synth-chip boosted" title="Nombre d'enfants supplémentaires par femme">
+							<span class="synth-icon">👶</span>
+							<span class="synth-name">Enfants / femme</span>
+							<span class="synth-val">+{fx.children}</span>
+						</div>
+					{/if}
+					{#if fx.pregnancy > 0}
+						<div class="synth-chip boosted" title="Bonus à la probabilité de conception (s'additionne à la base)">
+							<span class="synth-icon">🤰</span>
+							<span class="synth-name">Conception</span>
+							<span class="synth-val">+{fx.pregnancy}%</span>
+						</div>
+					{/if}
+				</div>
+			</div>
+		{/if}
 
 		<!-- Légende -->
 		<div class="tt-legend">
@@ -290,6 +355,55 @@
 	.tt-points .lbl {
 		font-size: 14px;
 		color: oklch(0.5 0.04 250);
+	}
+
+	.tt-synthesis {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 10px 14px;
+		background: oklch(0.95 0.02 84);
+		border: 1px solid oklch(0.8 0.045 70);
+		border-radius: 5px;
+		flex-wrap: wrap;
+	}
+	.synth-label {
+		font-family: 'Marcellus', serif;
+		font-size: 12px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: oklch(0.5 0.05 55);
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+	.synth-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.synth-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		border-radius: 999px;
+		border: 1px solid oklch(0.82 0.04 70);
+		background: oklch(0.98 0.01 84);
+		font-family: 'EB Garamond', serif;
+		font-size: 14px;
+		color: oklch(0.5 0.04 55);
+	}
+	.synth-chip.boosted {
+		border-color: oklch(0.62 0.13 145);
+		background: oklch(0.96 0.04 140);
+		color: oklch(0.32 0.1 145);
+	}
+	.synth-icon { font-size: 15px; line-height: 1; }
+	.synth-name { font-size: 13px; }
+	.synth-val {
+		font-family: 'Marcellus', serif;
+		font-size: 14px;
+		font-weight: 600;
 	}
 
 	.tt-legend {

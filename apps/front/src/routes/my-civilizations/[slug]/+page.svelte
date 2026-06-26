@@ -207,16 +207,35 @@
 			.reduce<number>((sum: number, b: { count: number }) => sum + b.count, 0)
 	)
 
-	// Multiplicateur de stockage issu des technologies recherchées (ex. Entreposage
-	// +50 %). Mirroir de `Civilization.storageMultiplier` côté simulation : produit
-	// des facteurs `storageMultiplier` de chaque techno acquise, défaut 1. Sans ça,
-	// la jauge sous-estimerait la capacité réelle après recherche.
-	const storageMultiplier = $derived(
-		TECH_TREE.filter((node) => (data.civilization.researchedTechs ?? []).includes(node.id))
-			.flatMap((node) => node.effects)
-			.filter((effect) => effect.kind === 'storageMultiplier')
-			.reduce((multiplier, effect) => multiplier * effect.factor, 1)
+	// Multiplicateurs issus des technologies recherchées — miroirs exacts des
+	// getters `Civilization.*Multiplier` de la simulation.
+	const researchedTechs = $derived(data.civilization.researchedTechs ?? [])
+	const _techEffects = $derived(
+		TECH_TREE.filter((node) => researchedTechs.includes(node.id)).flatMap((node) => node.effects)
 	)
+	const storageMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'storageMultiplier' ? m * e.factor : m, 1)
+	)
+	const productionMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'productionMultiplier' ? m * e.factor : m, 1)
+	)
+	const militaryMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'militaryMultiplier' ? m * e.factor : m, 1)
+	)
+	const researchMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'researchMultiplier' ? m * e.factor : m, 1)
+	)
+	const maxChildrenBonus = $derived(
+		_techEffects.reduce((s, e) => e.kind === 'maxChildrenBonus' ? s + e.amount : s, 0)
+	)
+	const pregnancyBonus = $derived(
+		_techEffects.reduce((s, e) => e.kind === 'pregnancyProbabilityBonus' ? s + e.amount : s, 0)
+	)
+	const hasTechBonus = $derived(
+		productionMultiplier > 1 || storageMultiplier > 1 || militaryMultiplier > 1 ||
+		researchMultiplier > 1 || maxChildrenBonus > 0 || pregnancyBonus > 0
+	)
+	const fmtMult = (v: number) => v === 1 ? '×1' : `×${v.toFixed(2).replace(/\.?0+$/, '')}`
 
 	// ── Constructions en cours ─────────────────────────────────────────────────
 	// Group pending constructions by building type, and within each type by the
@@ -608,6 +627,32 @@
 				</a>
 			</div>
 		</div>
+
+		<!-- Bonus de technologies actifs -->
+		{#if hasTechBonus}
+			<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding:10px 14px; margin-top:16px; background:oklch(0.96 0.03 140/0.35); border:1px solid oklch(0.75 0.1 145/0.4); border-radius:5px; font-family:'EB Garamond',serif;">
+				<span style="font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.4 0.1 145); white-space:nowrap; flex-shrink:0;">Bonus de technologies</span>
+				{#if productionMultiplier > 1}
+					<span title="Multiplicateur de production des bâtiments" style="font-size:14px; color:oklch(0.35 0.08 150);">⚙️ Production <strong>{fmtMult(productionMultiplier)}</strong></span>
+				{/if}
+				{#if storageMultiplier > 1}
+					<span title="Multiplicateur de capacité de stockage" style="font-size:14px; color:oklch(0.35 0.08 150);">📦 Stockage <strong>{fmtMult(storageMultiplier)}</strong></span>
+				{/if}
+				{#if militaryMultiplier > 1}
+					<span title="Multiplicateur de force militaire" style="font-size:14px; color:oklch(0.35 0.08 150);">⚔️ Militaire <strong>{fmtMult(militaryMultiplier)}</strong></span>
+				{/if}
+				{#if researchMultiplier > 1}
+					<span title="Multiplicateur de points de recherche par mois" style="font-size:14px; color:oklch(0.35 0.08 150);">🔭 Recherche <strong>{fmtMult(researchMultiplier)}</strong></span>
+				{/if}
+				{#if maxChildrenBonus > 0}
+					<span title="Enfants supplémentaires par femme" style="font-size:14px; color:oklch(0.35 0.08 150);">👶 Enfants/femme <strong>+{maxChildrenBonus}</strong></span>
+				{/if}
+				{#if pregnancyBonus > 0}
+					<span title="Bonus à la probabilité de conception" style="font-size:14px; color:oklch(0.35 0.08 150);">🤰 Conception <strong>+{pregnancyBonus}%</strong></span>
+				{/if}
+				<a href="/my-civilizations/{data.civilization.id}/technologies" style="margin-left:auto; font-size:13px; color:oklch(0.45 0.1 145); text-decoration:none; white-space:nowrap;">{(data.civilization.researchedTechs ?? []).length} technologie{(data.civilization.researchedTechs ?? []).length > 1 ? 's' : ''} acquise{(data.civilization.researchedTechs ?? []).length > 1 ? 's' : ''} →</a>
+			</div>
+		{/if}
 
 		<!-- Charts row -->
 		<div style="display:flex; justify-content:flex-end; align-items:center; margin-top:24px;">
