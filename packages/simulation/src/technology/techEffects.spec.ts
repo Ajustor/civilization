@@ -99,3 +99,23 @@ describe('economy effects', () => {
     expect(civ.getStorageCapacity(ResourceTypes.WOOD)).toBe(Math.floor(baseCap * 1.5))
   })
 })
+
+describe('military and population effects', () => {
+  it('military strength scales with militaryMultiplier', () => {
+    const civ = new Civilization('Army')
+    const soldier = new People({ month: 12 * 30, gender: Gender.MALE, lifeCounter: 10 })
+    soldier.id = 'sold'
+    soldier.setOccupation(OccupationTypes.SOLDIER)
+    civ.addPeople(soldier)
+    const base = civ.militaryStrength
+    civ.researchedTechs = [TechId.MASONRY, TechId.METALLURGY] // +25%
+    expect(civ.militaryStrength).toBe(Math.floor(base * 1.25))
+  })
+  it('effective max children includes the bonus', () => {
+    const civ = new Civilization('Pop')
+    const baseMax = civ.config.MAXIMUM_CHILDREN
+    civ.researchedTechs = [TechId.MEDICINE] // +5
+    expect(civ.effectiveMaxChildren).toBe(baseMax + 5)
+    expect(civ.effectivePregnancyProbability).toBe(Math.min(100, civ.config.PREGNANCY_PROBABILITY + 10))
+  })
+})

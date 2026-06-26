@@ -343,10 +343,11 @@ export class Civilization {
   }
 
   get militaryStrength(): number {
-    return this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
+    const base = this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
       (strength, soldier) => strength + Math.max(0, soldier.lifeCounter),
       0,
     );
+    return Math.floor(base * this.militaryMultiplier);
   }
 
   loseSoldiers(ratio: number): void {
@@ -395,6 +396,14 @@ export class Civilization {
       return sum + (stored?.maxQuantity ?? 0) * building.count
     }, 0)
     return Math.floor(base * this.storageMultiplier)
+  }
+
+  get effectiveMaxChildren(): number {
+    return this.config.MAXIMUM_CHILDREN + this.maxChildrenBonus;
+  }
+
+  get effectivePregnancyProbability(): number {
+    return Math.min(100, this.config.PREGNANCY_PROBABILITY + this.pregnancyProbabilityBonus);
   }
 
   addPeople(...peoples: People[]): void {
@@ -615,7 +624,7 @@ export class Civilization {
     // cap defensively.
     if (
       activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
-      this.childrenCount < this.config.MAXIMUM_CHILDREN
+      this.childrenCount < this.effectiveMaxChildren
     ) {
       await this.createNewPeople();
     }
@@ -1132,7 +1141,7 @@ export class Civilization {
   private async createNewPeople() {
     // Handle pregnancy
 
-    if (this.config.MAXIMUM_CHILDREN <= this.childrenCount) {
+    if (this.effectiveMaxChildren <= this.childrenCount) {
       return;
     }
 
@@ -1189,7 +1198,7 @@ export class Civilization {
       eligiblePeople.map(
         ([mother, father]) =>
           new Promise((resolve) => {
-            if (!isWithinChance(this.config.PREGNANCY_PROBABILITY) || !mother) {
+            if (!isWithinChance(this.effectivePregnancyProbability) || !mother) {
               return resolve(null);
             }
 
