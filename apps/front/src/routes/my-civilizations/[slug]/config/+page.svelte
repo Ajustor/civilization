@@ -40,6 +40,10 @@
 		// openExchange / atWarWith are arrays driven by checkboxes (no native form
 		// inputs), so they only reach the server when the whole form is posted as JSON.
 		dataType: 'json',
+		// Keep the just-submitted values on screen instead of resetting to the
+		// initial (often default) load snapshot — the action returns the freshly
+		// persisted config, which we want to remain displayed.
+		resetForm: false,
 		validators: zodClient(civilizationConfigSchema),
 		onError({ result }) {
 			toast.error(result.error?.message ?? 'Une erreur est survenue')

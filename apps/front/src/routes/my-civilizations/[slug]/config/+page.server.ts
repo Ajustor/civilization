@@ -79,8 +79,27 @@ export const actions: Actions = {
 				nextBuildingToBuild: form.data.nextBuildingToBuild
 			})
 
-			message(form, { status: 'success', text: 'La configuration a bien été mise à jour' })
-			return { form }
+			// Re-read so the form reflects exactly what was persisted (avoids showing
+			// stale/default values after submit).
+			const updated = await getMyCivilizationFromId(cookies.get('auth') ?? '', params.slug).catch(
+				() => null
+			)
+			const persistedForm = updated
+				? await superValidate(
+						{
+							maximumChildren: updated.config.MAXIMUM_CHILDREN,
+							maxActivePeopleByCivilization: updated.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
+							openExchange: updated.config.OPEN_EXCHANGE ?? [],
+							militaryRatio: updated.config.MILITARY_RATIO,
+							atWarWith: updated.config.AT_WAR_WITH ?? [],
+							nextBuildingToBuild: updated.config.NEXT_BUILDING_TO_BUILD ?? null
+						},
+						zod(civilizationConfigSchema)
+					)
+				: form
+
+			message(persistedForm, { status: 'success', text: 'La configuration a bien été mise à jour' })
+			return { form: persistedForm }
 		} catch (requestError) {
 			error(requestError.status ?? 500, requestError.value ?? 'Une erreur est survenue')
 		}
