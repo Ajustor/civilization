@@ -21,6 +21,7 @@ import {
   UserModel,
   WorldModel,
 } from '../../libs/database/models'
+import { computeRecap, emptyRecap, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
 import { PeopleService, personMapper } from '../people/service'
 import { UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
@@ -701,5 +702,47 @@ export class CivilizationService {
     }
 
     return CombatLogModel.countDocuments(filter)
+  }
+
+  async getRecap(userId: string, civilizationId: string): Promise<RecapData> {
+    const user = await UserModel.findOne({ _id: userId }).populate<{
+      civilizations: (CivilizationType & { livedMonths: number; lastSeenMonth?: number | null })[]
+    }>({ path: 'civilizations' })
+
+    const civilization = user?.civilizations.find(({ id }) => id === civilizationId)
+    if (!user || !civilization) {
+      throw new Error('No civilization found')
+    }
+
+    const toMonth = civilization.livedMonths
+    const fromMonth = civilization.lastSeenMonth
+
+    // Première visite : on pose la référence, pas de récap.
+    if (fromMonth === null || fromMonth === undefined) {
+      await CivilizationModel.updateOne({ _id: civilizationId }, { lastSeenMonth: toMonth })
+      return emptyRecap()
+    }
+    if (toMonth <= fromMonth) {
+      return emptyRecap()
+    }
+
+    const allStats = (await CivilizationStatsModel.find({ civilizationId })
+      .sort('month')
+      .lean()) as unknown as RecapStatsSnapshot[]
+    const baseline = [...allStats].reverse().find((snapshot) => snapshot.month <= fromMonth) ?? null
+    const current = allStats[allStats.length - 1] ?? null
+    const periodSnapshots = allStats.filter(
+      (snapshot) => snapshot.month > fromMonth && snapshot.month <= toMonth,
+    )
+
+    const combats = (await CombatLogModel.find({
+      civilizationId,
+      month: { $gt: fromMonth, $lte: toMonth },
+    }).lean()) as unknown as RecapCombatLog[]
+
+    const recap = computeRecap({ fromMonth, toMonth, baseline, current, periodSnapshots, combats })
+
+    await CivilizationModel.updateOne({ _id: civilizationId }, { lastSeenMonth: toMonth })
+    return recap
   }
 }
