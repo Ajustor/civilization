@@ -14,6 +14,9 @@ export { defaultCivilizationConfig } from './civilization'
 export { BuildingTypes } from './buildings/enum'
 export * from './buildings'
 
+export { TECH_TREE, TechId } from './technology/techTree'
+export type { TechNode, TechEffect } from './technology/techTree'
+
 export { OccupationTypes } from './people/work/enum'
 export { MINIMAL_AGE_TO_BECOME } from './people/work/ages'
 export { DeathCause } from './people/death'
