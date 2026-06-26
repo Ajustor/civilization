@@ -519,11 +519,13 @@ export class Civilization {
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
     ).length
 
-    // Allow only half people to be child
-    const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD)
+    // The maximum number of simultaneous children is governed solely by the
+    // civilization's own configuration (MAXIMUM_CHILDREN) so that what the
+    // player sets is exactly what applies. createNewPeople enforces the same
+    // cap defensively.
     if (
       activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
-      children.length < (adults.length * 1) / 3
+      this.childrenCount < this.config.MAXIMUM_CHILDREN
     ) {
       await this.createNewPeople()
     }
