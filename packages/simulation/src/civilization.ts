@@ -1,35 +1,31 @@
-import { Resource, ResourceTypes } from './resource'
-import { countries, uniqueNamesGenerator } from 'unique-names-generator'
+import { countries, uniqueNamesGenerator } from "unique-names-generator";
+import { v4 } from "uuid";
 
+import { isExtractionOrProductionBuilding } from "./buildings";
+import { Cache } from "./buildings/cache";
+import { Campfire } from "./buildings/campfire";
+import { BuildingTypes } from "./buildings/enum";
+import { Farm } from "./buildings/farm";
+import { House } from "./buildings/house";
+import { Kiln } from "./buildings/kiln";
+import { Mine } from "./buildings/mine";
+import { Sawmill } from "./buildings/sawmill";
+import { Wall } from "./buildings/wall";
+import { Gender } from "./people/enum";
+import { People } from "./people/people";
+import { OccupationTypes } from "./people/work/enum";
+import { Resource, ResourceTypes } from "./resource";
+import { OCCUPATION_TREE } from "./technology/occupationTree";
 import {
-  AbstractExtractionBuilding,
-  AbstractStorageBuilding,
-  ExtractionBuilding,
-  type Building,
-  type ConstructionCost,
-  type ProductionBuilding,
-  type WorkerRequiredToBuild,
-} from './types/building'
-import { BuildingTypes } from './buildings/enum'
-import { Gender } from './people/enum'
-import { House } from './buildings/house'
-import { OccupationTypes } from './people/work/enum'
-import { People } from './people/people'
-import type { World } from './world'
-import { hasElementInCommon } from './utils/array'
-import { isWithinChance } from './utils'
-import { v4 } from 'uuid'
-import { OCCUPATION_TREE } from './technology/occupationTree'
-import { getRandomInt } from './utils/random'
-import { Kiln } from './buildings/kiln'
-import { Sawmill } from './buildings/sawmill'
-import { Farm } from './buildings/farm'
-import { Mine } from './buildings/mine'
-import { isExtractionOrProductionBuilding } from './buildings'
-import { Campfire } from './buildings/campfire'
-import { Cache } from './buildings/cache'
-import { Wall } from './buildings/wall'
-import type { CivilizationConfig, PendingConstruction } from './types/civilization'
+  AbstractExtractionBuilding, AbstractStorageBuilding, Building, ConstructionCost,
+  ExtractionBuilding, ProductionBuilding, type, type, type, type, WorkerRequiredToBuild
+} from "./types/building";
+import { isWithinChance } from "./utils";
+import { hasElementInCommon } from "./utils/array";
+import { getRandomInt } from "./utils/random";
+
+import type { World } from './world';
+import type { CivilizationConfig, PendingConstruction } from './types/civilization';
 
 export const defaultCivilizationConfig: CivilizationConfig = {
   PEOPLE_CHARCOAL_CAN_HEAT: 10,
@@ -42,7 +38,7 @@ export const defaultCivilizationConfig: CivilizationConfig = {
   AT_WAR_WITH: [],
   MILITARY_RATIO: 0,
   NEXT_BUILDING_TO_BUILD: null,
-}
+};
 
 const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
@@ -53,30 +49,30 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
   [BuildingTypes.WALL]: Wall,
-}
+};
 
-const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE]
+const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE];
 
 const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
   [BuildingTypes.MINE]: [ResourceTypes.STONE],
-}
+};
 
-const STORAGE_BUILDINGS = [BuildingTypes.CACHE]
-const EXTRACTIONS_BUILDINGS = [BuildingTypes.MINE]
+const STORAGE_BUILDINGS = [BuildingTypes.CACHE];
+const EXTRACTIONS_BUILDINGS = [BuildingTypes.MINE];
 
 export const isExtractionBuilding = (
   building: Building,
 ): building is AbstractExtractionBuilding =>
-  EXTRACTIONS_BUILDINGS.includes(building.getType())
+  EXTRACTIONS_BUILDINGS.includes(building.getType());
 
 export class Civilization {
-  public id = v4()
-  public pendingConstructions: PendingConstruction[] = []
-  private _people: People[]
-  private _resources: Resource[]
-  private _livedMonths: number = 0
-  private _buildings: Building[]
-  private _citizensCount: number = 0
+  public id = v4();
+  public pendingConstructions: PendingConstruction[] = [];
+  private _people: People[];
+  private _resources: Resource[];
+  private _livedMonths: number = 0;
+  private _buildings: Building[];
+  private _citizensCount: number = 0;
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
@@ -86,438 +82,438 @@ export class Civilization {
       AT_WAR_WITH: [...defaultCivilizationConfig.AT_WAR_WITH],
     },
   ) {
-    this._people = []
-    this._resources = []
-    this._buildings = []
+    this._people = [];
+    this._resources = [];
+    this._buildings = [];
   }
 
   nobodyAlive(): boolean {
-    return this._people.length === 0
+    return this._people.length === 0;
   }
 
   get citizensCount(): number {
-    return this._people.length || this._citizensCount
+    return this._people.length || this._citizensCount;
   }
 
   set citizensCount(citizenCount: number) {
-    this._citizensCount = citizenCount
+    this._citizensCount = citizenCount;
   }
 
   get childrenCount(): number {
-    return this.people.filter((person) => person.work?.occupationType === OccupationTypes.CHILD).length
+    return this.people.filter((person) => person.work?.occupationType === OccupationTypes.CHILD).length;
   }
 
   get livedMonths(): number {
-    return this._livedMonths
+    return this._livedMonths;
   }
 
   set livedMonths(livedMonths: number) {
-    this._livedMonths = livedMonths
+    this._livedMonths = livedMonths;
   }
 
   get people(): People[] {
-    return this._people
+    return this._people;
   }
 
   set people(people: People[]) {
-    this._people = people
+    this._people = people;
   }
 
   get resources(): Resource[] {
-    return this._resources
+    return this._resources;
   }
 
   set resources(resources: Resource[]) {
-    this._resources = resources
+    this._resources = resources;
   }
 
   get buildings(): Building[] {
-    return this._buildings
+    return this._buildings;
   }
 
   get houses(): House | undefined {
     return this.buildings.find<House>(
       (building): building is House =>
         building.getType() === BuildingTypes.HOUSE,
-    )
+    );
   }
 
   get sawmill(): Sawmill | undefined {
     return this.buildings.find<Sawmill>(
       (building): building is Sawmill =>
         building.getType() === BuildingTypes.SAWMILL,
-    )
+    );
   }
 
   get mine(): Mine | undefined {
     return this.buildings.find<Mine>(
       (building): building is Mine => building.getType() === BuildingTypes.MINE,
-    )
+    );
   }
 
   get kiln(): Kiln | undefined {
     return this.buildings.find<Kiln>(
       (building): building is Kiln => building.getType() === BuildingTypes.KILN,
-    )
+    );
   }
 
   get farm(): Farm | undefined {
     return this.buildings.find<Farm>(
       (building): building is Farm => building.getType() === BuildingTypes.FARM,
-    )
+    );
   }
 
   get cache(): Cache | undefined {
     return this.buildings.find<Cache>(
       (building): building is Cache =>
         building.getType() === BuildingTypes.CACHE,
-    )
+    );
   }
 
   get campfire(): Campfire | undefined {
     return this.buildings.find<Campfire>(
       (building): building is Campfire =>
         building.getType() === BuildingTypes.CAMPFIRE,
-    )
+    );
   }
 
   get wall(): Wall | undefined {
     return this.buildings.find<Wall>(
       (building): building is Wall => building.getType() === BuildingTypes.WALL,
-    )
+    );
   }
 
   set houses(house: House) {
-    this.buildings.push(house)
+    this.buildings.push(house);
   }
 
   private getWorkerSpaceLeft(workerType: OccupationTypes): number {
-    const peopleWithOccupation = this.getPeopleWithOccupation(workerType).length
+    const peopleWithOccupation = this.getPeopleWithOccupation(workerType).length;
     return (
       this.buildings.reduce((space, building) => {
         if (isExtractionOrProductionBuilding(building)) {
           const requiredWorker = building.workerTypeRequired.filter(
             (worker) => worker.occupation === workerType,
-          )
+          );
           if (!requiredWorker.length) {
-            return space
+            return space;
           }
           space +=
             requiredWorker.reduce((sum, { count }) => sum + count, 0) *
-            building.count
+            building.count;
         }
-        return space
+        return space;
       }, 0) - peopleWithOccupation
-    )
+    );
   }
 
   increaseResource(type: ResourceTypes, count: number) {
-    const resource = this._resources.find((resource) => type === resource.type)
+    const resource = this._resources.find((resource) => type === resource.type);
     if (!resource) {
-      this._resources.push(new Resource(type, count))
+      this._resources.push(new Resource(type, count));
     } else {
-      resource.increase(count)
+      resource.increase(count);
     }
   }
 
   decreaseResource(type: ResourceTypes, count: number) {
-    const resource = this._resources.find((resource) => type === resource.type)
+    const resource = this._resources.find((resource) => type === resource.type);
 
     if (!resource) {
-      this._resources.push(new Resource(type, 0))
+      this._resources.push(new Resource(type, 0));
     } else {
-      resource.decrease(count)
+      resource.decrease(count);
     }
   }
 
   getResource(type: ResourceTypes): Resource {
-    let resource = this._resources.find((resource) => resource.type === type)
+    let resource = this._resources.find((resource) => resource.type === type);
 
     if (!resource) {
-      resource = new Resource(type, 0)
-      this.addResource(resource)
+      resource = new Resource(type, 0);
+      this.addResource(resource);
     }
 
-    return resource
+    return resource;
   }
 
   getPeopleWithOccupation(occupation: OccupationTypes): People[] {
     return this._people.filter(
       ({ work: peopleJob }) =>
         peopleJob && occupation === peopleJob.occupationType,
-    )
+    );
   }
 
   getPeopleOlderThan(age: number): People[] {
-    return this._people.filter(({ years }) => years >= age)
+    return this._people.filter(({ years }) => years >= age);
   }
 
   removePeople(citizenIds: string[]) {
-    this._people = this._people.filter(({ id }) => !citizenIds.includes(id))
+    this._people = this._people.filter(({ id }) => !citizenIds.includes(id));
   }
 
   getPeopleWithoutOccupation(occupation: OccupationTypes): People[] {
     return this._people.filter(
       ({ work: peopleJob }) =>
         peopleJob && occupation !== peopleJob.occupationType,
-    )
+    );
   }
 
   get militaryStrength(): number {
     return this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
       (strength, soldier) => strength + Math.max(0, soldier.lifeCounter),
       0,
-    )
+    );
   }
 
   loseSoldiers(ratio: number): void {
-    const soldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER)
-    const toKill = Math.floor(soldiers.length * ratio)
-    const casualties = soldiers.slice(0, toKill).map(({ id }) => id)
-    this.removePeople(casualties)
+    const soldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER);
+    const toKill = Math.floor(soldiers.length * ratio);
+    const casualties = soldiers.slice(0, toKill).map(({ id }) => id);
+    this.removePeople(casualties);
   }
 
   releaseCaptives(count: number): People[] {
-    const candidates = this.getPeopleWithoutOccupation(OccupationTypes.SOLDIER)
-    const captured = candidates.slice(0, count)
-    this.removePeople(captured.map(({ id }) => id))
-    return captured
+    const candidates = this.getPeopleWithoutOccupation(OccupationTypes.SOLDIER);
+    const captured = candidates.slice(0, count);
+    this.removePeople(captured.map(({ id }) => id));
+    return captured;
   }
 
   getWorkersWhoCanRetire(): People[] {
-    return this._people.filter((worker) => worker.canRetire())
+    return this._people.filter((worker) => worker.canRetire());
   }
 
   getWorkersWhoCanUpgrade(): People[] {
     return this._people.filter(
       (worker) =>
         worker.work && OCCUPATION_TREE[worker.work.occupationType]?.length,
-    )
+    );
   }
 
   getDestructibleBuildings(): Building[] {
     return this._buildings.filter(
       (building) => !UNDESTRUCTIBLE_BUILDINGS.includes(building.getType()),
-    )
+    );
   }
 
   getStorageBuildings(): AbstractStorageBuilding[] {
     return this._buildings.filter((building) =>
       STORAGE_BUILDINGS.includes(building.getType()),
-    ) as AbstractStorageBuilding[]
+    ) as AbstractStorageBuilding[];
   }
 
   addPeople(...peoples: People[]): void {
     for (const people of peoples) {
-      this._people.push(people)
+      this._people.push(people);
     }
   }
 
   addResource(...resources: Resource[]): void {
-    this._resources.push(...resources)
+    this._resources.push(...resources);
   }
 
   addBuilding(...buildings: Building[]): void {
-    this._buildings.push(...buildings)
+    this._buildings.push(...buildings);
   }
 
   removeBuilding(building: Building): void {
     this._buildings = this._buildings.filter(
       (existingBuilding) => existingBuilding !== building,
-    )
+    );
   }
 
   constructBuilding(type: BuildingTypes): void {
     const existingBuilding = this.buildings.find(
       (building) => building.getType() === type,
-    )
+    );
 
     if (!existingBuilding) {
-      const newBuilding = new BUILDING_CONSTRUCTORS[type](1)
+      const newBuilding = new BUILDING_CONSTRUCTORS[type](1);
 
       if (isExtractionBuilding(newBuilding)) {
-        const buildingType = newBuilding.getType()
+        const buildingType = newBuilding.getType();
         newBuilding.generateOutput(
           (buildingType in EXTRACTIONS_RESOURCES &&
             EXTRACTIONS_RESOURCES[buildingType]) ||
-            [],
-        )
+          [],
+        );
       }
-      this.addBuilding(newBuilding)
-      return
+      this.addBuilding(newBuilding);
+      return;
     }
 
     if (isExtractionBuilding(existingBuilding)) {
-      const buildingType = existingBuilding.getType()
+      const buildingType = existingBuilding.getType();
       existingBuilding.generateOutput(
         (buildingType in EXTRACTIONS_RESOURCES &&
           EXTRACTIONS_RESOURCES[buildingType]) ||
-          [],
-      )
+        [],
+      );
     }
 
-    existingBuilding.count++
+    existingBuilding.count++;
   }
 
   private startConstruction(buildingType: BuildingTypes, monthsToBuild: number): void {
     this.pendingConstructions.push({
       buildingType,
       monthsRemaining: monthsToBuild,
-    })
+    });
   }
 
   private isBuildingPending(buildingType: BuildingTypes): boolean {
     return this.pendingConstructions.some(
       (pending) => pending.buildingType === buildingType,
-    )
+    );
   }
 
   private progressConstructions(): void {
-    const completed: PendingConstruction[] = []
+    const completed: PendingConstruction[] = [];
     for (const pending of this.pendingConstructions) {
-      pending.monthsRemaining--
+      pending.monthsRemaining--;
       if (pending.monthsRemaining <= 0) {
-        completed.push(pending)
+        completed.push(pending);
       }
     }
 
     for (const pending of completed) {
-      this.constructBuilding(pending.buildingType)
+      this.constructBuilding(pending.buildingType);
     }
 
     this.pendingConstructions = this.pendingConstructions.filter(
       (pending) => pending.monthsRemaining > 0,
-    )
+    );
   }
 
   private collectResource(workers: People[], world: World): Promise<null> {
     return new Promise((resolve) => {
       for (const worker of workers) {
-        worker.collectResource(world, this)
+        worker.collectResource(world, this);
       }
-      resolve(null)
-    })
+      resolve(null);
+    });
   }
 
   private async resourceConsumption(
     world: World,
     people: People[],
   ): Promise<void> {
-    const civilizationFood = this.getResource(ResourceTypes.RAW_FOOD)
-    const civilizationCookedFood = this.getResource(ResourceTypes.COOKED_FOOD)
-    const civilizationWood = this.getResource(ResourceTypes.WOOD)
-    const civilizationCharcoal = this.getResource(ResourceTypes.CHARCOAL)
+    const civilizationFood = this.getResource(ResourceTypes.RAW_FOOD);
+    const civilizationCookedFood = this.getResource(ResourceTypes.COOKED_FOOD);
+    const civilizationWood = this.getResource(ResourceTypes.WOOD);
+    const civilizationCharcoal = this.getResource(ResourceTypes.CHARCOAL);
 
     const foodPromise = new Promise((resolve) => {
       // Handle food consumption and life counter
       for (const person of people) {
         if (civilizationCookedFood) {
-          const eatFactor = person.eatFactor
+          const eatFactor = person.eatFactor;
           if (civilizationCookedFood.quantity >= eatFactor) {
-            civilizationCookedFood.decrease(eatFactor)
-            person.increaseLife(1)
-            continue
+            civilizationCookedFood.decrease(eatFactor);
+            person.increaseLife(1);
+            continue;
           }
         }
 
         if (civilizationFood) {
-          const eatFactor = person.eatFactor * 2
+          const eatFactor = person.eatFactor * 2;
           if (civilizationFood.quantity >= eatFactor) {
-            civilizationFood.decrease(eatFactor)
-            person.increaseLife(0.5)
-            continue
+            civilizationFood.decrease(eatFactor);
+            person.increaseLife(0.5);
+            continue;
           }
         }
 
-        person.decreaseLife(4)
+        person.decreaseLife(4);
       }
-      resolve(null)
-    })
+      resolve(null);
+    });
 
     const heatPromise = new Promise((resolve) => {
       // Handle wood consumption
 
       if (civilizationWood || civilizationCharcoal) {
-        let requiredWoodQuantity = 0
+        let requiredWoodQuantity = 0;
 
         switch (world.season) {
           case 'winter':
-            requiredWoodQuantity = 3
-            break
+            requiredWoodQuantity = 3;
+            break;
           case 'automn':
-            requiredWoodQuantity = 2
-            break
+            requiredWoodQuantity = 2;
+            break;
         }
 
         if (!requiredWoodQuantity) {
-          resolve(null)
+          resolve(null);
         }
 
         const peopleHeatedWithCharcoal = Math.min(
           civilizationCharcoal.quantity * this.config.PEOPLE_CHARCOAL_CAN_HEAT,
           people.length,
-        )
+        );
 
-        let peopleDoesNotHaveHeat = [...people]
+        let peopleDoesNotHaveHeat = [...people];
 
         if (peopleHeatedWithCharcoal) {
-          peopleDoesNotHaveHeat = people.toSpliced(0, peopleHeatedWithCharcoal)
+          peopleDoesNotHaveHeat = people.toSpliced(0, peopleHeatedWithCharcoal);
           civilizationCharcoal.decrease(
             Math.ceil(
               (people.length - peopleDoesNotHaveHeat.length) /
-                this.config.PEOPLE_CHARCOAL_CAN_HEAT,
+              this.config.PEOPLE_CHARCOAL_CAN_HEAT,
             ),
-          )
+          );
         }
 
         if (!peopleDoesNotHaveHeat.length) {
-          return resolve(null)
+          return resolve(null);
         }
 
         for (const person of peopleDoesNotHaveHeat) {
           if (civilizationWood.quantity >= requiredWoodQuantity) {
-            civilizationWood.decrease(requiredWoodQuantity)
+            civilizationWood.decrease(requiredWoodQuantity);
           } else {
-            person.decreaseLife()
+            person.decreaseLife();
           }
         }
       }
-      resolve(null)
-    })
+      resolve(null);
+    });
 
-    await Promise.all([foodPromise, heatPromise])
+    await Promise.all([foodPromise, heatPromise]);
   }
 
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
 
-    const gatherers = this.getPeopleWithOccupation(OccupationTypes.GATHERER)
-    const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER)
-    const children = this.getPeopleWithOccupation(OccupationTypes.CHILD)
+    const gatherers = this.getPeopleWithOccupation(OccupationTypes.GATHERER);
+    const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER);
+    const children = this.getPeopleWithOccupation(OccupationTypes.CHILD);
 
     await Promise.all([
       this.collectResource(children, world),
       this.collectResource(gatherers, world),
       this.collectResource(woodCutters, world),
-    ])
+    ]);
 
     const people = this.people
       .toSorted(
         (firstPerson, secondPerson) => secondPerson.years - firstPerson.years,
       )
-      .toSorted((person) => (person.work?.canWork(person.years) ? 1 : -1))
+      .toSorted((person) => (person.work?.canWork(person.years) ? 1 : -1));
 
-    await this.resourceConsumption(world, people)
+    await this.resourceConsumption(world, people);
 
     // Age all people
-    this._people.forEach((person) => person.ageOneMonth())
+    this._people.forEach((person) => person.ageOneMonth());
 
-    this.checkHousing()
-    this.removeDeadPeople()
+    this.checkHousing();
+    this.removeDeadPeople();
 
     const activePeopleCount = this.people.filter(
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
-    ).length
+    ).length;
 
     // The maximum number of simultaneous children is governed solely by the
     // civilization's own configuration (MAXIMUM_CHILDREN) so that what the
@@ -527,124 +523,124 @@ export class Civilization {
       activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
       this.childrenCount < this.config.MAXIMUM_CHILDREN
     ) {
-      await this.createNewPeople()
+      await this.createNewPeople();
     }
 
-    await this.birthAwaitingBabies()
+    await this.birthAwaitingBabies();
 
-    this.extractResources()
-    this.produceResources()
+    this.extractResources();
+    this.produceResources();
 
-    this.adaptPeopleJob()
-    this.progressConstructions()
-    this.buildNewBuilding()
+    this.adaptPeopleJob();
+    this.progressConstructions();
+    this.buildNewBuilding();
 
     if (!this.nobodyAlive()) {
-      this.livedMonths++
+      this.livedMonths++;
     }
   }
 
   private useProductionBuilding(building: ProductionBuilding) {
     for (let i = building.count; i > 0; i--) {
-      const requiredWorkers = building.workerTypeRequired
-      const workerByTypes = new Map<OccupationTypes, People[]>()
+      const requiredWorkers = building.workerTypeRequired;
+      const workerByTypes = new Map<OccupationTypes, People[]>();
       const requiredResourceAmountIndexedByType = new Map<
         ResourceTypes,
         number
-      >()
+      >();
 
       const workerRequiredCount = requiredWorkers.reduce(
         (count, { count: amount }) => count + amount,
         0,
-      )
+      );
 
       for (const requiredWorker of requiredWorkers) {
         const workers = this.getPeopleWithOccupation(
           requiredWorker.occupation,
-        ).filter((people) => people.canWork())
+        ).filter((people) => people.canWork());
 
         workerByTypes.set(
           requiredWorker.occupation,
           workers.splice(0, requiredWorker.count),
-        )
+        );
       }
 
       for (const requiredResources of building.inputResources) {
-        const resource = this.getResource(requiredResources.resource)
+        const resource = this.getResource(requiredResources.resource);
 
         if (resource.quantity < requiredResources.amount) {
-          return
+          return;
         }
 
         requiredResourceAmountIndexedByType.set(
           requiredResources.resource,
           requiredResources.amount,
-        )
+        );
       }
-      let availableWorkers = 0
+      let availableWorkers = 0;
 
       for (const workers of workerByTypes.values()) {
         for (const worker of workers) {
-          worker.hasWork = true
+          worker.hasWork = true;
 
-          availableWorkers++
+          availableWorkers++;
         }
       }
-      const productionRatio = availableWorkers / workerRequiredCount
+      const productionRatio = availableWorkers / workerRequiredCount;
       for (const [
         resource,
         amount,
       ] of requiredResourceAmountIndexedByType.entries()) {
-        this.decreaseResource(resource, amount)
+        this.decreaseResource(resource, amount);
       }
 
       for (const producedResource of building.outputResources) {
         this.increaseResource(
           producedResource.resource,
           Math.ceil(producedResource.amount * productionRatio),
-        )
+        );
       }
     }
   }
 
   private extractResources() {
     if (this.mine) {
-      this.extractResourcesFromBuilding(this.mine)
+      this.extractResourcesFromBuilding(this.mine);
     }
   }
 
   private extractResourcesFromBuilding(building: ExtractionBuilding) {
-    const resourcesProbabilities = building.outputResources
-    const requiredWorkers = building.workerTypeRequired
+    const resourcesProbabilities = building.outputResources;
+    const requiredWorkers = building.workerTypeRequired;
 
     // An exhausted extraction building is destroyed so a fresh one (with a new
     // random capacity) can be built in its place. `!= null` is used instead of
     // truthiness so that a capacity of exactly 0 is treated as exhausted.
     if (building.capacity != null && building.capacity <= 0) {
-      this.removeBuilding(building)
-      return
+      this.removeBuilding(building);
+      return;
     }
 
     for (const requiredWorker of requiredWorkers) {
       const worker = this.getPeopleWithOccupation(
         requiredWorker.occupation,
-      ).find((people) => people.canWork())
+      ).find((people) => people.canWork());
 
       if (!worker) {
-        return
+        return;
       }
-      worker.hasWork = true
+      worker.hasWork = true;
       for (const resource of resourcesProbabilities) {
         if (isWithinChance(resource.probability)) {
-          const amount = getRandomInt(1, 100)
-          this.increaseResource(resource.resource, amount)
+          const amount = getRandomInt(1, 100);
+          this.increaseResource(resource.resource, amount);
 
           if (building.capacity != null) {
-            building.capacity -= amount
+            building.capacity -= amount;
 
             if (building.capacity <= 0) {
-              this.removeBuilding(building)
-              return
+              this.removeBuilding(building);
+              return;
             }
           }
         }
@@ -654,73 +650,73 @@ export class Civilization {
 
   private produceResources() {
     if (this.sawmill) {
-      this.useProductionBuilding(this.sawmill)
+      this.useProductionBuilding(this.sawmill);
     }
 
     if (this.kiln) {
-      this.useProductionBuilding(this.kiln)
+      this.useProductionBuilding(this.kiln);
     }
 
     if (this.farm) {
-      this.useProductionBuilding(this.farm)
+      this.useProductionBuilding(this.farm);
     }
 
     if (this.campfire) {
-      this.useProductionBuilding(this.campfire)
+      this.useProductionBuilding(this.campfire);
     }
   }
 
   private buildChosenBuilding(): void {
-    const chosen = this.config.NEXT_BUILDING_TO_BUILD
+    const chosen = this.config.NEXT_BUILDING_TO_BUILD;
     if (!chosen) {
-      return
+      return;
     }
 
     // Defensive guard: an invalid stored building type (e.g. from a crafted
     // request) would otherwise crash the monthly tick on the constructor
     // lookup below. Drop the request instead.
     if (!(chosen in BUILDING_CONSTRUCTORS)) {
-      this.config.NEXT_BUILDING_TO_BUILD = null
-      return
+      this.config.NEXT_BUILDING_TO_BUILD = null;
+      return;
     }
 
     // Buildings stack via their `count`, so an existing one of this type is NOT a
     // blocker for a player-chosen build. Only skip if a build of this type is
     // already under construction, to avoid double-queueing the same chantier.
     if (this.isBuildingPending(chosen)) {
-      this.config.NEXT_BUILDING_TO_BUILD = null
-      return
+      this.config.NEXT_BUILDING_TO_BUILD = null;
+      return;
     }
 
     // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
     if (chosen === BuildingTypes.WALL) {
-      const builders = this.people.filter((person) => person.canWork()).length
+      const builders = this.people.filter((person) => person.canWork()).length;
       if (builders < Wall.minBuilders) {
-        return // keep the request; retry next month
+        return; // keep the request; retry next month
       }
     }
 
     const constructor = BUILDING_CONSTRUCTORS[chosen] as {
-      constructionCosts: ConstructionCost[]
-      workerRequiredToBuild: WorkerRequiredToBuild[]
-      timeToBuild: number
-    }
+      constructionCosts: ConstructionCost[];
+      workerRequiredToBuild: WorkerRequiredToBuild[];
+      timeToBuild: number;
+    };
     this.buildNew(
       chosen,
       constructor.constructionCosts,
       constructor.workerRequiredToBuild,
       constructor.timeToBuild,
-    )
+    );
 
     // Clear the request only if the chantier actually started.
     if (this.isBuildingPending(chosen)) {
-      this.config.NEXT_BUILDING_TO_BUILD = null
+      this.config.NEXT_BUILDING_TO_BUILD = null;
     }
   }
 
   private buildNewBuilding() {
-    this.buildChosenBuilding()
-    this.buildNewHouses()
+    this.buildChosenBuilding();
+    this.buildNewHouses();
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
       if (!this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)) {
@@ -729,7 +725,7 @@ export class Civilization {
           Cache.constructionCosts,
           Cache.workerRequiredToBuild,
           Cache.timeToBuild,
-        )
+        );
       }
     }
 
@@ -740,7 +736,7 @@ export class Civilization {
         Kiln.constructionCosts,
         Kiln.workerRequiredToBuild,
         Kiln.timeToBuild,
-      )
+      );
     }
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
@@ -749,7 +745,7 @@ export class Civilization {
         Sawmill.constructionCosts,
         Sawmill.workerRequiredToBuild,
         Sawmill.timeToBuild,
-      )
+      );
     }
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
@@ -758,7 +754,7 @@ export class Civilization {
         Farm.constructionCosts,
         Farm.workerRequiredToBuild,
         Farm.timeToBuild,
-      )
+      );
     }
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
@@ -767,7 +763,7 @@ export class Civilization {
         Campfire.constructionCosts,
         Campfire.workerRequiredToBuild,
         Campfire.timeToBuild,
-      )
+      );
     }
 
     if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
@@ -777,7 +773,7 @@ export class Civilization {
           Mine.constructionCosts,
           Mine.workerRequiredToBuild,
           Mine.timeToBuild,
-        )
+        );
       }
     }
   }
@@ -785,48 +781,48 @@ export class Civilization {
   private buildNewHouses() {
     const canBuild = House.constructionCosts.every(
       (cost) => this.getResource(cost.resource).quantity >= cost.amount,
-    )
+    );
     if (!canBuild) {
-      return
+      return;
     }
 
     // Count pending houses toward effective capacity so in-flight construction
     // isn't re-queued every month until it completes.
     const pendingHouses = this.pendingConstructions.filter(
       (pending) => pending.buildingType === BuildingTypes.HOUSE,
-    ).length
+    ).length;
     const housesTotalCapacity =
-      House.capacity * ((this.houses?.count ?? 0) + pendingHouses)
+      House.capacity * ((this.houses?.count ?? 0) + pendingHouses);
     const workerNeeded = Math.ceil(
       (this._people.length - housesTotalCapacity) / House.capacity,
-    )
+    );
 
     if (workerNeeded < 0) {
-      return
+      return;
     }
-    const filteredWorkers = this.people.filter((citizen) => citizen.canWork())
+    const filteredWorkers = this.people.filter((citizen) => citizen.canWork());
     const workers = filteredWorkers.slice(
       0,
       Math.min(workerNeeded, filteredWorkers.length),
-    )
+    );
 
     for (const worker of workers) {
       const canContinueBuilding = House.constructionCosts.every(
         (cost) => this.getResource(cost.resource).quantity >= cost.amount,
-      )
+      );
 
       if (!canContinueBuilding) {
-        return
+        return;
       }
 
       for (const cost of House.constructionCosts) {
-        this.decreaseResource(cost.resource, cost.amount)
+        this.decreaseResource(cost.resource, cost.amount);
       }
 
       // One pending entry is pushed per available worker: parallel
       // construction sites are intended (one house per worker in flight).
-      worker.startBuilding(House.timeToBuild)
-      this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild)
+      worker.startBuilding(House.timeToBuild);
+      this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild);
     }
   }
 
@@ -839,63 +835,65 @@ export class Civilization {
     const canBuild =
       constructionCosts.every(
         (cost) => this.getResource(cost.resource).quantity >= cost.amount,
-      ) || !constructionCosts.length
+      ) || !constructionCosts.length;
     if (!canBuild) {
-      return
+      return;
     }
+
+    console.info('Start building', { buildingType, constructionCosts, workerRequiredToBuild, timeToBuild });
 
     const workers = workerRequiredToBuild.reduce<People[]>(
       (workers, workerRequired) => {
         const availableWorkers = this.getPeopleWithOccupation(
           workerRequired.occupation,
-        )
+        );
         for (let i = 0; i < workerRequired.amount; i++) {
           const worker = availableWorkers.find(
             (citizen) =>
               citizen.canWork() && !workers.find(({ id }) => id === citizen.id),
-          )
+          );
           if (worker) {
-            workers.push(worker)
+            workers.push(worker);
           }
         }
-        return workers
+        return workers;
       },
       [],
-    )
+    );
 
     if (
       workers.length <
       workerRequiredToBuild.reduce((sum, { amount }) => sum + amount, 0)
     ) {
-      return
+      return;
     }
     for (const worker of workers) {
-      worker.startBuilding(timeToBuild)
+      worker.startBuilding(timeToBuild);
     }
 
     for (const cost of constructionCosts) {
-      this.decreaseResource(cost.resource, cost.amount)
+      this.decreaseResource(cost.resource, cost.amount);
     }
 
-    this.startConstruction(buildingType, timeToBuild)
+    this.startConstruction(buildingType, timeToBuild);
   }
 
   private checkHousing() {
-    let lastCitizenWithoutHouseIndex = 0
+    let lastCitizenWithoutHouseIndex = 0;
     if (this.houses) {
-      lastCitizenWithoutHouseIndex = House.capacity * this.houses.count - 1
+      lastCitizenWithoutHouseIndex = House.capacity * this.houses.count - 1;
     }
-    const citizenWithoutHouse = this.people.slice(lastCitizenWithoutHouseIndex)
+    const citizenWithoutHouse = this.people.slice(lastCitizenWithoutHouseIndex);
 
     for (const citizen of citizenWithoutHouse) {
-      citizen.decreaseLife()
+      citizen.decreaseLife();
     }
   }
 
   public adaptPeopleJob() {
-    const workers = this.getWorkersWhoCanRetire()
+    const workers = this.getWorkersWhoCanRetire();
     for (const citizen of workers) {
-      citizen.setOccupation(OccupationTypes.RETIRED)
+      citizen.setOccupation(OccupationTypes.RETIRED);
     }
 
     const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(
@@ -908,37 +906,37 @@ export class Civilization {
           work.occupationType,
         ) &&
         !hasWork,
-    )
+    );
     for (const peopleWhoHasNotWork of peoplesWhoHasNotWork) {
       for (const [key, jobs] of Object.entries(OCCUPATION_TREE)) {
-        if (key === OccupationTypes.CHILD) continue
+        if (key === OccupationTypes.CHILD) continue;
         if (
           peopleWhoHasNotWork.work &&
           jobs.includes(peopleWhoHasNotWork.work.occupationType)
         ) {
-          peopleWhoHasNotWork.setOccupation(key as OccupationTypes)
+          peopleWhoHasNotWork.setOccupation(key as OccupationTypes);
         }
       }
     }
 
-    const workersCanUpgrade = this.getWorkersWhoCanUpgrade()
+    const workersCanUpgrade = this.getWorkersWhoCanUpgrade();
     for (const worker of workersCanUpgrade) {
       const hasChanceToEvolve =
         worker.work?.occupationType === OccupationTypes.CHILD ||
-        isWithinChance(this.config.CHANCE_TO_EVOLVE)
+        isWithinChance(this.config.CHANCE_TO_EVOLVE);
       if (hasChanceToEvolve && worker.work && worker.canUpgradeWork()) {
         const newPossibleOccupations =
-          OCCUPATION_TREE[worker.work.occupationType] ?? []
+          OCCUPATION_TREE[worker.work.occupationType] ?? [];
 
         if (!newPossibleOccupations.length) {
-          continue
+          continue;
         }
 
         const selectedNewOccupation = getRandomInt(
           0,
           newPossibleOccupations.length - 1,
-        )
-        const newOccupation = newPossibleOccupations[selectedNewOccupation]
+        );
+        const newOccupation = newPossibleOccupations[selectedNewOccupation];
 
         if (
           newOccupation &&
@@ -947,24 +945,24 @@ export class Civilization {
               newOccupation,
             ))
         ) {
-          worker.setOccupation(newOccupation)
+          worker.setOccupation(newOccupation);
         }
       }
     }
 
-    this.recruitSoldiers()
+    this.recruitSoldiers();
   }
 
   private recruitSoldiers(): void {
-    const ratio = this.config.MILITARY_RATIO ?? 0
+    const ratio = this.config.MILITARY_RATIO ?? 0;
     const adults = this.getPeopleWithoutOccupation(OccupationTypes.CHILD).filter(
       (person) => person.work?.occupationType !== OccupationTypes.RETIRED,
-    )
-    const targetSoldiers = Math.floor((adults.length * ratio) / 100)
-    const currentSoldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER)
+    );
+    const targetSoldiers = Math.floor((adults.length * ratio) / 100);
+    const currentSoldiers = this.getPeopleWithOccupation(OccupationTypes.SOLDIER);
 
     if (currentSoldiers.length === targetSoldiers) {
-      return
+      return;
     }
 
     if (currentSoldiers.length < targetSoldiers) {
@@ -973,16 +971,16 @@ export class Civilization {
           person.work?.occupationType !== OccupationTypes.SOLDIER &&
           // Une femme enceinte ne peut pas devenir soldat.
           person.pregnancyMonthsLeft <= 0,
-      )
-      const toRecruit = targetSoldiers - currentSoldiers.length
+      );
+      const toRecruit = targetSoldiers - currentSoldiers.length;
       for (const person of recruitable.slice(0, toRecruit)) {
-        person.setOccupation(OccupationTypes.SOLDIER)
+        person.setOccupation(OccupationTypes.SOLDIER);
       }
     } else {
       // Over target (ratio lowered): release the surplus back to gathering.
-      const toRelease = currentSoldiers.length - targetSoldiers
+      const toRelease = currentSoldiers.length - targetSoldiers;
       for (const person of currentSoldiers.slice(0, toRelease)) {
-        person.setOccupation(OccupationTypes.GATHERER)
+        person.setOccupation(OccupationTypes.GATHERER);
       }
     }
   }
@@ -991,56 +989,56 @@ export class Civilization {
     // Handle pregnancy
 
     if (this.config.MAXIMUM_CHILDREN <= this.childrenCount) {
-      return
+      return;
     }
 
-    let eligiblePeople: [People, People][] = []
+    let eligiblePeople: [People, People][] = [];
     const ableToConceivePeople = this._people.filter((person) =>
       person.canConceive(),
-    )
+    );
 
     const women = ableToConceivePeople.filter(
       ({ gender }) => gender === Gender.FEMALE,
-    )
+    );
     const men = ableToConceivePeople
       .filter(({ gender }) => gender === Gender.MALE)
-      .toSorted(() => Math.random() - 0.5)
+      .toSorted(() => Math.random() - 0.5);
 
     if (!women.length) {
-      return
+      return;
     }
 
     // Direct lineage is recomputed for every (woman, man) comparison below,
     // which is quadratic in the fertile population. Memoize it per person so
     // each lineage is only built once per month.
-    const lineageCache = new Map<People, string[]>()
+    const lineageCache = new Map<People, string[]>();
     const lineageOf = (person: People): string[] => {
-      let lineage = lineageCache.get(person)
+      let lineage = lineageCache.get(person);
       if (!lineage) {
-        lineage = person.getDirectLineage()
-        lineageCache.set(person, lineage)
+        lineage = person.getDirectLineage();
+        lineageCache.set(person, lineage);
       }
-      return lineage
-    }
+      return lineage;
+    };
 
     for (const woman of women) {
-      const womanLineage = lineageOf(woman)
+      const womanLineage = lineageOf(woman);
       const eligibleManIndex = men.findIndex(
         (man) => !hasElementInCommon(womanLineage, lineageOf(man)),
-      )
+      );
 
       if (eligibleManIndex === -1) {
-        continue
+        continue;
       }
-      const [eligibleMan] = men.splice(eligibleManIndex, 1)
+      const [eligibleMan] = men.splice(eligibleManIndex, 1);
 
       if (eligibleMan) {
-        eligiblePeople.push([woman, eligibleMan])
+        eligiblePeople.push([woman, eligibleMan]);
       }
     }
 
     if (!eligiblePeople.length) {
-      return
+      return;
     }
 
     await Promise.all(
@@ -1048,18 +1046,18 @@ export class Civilization {
         ([mother, father]) =>
           new Promise((resolve) => {
             if (!isWithinChance(this.config.PREGNANCY_PROBABILITY) || !mother) {
-              return resolve(null)
+              return resolve(null);
             }
 
-            const genders = [Gender.FEMALE, Gender.MALE]
+            const genders = [Gender.FEMALE, Gender.MALE];
             const newPerson = new People({
               month: 0,
               gender:
                 genders[
-                  Math.min(
-                    Math.floor(Math.random() * genders.length),
-                    genders.length - 1,
-                  )
+                Math.min(
+                  Math.floor(Math.random() * genders.length),
+                  genders.length - 1,
+                )
                 ],
               lifeCounter: 2,
               lineage: {
@@ -1082,38 +1080,38 @@ export class Civilization {
                   }),
                 },
               },
-            })
-            newPerson.setOccupation(OccupationTypes.CHILD)
+            });
+            newPerson.setOccupation(OccupationTypes.CHILD);
 
-            mother.addChildToBirth(newPerson)
+            mother.addChildToBirth(newPerson);
 
-            mother.lifeCounter = Math.floor(mother.lifeCounter / 2)
-            father.lifeCounter = Math.floor(father.lifeCounter / 2)
-            resolve(null)
+            mother.lifeCounter = Math.floor(mother.lifeCounter / 2);
+            father.lifeCounter = Math.floor(father.lifeCounter / 2);
+            resolve(null);
           }),
       ),
-    )
+    );
   }
 
   private async birthAwaitingBabies() {
-    const awaitingMothers = this._people.filter<People & { child: People }>(
-      (person): person is People & { child: People } =>
+    const awaitingMothers = this._people.filter<People & { child: People; }>(
+      (person): person is People & { child: People; } =>
         !!(person.pregnancyMonthsLeft === 0 && person.child),
-    )
+    );
 
     await Promise.all(
       awaitingMothers.map(
         (mother) =>
           new Promise((resolve) => {
-            this.addPeople(mother.child)
-            mother.giveBirth()
-            resolve(null)
+            this.addPeople(mother.child);
+            mother.giveBirth();
+            resolve(null);
           }),
       ),
-    )
+    );
   }
 
   private removeDeadPeople() {
-    this._people = this._people.filter((person) => person.isAlive())
+    this._people = this._people.filter((person) => person.isAlive());
   }
 }
