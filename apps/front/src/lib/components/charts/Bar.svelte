@@ -44,7 +44,7 @@
 		LineController
 	)
 
-	let chart: HTMLCanvasElement = $state()
+	let chart: HTMLCanvasElement = $state(undefined as unknown as HTMLCanvasElement)
 
 	// Rebuild the chart whenever `data`/`options` change. The previous version only
 	// drew once in onMount, so the live auto-refresh (and any reactive data update)

@@ -1,7 +1,7 @@
 import {
   AbstractExtractionBuilding,
   AbstractProductionBuilding,
-  Building,
+  type Building,
 } from '../types/building'
 
 export const isExtractionOrProductionBuilding = (

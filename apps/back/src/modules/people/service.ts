@@ -1,7 +1,7 @@
-import { Gender, OccupationTypes, People, PeopleBuilder, PeopleEntity, PeopleType } from '@ajustor/simulation'
-import { MongoCivilizationType } from '../civilizations/service'
+import { Gender, OccupationTypes, People, PeopleBuilder, type PeopleEntity, type PeopleType } from '@ajustor/simulation'
+import type { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
-import { AnyBulkWriteOperation, SortOrder } from 'mongoose'
+import { type AnyBulkWriteOperation, type SortOrder } from 'mongoose'
 
 export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage, originCivilizationId }: PeopleType): People => {
   const peopleBuilder = new PeopleBuilder()

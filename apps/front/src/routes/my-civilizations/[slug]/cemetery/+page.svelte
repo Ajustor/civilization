@@ -26,9 +26,6 @@
 	<meta name="description" content="Le cimetière de {data.civilization.name}" />
 </svelte:head>
 
-<!-- Voile de deuil : recouvre tout le fond parchemin de la page -->
-<div class="mourning-veil" aria-hidden="true"></div>
-
 <div class="mourning">
 	<div class="mourning-wrapper">
 		<!-- Fil d'Ariane assombri -->
@@ -95,21 +92,14 @@
 </div>
 
 <style>
-	/* Voile fixe qui recouvre le fond parchemin du layout */
-	.mourning-veil {
-		position: fixed;
-		inset: 0;
-		z-index: -1;
-		background:
-			radial-gradient(ellipse at 50% -10%, oklch(0.24 0.025 285), transparent 60%),
-			radial-gradient(ellipse at 50% 120%, oklch(0.16 0.02 280), transparent 55%),
-			oklch(0.12 0.018 280);
-	}
-
 	.mourning {
 		min-height: 100%;
 		color: oklch(0.82 0.018 80);
 		font-family: 'EB Garamond', serif;
+		background:
+			radial-gradient(ellipse at 50% -10%, oklch(0.24 0.025 285), transparent 60%),
+			radial-gradient(ellipse at 50% 120%, oklch(0.16 0.02 280), transparent 55%),
+			oklch(0.12 0.018 280);
 	}
 
 	.mourning-wrapper {

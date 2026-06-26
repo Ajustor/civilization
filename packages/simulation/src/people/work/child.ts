@@ -4,7 +4,7 @@ import { getRandomInt } from '../../utils/random'
 import { World } from '../../world'
 import { MINIMAL_AGE_TO_WORK } from '../people'
 import { OccupationTypes } from './enum'
-import { Work } from './interface'
+import type { Work } from './interface'
 
 export class Child implements Work {
   canUpgrade(personAge: number): boolean {

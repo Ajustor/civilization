@@ -11,7 +11,8 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"useUnknownInCatchVariables": false,
-		"types": ["vite-plugin-pwa/info", "vite-plugin-pwa/svelte", "vite-plugin-pwa/client"]
+		"types": ["vite-plugin-pwa/info", "vite-plugin-pwa/svelte", "vite-plugin-pwa/client"],
+		"jsx": "react-jsx"
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	// except $lib which is handled by https://kit.svelte.dev/docs/configuration#files

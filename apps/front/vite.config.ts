@@ -26,7 +26,8 @@ const superformsZodAdapter = path.join(
 
 const generateSW = process.env.GENERATE_SW === 'true'
 
-const plugins = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const plugins: any[] = [
 	visualizer({ filename: 'stats.html', emitFile: true }) as PluginOption,
 	sveltekit(),
 	SvelteKitPWA({

@@ -1,4 +1,4 @@
-import { ActionInput, WorldEvent } from './interface'
+import type { ActionInput, WorldEvent } from './interface'
 import { MAX_LIFE, MINIMUM_CONCEPTION_AGE, People } from '../people/people'
 import { getRandomInt, isWithinChance } from '../utils/random'
 

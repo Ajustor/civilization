@@ -2,8 +2,8 @@ import { OccupationTypes } from '../people/work/enum'
 import { ResourceTypes } from '../resource'
 import {
   AbstractProductionBuilding,
-  WorkerRequired,
-  WorkerRequiredToBuild,
+  type WorkerRequired,
+  type WorkerRequiredToBuild,
   type BuildingType,
   type ConstructionCost,
   type ProduceResource,

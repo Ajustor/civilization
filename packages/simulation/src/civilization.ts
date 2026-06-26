@@ -21,8 +21,8 @@ import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
 import { TECH_TREE, TechId, getTechNode, getBuildingGate } from "./technology/techTree";
 import {
-  AbstractExtractionBuilding, AbstractStorageBuilding, Building, ConstructionCost,
-  ExtractionBuilding, ProductionBuilding, WorkerRequiredToBuild
+  AbstractExtractionBuilding, AbstractStorageBuilding, type Building, type ConstructionCost,
+  type ExtractionBuilding, type ProductionBuilding, type WorkerRequiredToBuild
 } from "./types/building";
 import { isWithinChance } from "./utils";
 import { hasElementInCommon } from "./utils/array";

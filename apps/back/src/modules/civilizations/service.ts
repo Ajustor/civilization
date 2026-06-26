@@ -1,17 +1,17 @@
 import {
-  BuildingType,
+  type BuildingType,
   BuildingTypes,
   Civilization,
   CivilizationBuilder,
-  CivilizationConfig,
-  CivilizationType,
+  type CivilizationConfig,
+  type CivilizationType,
   House,
-  PeopleEntity,
+  type PeopleEntity,
   Resource,
   ResourceTypes,
   isExtractionBuilding,
   defaultCivilizationConfig,
-  TechId,
+  type TechId,
   getTechNode,
 } from '@ajustor/simulation'
 import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
@@ -26,8 +26,8 @@ import {
 } from '../../libs/database/models'
 import { computeRecap, emptyRecap, RECAP_MIN_MONTHS, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
 import { PeopleService, personMapper } from '../people/service'
-import { UpdateCivilizationDtoType } from './dto'
-import { AnyBulkWriteOperation, Types } from 'mongoose'
+import type { UpdateCivilizationDtoType } from './dto'
+import { type AnyBulkWriteOperation, Types } from 'mongoose'
 import { arrayToMap } from '../../utils'
 import { pushSender } from '../../libs/services/pushSender'
 

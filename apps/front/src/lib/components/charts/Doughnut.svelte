@@ -26,7 +26,7 @@
 
 	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, DoughnutController, Colors)
 
-	let chart: HTMLCanvasElement = $state()
+	let chart: HTMLCanvasElement = $state(undefined as unknown as HTMLCanvasElement)
 
 	onMount(() => {
 		new ChartJS(chart, {

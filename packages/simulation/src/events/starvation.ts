@@ -1,6 +1,6 @@
 import { ResourceTypes } from '../resource'
 import { Events } from './enum'
-import { ActionInput, WorldEvent } from './interface'
+import type { ActionInput, WorldEvent } from './interface'
 
 export class Starvation implements WorldEvent {
   type = Events.STARVATION

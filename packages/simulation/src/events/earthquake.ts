@@ -1,4 +1,4 @@
-import { ActionInput, WorldEvent } from './interface'
+import type { ActionInput, WorldEvent } from './interface'
 
 import { Events } from './enum'
 

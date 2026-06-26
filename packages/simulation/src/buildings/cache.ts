@@ -1,7 +1,7 @@
 import { OccupationTypes } from "../people/work/enum";
 import { ResourceTypes } from "../resource";
 import {
-  AbstractStorageBuilding, BuildingType, ConstructionCost, StoredResource, WorkerRequiredToBuild
+  AbstractStorageBuilding, type BuildingType, type ConstructionCost, type StoredResource, type WorkerRequiredToBuild
 } from "../types/building";
 import { BuildingTypes } from "./enum";
 

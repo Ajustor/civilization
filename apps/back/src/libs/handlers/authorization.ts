@@ -1,7 +1,8 @@
 import Elysia from 'elysia'
 import { jwtMiddleware } from '../jwt'
-import { User } from '../../../db/schema/users'
 import { bearer } from '@elysiajs/bearer'
+
+type User = { id: string; username: string; email: string } | false
 
 export const authorization = (message: string) => {
   const plugin = new Elysia()

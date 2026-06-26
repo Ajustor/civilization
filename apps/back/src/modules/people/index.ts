@@ -3,7 +3,7 @@ import { authorization } from '../../libs/handlers/authorization'
 import { logger } from '@bogeychan/elysia-logger'
 import { jwtMiddleware } from '../../libs/jwt'
 import { PeopleService, personMapper } from './service'
-import { OccupationTypes, PeopleType } from '@ajustor/simulation'
+import { OccupationTypes, type PeopleType } from '@ajustor/simulation'
 
 
 const peopleService = new PeopleService()

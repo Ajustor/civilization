@@ -25,6 +25,13 @@
 	import { callGetRecap } from '../../../services/sveltekit-api/recap'
 	import type { RecapData } from '@ajustor/civ-api'
 
+	type CivilizationStat = {
+		month: number
+		event?: Events | null
+		resources: { resourceType?: ResourceTypes; quantity?: number }[]
+		people?: { men?: number; women?: number; pregnantWomen?: number }
+	}
+
 	interface Props {
 		data: PageData;
 	}
@@ -41,7 +48,7 @@
 	// Same reasoning as `peoplePromise`: the server-streamed stat promises captured
 	// here are not reactive, so the charts/combat-log never refreshed live. We hold
 	// them in local state and re-fetch via the client `/stats` endpoint on refresh.
-	let statsPromise = $state(data.lazy.stats.civilization)
+	let statsPromise = $state<Promise<CivilizationStat[]>>(data.lazy.stats.civilization as Promise<CivilizationStat[]>)
 	let jobsPromise = $state(data.lazy.stats.jobs)
 	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
 	let combatLogsPromise = $state(data.lazy.combatLogs)
@@ -196,8 +203,8 @@
 	const OVERFLOW_COLOR = 'oklch(0.55 0.2 28)'
 	const cacheCount = $derived(
 		data.civilization.buildings
-			.filter((b) => b.type === BuildingTypes.CACHE)
-			.reduce((sum, b) => sum + b.count, 0)
+			.filter((b: { type: string; count: number }) => b.type === BuildingTypes.CACHE)
+			.reduce<number>((sum: number, b: { count: number }) => sum + b.count, 0)
 	)
 
 	// Multiplicateur de stockage issu des technologies recherchées (ex. Entreposage
@@ -582,7 +589,7 @@
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
 				</div>
 				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce((a, b) => a + b.count, 0)}</div>
+					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
 				</div>
 				<div>
@@ -595,6 +602,7 @@
 					</a>
 				{/if}
 				<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
+				<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
 				<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
 					<Settings size="16" /> Configurer
 				</a>
@@ -743,21 +751,22 @@
 			<h2 class="civ-section-title">Ressources actuelles</h2>
 			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
 				{#each data.civilization.resources as resource}
-					{@const capacity = Math.floor(cacheCount * (STORAGE_PER_CACHE[resource.type] ?? 0) * storageMultiplier)}
+					{@const resourceType = resource.type as ResourceTypes}
+					{@const capacity = Math.floor(cacheCount * (STORAGE_PER_CACHE[resourceType] ?? 0) * storageMultiplier)}
 					{@const over = Math.max(0, resource.quantity - capacity)}
 					{@const total = Math.max(resource.quantity, capacity, 1)}
 					{@const storedW = (Math.min(resource.quantity, capacity) / total) * 100}
 					{@const overW = (over / total) * 100}
 					<div>
 						<div style="display:flex; justify-content:space-between; align-items:baseline; font-size:16px; margin-bottom:4px;">
-							<span>{resourceNames[resource.type]}</span>
+							<span>{resourceNames[resourceType]}</span>
 							<span style="font-size:14px;">
 								<span style="color:{over > 0 ? OVERFLOW_COLOR : 'oklch(0.4 0.04 40)'}; font-weight:600;">{resource.quantity.toLocaleString('fr-FR')}</span>
 								<span style="color:oklch(0.55 0.03 50);"> / {capacity.toLocaleString('fr-FR')}</span>
 							</span>
 						</div>
 						<div class="civ-progress-bar" style="display:flex; overflow:hidden;">
-							<div style="width:{storedW}%; height:100%; background:{RESOURCE_COLORS[resource.type] ?? 'oklch(0.55 0.1 130)'}; transition:width .3s;"></div>
+							<div style="width:{storedW}%; height:100%; background:{RESOURCE_COLORS[resourceType] ?? 'oklch(0.55 0.1 130)'}; transition:width .3s;"></div>
 							{#if overW > 0}
 								<div style="width:{overW}%; height:100%; background:{OVERFLOW_COLOR}; transition:width .3s;" title="Surplus au-delà de la capacité"></div>
 							{/if}
@@ -793,7 +802,7 @@
 
 		<!-- Buildings table -->
 		<div class="civ-inner-card" style="margin-top:20px;">
-			<h2 class="civ-section-title">Bâtiments ({data.civilization.buildings.reduce((a, { count }) => a + count, 0)} au total)</h2>
+			<h2 class="civ-section-title">Bâtiments ({data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)} au total)</h2>
 			<BuildingsTable buildings={data.civilization.buildings} />
 		</div>
 

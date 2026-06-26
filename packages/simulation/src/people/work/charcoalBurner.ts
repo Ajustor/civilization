@@ -1,5 +1,5 @@
 import { OccupationTypes } from './enum'
-import { UpgradedWork } from './interface'
+import type { UpgradedWork } from './interface'
 
 const MINIMAL_AGE_TO_UPGRADE = 21
 
