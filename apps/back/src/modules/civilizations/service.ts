@@ -22,7 +22,7 @@ import {
   WorldModel,
 } from '../../libs/database/models'
 import { PeopleService, personMapper } from '../people/service'
-import { UpdateCivilizationDto, UpdateCivilizationDtoType } from './dto'
+import { UpdateCivilizationDtoType } from './dto'
 import { AnyBulkWriteOperation } from 'mongoose'
 import { arrayToMap } from '../../utils'
 
