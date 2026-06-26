@@ -54,6 +54,7 @@ export const civilizationMapper = (
   const builder = new CivilizationBuilder()
     .withId(civilization.id)
     .withLivedMonths(civilization.livedMonths)
+    .withResearchPoints((civilization as { researchPoints?: number }).researchPoints ?? 0)
     .withName(civilization.name)
     .withCitizensCount(civilization.people?.length ?? 0)
 
@@ -494,6 +495,7 @@ export class CivilizationService {
               buildingType: building.getType(),
             })),
             livedMonths: civilization.livedMonths,
+            researchPoints: civilization.researchPoints,
             pendingConstructions: civilization.pendingConstructions,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,
