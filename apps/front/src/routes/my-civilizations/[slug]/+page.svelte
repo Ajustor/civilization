@@ -534,6 +534,10 @@
 					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce((a, b) => a + b.count, 0)}</div>
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
 				</div>
+				<div>
+					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 250);">{data.civilization.researchPoints ?? 0}</div>
+					<div style="font-size:14px; color:oklch(0.5 0.03 50);">points de recherche</div>
+				</div>
 				{#if data.worldId}
 					<a href="/worlds/{data.worldId}/market" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
 						Marché

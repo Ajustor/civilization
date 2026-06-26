@@ -12,7 +12,7 @@ import {
   isExtractionBuilding,
   defaultCivilizationConfig,
 } from '@ajustor/simulation'
-import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall } from '@ajustor/simulation'
+import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
 import {
   CivilizationModel,
   CivilizationStatsModel,
@@ -39,6 +39,7 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
   [BuildingTypes.WALL]: Wall,
+  [BuildingTypes.LIBRARY]: Library,
 }
 
 export type MongoCivilizationType = CivilizationType & {
@@ -54,6 +55,7 @@ export const civilizationMapper = (
   const builder = new CivilizationBuilder()
     .withId(civilization.id)
     .withLivedMonths(civilization.livedMonths)
+    .withResearchPoints((civilization as { researchPoints?: number }).researchPoints ?? 0)
     .withName(civilization.name)
     .withCitizensCount(civilization.people?.length ?? 0)
 
@@ -494,6 +496,7 @@ export class CivilizationService {
               buildingType: building.getType(),
             })),
             livedMonths: civilization.livedMonths,
+            researchPoints: civilization.researchPoints,
             pendingConstructions: civilization.pendingConstructions,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,

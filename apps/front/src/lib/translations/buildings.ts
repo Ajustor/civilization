@@ -9,4 +9,5 @@ export const buildingNames: { [key in BuildingTypes]: string } = {
   [BuildingTypes.CAMPFIRE]: 'Feu de camp',
   [BuildingTypes.CACHE]: 'Entrepôt',
   [BuildingTypes.WALL]: 'Muraille',
+  [BuildingTypes.LIBRARY]: 'Bibliothèque',
 }

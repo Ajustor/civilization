@@ -13,6 +13,7 @@ export class CivilizationBuilder {
   private resources: Resource[] = [];
   private buildings: Building[] = []
   private livedMonths: number
+  private researchPoints: number = 0
   private citizenCount: number = 0
   private config?: CivilizationConfig
   private pendingConstructions: PendingConstruction[] = []
@@ -29,6 +30,11 @@ export class CivilizationBuilder {
 
   withLivedMonths(livedMonths: number): this {
     this.livedMonths = livedMonths
+    return this
+  }
+
+  withResearchPoints(researchPoints: number): this {
+    this.researchPoints = researchPoints
     return this
   }
 
@@ -96,6 +102,7 @@ export class CivilizationBuilder {
     civilization.addBuilding(...this.buildings)
 
     civilization.livedMonths = this.livedMonths
+    civilization.researchPoints = this.researchPoints
     civilization.citizensCount ||= this.citizenCount
 
     if (this.id) {
@@ -112,6 +119,7 @@ export class CivilizationBuilder {
     this.buildings = []
     this.name = ''
     this.livedMonths = 0
+    this.researchPoints = 0
     this.id = ''
     this.citizenCount = 0
     this.config = undefined

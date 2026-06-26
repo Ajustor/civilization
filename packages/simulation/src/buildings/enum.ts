@@ -7,4 +7,5 @@ export enum BuildingTypes {
   CAMPFIRE = 'campfire',
   CACHE = 'cache',
   WALL = 'wall',
+  LIBRARY = 'library',
 }

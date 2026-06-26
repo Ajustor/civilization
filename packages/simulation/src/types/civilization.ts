@@ -26,6 +26,7 @@ export type CivilizationType = {
   id: string
   name: string
   livedMonths: number
+  researchPoints: number
   people?: PeopleType[],
   resources: ResourceType[],
   buildings: BuildingType[],

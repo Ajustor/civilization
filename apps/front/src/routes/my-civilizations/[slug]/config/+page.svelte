@@ -24,6 +24,7 @@
 		Campfire,
 		Cache,
 		Wall,
+		Library,
 		type ResourceTypes,
 		type OccupationTypes
 	} from '@ajustor/simulation'
@@ -87,7 +88,8 @@
 		[BuildingTypes.MINE]: Mine,
 		[BuildingTypes.CAMPFIRE]: Campfire,
 		[BuildingTypes.CACHE]: Cache,
-		[BuildingTypes.WALL]: Wall
+		[BuildingTypes.WALL]: Wall,
+		[BuildingTypes.LIBRARY]: Library
 	}
 
 	const selectedBuildingInfo = $derived.by(() => {
