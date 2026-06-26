@@ -15,6 +15,10 @@ export async function attachAliveCivilizations(
     people: true,
   })
 
+  // Reset first so a reused world instance (e.g. running several months in a
+  // row) gets the freshly reloaded civilizations instead of accumulating
+  // duplicates of the same civilization.
+  world.clearCivilizations()
   world.addCivilization(
     ...civilizations.filter((civilization) => civilization.people.length),
   )
