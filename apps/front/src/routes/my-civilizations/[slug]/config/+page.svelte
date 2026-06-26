@@ -14,8 +14,20 @@
 	import { zodClient } from 'sveltekit-superforms/adapters'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import { toast } from 'svelte-sonner'
-	import { BuildingTypes } from '@ajustor/simulation'
-	import { buildingNames } from '$lib/translations'
+	import {
+		BuildingTypes,
+		House,
+		Farm,
+		Kiln,
+		Sawmill,
+		Mine,
+		Campfire,
+		Cache,
+		Wall,
+		type ResourceTypes,
+		type OccupationTypes
+	} from '@ajustor/simulation'
+	import { buildingNames, resourceNames, OCCUPATIONS } from '$lib/translations'
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
 	interface Props {
@@ -56,6 +68,35 @@
 			$formData.atWarWith = $formData.atWarWith.filter((id) => id !== civilizationId)
 		}
 	}
+
+	// Construction requirements come from the static fields on each building class.
+	type BuildingMeta = {
+		constructionCosts?: { resource: ResourceTypes; amount: number }[]
+		workerRequiredToBuild?: { occupation: OccupationTypes; amount: number }[]
+		timeToBuild?: number
+	}
+	const BUILDING_CLASSES: Record<BuildingTypes, BuildingMeta> = {
+		[BuildingTypes.HOUSE]: House,
+		[BuildingTypes.FARM]: Farm,
+		[BuildingTypes.KILN]: Kiln,
+		[BuildingTypes.SAWMILL]: Sawmill,
+		[BuildingTypes.MINE]: Mine,
+		[BuildingTypes.CAMPFIRE]: Campfire,
+		[BuildingTypes.CACHE]: Cache,
+		[BuildingTypes.WALL]: Wall
+	}
+
+	const selectedBuildingInfo = $derived.by(() => {
+		const type = $formData.nextBuildingToBuild
+		if (!type) return null
+		const meta = BUILDING_CLASSES[type as BuildingTypes]
+		if (!meta) return null
+		return {
+			costs: meta.constructionCosts ?? [],
+			workers: meta.workerRequiredToBuild ?? [],
+			timeToBuild: meta.timeToBuild
+		}
+	})
 </script>
 
 <svelte:head>
@@ -181,6 +222,36 @@
 						{/snippet}
 					</FormControl>
 					<FormDescription>Bâtiment que la civilisation cherchera à construire en priorité.</FormDescription>
+					{#if selectedBuildingInfo}
+						<div style="margin-top:10px; padding:12px 14px; border:1px solid oklch(0.8 0.04 70); border-radius:4px; background:oklch(0.97 0.015 84); display:flex; flex-direction:column; gap:10px;">
+							<div style="display:flex; align-items:baseline; gap:8px;">
+								<span style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50);">Temps de construction</span>
+								<span style="font-size:15px; font-weight:600; color:oklch(0.32 0.04 40);">{selectedBuildingInfo.timeToBuild ?? '?'} mois</span>
+							</div>
+							<div>
+								<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ressources requises</div>
+								{#if selectedBuildingInfo.costs.length}
+									<div style="display:flex; flex-wrap:wrap; gap:6px;">
+										{#each selectedBuildingInfo.costs as cost}
+											<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{cost.amount} {resourceNames[cost.resource]}</span>
+										{/each}
+									</div>
+								{:else}
+									<span style="font-size:14px; color:oklch(0.5 0.03 50);">Aucune ressource requise</span>
+								{/if}
+							</div>
+							{#if selectedBuildingInfo.workers.length}
+								<div>
+									<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ouvriers requis pour la construction</div>
+									<div style="display:flex; flex-wrap:wrap; gap:6px;">
+										{#each selectedBuildingInfo.workers as worker}
+											<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{worker.amount} {OCCUPATIONS[worker.occupation]}</span>
+										{/each}
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
 					<FormFieldErrors />
 				</FormField>
 			</div>
