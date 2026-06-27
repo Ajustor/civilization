@@ -17,6 +17,7 @@ import { authorization } from '../../libs/handlers/authorization'
 import { jwtMiddleware } from '../../libs/jwt'
 import { logger } from '@bogeychan/elysia-logger'
 import { UpdateCivilizationDto } from './dto'
+import { ColonizeDto } from './colonize.dto'
 
 const INITIAL_CITIZEN_NUMBER = 50
 const INITIAL_CITIZEN_AGE = 12 * 16
@@ -94,6 +95,18 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
         return { error: error instanceof Error ? error.message : 'Unable to unlock technology' }
       }
     },
+  )
+  .post(
+    '/:civilizationId/colonize',
+    async ({ user, civilizationService, params: { civilizationId }, body, set }) => {
+      try {
+        return await civilizationService.colonize(user.id as string, civilizationId, body)
+      } catch (error) {
+        set.status = 400
+        return { error: error instanceof Error ? error.message : 'Unable to colonize' }
+      }
+    },
+    { body: ColonizeDto },
   )
   .post(
     '',
