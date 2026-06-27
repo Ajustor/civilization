@@ -11,7 +11,7 @@ import {
   ResourceTypes,
   isExtractionBuilding,
   defaultCivilizationConfig,
-  type TechId,
+  TechId,
   getTechNode,
 } from '@ajustor/simulation'
 import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
@@ -27,6 +27,7 @@ import {
 import { computeRecap, emptyRecap, RECAP_MIN_MONTHS, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
 import { PeopleService, personMapper } from '../people/service'
 import type { UpdateCivilizationDtoType } from './dto'
+import type { ColonizeDtoType } from './colonize.dto'
 import { type AnyBulkWriteOperation, Types } from 'mongoose'
 import { arrayToMap } from '../../utils'
 import { pushSender } from '../../libs/services/pushSender'
@@ -544,6 +545,108 @@ export class CivilizationService {
     const exists = await CivilizationModel.exists({ name: civilizationName })
 
     return !!exists?._id
+  }
+
+  async colonize(userId: string, civilizationId: string, body: ColonizeDtoType) {
+    // 1. Vérifier que l'utilisateur possède cette civ
+    const user = await UserModel.findOne({ _id: userId })
+    if (!user?.civilizations.map(String).includes(civilizationId)) {
+      throw new Error('Civilization not found')
+    }
+
+    // 2. Charger le document MongoDB de la civ (sans peupler les gens)
+    const mongoCiv = await CivilizationModel.findById<MongoCivilizationType>(civilizationId)
+    if (!mongoCiv) throw new Error('Civilization not found')
+
+    // 3. Vérifier la tech COLONISATION
+    if (!(mongoCiv.researchedTechs ?? []).includes(TechId.COLONIZATION)) {
+      throw new Error('Colonization technology required')
+    }
+
+    // 4. Valider la population
+    const totalPeople = mongoCiv.people.length
+    const transferCount = Math.floor(totalPeople * body.populationPercent / 100)
+    if (transferCount < 1) throw new Error('Not enough people to transfer')
+    if (totalPeople - transferCount < 10) {
+      throw new Error('Mother civilization must keep at least 10 people')
+    }
+
+    // 5. Valider les ressources
+    for (const transfer of body.resources) {
+      if (transfer.amount <= 0) continue
+      const existing = mongoCiv.resources.find((r) => r.resourceType === transfer.type)
+      if ((existing?.quantity ?? 0) < transfer.amount) {
+        throw new Error(`Insufficient ${transfer.type}`)
+      }
+    }
+
+    // 6. Vérifier l'unicité du nom
+    if (await this.exist(body.colonyName)) {
+      throw new Error('A civilization with that name already exists')
+    }
+
+    // 7. Mélanger et répartir les IDs de citoyens
+    const allIds = mongoCiv.people.map((id) => id.toString())
+    const shuffled = [...allIds].sort(() => Math.random() - 0.5)
+    const colonyPeopleIds = shuffled.slice(0, transferCount)
+    const motherPeopleIds = shuffled.slice(transferCount)
+
+    // 8. Calculer les nouveaux stocks de ressources
+    const motherResources = mongoCiv.resources.map((r) => ({
+      resourceType: r.resourceType,
+      quantity: r.quantity,
+    }))
+    const colonyResources: { resourceType: ResourceTypes; quantity: number }[] = []
+
+    for (const transfer of body.resources) {
+      if (transfer.amount <= 0) continue
+      const idx = motherResources.findIndex((r) => r.resourceType === transfer.type)
+      if (idx === -1) continue
+      motherResources[idx].quantity -= transfer.amount
+      const existing = colonyResources.find((r) => r.resourceType === transfer.type)
+      if (existing) {
+        existing.quantity += transfer.amount
+      } else {
+        colonyResources.push({ resourceType: transfer.type as ResourceTypes, quantity: transfer.amount })
+      }
+    }
+
+    // 9. Créer la colonie
+    const currentOpenExchange = (mongoCiv.config?.OPEN_EXCHANGE ?? []).map(String)
+    const colonyDoc = await CivilizationModel.create({
+      name: body.colonyName,
+      livedMonths: 0,
+      researchPoints: 0,
+      researchedTechs: body.techs,
+      buildings: [],
+      people: colonyPeopleIds,
+      resources: colonyResources,
+      worldId: mongoCiv.worldId,
+      config: {
+        ...defaultCivilizationConfig,
+        OPEN_EXCHANGE: [civilizationId],
+        AT_WAR_WITH: [],
+      },
+    })
+
+    // 10. Mettre à jour la mère
+    await CivilizationModel.findByIdAndUpdate(civilizationId, {
+      people: motherPeopleIds,
+      resources: motherResources,
+      'config.OPEN_EXCHANGE': [...currentOpenExchange, colonyDoc._id.toString()],
+    })
+
+    // 11. Ajouter la colonie au monde
+    await WorldModel.findByIdAndUpdate(mongoCiv.worldId, {
+      $push: { civilizations: colonyDoc._id },
+    })
+
+    // 12. Rattacher la colonie au compte utilisateur
+    await UserModel.findByIdAndUpdate(userId, {
+      $push: { civilizations: colonyDoc._id },
+    })
+
+    return { motherId: civilizationId, colonyId: colonyDoc._id.toString() }
   }
 
   async update(userId: string, civilizationId: string, body: UpdateCivilizationDtoType) {
