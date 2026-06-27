@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms'
-	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
+	import { zodClient } from 'sveltekit-superforms/adapters'
 	import type { PageData } from './$types'
 	import { toast } from 'svelte-sonner'
 	import { newUserSchema } from '$lib/schemas/newUser'

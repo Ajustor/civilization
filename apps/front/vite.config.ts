@@ -24,7 +24,7 @@ const superformsZodAdapter = path.join(
 	'zod4.js',
 )
 
-const generateSW = process.env.GENERATE_SW === 'true'
+const generateSW = process.env.GENERATE_SW !== 'false'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const plugins: any[] = [

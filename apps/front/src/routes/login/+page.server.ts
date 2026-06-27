@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types'
 import type { Actions } from './$types'
 import { loginSchema } from '$lib/schemas/login'
 import { message, superValidate, fail } from 'sveltekit-superforms'
-import { zod4 as zod } from 'sveltekit-superforms/adapters'
+import { zod } from 'sveltekit-superforms/adapters'
 import { redirect } from '@sveltejs/kit'
 import { login } from '../../services/api/user-api'
 

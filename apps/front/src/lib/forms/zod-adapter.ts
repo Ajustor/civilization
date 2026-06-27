@@ -14,4 +14,4 @@
 // variants under the names `zod` and `zodClient` that the rest of the codebase
 // expects. The vite alias also maps `sveltekit-superforms/adapters` → `zod4.js`
 // at runtime to prevent the TypeBox barrel crash.
-export { zod4 as zod, zod4Client as zodClient } from 'sveltekit-superforms/adapters'
+export { zod, zodClient } from 'sveltekit-superforms/adapters'
