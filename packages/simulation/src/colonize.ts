@@ -38,8 +38,10 @@ export function splitCivilization(
     if (transfer.amount <= 0) continue
     const motherRes = motherResources.find((r) => r.type === transfer.type)
     if (!motherRes) continue
-    motherRes.decrease(transfer.amount)
-    colonyResources.push(new Resource(transfer.type, transfer.amount))
+    const actual = Math.min(transfer.amount, motherRes.quantity)
+    if (actual <= 0) continue
+    motherRes.decrease(actual)
+    colonyResources.push(new Resource(transfer.type, actual))
   }
 
   return { colonyPeople, colonyResources, motherPeople, motherResources }
