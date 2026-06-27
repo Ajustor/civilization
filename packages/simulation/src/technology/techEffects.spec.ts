@@ -163,9 +163,11 @@ describe('new prerequisite chains', () => {
     expect(withTechs().canUnlock(TechId.IRRIGATION)).toBe(false)
     expect(withTechs(TechId.AGRONOMY).canUnlock(TechId.IRRIGATION)).toBe(true)
   })
-  it('logistics requires warehousing', () => {
+  it('logistics requires warehousing AND pottery', () => {
     expect(withTechs().canUnlock(TechId.LOGISTICS)).toBe(false)
-    expect(withTechs(TechId.WAREHOUSING).canUnlock(TechId.LOGISTICS)).toBe(true)
+    expect(withTechs(TechId.WAREHOUSING).canUnlock(TechId.LOGISTICS)).toBe(false)
+    expect(withTechs(TechId.POTTERY).canUnlock(TechId.LOGISTICS)).toBe(false)
+    expect(withTechs(TechId.WAREHOUSING, TechId.POTTERY).canUnlock(TechId.LOGISTICS)).toBe(true)
   })
   it('engineering requires masonry AND mechanization', () => {
     expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY).canUnlock(TechId.ENGINEERING)).toBe(false)
