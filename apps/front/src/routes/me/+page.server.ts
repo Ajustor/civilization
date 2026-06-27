@@ -3,7 +3,7 @@ import { fail, superValidate } from 'sveltekit-superforms'
 import { changePassword, getUser } from '../../services/api/user-api'
 import type { User } from '../../stores/user'
 import type { Actions, PageServerLoad } from './$types'
-import { zod } from 'sveltekit-superforms/adapters'
+import { zod4 as zod } from 'sveltekit-superforms/adapters'
 import { error } from '@sveltejs/kit'
 
 export const load: PageServerLoad = async ({ cookies, url }) => {

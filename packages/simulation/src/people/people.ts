@@ -54,7 +54,7 @@ export const MINIMUM_CONCEPTION_AGE = 16
 const PREGNANCY_MONTHS = 9
 const MAXIMUM_CONCEPTION_AGE = 50
 const MINIMUM_CONCEPTION_HEALTH = 8
-const MAX_NUMBER_OF_CHILD = 3
+export const MAX_NUMBER_OF_CHILD = 3
 
 export const LIFE_EXPECTANCY = 85
 const DEATH_RATE_AFTER_EXPECTANCY = 20
@@ -198,9 +198,9 @@ export class People {
     this.buildingMonthsLeft = buildingMonthsLeft
   }
 
-  canConceive(): boolean {
+  canConceive(maxNumberOfChild: number = MAX_NUMBER_OF_CHILD): boolean {
     return (
-      this.numberOfChild <= MAX_NUMBER_OF_CHILD &&
+      this.numberOfChild <= maxNumberOfChild &&
       this.years > MINIMUM_CONCEPTION_AGE &&
       this.years < MAXIMUM_CONCEPTION_AGE &&
       this.lifeCounter >= MINIMUM_CONCEPTION_HEALTH &&

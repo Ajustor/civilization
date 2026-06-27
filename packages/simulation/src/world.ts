@@ -9,7 +9,7 @@ import type { CombatRecord, PlunderedResource } from './types/combat'
 import { Earthquake } from './events/earthquake'
 import { Events } from './events/enum'
 import { Starvation } from './events/starvation'
-import { WorldEvent } from './events/interface'
+import type { WorldEvent } from './events/interface'
 import { formatCivilizations } from './formatters/civilization'
 import { isWithinChance } from './utils'
 

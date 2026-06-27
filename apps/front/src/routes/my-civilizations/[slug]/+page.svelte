@@ -9,7 +9,8 @@
 		type OccupationTypes,
 		type PeopleType,
 		type DeathCause,
-		Events
+		Events,
+		TECH_TREE
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames, deathCauseNames } from '$lib/translations'
@@ -23,6 +24,13 @@
 	import RecapModal from '$lib/components/RecapModal.svelte'
 	import { callGetRecap } from '../../../services/sveltekit-api/recap'
 	import type { RecapData } from '@ajustor/civ-api'
+
+	type CivilizationStat = {
+		month: number
+		event?: Events | null
+		resources: { resourceType?: ResourceTypes; quantity?: number }[]
+		people?: { men?: number; women?: number; pregnantWomen?: number }
+	}
 
 	interface Props {
 		data: PageData;
@@ -40,7 +48,7 @@
 	// Same reasoning as `peoplePromise`: the server-streamed stat promises captured
 	// here are not reactive, so the charts/combat-log never refreshed live. We hold
 	// them in local state and re-fetch via the client `/stats` endpoint on refresh.
-	let statsPromise = $state(data.lazy.stats.civilization)
+	let statsPromise = $state<Promise<CivilizationStat[]>>(data.lazy.stats.civilization as Promise<CivilizationStat[]>)
 	let jobsPromise = $state(data.lazy.stats.jobs)
 	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
 	let combatLogsPromise = $state(data.lazy.combatLogs)
@@ -195,9 +203,40 @@
 	const OVERFLOW_COLOR = 'oklch(0.55 0.2 28)'
 	const cacheCount = $derived(
 		data.civilization.buildings
-			.filter((b) => b.type === BuildingTypes.CACHE)
-			.reduce((sum, b) => sum + b.count, 0)
+			.filter((b: { type: string; count: number }) => b.type === BuildingTypes.CACHE)
+			.reduce<number>((sum: number, b: { count: number }) => sum + b.count, 0)
 	)
+
+	// Multiplicateurs issus des technologies recherchées — miroirs exacts des
+	// getters `Civilization.*Multiplier` de la simulation.
+	const researchedTechs = $derived(data.civilization.researchedTechs ?? [])
+	const hasColonizationTech = $derived(researchedTechs.includes('colonization'))
+	const _techEffects = $derived(
+		TECH_TREE.filter((node) => researchedTechs.includes(node.id)).flatMap((node) => node.effects)
+	)
+	const storageMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'storageMultiplier' ? m * e.factor : m, 1)
+	)
+	const productionMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'productionMultiplier' ? m * e.factor : m, 1)
+	)
+	const militaryMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'militaryMultiplier' ? m * e.factor : m, 1)
+	)
+	const researchMultiplier = $derived(
+		_techEffects.reduce((m, e) => e.kind === 'researchMultiplier' ? m * e.factor : m, 1)
+	)
+	const maxChildrenBonus = $derived(
+		_techEffects.reduce((s, e) => e.kind === 'maxChildrenBonus' ? s + e.amount : s, 0)
+	)
+	const pregnancyBonus = $derived(
+		_techEffects.reduce((s, e) => e.kind === 'pregnancyProbabilityBonus' ? s + e.amount : s, 0)
+	)
+	const hasTechBonus = $derived(
+		productionMultiplier > 1 || storageMultiplier > 1 || militaryMultiplier > 1 ||
+		researchMultiplier > 1 || maxChildrenBonus > 0 || pregnancyBonus > 0
+	)
+	const fmtMult = (v: number) => v === 1 ? '×1' : `×${v.toFixed(2).replace(/\.?0+$/, '')}`
 
 	// ── Constructions en cours ─────────────────────────────────────────────────
 	// Group pending constructions by building type, and within each type by the
@@ -570,7 +609,7 @@
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
 				</div>
 				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce((a, b) => a + b.count, 0)}</div>
+					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
 					<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
 				</div>
 				<div>
@@ -582,11 +621,54 @@
 						Marché
 					</a>
 				{/if}
+				<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
+				<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
 				<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
 					<Settings size="16" /> Configurer
 				</a>
+				{#if hasColonizationTech}
+					<a
+						href="/my-civilizations/{data.civilization.id}/colonize"
+						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;"
+					>
+						🌍 Fonder une colonie
+					</a>
+				{:else}
+					<span
+						title="Nécessite la technologie Colonisation"
+						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.65 0.03 50); font-family:'EB Garamond',serif; font-size:15px; cursor:not-allowed; opacity:0.55;"
+					>
+						🔒 Fonder une colonie
+					</span>
+				{/if}
 			</div>
 		</div>
+
+		<!-- Bonus de technologies actifs -->
+		{#if hasTechBonus}
+			<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding:10px 14px; margin-top:16px; background:oklch(0.96 0.03 140/0.35); border:1px solid oklch(0.75 0.1 145/0.4); border-radius:5px; font-family:'EB Garamond',serif;">
+				<span style="font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.4 0.1 145); white-space:nowrap; flex-shrink:0;">Bonus de technologies</span>
+				{#if productionMultiplier > 1}
+					<span title="Multiplicateur de production des bâtiments" style="font-size:14px; color:oklch(0.35 0.08 150);">⚙️ Production <strong>{fmtMult(productionMultiplier)}</strong></span>
+				{/if}
+				{#if storageMultiplier > 1}
+					<span title="Multiplicateur de capacité de stockage" style="font-size:14px; color:oklch(0.35 0.08 150);">📦 Stockage <strong>{fmtMult(storageMultiplier)}</strong></span>
+				{/if}
+				{#if militaryMultiplier > 1}
+					<span title="Multiplicateur de force militaire" style="font-size:14px; color:oklch(0.35 0.08 150);">⚔️ Militaire <strong>{fmtMult(militaryMultiplier)}</strong></span>
+				{/if}
+				{#if researchMultiplier > 1}
+					<span title="Multiplicateur de points de recherche par mois" style="font-size:14px; color:oklch(0.35 0.08 150);">🔭 Recherche <strong>{fmtMult(researchMultiplier)}</strong></span>
+				{/if}
+				{#if maxChildrenBonus > 0}
+					<span title="Enfants supplémentaires par femme" style="font-size:14px; color:oklch(0.35 0.08 150);">👶 Enfants/femme <strong>+{maxChildrenBonus}</strong></span>
+				{/if}
+				{#if pregnancyBonus > 0}
+					<span title="Bonus à la probabilité de conception" style="font-size:14px; color:oklch(0.35 0.08 150);">🤰 Conception <strong>+{pregnancyBonus}%</strong></span>
+				{/if}
+				<a href="/my-civilizations/{data.civilization.id}/technologies" style="margin-left:auto; font-size:13px; color:oklch(0.45 0.1 145); text-decoration:none; white-space:nowrap;">{(data.civilization.researchedTechs ?? []).length} technologie{(data.civilization.researchedTechs ?? []).length > 1 ? 's' : ''} acquise{(data.civilization.researchedTechs ?? []).length > 1 ? 's' : ''} →</a>
+			</div>
+		{/if}
 
 		<!-- Charts row -->
 		<div style="display:flex; justify-content:flex-end; align-items:center; margin-top:24px;">
@@ -730,21 +812,22 @@
 			<h2 class="civ-section-title">Ressources actuelles</h2>
 			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 32px;">
 				{#each data.civilization.resources as resource}
-					{@const capacity = cacheCount * (STORAGE_PER_CACHE[resource.type] ?? 0)}
+					{@const resourceType = resource.type as ResourceTypes}
+					{@const capacity = Math.floor(cacheCount * (STORAGE_PER_CACHE[resourceType] ?? 0) * storageMultiplier)}
 					{@const over = Math.max(0, resource.quantity - capacity)}
 					{@const total = Math.max(resource.quantity, capacity, 1)}
 					{@const storedW = (Math.min(resource.quantity, capacity) / total) * 100}
 					{@const overW = (over / total) * 100}
 					<div>
 						<div style="display:flex; justify-content:space-between; align-items:baseline; font-size:16px; margin-bottom:4px;">
-							<span>{resourceNames[resource.type]}</span>
+							<span>{resourceNames[resourceType]}</span>
 							<span style="font-size:14px;">
 								<span style="color:{over > 0 ? OVERFLOW_COLOR : 'oklch(0.4 0.04 40)'}; font-weight:600;">{resource.quantity.toLocaleString('fr-FR')}</span>
 								<span style="color:oklch(0.55 0.03 50);"> / {capacity.toLocaleString('fr-FR')}</span>
 							</span>
 						</div>
 						<div class="civ-progress-bar" style="display:flex; overflow:hidden;">
-							<div style="width:{storedW}%; height:100%; background:{RESOURCE_COLORS[resource.type] ?? 'oklch(0.55 0.1 130)'}; transition:width .3s;"></div>
+							<div style="width:{storedW}%; height:100%; background:{RESOURCE_COLORS[resourceType] ?? 'oklch(0.55 0.1 130)'}; transition:width .3s;"></div>
 							{#if overW > 0}
 								<div style="width:{overW}%; height:100%; background:{OVERFLOW_COLOR}; transition:width .3s;" title="Surplus au-delà de la capacité"></div>
 							{/if}
@@ -780,7 +863,7 @@
 
 		<!-- Buildings table -->
 		<div class="civ-inner-card" style="margin-top:20px;">
-			<h2 class="civ-section-title">Bâtiments ({data.civilization.buildings.reduce((a, { count }) => a + count, 0)} au total)</h2>
+			<h2 class="civ-section-title">Bâtiments ({data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)} au total)</h2>
 			<BuildingsTable buildings={data.civilization.buildings} />
 		</div>
 
@@ -862,9 +945,12 @@
 			{/await}
 		</div>
 
-		<!-- Cemetery -->
+		<!-- Cemetery (aperçu — page dédiée) -->
 		<div class="civ-inner-card" style="margin-top:24px;">
-			<h2 class="civ-section-title" style="margin:0 0 16px;">Cimetière</h2>
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+				<h2 class="civ-section-title" style="margin:0;">Cimetière</h2>
+				<a href="/my-civilizations/{data.civilization.id}/cemetery" style="font-size:15px; color:oklch(0.5 0.13 34); font-family:'EB Garamond',serif; text-decoration:none;">Voir le cimetière →</a>
+			</div>
 
 			{#await cemeteryPromise}
 				<p style="color:oklch(0.55 0.03 50); font-size:15px;">Chargement…</p>
@@ -880,9 +966,9 @@
 							</span>
 						{/each}
 					</div>
-					<!-- Recent deaths -->
-					<div style="display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto;">
-						{#each cemetery.graves as grave}
+					<!-- Recent deaths (aperçu des plus récents) -->
+					<div style="display:flex; flex-direction:column; gap:6px;">
+						{#each cemetery.graves.slice(0, 6) as grave}
 							<div style="display:flex; align-items:center; gap:12px; padding:8px 14px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.85 0.03 70);">
 								<span style="font-size:16px; flex-shrink:0;">🪦</span>
 								<span style="flex:1; min-width:0; font-family:'Marcellus',serif; font-size:15px; color:oklch(0.35 0.04 40);">{grave.name}</span>

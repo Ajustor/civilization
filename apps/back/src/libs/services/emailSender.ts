@@ -1,5 +1,5 @@
 import Elysia from 'elysia'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Resend } from 'resend'
 
 

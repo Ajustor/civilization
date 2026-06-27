@@ -1,16 +1,18 @@
 import {
-  BuildingType,
+  type BuildingType,
   BuildingTypes,
   Civilization,
   CivilizationBuilder,
-  CivilizationConfig,
-  CivilizationType,
+  type CivilizationConfig,
+  type CivilizationType,
   House,
-  PeopleEntity,
+  type PeopleEntity,
   Resource,
   ResourceTypes,
   isExtractionBuilding,
   defaultCivilizationConfig,
+  TechId,
+  getTechNode,
 } from '@ajustor/simulation'
 import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
 import {
@@ -24,8 +26,9 @@ import {
 } from '../../libs/database/models'
 import { computeRecap, emptyRecap, RECAP_MIN_MONTHS, type RecapData, type RecapStatsSnapshot, type RecapCombatLog } from './recap'
 import { PeopleService, personMapper } from '../people/service'
-import { UpdateCivilizationDtoType } from './dto'
-import { AnyBulkWriteOperation, Types } from 'mongoose'
+import type { UpdateCivilizationDtoType } from './dto'
+import type { ColonizeDtoType } from './colonize.dto'
+import { type AnyBulkWriteOperation, Types } from 'mongoose'
 import { arrayToMap } from '../../utils'
 import { pushSender } from '../../libs/services/pushSender'
 
@@ -57,6 +60,7 @@ export const civilizationMapper = (
     .withId(civilization.id)
     .withLivedMonths(civilization.livedMonths)
     .withResearchPoints((civilization as { researchPoints?: number }).researchPoints ?? 0)
+    .withResearchedTechs(((civilization as { researchedTechs?: string[] }).researchedTechs ?? []) as TechId[])
     .withName(civilization.name)
     .withCitizensCount(civilization.people?.length ?? 0)
 
@@ -498,6 +502,7 @@ export class CivilizationService {
             })),
             livedMonths: civilization.livedMonths,
             researchPoints: civilization.researchPoints,
+            researchedTechs: civilization.researchedTechs,
             pendingConstructions: civilization.pendingConstructions,
             resources: civilization.resources.map(({ type, quantity }) => ({
               resourceType: type,
@@ -540,6 +545,118 @@ export class CivilizationService {
     const exists = await CivilizationModel.exists({ name: civilizationName })
 
     return !!exists?._id
+  }
+
+  async colonize(userId: string, civilizationId: string, body: ColonizeDtoType) {
+    // 1. Vérifier que l'utilisateur possède cette civ
+    const user = await UserModel.findOne({ _id: userId })
+    if (!user?.civilizations.map(String).includes(civilizationId)) {
+      throw new Error('Civilization not found')
+    }
+
+    // 2. Charger le document MongoDB de la civ (sans peupler les gens)
+    const mongoCiv = await CivilizationModel.findById<MongoCivilizationType>(civilizationId)
+    if (!mongoCiv) throw new Error('Civilization not found')
+
+    // 3. Vérifier la tech COLONISATION
+    if (!(mongoCiv.researchedTechs ?? []).includes(TechId.COLONIZATION)) {
+      throw new Error('Colonization technology required')
+    }
+
+    // 4. Valider la population
+    const civPeople = (mongoCiv.people ?? []) as { toString(): string }[]
+    const totalPeople = civPeople.length
+    const transferCount = Math.floor(totalPeople * body.populationPercent / 100)
+    if (transferCount < 1) throw new Error('Not enough people to transfer')
+    if (totalPeople - transferCount < 10) {
+      throw new Error('Mother civilization must keep at least 10 people')
+    }
+
+    // Aggregate resource transfers by type to prevent duplicate bypass
+    const resourceTransferMap = new Map<string, number>()
+    for (const transfer of body.resources) {
+      if (transfer.amount <= 0) continue
+      resourceTransferMap.set(transfer.type, (resourceTransferMap.get(transfer.type) ?? 0) + transfer.amount)
+    }
+    const aggregatedTransfers = Array.from(resourceTransferMap.entries()).map(([type, amount]) => ({ type, amount }))
+
+    // 5. Valider les ressources
+    const civResources = mongoCiv.resources as { resourceType: ResourceTypes; quantity: number }[]
+    for (const transfer of aggregatedTransfers) {
+      if (transfer.amount <= 0) continue
+      const existing = civResources.find((r) => r.resourceType === transfer.type)
+      if ((existing?.quantity ?? 0) < transfer.amount) {
+        throw new Error(`Insufficient ${transfer.type}`)
+      }
+    }
+
+    // 6. Vérifier l'unicité du nom
+    if (await this.exist(body.colonyName)) {
+      throw new Error('A civilization with that name already exists')
+    }
+
+    // 7. Mélanger et répartir les IDs de citoyens
+    const allIds = civPeople.map((id) => id.toString())
+    const shuffled = [...allIds].sort(() => Math.random() - 0.5)
+    const colonyPeopleIds = shuffled.slice(0, transferCount)
+    const motherPeopleIds = shuffled.slice(transferCount)
+
+    // 8. Calculer les nouveaux stocks de ressources
+    const motherResources = civResources.map((r) => ({
+      resourceType: r.resourceType,
+      quantity: r.quantity,
+    }))
+    const colonyResources: { resourceType: ResourceTypes; quantity: number }[] = []
+
+    for (const transfer of aggregatedTransfers) {
+      if (transfer.amount <= 0) continue
+      const idx = motherResources.findIndex((r) => r.resourceType === transfer.type)
+      if (idx === -1) continue
+      motherResources[idx].quantity -= transfer.amount
+      const existing = colonyResources.find((r) => r.resourceType === transfer.type)
+      if (existing) {
+        existing.quantity += transfer.amount
+      } else {
+        colonyResources.push({ resourceType: transfer.type as ResourceTypes, quantity: transfer.amount })
+      }
+    }
+
+    // 9. Créer la colonie
+    const currentOpenExchange = (mongoCiv.config?.OPEN_EXCHANGE ?? []).map(String)
+    const colonyDoc = await CivilizationModel.create({
+      name: body.colonyName,
+      livedMonths: 0,
+      researchPoints: 0,
+      researchedTechs: body.techs,
+      buildings: [],
+      people: colonyPeopleIds,
+      resources: colonyResources,
+      worldId: mongoCiv.worldId,
+      config: {
+        ...defaultCivilizationConfig,
+        OPEN_EXCHANGE: [civilizationId],
+        AT_WAR_WITH: [],
+      },
+    })
+
+    // 10. Mettre à jour la mère
+    await CivilizationModel.findByIdAndUpdate(civilizationId, {
+      people: motherPeopleIds,
+      resources: motherResources,
+      'config.OPEN_EXCHANGE': [...currentOpenExchange, colonyDoc._id.toString()],
+    })
+
+    // 11. Ajouter la colonie au monde
+    await WorldModel.findByIdAndUpdate(mongoCiv.worldId, {
+      $push: { civilizations: colonyDoc._id },
+    })
+
+    // 12. Rattacher la colonie au compte utilisateur
+    await UserModel.findByIdAndUpdate(userId, {
+      $push: { civilizations: colonyDoc._id },
+    })
+
+    return { motherId: civilizationId, colonyId: colonyDoc._id.toString() }
   }
 
   async update(userId: string, civilizationId: string, body: UpdateCivilizationDtoType) {
@@ -771,5 +888,41 @@ export class CivilizationService {
 
     await CivilizationModel.updateOne({ _id: civilizationId }, { lastSeenMonth: toMonth })
     return recap
+  }
+
+  async unlockTech(userId: string, civilizationId: string, techId: string) {
+    const user = await UserModel.findOne({ _id: userId }).populate<{
+      civilizations: (CivilizationType & { researchPoints?: number; researchedTechs?: string[] })[]
+    }>({ path: 'civilizations' })
+    const civilization = user?.civilizations.find(({ id }) => id === civilizationId)
+    if (!user || !civilization) {
+      throw new Error('No civilization found')
+    }
+
+    const node = getTechNode(techId as TechId)
+    if (!node) {
+      throw new Error('Unknown technology')
+    }
+
+    const researched = civilization.researchedTechs ?? []
+    if (researched.includes(techId)) {
+      throw new Error('Technology already researched')
+    }
+    if (!node.prerequisites.every((pre) => researched.includes(pre))) {
+      throw new Error('Prerequisites not met')
+    }
+    const points = civilization.researchPoints ?? 0
+    if (points < node.cost) {
+      throw new Error('Not enough research points')
+    }
+
+    await CivilizationModel.updateOne(
+      { _id: civilizationId },
+      {
+        researchPoints: points - node.cost,
+        researchedTechs: [...researched, techId],
+      },
+    )
+    return { researchPoints: points - node.cost, researchedTechs: [...researched, techId] }
   }
 }

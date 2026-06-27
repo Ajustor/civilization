@@ -13,15 +13,17 @@ import { Mine } from "./buildings/mine";
 import { Sawmill } from "./buildings/sawmill";
 import { Wall } from "./buildings/wall";
 import { Gender } from "./people/enum";
-import { People } from "./people/people";
+import { People, MAX_NUMBER_OF_CHILD } from "./people/people";
 import { DeathCause, type DeathRecord } from "./people/death";
 import { OccupationTypes } from "./people/work/enum";
 import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
+import { TechId, getTechNode, getBuildingGate } from "./technology/techTree";
+import { Events } from "./events/enum";
 import {
-  AbstractExtractionBuilding, AbstractStorageBuilding, Building, ConstructionCost,
-  ExtractionBuilding, ProductionBuilding, WorkerRequiredToBuild
+  AbstractExtractionBuilding, AbstractStorageBuilding, type Building, type ConstructionCost,
+  type ExtractionBuilding, type ProductionBuilding, type WorkerRequiredToBuild
 } from "./types/building";
 import { isWithinChance } from "./utils";
 import { hasElementInCommon } from "./utils/array";
@@ -76,11 +78,22 @@ export class Civilization {
   private _resources: Resource[];
   private _livedMonths: number = 0;
   private _researchPoints: number = 0;
+  private _researchedTechs: TechId[] = [];
   private _buildings: Building[];
   private _citizensCount: number = 0;
   // Deaths collected during the current month (war casualties + natural deaths),
   // read back after passAMonth to fill the cemetery. Per-instance and transient.
   private _deaths: DeathRecord[] = [];
+  private _occupationIndex: Map<OccupationTypes, People[]> | null = null;
+  private _techCache: {
+    production: number
+    storage: number
+    military: number
+    maxChildren: number
+    pregnancyBonus: number
+    research: number
+    eventReductions: Map<Events, number>
+  } | null = null;
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
@@ -131,6 +144,107 @@ export class Civilization {
 
   set researchPoints(value: number) {
     this._researchPoints = value;
+  }
+
+  get researchedTechs(): TechId[] {
+    return this._researchedTechs;
+  }
+
+  set researchedTechs(value: TechId[]) {
+    this._researchedTechs = value;
+    this._techCache = null;
+  }
+
+  hasTech(id: TechId): boolean {
+    return this._researchedTechs.includes(id);
+  }
+
+  canUnlock(id: TechId): boolean {
+    const node = getTechNode(id);
+    if (!node || this.hasTech(id)) {
+      return false;
+    }
+    return node.prerequisites.every((pre) => this.hasTech(pre));
+  }
+
+  isBuildingUnlocked(building: BuildingTypes): boolean {
+    const gate = getBuildingGate(building);
+    return gate === undefined || this.hasTech(gate);
+  }
+
+  private buildTechCache(): void {
+    let production = 1, storage = 1, military = 1, research = 1
+    let maxChildren = 0, pregnancyBonus = 0
+    const eventReductions = new Map<Events, number>()
+    for (const id of this._researchedTechs) {
+      for (const effect of getTechNode(id)?.effects ?? []) {
+        switch (effect.kind) {
+          case 'productionMultiplier': production *= effect.factor; break
+          case 'storageMultiplier': storage *= effect.factor; break
+          case 'militaryMultiplier': military *= effect.factor; break
+          case 'maxChildrenBonus': maxChildren += effect.amount; break
+          case 'pregnancyProbabilityBonus': pregnancyBonus += effect.amount; break
+          case 'researchMultiplier': research *= effect.factor; break
+          case 'eventDamageReduction': {
+            const current = eventReductions.get(effect.event) ?? 0
+            // Combine reductions additively, capped at 90%
+            eventReductions.set(effect.event, Math.min(0.9, current + effect.factor))
+            break
+          }
+        }
+      }
+    }
+    this._techCache = { production, storage, military, maxChildren, pregnancyBonus, research, eventReductions }
+  }
+
+  getEventDamageReduction(event: Events): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.eventReductions.get(event) ?? 0
+  }
+
+  private buildOccupationIndex(): void {
+    const index = new Map<OccupationTypes, People[]>()
+    for (const person of this._people) {
+      if (!person.work) continue
+      const occ = person.work.occupationType
+      const bucket = index.get(occ)
+      if (bucket) {
+        bucket.push(person)
+      } else {
+        index.set(occ, [person])
+      }
+    }
+    this._occupationIndex = index
+  }
+
+  get productionMultiplier(): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.production
+  }
+
+  get storageMultiplier(): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.storage
+  }
+
+  get militaryMultiplier(): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.military
+  }
+
+  get maxChildrenBonus(): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.maxChildren
+  }
+
+  get pregnancyProbabilityBonus(): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.pregnancyBonus
+  }
+
+  get researchMultiplier(): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.research
   }
 
   get people(): People[] {
@@ -260,6 +374,9 @@ export class Civilization {
   }
 
   getPeopleWithOccupation(occupation: OccupationTypes): People[] {
+    if (this._occupationIndex) {
+      return this._occupationIndex.get(occupation) ?? []
+    }
     return this._people.filter(
       ({ work: peopleJob }) =>
         peopleJob && occupation === peopleJob.occupationType,
@@ -282,10 +399,11 @@ export class Civilization {
   }
 
   get militaryStrength(): number {
-    return this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
+    const base = this.getPeopleWithOccupation(OccupationTypes.SOLDIER).reduce(
       (strength, soldier) => strength + Math.max(0, soldier.lifeCounter),
       0,
     );
+    return Math.floor(base * this.militaryMultiplier);
   }
 
   loseSoldiers(ratio: number): void {
@@ -326,6 +444,26 @@ export class Civilization {
     return this._buildings.filter((building) =>
       STORAGE_BUILDINGS.includes(building.getType()),
     ) as AbstractStorageBuilding[];
+  }
+
+  getStorageCapacity(resource: ResourceTypes): number {
+    const base = this.getStorageBuildings().reduce((sum, building) => {
+      const stored = building.storedResources.find((s) => s.resource === resource)
+      return sum + (stored?.maxQuantity ?? 0) * building.count
+    }, 0)
+    return Math.floor(base * this.storageMultiplier)
+  }
+
+  // Per-woman lifetime child limit (people.ts MAX_NUMBER_OF_CHILD), raised by
+  // the Medicine tech's maxChildrenBonus. The civilization-wide simultaneous cap
+  // is governed solely by the user config (MAXIMUM_CHILDREN) and is not affected
+  // by this bonus.
+  get effectiveMaxChildrenPerWoman(): number {
+    return MAX_NUMBER_OF_CHILD + this.maxChildrenBonus;
+  }
+
+  get effectivePregnancyProbability(): number {
+    return Math.min(100, this.config.PREGNANCY_PROBABILITY + this.pregnancyProbabilityBonus);
   }
 
   addPeople(...peoples: People[]): void {
@@ -511,6 +649,7 @@ export class Civilization {
 
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
+    this.buildOccupationIndex();
 
     const gatherers = this.getPeopleWithOccupation(OccupationTypes.GATHERER);
     const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER);
@@ -535,6 +674,7 @@ export class Civilization {
 
     this.checkHousing();
     this.removeDeadPeople();
+    this.buildOccupationIndex();
 
     const activePeopleCount = this.people.filter(
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
@@ -552,11 +692,16 @@ export class Civilization {
     }
 
     await this.birthAwaitingBabies();
+    // Population settled — build index for extract/produce/research phase
+    this.buildOccupationIndex();
 
     this.extractResources();
     this.produceResources();
     this.produceResearch();
 
+    // adaptPeopleJob mutates occupations — clear the index so subsequent reads
+    // fall back to the linear scan on the current (mutated) state
+    this._occupationIndex = null;
     this.adaptPeopleJob();
     this.progressConstructions();
     this.buildNewBuilding();
@@ -623,7 +768,7 @@ export class Civilization {
       for (const producedResource of building.outputResources) {
         this.increaseResource(
           producedResource.resource,
-          Math.ceil(producedResource.amount * productionRatio),
+          Math.ceil(producedResource.amount * productionRatio * this.productionMultiplier),
         );
       }
     }
@@ -666,7 +811,7 @@ export class Civilization {
         worker.hasWork = true;
         for (const resource of resourcesProbabilities) {
           if (isWithinChance(resource.probability)) {
-            const amount = getRandomInt(1, 100);
+            const amount = Math.floor(getRandomInt(1, 100) * this.productionMultiplier);
             this.increaseResource(resource.resource, amount);
 
             if (building.capacity != null) {
@@ -728,7 +873,7 @@ export class Civilization {
     }
 
     this._researchPoints += Math.floor(
-      Library.researchOutput * (staffed / requiredPerLibrary),
+      Library.researchOutput * (staffed / requiredPerLibrary) * this.researchMultiplier,
     )
   }
 
@@ -898,6 +1043,10 @@ export class Civilization {
     workerRequiredToBuild: WorkerRequiredToBuild[],
     timeToBuild: number,
   ) {
+    if (!this.isBuildingUnlocked(buildingType)) {
+      return;
+    }
+
     const canBuild =
       constructionCosts.every(
         (cost) => this.getResource(cost.resource).quantity >= cost.amount,
@@ -1064,8 +1213,9 @@ export class Civilization {
     }
 
     let eligiblePeople: [People, People][] = [];
+    const maxChildrenPerWoman = this.effectiveMaxChildrenPerWoman;
     const ableToConceivePeople = this._people.filter((person) =>
-      person.canConceive(),
+      person.canConceive(maxChildrenPerWoman),
     );
 
     const women = ableToConceivePeople.filter(
@@ -1116,7 +1266,7 @@ export class Civilization {
       eligiblePeople.map(
         ([mother, father]) =>
           new Promise((resolve) => {
-            if (!isWithinChance(this.config.PREGNANCY_PROBABILITY) || !mother) {
+            if (!isWithinChance(this.effectivePregnancyProbability) || !mother) {
               return resolve(null);
             }
 

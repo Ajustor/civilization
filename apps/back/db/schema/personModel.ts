@@ -1,4 +1,4 @@
-import { Gender, OccupationTypes, PeopleEntity } from '@ajustor/simulation'
+import { Gender, OccupationTypes, type PeopleEntity } from '@ajustor/simulation'
 import { Schema } from 'mongoose'
 
 const PersonSchema = new Schema<PeopleEntity>({

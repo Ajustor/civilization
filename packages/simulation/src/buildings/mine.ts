@@ -2,10 +2,10 @@ import { OccupationTypes } from '../people/work/enum'
 import { ResourceTypes } from '../resource'
 import {
   AbstractExtractionBuilding,
-  BuildingType,
-  ExtractedResource,
-  WorkerRequired,
-  WorkerRequiredToBuild,
+  type BuildingType,
+  type ExtractedResource,
+  type WorkerRequired,
+  type WorkerRequiredToBuild,
 } from '../types/building'
 import { getRandomInt } from '../utils/random'
 import { BuildingTypes } from './enum'

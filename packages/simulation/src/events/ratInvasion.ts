@@ -1,4 +1,4 @@
-import { ActionInput, WorldEvent } from './interface'
+import type { ActionInput, WorldEvent } from './interface'
 
 import { Events } from './enum'
 import { ResourceTypes } from '../resource'
@@ -10,21 +10,12 @@ export class RatInvasion implements WorldEvent {
     for (const civilization of civilizations) {
       const food = civilization.getResource(ResourceTypes.RAW_FOOD)
 
-      const protectedFood = civilization
-        .getStorageBuildings()
-        .reduce<number>((sum, building) => {
-          return (
-            sum +
-            (building.storedResources.find(
-              (storedResource) =>
-                storedResource.resource === ResourceTypes.RAW_FOOD,
-            )?.maxQuantity ?? 0) *
-              building.count
-          )
-        }, 0)
+      const uneatableFood = civilization.getStorageCapacity(ResourceTypes.RAW_FOOD)
 
-      if (food.quantity && food.quantity < protectedFood) {
-        food.decrease(food.quantity - protectedFood)
+      if (food.quantity && food.quantity < uneatableFood) {
+        const rawLoss = food.quantity - uneatableFood
+        const reduction = civilization.getEventDamageReduction(Events.RAT_INVASION)
+        food.decrease(Math.floor(rawLoss * (1 - reduction)))
       }
     }
   }

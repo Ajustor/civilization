@@ -1,6 +1,6 @@
 import adapter from '@sveltejs/adapter-node'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
-const generateSW = process.env.GENERATE_SW === 'true'
+const generateSW = process.env.GENERATE_SW !== 'false'
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

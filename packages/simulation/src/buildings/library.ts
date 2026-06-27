@@ -2,10 +2,10 @@ import { OccupationTypes } from '../people/work/enum'
 import { ResourceTypes } from '../resource'
 import {
   AbstractProductionBuilding,
-  BuildingType,
-  ConstructionCost,
-  WorkerRequired,
-  WorkerRequiredToBuild,
+  type BuildingType,
+  type ConstructionCost,
+  type WorkerRequired,
+  type WorkerRequiredToBuild,
 } from '../types/building'
 import { BuildingTypes } from './enum'
 
@@ -37,7 +37,7 @@ export class Library extends AbstractProductionBuilding {
 
   public static constructionCosts: ConstructionCost[] = [
     {
-      resource: ResourceTypes.PLANK,
+      resource: ResourceTypes.WOOD,
       amount: 15,
     },
     {

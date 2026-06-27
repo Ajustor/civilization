@@ -2,7 +2,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import { loginSchema } from '$lib/schemas/login'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import type { PageData } from './$types'
 	import { toast } from 'svelte-sonner'
 	import { redirect } from '@sveltejs/kit'
@@ -85,7 +85,7 @@
 					{#if $errors.password}<div style="font-size:13px; color:oklch(0.52 0.2 30); margin-top:4px;">{$errors.password}</div>{/if}
 				</div>
 				<button type="submit" style="width:100%; padding:13px; margin-top:6px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:18px; letter-spacing:.03em; cursor:pointer; box-shadow:0 4px 14px rgba(80,30,20,.28);">Entrer dans le monde</button>
-				<div onclick={() => showForgot = true} style="text-align:center; font-size:15px; color:oklch(0.5 0.06 40); margin-top:4px; cursor:pointer;">Mot de passe oublié&nbsp;?</div>
+				<button type="button" onclick={() => showForgot = true} style="text-align:center; font-size:15px; color:oklch(0.5 0.06 40); margin-top:4px; cursor:pointer; background:none; border:none; width:100%;">Mot de passe oublié&nbsp;?</button>
 			</form>
 		{:else}
 			<!-- Forgot password form -->
@@ -100,7 +100,7 @@
 					/>
 				</div>
 				<button onclick={askANewPassword} style="width:100%; padding:13px; margin-top:6px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:18px; letter-spacing:.03em; cursor:pointer; box-shadow:0 4px 14px rgba(80,30,20,.28);">Envoyer le lien</button>
-				<div onclick={() => showForgot = false} style="text-align:center; font-size:15px; color:oklch(0.5 0.06 40); margin-top:4px; cursor:pointer;">‹ Retour à la connexion</div>
+				<button type="button" onclick={() => showForgot = false} style="text-align:center; font-size:15px; color:oklch(0.5 0.06 40); margin-top:4px; cursor:pointer; background:none; border:none; width:100%;">‹ Retour à la connexion</button>
 			</div>
 		{/if}
 	</div>

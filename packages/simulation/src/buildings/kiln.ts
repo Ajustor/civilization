@@ -2,10 +2,10 @@ import { OccupationTypes } from '../people/work/enum'
 import { ResourceTypes } from '../resource'
 import {
   AbstractProductionBuilding,
-  BuildingType,
-  ConstructionCost,
-  WorkerRequired,
-  WorkerRequiredToBuild,
+  type BuildingType,
+  type ConstructionCost,
+  type WorkerRequired,
+  type WorkerRequiredToBuild,
 } from '../types/building'
 import { BuildingTypes } from './enum'
 

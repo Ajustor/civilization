@@ -2,7 +2,7 @@
 	import { passwordChangeSchema } from '$lib/schemas/passwordChanger'
 	import { toast } from 'svelte-sonner'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import { useUser } from '../../stores/user'
 	import type { PageData } from './$types'
 	import {

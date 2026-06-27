@@ -11,9 +11,12 @@
 		FormLegend
 	} from '$lib/components/ui/form'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
+	import type { z } from 'zod'
 	import { toast } from 'svelte-sonner'
+
+	type ConfigFormData = z.infer<typeof civilizationConfigSchema>
 	import {
 		BuildingTypes,
 		House,
@@ -25,6 +28,8 @@
 		Cache,
 		Wall,
 		Library,
+		getBuildingGate,
+		getTechNode,
 		type ResourceTypes,
 		type OccupationTypes
 	} from '@ajustor/simulation'
@@ -59,18 +64,20 @@
 	const { form: formData, enhance: formEnhance } = form
 
 	const toggleExchange = (civilizationId: string, checked: boolean | 'indeterminate') => {
+		const fd = $formData as ConfigFormData
 		if (checked === true) {
-			$formData.openExchange = [...$formData.openExchange, civilizationId]
+			$formData.openExchange = [...fd.openExchange, civilizationId]
 		} else {
-			$formData.openExchange = $formData.openExchange.filter((id) => id !== civilizationId)
+			$formData.openExchange = fd.openExchange.filter((id: string) => id !== civilizationId)
 		}
 	}
 
 	const toggleWar = (civilizationId: string, checked: boolean | 'indeterminate') => {
+		const fd = $formData as ConfigFormData
 		if (checked === true) {
-			$formData.atWarWith = [...$formData.atWarWith, civilizationId]
+			$formData.atWarWith = [...fd.atWarWith, civilizationId]
 		} else {
-			$formData.atWarWith = $formData.atWarWith.filter((id) => id !== civilizationId)
+			$formData.atWarWith = fd.atWarWith.filter((id: string) => id !== civilizationId)
 		}
 	}
 
@@ -91,6 +98,20 @@
 		[BuildingTypes.WALL]: Wall,
 		[BuildingTypes.LIBRARY]: Library
 	}
+
+	// Bâtiments verrouillés par l'arbre de technologies : pour chaque type gardé
+	// par une techno non encore recherchée, on garde le nom (FR) de cette techno.
+	const researchedTechs = $derived<string[]>(data.civilization.researchedTechs ?? [])
+	const lockedBuildings = $derived.by(() => {
+		const locked = new Map<BuildingTypes, string>()
+		for (const buildingType of Object.values(BuildingTypes)) {
+			const gate = getBuildingGate(buildingType)
+			if (gate && !researchedTechs.includes(gate)) {
+				locked.set(buildingType, getTechNode(gate)?.name ?? gate)
+			}
+		}
+		return locked
+	})
 
 	const selectedBuildingInfo = $derived.by(() => {
 		const type = $formData.nextBuildingToBuild
@@ -163,7 +184,7 @@
 						<div class="flex items-center gap-2">
 							<Checkbox
 								id="exchange-{otherCivilization.id}"
-								checked={$formData.openExchange.includes(otherCivilization.id)}
+								checked={($formData as ConfigFormData).openExchange.includes(otherCivilization.id)}
 								onCheckedChange={(checked: boolean | 'indeterminate') => toggleExchange(otherCivilization.id, checked)}
 							/>
 							<label for="exchange-{otherCivilization.id}" style="font-size:15px; cursor:pointer;">{otherCivilization.name}</label>
@@ -198,7 +219,7 @@
 							<div class="flex items-center gap-2">
 								<Checkbox
 									id="war-{otherCivilization.id}"
-									checked={$formData.atWarWith.includes(otherCivilization.id)}
+									checked={($formData as ConfigFormData).atWarWith.includes(otherCivilization.id)}
 									onCheckedChange={(checked: boolean | 'indeterminate') => toggleWar(otherCivilization.id, checked)}
 								/>
 								<label for="war-{otherCivilization.id}" style="font-size:15px; cursor:pointer;">{otherCivilization.name}</label>
@@ -229,7 +250,12 @@
 							>
 								<option value="">Aucun</option>
 								{#each Object.values(BuildingTypes) as buildingType}
-									<option value={buildingType}>{buildingNames[buildingType]}</option>
+									{@const lockedBy = lockedBuildings.get(buildingType)}
+									<option
+										value={buildingType}
+										disabled={!!lockedBy}
+										title={lockedBy ? `Recherche manquante : ${lockedBy}` : undefined}
+									>{buildingNames[buildingType]}{lockedBy ? ` 🔒 (recherche : ${lockedBy})` : ''}</option>
 								{/each}
 							</select>
 						{/snippet}

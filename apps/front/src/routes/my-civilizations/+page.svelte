@@ -2,7 +2,7 @@
 	import type { PageData } from './$types'
 	import { toast } from 'svelte-sonner'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import { newCivilizationSchema } from '$lib/schemas/newCivilization'
 	import {
 		FormControl,
@@ -81,14 +81,15 @@
 
 <!-- Create civilization modal -->
 {#if isDialogOpen}
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 	<div
+		role="presentation"
 		style="position:fixed; inset:0; z-index:50; background:rgba(40,25,10,.45); display:flex; align-items:center; justify-content:center; padding:16px;"
 		onclick={() => (isDialogOpen = false)}
 	>
 		<div
 			style="background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.06), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.74 0.05 60), 0 20px 48px rgba(60,40,20,.24); border-radius:5px; padding:32px; width:100%; max-width:480px;"
 			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
@@ -151,14 +152,15 @@
 
 <!-- Delete confirmation modal -->
 {#if deleteDialogOpen}
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 	<div
+		role="presentation"
 		style="position:fixed; inset:0; z-index:50; background:rgba(40,25,10,.45); display:flex; align-items:center; justify-content:center; padding:16px;"
 		onclick={() => (deleteDialogOpen = false)}
 	>
 		<div
 			style="background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.06), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.74 0.05 60), 0 20px 48px rgba(60,40,20,.24); border-radius:5px; padding:32px; width:100%; max-width:420px;"
 			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
@@ -229,7 +231,7 @@
 								<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
 							</div>
 							<div>
-								<div style="font-family:'Tangerine',cursive; font-size:28px; color:oklch(0.45 0.1 38);">{civ.buildings.reduce((a, b) => a + b.count, 0)}</div>
+								<div style="font-family:'Tangerine',cursive; font-size:28px; color:oklch(0.45 0.1 38);">{civ.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
 								<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
 							</div>
 						</div>

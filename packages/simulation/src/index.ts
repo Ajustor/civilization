@@ -14,6 +14,12 @@ export { defaultCivilizationConfig } from './civilization'
 export { BuildingTypes } from './buildings/enum'
 export * from './buildings'
 
+export { TECH_TREE, TechId, getTechNode, getBuildingGate } from './technology/techTree'
+export type { TechNode, TechEffect } from './technology/techTree'
+
+export { splitCivilization } from './colonize'
+export type { SplitParams, SplitResult, ResourceTransfer } from './colonize'
+
 export { OccupationTypes } from './people/work/enum'
 export { MINIMAL_AGE_TO_BECOME } from './people/work/ages'
 export { DeathCause } from './people/death'

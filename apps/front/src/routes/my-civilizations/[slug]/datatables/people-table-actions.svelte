@@ -30,14 +30,14 @@
 </script>
 
 <DropdownMenu>
-	<DropdownMenuTrigger asChild >
-		{#snippet children({ builder })}
-				<Button variant="ghost" builders={[builder]} size="icon" class="relative h-8 w-8 p-0">
+	<DropdownMenuTrigger>
+		{#snippet child({ props })}
+			<Button variant="ghost" {...props} size="icon" class="relative h-8 w-8 p-0">
 				<span class="sr-only">Ouvrir le menu</span>
 				<Ellipsis class="h-4 w-4" />
 			</Button>
-					{/snippet}
-		</DropdownMenuTrigger>
+		{/snippet}
+	</DropdownMenuTrigger>
 	<DropdownMenuContent>
 		<DropdownMenuGroup>
 			<DropdownMenuLabel>Actions</DropdownMenuLabel>
