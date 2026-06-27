@@ -210,6 +210,7 @@
 	// Multiplicateurs issus des technologies recherchées — miroirs exacts des
 	// getters `Civilization.*Multiplier` de la simulation.
 	const researchedTechs = $derived(data.civilization.researchedTechs ?? [])
+	const hasColonizationTech = $derived(researchedTechs.includes('colonization'))
 	const _techEffects = $derived(
 		TECH_TREE.filter((node) => researchedTechs.includes(node.id)).flatMap((node) => node.effects)
 	)
@@ -625,6 +626,21 @@
 				<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
 					<Settings size="16" /> Configurer
 				</a>
+				{#if hasColonizationTech}
+					<a
+						href="/my-civilizations/{data.civilization.id}/colonize"
+						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;"
+					>
+						🌍 Fonder une colonie
+					</a>
+				{:else}
+					<span
+						title="Nécessite la technologie Colonisation"
+						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.65 0.03 50); font-family:'EB Garamond',serif; font-size:15px; cursor:not-allowed; opacity:0.55;"
+					>
+						🔒 Fonder une colonie
+					</span>
+				{/if}
 			</div>
 		</div>
 
