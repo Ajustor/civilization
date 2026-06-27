@@ -1,3 +1,4 @@
+// @ts-nocheck — service worker: compiled by vite-pwa, not the app tsconfig
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 
 declare let self: ServiceWorkerGlobalScope

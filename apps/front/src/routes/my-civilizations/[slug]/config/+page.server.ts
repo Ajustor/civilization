@@ -9,7 +9,7 @@ import {
 } from '../../../../services/api/civilization-api'
 import { getWorldCivilizations } from '../../../../services/api/world-api'
 import type { Actions, PageServerLoad } from './$types'
-import { zod } from 'sveltekit-superforms/adapters'
+import { zod4 as zod } from 'sveltekit-superforms/adapters'
 import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 import { error, redirect } from '@sveltejs/kit'
 import type { CivilizationType } from '@ajustor/simulation'

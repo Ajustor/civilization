@@ -11,7 +11,7 @@
 		FormLegend
 	} from '$lib/components/ui/form'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import type { z } from 'zod'
 	import { toast } from 'svelte-sonner'

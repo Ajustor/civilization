@@ -2,7 +2,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import { loginSchema } from '$lib/schemas/login'
 	import { superForm } from 'sveltekit-superforms'
-	import { zodClient } from 'sveltekit-superforms/adapters'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import type { PageData } from './$types'
 	import { toast } from 'svelte-sonner'
 	import { redirect } from '@sveltejs/kit'

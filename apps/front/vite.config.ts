@@ -26,8 +26,29 @@ const superformsZodAdapter = path.join(
 
 const generateSW = process.env.GENERATE_SW !== 'false'
 
+// The `sveltekit-superforms/adapters` barrel eagerly evaluates EVERY adapter,
+// including the TypeBox one, which throws at build time. This plugin intercepts
+// that import and redirects it to the zod4.js adapter module directly (which
+// exports `zod` and `zodClient`), re-exporting them under the versioned names
+// `zod4` and `zod4Client` that the codebase uses (matching the barrel's type
+// declarations so TypeScript stays happy).
+const superformsAdaptersPlugin = (zod4Path: string): import('vite').Plugin => ({
+  name: 'superforms-adapters-compat',
+  enforce: 'pre',
+  resolveId(id) {
+    if (id === 'sveltekit-superforms/adapters') return '\0superforms-adapters'
+  },
+  load(id) {
+    if (id === '\0superforms-adapters') {
+      const p = zod4Path.replace(/\\/g, '/')
+      return `export { zod as zod4, zodClient as zod4Client, zod, zodClient, zodToJSONSchema } from '${p}'`
+    }
+  },
+})
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const plugins: any[] = [
+	superformsAdaptersPlugin(superformsZodAdapter),
 	visualizer({ filename: 'stats.html', emitFile: true }) as PluginOption,
 	sveltekit(),
 	SvelteKitPWA({
@@ -87,10 +108,9 @@ export default defineConfig({
 		__RELOAD_SW__: false,
 		'process.env.NODE_ENV': process.env.NODE_ENV === 'production' ? '"production"' : '"development"',
 	},
-	resolve: {
-		alias: {
-			'sveltekit-superforms/adapters': superformsZodAdapter,
-		},
+	resolve: {},
+	ssr: {
+		noExternal: ['sveltekit-superforms'],
 	},
 	// PostCSS config is auto-discovered from postcss.config.cjs. Setting
 	// css.postcss to an inline object here ({ config: ... }) made vite treat it
