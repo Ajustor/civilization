@@ -564,7 +564,8 @@ export class CivilizationService {
     }
 
     // 4. Valider la population
-    const totalPeople = mongoCiv.people.length
+    const civPeople = (mongoCiv.people ?? []) as { toString(): string }[]
+    const totalPeople = civPeople.length
     const transferCount = Math.floor(totalPeople * body.populationPercent / 100)
     if (transferCount < 1) throw new Error('Not enough people to transfer')
     if (totalPeople - transferCount < 10) {
@@ -572,9 +573,10 @@ export class CivilizationService {
     }
 
     // 5. Valider les ressources
+    const civResources = mongoCiv.resources as { resourceType: ResourceTypes; quantity: number }[]
     for (const transfer of body.resources) {
       if (transfer.amount <= 0) continue
-      const existing = mongoCiv.resources.find((r) => r.resourceType === transfer.type)
+      const existing = civResources.find((r) => r.resourceType === transfer.type)
       if ((existing?.quantity ?? 0) < transfer.amount) {
         throw new Error(`Insufficient ${transfer.type}`)
       }
@@ -586,13 +588,13 @@ export class CivilizationService {
     }
 
     // 7. Mélanger et répartir les IDs de citoyens
-    const allIds = mongoCiv.people.map((id) => id.toString())
+    const allIds = civPeople.map((id) => id.toString())
     const shuffled = [...allIds].sort(() => Math.random() - 0.5)
     const colonyPeopleIds = shuffled.slice(0, transferCount)
     const motherPeopleIds = shuffled.slice(transferCount)
 
     // 8. Calculer les nouveaux stocks de ressources
-    const motherResources = mongoCiv.resources.map((r) => ({
+    const motherResources = civResources.map((r) => ({
       resourceType: r.resourceType,
       quantity: r.quantity,
     }))
