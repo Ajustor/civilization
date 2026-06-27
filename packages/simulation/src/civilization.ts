@@ -83,6 +83,15 @@ export class Civilization {
   // Deaths collected during the current month (war casualties + natural deaths),
   // read back after passAMonth to fill the cemetery. Per-instance and transient.
   private _deaths: DeathRecord[] = [];
+  private _occupationIndex: Map<OccupationTypes, People[]> | null = null;
+  private _techCache: {
+    production: number
+    storage: number
+    military: number
+    maxChildren: number
+    pregnancyBonus: number
+    research: number
+  } | null = null;
 
   constructor(
     public name = uniqueNamesGenerator({ dictionaries: [countries] }),
@@ -141,6 +150,7 @@ export class Civilization {
 
   set researchedTechs(value: TechId[]) {
     this._researchedTechs = value;
+    this._techCache = null;
   }
 
   hasTech(id: TechId): boolean {
@@ -160,42 +170,67 @@ export class Civilization {
     return gate === undefined || this.hasTech(gate);
   }
 
-  private effectsOfKind<K extends import('./technology/techTree').TechEffect['kind']>(
-    kind: K,
-  ): Extract<import('./technology/techTree').TechEffect, { kind: K }>[] {
-    const effects: Extract<import('./technology/techTree').TechEffect, { kind: K }>[] = [];
+  private buildTechCache(): void {
+    let production = 1, storage = 1, military = 1, research = 1
+    let maxChildren = 0, pregnancyBonus = 0
     for (const id of this._researchedTechs) {
       for (const effect of getTechNode(id)?.effects ?? []) {
-        if (effect.kind === kind) {
-          effects.push(effect as Extract<import('./technology/techTree').TechEffect, { kind: K }>);
+        switch (effect.kind) {
+          case 'productionMultiplier': production *= effect.factor; break
+          case 'storageMultiplier': storage *= effect.factor; break
+          case 'militaryMultiplier': military *= effect.factor; break
+          case 'maxChildrenBonus': maxChildren += effect.amount; break
+          case 'pregnancyProbabilityBonus': pregnancyBonus += effect.amount; break
+          case 'researchMultiplier': research *= effect.factor; break
         }
       }
     }
-    return effects;
+    this._techCache = { production, storage, military, maxChildren, pregnancyBonus, research }
+  }
+
+  private buildOccupationIndex(): void {
+    const index = new Map<OccupationTypes, People[]>()
+    for (const person of this._people) {
+      if (!person.work) continue
+      const occ = person.work.occupationType
+      const bucket = index.get(occ)
+      if (bucket) {
+        bucket.push(person)
+      } else {
+        index.set(occ, [person])
+      }
+    }
+    this._occupationIndex = index
   }
 
   get productionMultiplier(): number {
-    return this.effectsOfKind('productionMultiplier').reduce((m, e) => m * e.factor, 1);
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.production
   }
 
   get storageMultiplier(): number {
-    return this.effectsOfKind('storageMultiplier').reduce((m, e) => m * e.factor, 1);
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.storage
   }
 
   get militaryMultiplier(): number {
-    return this.effectsOfKind('militaryMultiplier').reduce((m, e) => m * e.factor, 1);
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.military
   }
 
   get maxChildrenBonus(): number {
-    return this.effectsOfKind('maxChildrenBonus').reduce((s, e) => s + e.amount, 0);
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.maxChildren
   }
 
   get pregnancyProbabilityBonus(): number {
-    return this.effectsOfKind('pregnancyProbabilityBonus').reduce((s, e) => s + e.amount, 0);
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.pregnancyBonus
   }
 
   get researchMultiplier(): number {
-    return this.effectsOfKind('researchMultiplier').reduce((m, e) => m * e.factor, 1);
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.research
   }
 
   get people(): People[] {
@@ -325,6 +360,9 @@ export class Civilization {
   }
 
   getPeopleWithOccupation(occupation: OccupationTypes): People[] {
+    if (this._occupationIndex) {
+      return this._occupationIndex.get(occupation) ?? []
+    }
     return this._people.filter(
       ({ work: peopleJob }) =>
         peopleJob && occupation === peopleJob.occupationType,
@@ -597,6 +635,7 @@ export class Civilization {
 
   async passAMonth(world: World): Promise<void> {
     // Handle resource collection
+    this.buildOccupationIndex();
 
     const gatherers = this.getPeopleWithOccupation(OccupationTypes.GATHERER);
     const woodCutters = this.getPeopleWithOccupation(OccupationTypes.WOODCUTTER);
@@ -621,6 +660,7 @@ export class Civilization {
 
     this.checkHousing();
     this.removeDeadPeople();
+    this.buildOccupationIndex();
 
     const activePeopleCount = this.people.filter(
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
@@ -638,11 +678,16 @@ export class Civilization {
     }
 
     await this.birthAwaitingBabies();
+    // Population settled — build index for extract/produce/research phase
+    this.buildOccupationIndex();
 
     this.extractResources();
     this.produceResources();
     this.produceResearch();
 
+    // adaptPeopleJob mutates occupations — clear the index so subsequent reads
+    // fall back to the linear scan on the current (mutated) state
+    this._occupationIndex = null;
     this.adaptPeopleJob();
     this.progressConstructions();
     this.buildNewBuilding();
