@@ -1,4 +1,5 @@
 import { BuildingTypes } from '../buildings/enum'
+import { Events } from '../events/enum'
 
 export enum TechId {
   // — Tier 0 (racines) —
@@ -12,6 +13,9 @@ export enum TechId {
   WRITING = 'writing',
   FISHING = 'fishing',
   HERBAL_MEDICINE = 'herbal_medicine',
+  // — Tier 1 (event reduction) —
+  FIREPROOFING = 'fireproofing',
+  FOOD_PRESERVATION = 'food_preservation',
   // — Tier 1 —
   MASONRY = 'masonry',
   MECHANIZATION = 'mechanization',
@@ -23,6 +27,9 @@ export enum TechId {
   ANIMAL_TRACTION = 'animal_traction',
   ACCOUNTING = 'accounting',
   MIDWIFERY = 'midwifery',
+  // — Tier 2 (event reduction) —
+  EARTHWORKS = 'earthworks',
+  PEST_CONTROL = 'pest_control',
   // — Tier 2 —
   METALLURGY = 'metallurgy',
   ENGINEERING = 'engineering',
@@ -78,6 +85,7 @@ export type TechEffect =
   | { kind: 'maxChildrenBonus'; amount: number }
   | { kind: 'pregnancyProbabilityBonus'; amount: number }
   | { kind: 'researchMultiplier'; factor: number }
+  | { kind: 'eventDamageReduction'; event: Events; factor: number }
 
 export type TechNode = {
   id: TechId
@@ -183,6 +191,22 @@ export const TECH_TREE: TechNode[] = [
   // TIER 1
   // ═══════════════════════════════════════════════════════════════
   {
+    id: TechId.FIREPROOFING,
+    name: 'Ignifugation',
+    description: 'Techniques de construction résistantes au feu. Réduit les pertes de bois lors d\'un incendie de 50 %.',
+    cost: 10,
+    prerequisites: [TechId.CRAFTSMANSHIP],
+    effects: [{ kind: 'eventDamageReduction', event: Events.FIRE, factor: 0.5 }],
+  },
+  {
+    id: TechId.FOOD_PRESERVATION,
+    name: 'Conservation alimentaire',
+    description: 'Séchage, salage et fermentation. Réduit les pertes de nourriture lors d\'une famine de 40 %.',
+    cost: 10,
+    prerequisites: [TechId.POTTERY],
+    effects: [{ kind: 'eventDamageReduction', event: Events.STARVATION, factor: 0.4 }],
+  },
+  {
     id: TechId.MASONRY,
     name: 'Maçonnerie',
     description: 'Débloque la Mine et la Muraille.',
@@ -278,6 +302,22 @@ export const TECH_TREE: TechNode[] = [
   // ═══════════════════════════════════════════════════════════════
   // TIER 2
   // ═══════════════════════════════════════════════════════════════
+  {
+    id: TechId.EARTHWORKS,
+    name: 'Terrassement',
+    description: 'Fondations renforcées et talus de soutènement. Réduit les dégâts des tremblements de terre de 40 %.',
+    cost: 20,
+    prerequisites: [TechId.MASONRY, TechId.ENGINEERING],
+    effects: [{ kind: 'eventDamageReduction', event: Events.EARTHQUAKE, factor: 0.4 }],
+  },
+  {
+    id: TechId.PEST_CONTROL,
+    name: 'Lutte antiparasitaire',
+    description: 'Pièges, chats domestiques et silos hermétiques. Réduit les pertes dues aux invasions de rats de 60 %.',
+    cost: 20,
+    prerequisites: [TechId.FOOD_PRESERVATION, TechId.HUNTING],
+    effects: [{ kind: 'eventDamageReduction', event: Events.RAT_INVASION, factor: 0.6 }],
+  },
   {
     id: TechId.METALLURGY,
     name: 'Métallurgie',

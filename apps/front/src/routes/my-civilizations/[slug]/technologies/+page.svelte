@@ -82,6 +82,10 @@
 		colonization: '🌍',
 		industrialization: '⚡',
 		empire: '👑',
+		fireproofing: '🔥',
+		food_preservation: '🥫',
+		earthworks: '⛏️',
+		pest_control: '🐀',
 	}
 
 	// ── Disposition en arbre ───────────────────────────────────────────────────
@@ -184,6 +188,7 @@
 	// côté client à partir du TECH_TREE (miroir exact de la simulation).
 	const activeEffects = $derived(() => {
 		let prod = 1, stor = 1, mil = 1, research = 1, children = 0, pregnancy = 0
+		const eventReductions: Record<string, number> = {}
 		for (const id of researched) {
 			const node = byId.get(id)
 			if (!node) continue
@@ -194,9 +199,12 @@
 				else if (e.kind === 'researchMultiplier') research *= e.factor
 				else if (e.kind === 'maxChildrenBonus') children += e.amount
 				else if (e.kind === 'pregnancyProbabilityBonus') pregnancy += e.amount
+				else if (e.kind === 'eventDamageReduction') {
+					eventReductions[e.event] = Math.min(0.9, (eventReductions[e.event] ?? 0) + e.factor)
+				}
 			}
 		}
-		return { prod, stor, mil, research, children, pregnancy }
+		return { prod, stor, mil, research, children, pregnancy, eventReductions }
 	})
 	const fmtMult = (v: number) => v === 1 ? '×1' : `×${v.toFixed(2).replace(/\.?0+$/, '')}`
 
@@ -227,7 +235,7 @@
 
 <svelte:head><title>Technologies — {data.civilization.name}</title></svelte:head>
 
-<div class="civ-page-wrapper">
+<div class="civ-page-wrapper" style="max-width: 100%;">
 	<Breadcrumb items={[
 		{ label: 'Mes civilisations', href: '/my-civilizations' },
 		{ label: data.civilization.name, href: `/my-civilizations/${data.civilization.id}` },
@@ -280,6 +288,20 @@
 							<span class="synth-val">+{fx.pregnancy}%</span>
 						</div>
 					{/if}
+					{#each Object.entries(fx.eventReductions) as [event, reduction]}
+						{@const eventLabel: Record<string, { icon: string; name: string }> = {
+							fire: { icon: '🔥', name: 'Incendie' },
+							starvation: { icon: '🌾', name: 'Famine' },
+							earthquake: { icon: '🪨', name: 'Tremblement' },
+							rat_invasion: { icon: '🐀', name: 'Invasion' },
+						}}
+						{@const info = eventLabel[event] ?? { icon: '⚡', name: event }}
+						<div class="synth-chip boosted" title="Réduction des dégâts de l'événement « {info.name} »">
+							<span class="synth-icon">{info.icon}</span>
+							<span class="synth-name">{info.name}</span>
+							<span class="synth-val">-{Math.round(reduction * 100)}%</span>
+						</div>
+					{/each}
 				</div>
 			</div>
 		{/if}

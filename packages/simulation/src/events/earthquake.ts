@@ -11,8 +11,9 @@ export class Earthquake implements WorldEvent {
     for (const civilization of civilizations) {
       const buildings = civilization.getDestructibleBuildings()
       const buildingCount = buildings.reduce((sum, { count }) => sum + count, 0)
-      const min = Math.floor(Math.random() * buildingCount)
-      let deleteCount = Math.floor(Math.random() * (buildingCount - min) + min)
+      const reduction = civilization.getEventDamageReduction(Events.EARTHQUAKE)
+      const min = Math.floor(Math.random() * buildingCount * (1 - reduction))
+      let deleteCount = Math.floor(Math.random() * (buildingCount * (1 - reduction) - min) + min)
 
       for (const building of buildings.toSorted(() => Math.random() - 0.5)) {
         const random = Math.floor(Math.random() * deleteCount)

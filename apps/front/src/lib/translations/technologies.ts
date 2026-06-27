@@ -61,4 +61,8 @@ export const techNames: Record<string, string> = {
   [TechId.COLONIZATION]: 'Colonisation',
   [TechId.INDUSTRIALIZATION]: 'Industrialisation',
   [TechId.EMPIRE]: 'Empire',
+  [TechId.FIREPROOFING]: 'Ignifugation',
+  [TechId.FOOD_PRESERVATION]: 'Conservation alimentaire',
+  [TechId.EARTHWORKS]: 'Terrassement',
+  [TechId.PEST_CONTROL]: 'Lutte antiparasitaire',
 }

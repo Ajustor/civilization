@@ -12,7 +12,9 @@ export class Fire implements WorldEvent {
 
       const unburnableWood = civilization.getStorageCapacity(ResourceTypes.WOOD)
       if (wood.quantity && unburnableWood < wood.quantity) {
-        wood.decrease(wood.quantity - unburnableWood)
+        const rawLoss = wood.quantity - unburnableWood
+        const reduction = civilization.getEventDamageReduction(Events.FIRE)
+        wood.decrease(Math.floor(rawLoss * (1 - reduction)))
       }
     }
   }

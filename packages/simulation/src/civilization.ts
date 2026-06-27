@@ -20,6 +20,7 @@ import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
 import { TechId, getTechNode, getBuildingGate } from "./technology/techTree";
+import { Events } from "./events/enum";
 import {
   AbstractExtractionBuilding, AbstractStorageBuilding, type Building, type ConstructionCost,
   type ExtractionBuilding, type ProductionBuilding, type WorkerRequiredToBuild
@@ -91,6 +92,7 @@ export class Civilization {
     maxChildren: number
     pregnancyBonus: number
     research: number
+    eventReductions: Map<Events, number>
   } | null = null;
 
   constructor(
@@ -173,6 +175,7 @@ export class Civilization {
   private buildTechCache(): void {
     let production = 1, storage = 1, military = 1, research = 1
     let maxChildren = 0, pregnancyBonus = 0
+    const eventReductions = new Map<Events, number>()
     for (const id of this._researchedTechs) {
       for (const effect of getTechNode(id)?.effects ?? []) {
         switch (effect.kind) {
@@ -182,10 +185,21 @@ export class Civilization {
           case 'maxChildrenBonus': maxChildren += effect.amount; break
           case 'pregnancyProbabilityBonus': pregnancyBonus += effect.amount; break
           case 'researchMultiplier': research *= effect.factor; break
+          case 'eventDamageReduction': {
+            const current = eventReductions.get(effect.event) ?? 0
+            // Combine reductions additively, capped at 90%
+            eventReductions.set(effect.event, Math.min(0.9, current + effect.factor))
+            break
+          }
         }
       }
     }
-    this._techCache = { production, storage, military, maxChildren, pregnancyBonus, research }
+    this._techCache = { production, storage, military, maxChildren, pregnancyBonus, research, eventReductions }
+  }
+
+  getEventDamageReduction(event: Events): number {
+    if (!this._techCache) this.buildTechCache()
+    return this._techCache!.eventReductions.get(event) ?? 0
   }
 
   private buildOccupationIndex(): void {

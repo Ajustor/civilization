@@ -18,9 +18,9 @@ export class Starvation implements WorldEvent {
       const civilizationFood = civilization.getResource(ResourceTypes.RAW_FOOD)
 
       if (civilizationFood) {
-        const randomDecrease = Math.floor(Math.random() * (civilizationFood.quantity))
-
-        civilizationFood.decrease(randomDecrease)
+        const reduction = civilization.getEventDamageReduction(Events.STARVATION)
+        const rawDecrease = Math.floor(Math.random() * civilizationFood.quantity)
+        civilizationFood.decrease(Math.floor(rawDecrease * (1 - reduction)))
       }
     }
   }
