@@ -37,13 +37,15 @@ export const actions: Actions = {
       (formData.get('techs') as string) || '[]',
     ) as string[]
 
+    let colonyId: string | undefined
     try {
-      await colonizeCivilization(cookies.get('auth') ?? '', params.slug, {
+      const result = await colonizeCivilization(cookies.get('auth') ?? '', params.slug, {
         colonyName,
         populationPercent,
         resources,
         techs,
       })
+      colonyId = result && 'colonyId' in result ? result.colonyId : undefined
     } catch (err) {
       return fail(400, {
         error:
@@ -51,6 +53,6 @@ export const actions: Actions = {
       })
     }
 
-    redirect(302, '/my-civilizations')
+    redirect(302, colonyId ? `/my-civilizations/${colonyId}` : '/my-civilizations')
   },
 }

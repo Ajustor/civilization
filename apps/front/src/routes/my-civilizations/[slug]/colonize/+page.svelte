@@ -18,9 +18,10 @@
   )
   let selectedTechs = $state<string[]>([])
 
-  const transferCount = $derived(
-    Math.floor((totalPeople * populationPercent) / 100),
-  )
+  const POP_PRESETS = [5, 10, 20, 30, 50]
+  const RES_PRESETS = [0, 10, 25, 50]
+
+  const transferCount = $derived(Math.floor((totalPeople * populationPercent) / 100))
   const remainingCount = $derived(totalPeople - transferCount)
   const popValid = $derived(remainingCount >= 10 && transferCount >= 1)
   const canSubmit = $derived(colonyName.trim().length >= 3 && popValid)
@@ -30,9 +31,7 @@
       .filter((r) => (resourcePercents[r.type] ?? 0) > 0)
       .map((r) => ({
         type: r.type,
-        amount: Math.floor(
-          (r.quantity * (resourcePercents[r.type] ?? 0)) / 100,
-        ),
+        amount: Math.floor((r.quantity * (resourcePercents[r.type] ?? 0)) / 100),
       })),
   )
 
@@ -40,6 +39,14 @@
     selectedTechs = selectedTechs.includes(id)
       ? selectedTechs.filter((t) => t !== id)
       : [...selectedTechs, id]
+  }
+
+  const selectAllTechs = () => {
+    selectedTechs = [...(civ.researchedTechs ?? [])]
+  }
+
+  const clearTechs = () => {
+    selectedTechs = []
   }
 </script>
 
@@ -70,15 +77,13 @@
           goto(result.location)
         } else if (result.type === 'failure') {
           toast.error(
-            (result.data as { error?: string })?.error ??
-              'Une erreur est survenue',
+            (result.data as { error?: string })?.error ?? 'Une erreur est survenue',
           )
         }
       },
     })}
     class="colonize-form"
   >
-    <!-- JSON serialization of arrays -->
     <input type="hidden" name="resources" value={JSON.stringify(resourcesPayload)} />
     <input type="hidden" name="techs" value={JSON.stringify(selectedTechs)} />
 
@@ -99,15 +104,30 @@
     <!-- Population -->
     <section class="form-section">
       <h2>Population</h2>
-      <div class="pop-stats">
-        <span>Transférer {populationPercent}% → <strong>{transferCount}</strong> colons</span>
-        <span>Mère conserve <strong>{remainingCount}</strong></span>
+      <div class="pop-summary">
+        <div class="pop-stat">
+          <span class="pop-stat-val">{transferCount}</span>
+          <span class="pop-stat-lbl">colons transférés</span>
+        </div>
+        <div class="pop-divider">→</div>
+        <div class="pop-stat">
+          <span class="pop-stat-val" class:warn={!popValid && totalPeople > 0}>{remainingCount}</span>
+          <span class="pop-stat-lbl">restent dans la mère</span>
+        </div>
       </div>
       {#if !popValid && totalPeople > 0}
-        <p class="field-warning">
-          La mère doit conserver au moins 10 habitants.
-        </p>
+        <p class="field-warning">La mère doit conserver au moins 10 habitants.</p>
       {/if}
+      <div class="preset-row">
+        {#each POP_PRESETS as p}
+          <button
+            type="button"
+            class="preset-btn"
+            class:active={populationPercent === p}
+            onclick={() => (populationPercent = p)}
+          >{p}%</button>
+        {/each}
+      </div>
       <input
         type="range"
         name="populationPercent"
@@ -116,6 +136,11 @@
         bind:value={populationPercent}
         class="range-input"
       />
+      <div class="range-labels">
+        <span>5%</span>
+        <span class="range-cur">{populationPercent}%</span>
+        <span>50%</span>
+      </div>
     </section>
 
     <!-- Resources -->
@@ -125,20 +150,31 @@
         {#each civ.resources ?? [] as resource (resource.type)}
           {@const pct = resourcePercents[resource.type] ?? 0}
           {@const transferAmt = Math.floor((resource.quantity * pct) / 100)}
-          <div class="resource-row">
-            <span class="resource-name">
-              {resourceNames[resource.type] ?? resource.type}
-            </span>
+          <div class="resource-block">
+            <div class="resource-header">
+              <span class="resource-name">{resourceNames[resource.type] ?? resource.type}</span>
+              <span class="resource-stock">{resource.quantity} disponibles</span>
+              <span class="resource-transfer" class:active={transferAmt > 0}>
+                {#if transferAmt > 0}→ {transferAmt} transférés{:else}aucun transfert{/if}
+              </span>
+            </div>
+            <div class="preset-row">
+              {#each RES_PRESETS as p}
+                <button
+                  type="button"
+                  class="preset-btn"
+                  class:active={pct === p}
+                  onclick={() => (resourcePercents[resource.type] = p)}
+                >{p}%</button>
+              {/each}
+            </div>
             <input
               type="range"
               min="0"
               max="100"
               bind:value={resourcePercents[resource.type]}
-              class="range-input range-flex"
+              class="range-input"
             />
-            <span class="resource-amount">
-              {pct}% → {transferAmt}
-            </span>
           </div>
         {/each}
       </section>
@@ -148,22 +184,23 @@
     {#if (civ.researchedTechs ?? []).length > 0}
       <section class="form-section">
         <h2>Technologies à transmettre</h2>
-        <p class="section-hint">
-          La mère conserve toutes ses recherches. Choisissez ce que vous transmettez.
-        </p>
+        <p class="section-hint">La mère conserve toutes ses recherches.</p>
+        <div class="tech-actions">
+          <button type="button" class="tech-action-btn" onclick={selectAllTechs}>Tout sélectionner</button>
+          <button type="button" class="tech-action-btn" onclick={clearTechs}>Tout effacer</button>
+          <span class="tech-count">{selectedTechs.length} / {(civ.researchedTechs ?? []).length}</span>
+        </div>
         <div class="tech-grid">
           {#each civ.researchedTechs ?? [] as techId (techId)}
-            <label
-              class="tech-label"
+            <button
+              type="button"
+              class="tech-chip"
               class:selected={selectedTechs.includes(techId)}
+              onclick={() => toggleTech(techId)}
             >
-              <input
-                type="checkbox"
-                checked={selectedTechs.includes(techId)}
-                onchange={() => toggleTech(techId)}
-              />
+              {#if selectedTechs.includes(techId)}<span class="chip-check">✓</span>{/if}
               {techNames[techId] ?? techId}
-            </label>
+            </button>
           {/each}
         </div>
       </section>
@@ -171,7 +208,7 @@
 
     <!-- Submit -->
     <button type="submit" disabled={!canSubmit} class="submit-btn" class:enabled={canSubmit}>
-      Fonder la colonie
+      🌍 Fonder la colonie
     </button>
   </form>
 </div>
@@ -187,14 +224,14 @@
   .colonize-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    max-width: 560px;
+    gap: 28px;
+    max-width: 580px;
   }
 
   .form-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   .form-section h2 {
@@ -208,11 +245,11 @@
 
   .text-input {
     width: 100%;
-    padding: 8px 10px;
+    padding: 10px 12px;
     border: 1px solid oklch(0.74 0.05 60);
-    border-radius: 4px;
+    border-radius: 5px;
     font-family: 'EB Garamond', serif;
-    font-size: 15px;
+    font-size: 16px;
     background: oklch(0.985 0.01 84);
     color: oklch(0.25 0.03 40);
     box-sizing: border-box;
@@ -224,12 +261,47 @@
     box-shadow: 0 0 0 2px oklch(0.55 0.1 140 / 0.2);
   }
 
-  .pop-stats {
+  /* Population summary */
+  .pop-summary {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 16px;
+    background: oklch(0.96 0.015 84);
+    border: 1px solid oklch(0.85 0.03 60);
+    border-radius: 6px;
+  }
+
+  .pop-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .pop-stat-val {
+    font-family: 'Marcellus', serif;
+    font-size: 26px;
+    color: oklch(0.35 0.08 140);
+    line-height: 1;
+  }
+
+  .pop-stat-val.warn {
+    color: oklch(0.5 0.18 25);
+  }
+
+  .pop-stat-lbl {
     font-family: 'EB Garamond', serif;
-    font-size: 14px;
-    color: oklch(0.45 0.06 40);
+    font-size: 12px;
+    color: oklch(0.5 0.04 50);
+    text-align: center;
+  }
+
+  .pop-divider {
+    font-size: 22px;
+    color: oklch(0.65 0.05 60);
+    flex-shrink: 0;
   }
 
   .field-warning {
@@ -239,39 +311,99 @@
     color: oklch(0.5 0.18 25);
   }
 
+  /* Presets */
+  .preset-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .preset-btn {
+    padding: 5px 14px;
+    border: 1px solid oklch(0.8 0.04 60);
+    border-radius: 999px;
+    background: oklch(0.985 0.01 84);
+    font-family: 'Marcellus', serif;
+    font-size: 13px;
+    color: oklch(0.45 0.05 50);
+    cursor: pointer;
+    transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+  }
+
+  .preset-btn:hover {
+    border-color: oklch(0.55 0.1 140);
+    color: oklch(0.35 0.1 140);
+  }
+
+  .preset-btn.active {
+    background: oklch(0.45 0.12 140);
+    border-color: oklch(0.45 0.12 140);
+    color: oklch(0.97 0.01 84);
+  }
+
   .range-input {
     width: 100%;
     accent-color: oklch(0.48 0.12 140);
     cursor: pointer;
   }
 
-  .resource-row {
+  .range-labels {
     display: flex;
-    align-items: center;
+    justify-content: space-between;
+    font-family: 'EB Garamond', serif;
+    font-size: 12px;
+    color: oklch(0.55 0.04 50);
+  }
+
+  .range-cur {
+    font-family: 'Marcellus', serif;
+    color: oklch(0.4 0.1 140);
+    font-size: 13px;
+  }
+
+  /* Resources */
+  .resource-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid oklch(0.87 0.03 60);
+    border-radius: 5px;
+    background: oklch(0.99 0.008 84);
+  }
+
+  .resource-header {
+    display: flex;
+    align-items: baseline;
     gap: 10px;
-    margin-bottom: 4px;
+    flex-wrap: wrap;
   }
 
   .resource-name {
-    width: 130px;
-    font-family: 'EB Garamond', serif;
-    font-size: 14px;
-    color: oklch(0.35 0.04 45);
-    flex-shrink: 0;
-  }
-
-  .range-flex {
+    font-family: 'Marcellus', serif;
+    font-size: 15px;
+    color: oklch(0.32 0.04 40);
     flex: 1;
-    width: auto;
+    min-width: 100px;
   }
 
-  .resource-amount {
-    width: 90px;
+  .resource-stock {
     font-family: 'EB Garamond', serif;
     font-size: 13px;
-    color: oklch(0.45 0.06 40);
-    text-align: right;
-    flex-shrink: 0;
+    color: oklch(0.55 0.04 50);
+  }
+
+  .resource-transfer {
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    color: oklch(0.55 0.04 50);
+    font-style: italic;
+  }
+
+  .resource-transfer.active {
+    color: oklch(0.42 0.12 140);
+    font-style: normal;
+    font-weight: 600;
   }
 
   .section-hint {
@@ -282,39 +414,81 @@
     font-style: italic;
   }
 
-  .tech-grid {
+  /* Tech actions bar */
+  .tech-actions {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
   }
 
-  .tech-label {
+  .tech-action-btn {
+    padding: 4px 12px;
+    border: 1px solid oklch(0.8 0.04 60);
+    border-radius: 4px;
+    background: oklch(0.985 0.01 84);
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    color: oklch(0.45 0.05 50);
+    cursor: pointer;
+    transition: background 0.1s ease, border-color 0.1s ease;
+  }
+
+  .tech-action-btn:hover {
+    border-color: oklch(0.6 0.08 50);
+    background: oklch(0.96 0.015 84);
+  }
+
+  .tech-count {
+    margin-left: auto;
+    font-family: 'Marcellus', serif;
+    font-size: 13px;
+    color: oklch(0.5 0.08 140);
+  }
+
+  .tech-grid {
     display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .tech-chip {
+    display: inline-flex;
     align-items: center;
     gap: 5px;
     font-family: 'EB Garamond', serif;
     font-size: 14px;
     cursor: pointer;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border: 1px solid oklch(0.8 0.04 60);
-    border-radius: 4px;
+    border-radius: 999px;
     background: oklch(0.985 0.01 84);
-    transition: background 0.12s ease, border-color 0.12s ease;
+    color: oklch(0.4 0.04 50);
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
   }
 
-  .tech-label.selected {
-    background: oklch(0.93 0.06 110 / 0.4);
+  .tech-chip:hover {
     border-color: oklch(0.6 0.1 130);
-    color: oklch(0.3 0.08 130);
+    background: oklch(0.97 0.03 130 / 0.3);
+  }
+
+  .tech-chip.selected {
+    background: oklch(0.45 0.12 140);
+    border-color: oklch(0.45 0.12 140);
+    color: oklch(0.97 0.01 84);
+  }
+
+  .chip-check {
+    font-size: 12px;
+    font-weight: 700;
   }
 
   .submit-btn {
     align-self: flex-start;
-    padding: 10px 24px;
+    padding: 11px 28px;
     background: oklch(0.75 0.02 50);
     color: oklch(0.96 0.01 84);
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     font-family: 'Marcellus', serif;
     font-size: 16px;
     cursor: not-allowed;
