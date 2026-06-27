@@ -148,3 +148,27 @@ export const getCemetery = async (
 
   return data
 }
+
+export const colonizeCivilization = async (
+  authToken: string,
+  civilizationId: string,
+  body: {
+    colonyName: string
+    populationPercent: number
+    resources: { type: string; amount: number }[]
+    techs: string[]
+  },
+) => {
+  const { data, error } = await client
+    .civilizations({ civilizationId })
+    .colonize.post(body, {
+      headers: { authorization: `Bearer ${authToken}` },
+    })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return data
+}
