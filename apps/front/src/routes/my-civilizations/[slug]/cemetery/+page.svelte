@@ -93,7 +93,7 @@
 
 <style>
 	.mourning {
-		min-height: 100%;
+		flex: 1;
 		color: oklch(0.82 0.018 80);
 		font-family: 'EB Garamond', serif;
 		background:
