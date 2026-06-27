@@ -572,9 +572,17 @@ export class CivilizationService {
       throw new Error('Mother civilization must keep at least 10 people')
     }
 
+    // Aggregate resource transfers by type to prevent duplicate bypass
+    const resourceTransferMap = new Map<string, number>()
+    for (const transfer of body.resources) {
+      if (transfer.amount <= 0) continue
+      resourceTransferMap.set(transfer.type, (resourceTransferMap.get(transfer.type) ?? 0) + transfer.amount)
+    }
+    const aggregatedTransfers = Array.from(resourceTransferMap.entries()).map(([type, amount]) => ({ type, amount }))
+
     // 5. Valider les ressources
     const civResources = mongoCiv.resources as { resourceType: ResourceTypes; quantity: number }[]
-    for (const transfer of body.resources) {
+    for (const transfer of aggregatedTransfers) {
       if (transfer.amount <= 0) continue
       const existing = civResources.find((r) => r.resourceType === transfer.type)
       if ((existing?.quantity ?? 0) < transfer.amount) {
@@ -600,7 +608,7 @@ export class CivilizationService {
     }))
     const colonyResources: { resourceType: ResourceTypes; quantity: number }[] = []
 
-    for (const transfer of body.resources) {
+    for (const transfer of aggregatedTransfers) {
       if (transfer.amount <= 0) continue
       const idx = motherResources.findIndex((r) => r.resourceType === transfer.type)
       if (idx === -1) continue
