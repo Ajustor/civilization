@@ -536,6 +536,7 @@
 							{@const men = peopleRatio.menAndWomen.men}
 							{@const women = peopleRatio.menAndWomen.women}
 							{@const pregnant = peopleRatio.pregnantWomen}
+							{@const children = peopleRatio.children ?? 0}
 							{@const total = men + women}
 							{@const ratio = women > 0 ? (men / women).toFixed(2) : '─'}
 							<div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">
@@ -561,6 +562,8 @@
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{ratio}</span>
 												<span style="color:oklch(0.5 0.04 50);">Pour 100 femmes</span>
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{women > 0 ? Math.round(men / women * 100) : '─'} hommes</span>
+												<span style="color:oklch(0.5 0.04 50);">Enfants</span>
+												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(children)} ({pct(children, total)}%)</span>
 												<span style="color:oklch(0.5 0.04 50);">Total</span>
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(total)}</span>
 											</div>
