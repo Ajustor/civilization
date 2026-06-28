@@ -94,12 +94,13 @@ export const peopleModule = new Elysia({ prefix: '/people' })
     return { menAndWomen, pregnantWomen, jobs }
   })
   .get('/:civilizationId/stats/peopleRatio', async ({ peopleService, params: { civilizationId } }) => {
-    const [menAndWomen, pregnantWomen] = await Promise.all([
+    const [menAndWomen, pregnantWomen, children] = await Promise.all([
       peopleService.countGenders(civilizationId),
-      peopleService.countPregnant(civilizationId)
+      peopleService.countPregnant(civilizationId),
+      peopleService.countChildren(civilizationId)
     ])
 
-    return { menAndWomen, pregnantWomen }
+    return { menAndWomen, pregnantWomen, children }
   })
   .get('/:civilizationId/stats/jobs', async ({ peopleService, params: { civilizationId } }) => {
     const jobs: { [key in OccupationTypes]?: number } = {}
