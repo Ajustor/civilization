@@ -5,7 +5,6 @@ import {
   getMyCivilizationFromId,
   getCivilizationWorld,
   getCombatLogs,
-  getCemetery,
 } from '../../../services/api/civilization-api'
 import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
@@ -44,7 +43,6 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
         civilization: getCivilizationStats(cookies.get('auth') ?? '', params.slug),
       },
       combatLogs: getCombatLogs(cookies.get('auth') ?? '', params.slug, 5, 0),
-      cemetery: getCemetery(cookies.get('auth') ?? '', params.slug, 20, 0),
     },
   }
 }
