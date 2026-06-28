@@ -659,6 +659,107 @@ export class CivilizationService {
     return { motherId: civilizationId, colonyId: colonyDoc._id.toString() }
   }
 
+  async reclaimResources(
+    userId: string,
+    civilizationId: string,
+    targetCivilizationId: string,
+  ) {
+    // 1. Les deux civilisations doivent appartenir au joueur.
+    const user = await UserModel.findOne({ _id: userId })
+    const ownedIds = (user?.civilizations ?? []).map(String)
+    if (!ownedIds.includes(civilizationId)) {
+      throw new Error('Civilization not found')
+    }
+    if (!ownedIds.includes(targetCivilizationId)) {
+      throw new Error('Target civilization not found')
+    }
+    if (civilizationId === targetCivilizationId) {
+      throw new Error('A civilization cannot reclaim its own resources')
+    }
+
+    // 2. Charger les deux documents.
+    const [receiver, target] = await Promise.all([
+      CivilizationModel.findById<MongoCivilizationType>(civilizationId),
+      CivilizationModel.findById<MongoCivilizationType>(targetCivilizationId),
+    ])
+    if (!receiver) throw new Error('Civilization not found')
+    if (!target) throw new Error('Target civilization not found')
+
+    // 3. On ne récupère les ressources que d'une civilisation abandonnée,
+    // c'est-à-dire dont plus personne n'est habitant.
+    if ((target.people?.length ?? 0) > 0) {
+      throw new Error('The target civilization still has inhabitants')
+    }
+
+    // 4. Fusionner les ressources de la cible dans la civilisation réceptrice.
+    const receiverResources = (
+      receiver.resources as { resourceType: ResourceTypes; quantity: number }[]
+    ).map((r) => ({ resourceType: r.resourceType, quantity: r.quantity }))
+    const reclaimedResources: { resourceType: ResourceTypes; quantity: number }[] = []
+
+    for (const resource of target.resources as {
+      resourceType: ResourceTypes
+      quantity: number
+    }[]) {
+      if (resource.quantity <= 0) continue
+      reclaimedResources.push({
+        resourceType: resource.resourceType,
+        quantity: resource.quantity,
+      })
+      const existing = receiverResources.find(
+        (r) => r.resourceType === resource.resourceType,
+      )
+      if (existing) {
+        existing.quantity += resource.quantity
+      } else {
+        receiverResources.push({
+          resourceType: resource.resourceType,
+          quantity: resource.quantity,
+        })
+      }
+    }
+
+    // 5. Sauver la civilisation réceptrice avec ses nouvelles ressources.
+    await CivilizationModel.updateOne(
+      { _id: civilizationId },
+      { resources: receiverResources },
+    )
+
+    // 6. Supprimer la civilisation abandonnée. Le hook `deleteOne` du schéma
+    // retire déjà la référence du monde et du joueur ; on nettoie en plus ses
+    // statistiques et son cimetière, comme le fait `delete`.
+    await CivilizationStatsModel.deleteMany({ civilizationId: targetCivilizationId })
+    await GraveModel.deleteMany({ civilizationId: targetCivilizationId })
+    await CivilizationModel.deleteOne({ _id: targetCivilizationId })
+
+    // 7. Nettoyer les références éventuelles vers la civilisation supprimée dans
+    // la configuration des autres civilisations (échanges ouverts, guerres) afin
+    // de ne pas laisser de liens fantômes (ex. une colonie issue de `colonize`).
+    await CivilizationModel.updateMany(
+      {
+        $or: [
+          { 'config.OPEN_EXCHANGE': targetCivilizationId },
+          { 'config.AT_WAR_WITH': targetCivilizationId },
+        ],
+      },
+      {
+        $pull: {
+          'config.OPEN_EXCHANGE': targetCivilizationId,
+          'config.AT_WAR_WITH': targetCivilizationId,
+        },
+      },
+    )
+
+    return {
+      receiverId: civilizationId,
+      targetId: targetCivilizationId,
+      reclaimedResources: reclaimedResources.map(({ resourceType, quantity }) => ({
+        type: resourceType,
+        amount: quantity,
+      })),
+    }
+  }
+
   async update(userId: string, civilizationId: string, body: UpdateCivilizationDtoType) {
     const user = await UserModel.findOne({ _id: userId }).populate<{
       civilizations: CivilizationType[]

@@ -149,6 +149,28 @@ export const getCemetery = async (
   return data
 }
 
+export const reclaimCivilizationResources = async (
+  authToken: string,
+  civilizationId: string,
+  targetCivilizationId: string,
+) => {
+  const { data, error } = await client
+    .civilizations({ civilizationId })
+    .reclaim.post(
+      { targetCivilizationId },
+      {
+        headers: { authorization: `Bearer ${authToken}` },
+      },
+    )
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return data
+}
+
 export const colonizeCivilization = async (
   authToken: string,
   civilizationId: string,
