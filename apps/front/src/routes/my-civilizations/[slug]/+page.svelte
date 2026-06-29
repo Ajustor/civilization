@@ -59,12 +59,17 @@
 	let peopleSort = $state<{ field: string; order: 'asc' | 'desc' } | null>(null)
 	// Drive the citizens table from local state: reassigning the SvelteKit `data`
 	// prop's nested promise is NOT reactive in Svelte 5, so the table never updated.
-	let peoplePromise = $state<Promise<PeopleType[]>>(data.lazy.people)
+	// Citoyens tenus dans un tableau d'état résolu (pas une promesse) pour que la
+	// table reste MONTÉE entre rechargements/pagination/tri : la recréer à chaque
+	// fetch (via {#await}) réinitialisait son état de tri local (flèche + sens du tri).
+	let people = $state<PeopleType[]>([])
+	let peopleLoading = $state(true)
+	let peopleError = $state(false)
 	let recap = $state<RecapData | null>(null)
 
-	// Same reasoning as `peoplePromise`: the server-streamed stat promises captured
-	// here are not reactive, so the charts/combat-log never refreshed live. We hold
-	// them in local state and re-fetch via the client `/stats` endpoint on refresh.
+	// Same reasoning as the citizens list above: the server-streamed stat promises
+	// captured here are not reactive, so the charts/combat-log never refreshed live.
+	// We hold them in local state and re-fetch via the client `/stats` endpoint on refresh.
 	let statsPromise = $state<Promise<CivilizationStat[]>>(data.lazy.stats.civilization as Promise<CivilizationStat[]>)
 	let jobsPromise = $state(data.lazy.stats.jobs)
 	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
@@ -115,19 +120,27 @@
 		if (sort !== undefined) {
 			peopleSort = sort
 		}
-		const previous = peoplePromise
 		pageIndex = newPageIndex
 		pageSize = newPageSize
-		peoplePromise = (async () => {
-			try {
-				const { people } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize, peopleSort ?? undefined)
-				return people
-			} catch (error) {
-				console.error(error)
-				return previous
-			}
-		})()
+		peopleLoading = true
+		try {
+			const { people: fetched } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize, peopleSort ?? undefined)
+			people = fetched
+			peopleError = false
+		} catch (error) {
+			console.error(error)
+			peopleError = true
+		} finally {
+			peopleLoading = false
+		}
 	}
+
+	// Résolution initiale (liste chargée paresseusement côté serveur) dans le tableau
+	// d'état, sans monter/démonter la table.
+	void data.lazy.people
+		.then((fetched) => { people = fetched })
+		.catch((error) => { console.error(error); peopleError = true })
+		.finally(() => { peopleLoading = false })
 
 	// Live refresh: the world advances a month every ~15 min server-side.
 	onMount(() => {
@@ -1072,9 +1085,11 @@
 		<!-- People table -->
 		<div class="civ-inner-card" style="margin-top:20px;">
 			<h2 class="civ-section-title">Citoyens ({data.civilization.citizensCount} au total){#await peopleRatioPromise then peopleRatio}{#if peopleRatio && (peopleRatio.captives ?? 0) > 0}<span style="margin-left:8px; font-size:13px; font-family:'EB Garamond',serif; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); border-radius:10px; padding:2px 10px; vertical-align:middle;">dont {peopleRatio.captives} captif{(peopleRatio.captives ?? 0) > 1 ? 's' : ''}</span>{/if}{/await}</h2>
-			{#await peoplePromise}
+			{#if peopleError}
+				<p style="color:oklch(0.5 0.03 50); font-size:15px;">Impossible de charger la liste des citoyens.</p>
+			{:else if peopleLoading && people.length === 0}
 				<div style="height:120px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
-			{:then people}
+			{:else}
 				<PeopleTable
 					{people}
 					totalPeople={data.civilization.citizensCount ?? 0}
@@ -1083,9 +1098,7 @@
 					{pageSize}
 					currentCivilizationId={data.civilization.id}
 				/>
-			{:catch}
-				<p style="color:oklch(0.5 0.03 50); font-size:15px;">Impossible de charger la liste des citoyens.</p>
-			{/await}
+			{/if}
 		</div>
 
 		<!-- Buildings table -->
