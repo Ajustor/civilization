@@ -223,6 +223,13 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     },
   )
   .get(
+    '/:civilizationId/attackers',
+    async ({ civilizationService, params: { civilizationId } }) => {
+      const attackers = await civilizationService.getAttackers(civilizationId)
+      return { attackers }
+    },
+  )
+  .get(
     '/:civilizationId/combat-logs',
     async ({
       civilizationService,

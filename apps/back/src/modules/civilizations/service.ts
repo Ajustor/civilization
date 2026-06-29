@@ -898,6 +898,16 @@ export class CivilizationService {
     )
   }
 
+  async getAttackers(civilizationId: string): Promise<{ id: string; name: string }[]> {
+    const attackers = await CivilizationModel.find(
+      { 'config.AT_WAR_WITH': civilizationId, 'people.0': { $exists: true } },
+      { name: 1 },
+    ).lean()
+    return attackers
+      .filter((civ) => String(civ._id) !== String(civilizationId))
+      .map((civ) => ({ id: String(civ._id), name: civ.name as string }))
+  }
+
   async getCivilizationStats(civilizationId: string, limit: number = 10) {
     const result = await CivilizationStatsModel.find({ civilizationId })
       .sort('-month')

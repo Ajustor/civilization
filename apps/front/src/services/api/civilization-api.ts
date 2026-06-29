@@ -171,6 +171,24 @@ export const reclaimCivilizationResources = async (
   return data
 }
 
+export const getCivilizationAttackers = async (
+  authToken: string,
+  civilizationId: string,
+): Promise<{ id: string; name: string }[]> => {
+  const { data, error } = await client
+    .civilizations({ civilizationId })
+    .attackers.get({
+      headers: { authorization: `Bearer ${authToken}` },
+    })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return data.attackers as { id: string; name: string }[]
+}
+
 export const colonizeCivilization = async (
   authToken: string,
   civilizationId: string,

@@ -7,6 +7,7 @@ import {
   getCombatLogs,
   updateCivilization,
   getMyCivilizations,
+  getCivilizationAttackers,
 } from '../../../services/api/civilization-api'
 import { getWorldCivilizations } from '../../../services/api/world-api'
 import { fail, error, redirect } from '@sveltejs/kit'
@@ -68,6 +69,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
       combatLogs: getCombatLogs(auth, params.slug, 5, 0),
       // Citizens currently on a construction site (who builds what).
       builders: getCivilizationBuilders(auth, params.slug).catch(() => []),
+      attackers: getCivilizationAttackers(auth, params.slug).catch(() => []),
     },
   }
 }

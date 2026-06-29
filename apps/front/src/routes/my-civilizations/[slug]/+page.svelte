@@ -879,6 +879,19 @@
 			</div>
 		{/if}
 
+		<!-- Indicateur d'attaque entrante -->
+		{#await data.lazy.attackers then attackers}
+			{#if attackers && attackers.length > 0}
+				<div style="display:flex; align-items:center; gap:10px; margin-top:16px; padding:12px 16px; background:oklch(0.95 0.06 30); border:1px solid oklch(0.6 0.18 30); border-left:5px solid oklch(0.52 0.22 30); border-radius:5px; font-family:'EB Garamond',serif;">
+					<span style="font-size:22px; flex-shrink:0;">⚔️</span>
+					<span style="font-size:16px; color:oklch(0.4 0.16 30);">
+						{#if attackers.length === 1}<strong>{attackers[0].name}</strong> vous a déclaré la guerre.{:else}<strong>{attackers.length}</strong> civilisations vous ont déclaré la guerre : {attackers.map((a) => a.name).join(', ')}.{/if}
+						Préparez vos défenses (Muraille, ratio militaire).
+					</span>
+				</div>
+			{/if}
+		{/await}
+
 		<!-- Charts row -->
 		<div style="display:flex; justify-content:flex-end; align-items:center; margin-top:24px;">
 			{@render rangeSelector()}

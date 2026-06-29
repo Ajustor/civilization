@@ -45,8 +45,12 @@ export const changelog: ChangelogEntry[] = [
 				text: 'La page du monde indique désormais combien de civilisations sont en mode rapide et la vitesse de jeu en cours (1 mois ou 1 an toutes les 15 minutes).'
 			},
 			{
-				kind: 'fix',
-				text: 'Les offres de marché d’une civilisation disparaissent désormais lorsqu’elle meurt ou est supprimée.'
+				kind: ‘fix’,
+				text: ‘Les offres de marché d’une civilisation disparaissent désormais lorsqu’elle meurt ou est supprimée.’
+			},
+			{
+				kind: ‘feature’,
+				text: ‘Une civilisation voit désormais directement sur sa page quand une autre lui a déclaré la guerre, même sans notification.’
 			}
 		]
 	},
