@@ -1,4 +1,4 @@
-import { Fire, Migration, RatInvasion } from './events'
+import { BountifulHarvest, Fire, FortunateDiscovery, GoldenAge, Migration, RatInvasion, TradeCaravan } from './events'
 import { Resource, ResourceTypes } from './resource'
 
 import { Civilization } from './civilization'
@@ -48,6 +48,10 @@ const AVAILABLE_EVENTS: {
   [Events.MIGRATION]: () => new Migration(),
   [Events.FIRE]: () => new Fire(),
   [Events.RAT_INVASION]: () => new RatInvasion(),
+  [Events.BOUNTIFUL_HARVEST]: () => new BountifulHarvest(),
+  [Events.TRADE_CARAVAN]: () => new TradeCaravan(),
+  [Events.FORTUNATE_DISCOVERY]: () => new FortunateDiscovery(),
+  [Events.GOLDEN_AGE]: () => new GoldenAge(),
 }
 
 const defaultConfig: WorldConfig = {
@@ -417,6 +421,26 @@ export class World {
       }
       case event < 80: {
         this.nextEvent = Events.MIGRATION
+        break
+      }
+      // Événements bénéfiques : leur probabilité est inverse à l'ampleur du
+      // bonus (plus le gain est fort, plus c'est rare). Ils occupent la plage
+      // 80-98 qui ne produisait auparavant aucun événement, l'équilibre des
+      // malus (0-80) reste donc inchangé.
+      case event < 88: {
+        this.nextEvent = Events.BOUNTIFUL_HARVEST
+        break
+      }
+      case event < 93: {
+        this.nextEvent = Events.TRADE_CARAVAN
+        break
+      }
+      case event < 96: {
+        this.nextEvent = Events.FORTUNATE_DISCOVERY
+        break
+      }
+      case event < 98: {
+        this.nextEvent = Events.GOLDEN_AGE
         break
       }
       default: {

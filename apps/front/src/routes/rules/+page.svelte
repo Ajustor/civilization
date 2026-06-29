@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte'
 	import { getWorldsInfos } from '../../services/api/world-api'
 	import { resourceNames, eventsName, eventsDescription, buildingNames, OCCUPATIONS } from '$lib/translations'
-	import { type ResourceTypes, type Events, BuildingTypes, OccupationTypes } from '@ajustor/simulation'
+	import { type ResourceTypes, Events, BuildingTypes, OccupationTypes } from '@ajustor/simulation'
 	import { getBuildingMeta, getOccupationMeta } from '$lib/gameData'
 
 	type WorldInfo = Awaited<ReturnType<typeof getWorldsInfos>>[number]
@@ -130,6 +130,13 @@
 	]
 
 	const eventEntries = Object.entries(eventsName) as [Events, string][]
+	// Événements bénéfiques : ils sont d'autant plus rares que leur bonus est important.
+	const beneficialEvents = new Set<Events>([
+		Events.BOUNTIFUL_HARVEST,
+		Events.TRADE_CARAVAN,
+		Events.FORTUNATE_DISCOVERY,
+		Events.GOLDEN_AGE
+	])
 </script>
 
 <svelte:head>
@@ -356,11 +363,15 @@
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Événements</h2>
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
-					Chaque mois, selon la <strong>probabilité d'événement</strong> du monde, un événement peut frapper les civilisations. Les ressources stockées dans un <strong>Entrepôt</strong> sont protégées de l'incendie et de l'invasion de rats.
+					Chaque mois, selon la <strong>probabilité d'événement</strong> du monde, un événement peut frapper — ou favoriser — les civilisations. Les ressources stockées dans un <strong>Entrepôt</strong> sont protégées de l'incendie et de l'invasion de rats.
+				</p>
+				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
+					Certains événements sont <strong style="color:oklch(0.45 0.13 145);">bénéfiques</strong> (en vert) : ils offrent un bonus aux civilisations. Plus le bonus est important, plus l'événement est <strong>rare</strong> — l'<em>Âge d'or</em> est ainsi bien plus rare qu'une simple <em>récolte abondante</em>.
 				</p>
 				<div style="display:flex; flex-direction:column; gap:10px;">
 					{#each eventEntries as [event, name]}
-						<div style="padding:12px 16px; border:1px solid oklch(0.84 0.03 72); border-radius:4px; border-left:3px solid oklch(0.5 0.16 30);">
+						{@const beneficial = beneficialEvents.has(event)}
+						<div style="padding:12px 16px; border:1px solid oklch(0.84 0.03 72); border-radius:4px; border-left:3px solid {beneficial ? 'oklch(0.55 0.14 145)' : 'oklch(0.5 0.16 30)'};">
 							<div style="font-family:'Marcellus',serif; font-size:18px; color:oklch(0.34 0.04 40); margin-bottom:2px;">{name}</div>
 							<div style="font-size:15px; color:oklch(0.42 0.03 50);">{eventsDescription[event]}</div>
 						</div>
