@@ -120,8 +120,13 @@ export class PeopleService {
     // qui mettait `_id` (unique) en clé primaire et rendait le tri demandé sans
     // effet visible. Ici le champ demandé est primaire et `_id` sert uniquement de
     // départage stable pour la pagination.
+    // Directions NUMÉRIQUES homogènes (1/-1) : mélanger une valeur chaîne
+    // ('asc'/'desc') et numérique (_id: 1) dans le même objet `.sort()` faisait
+    // que Mongoose n'appliquait le tri que dans un seul sens.
+    const sortDirection: 1 | -1 =
+      sort?.order === 'desc' || sort?.order === 'descending' || sort?.order === -1 ? -1 : 1
     const rawPeopleRequest = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort(
-      sort?.field ? { [sort.field]: sort.order, _id: 1 } : { _id: 1 },
+      sort?.field ? { [sort.field]: sortDirection, _id: 1 } : { _id: 1 },
     )
 
     const rawPeople = await rawPeopleRequest.skip(page * count).limit(count)
