@@ -45,7 +45,7 @@
 		month: number
 		event?: Events | null
 		resources: { resourceType?: ResourceTypes; quantity?: number }[]
-		people?: { men?: number; women?: number; pregnantWomen?: number }
+		people?: { men?: number; women?: number; pregnantWomen?: number; children?: number }
 	}
 
 	interface Props {
@@ -600,9 +600,11 @@
 								acc[0] ??= { data: [], type: 'line', label: 'Hommes' }
 								acc[1] ??= { data: [], type: 'line', label: 'Femmes' }
 								acc[2] ??= { data: [], type: 'line', label: 'Femmes enceintes' }
+								acc[3] ??= { data: [], type: 'bar', label: 'Enfants' }
 								acc[0].data.push(p?.men ?? 0)
 								acc[1].data.push(p?.women ?? 0)
 								acc[2].data.push(p?.pregnantWomen ?? 0)
+								acc[3].data.push(p?.children ?? 0)
 								return acc
 							}, []
 						)}
@@ -930,9 +932,11 @@
 											datasets[0] ??= { data: [], type: 'line', label: 'Hommes' }
 											datasets[1] ??= { data: [], type: 'line', label: 'Femmes' }
 											datasets[2] ??= { data: [], type: 'line', label: 'Femmes enceintes' }
+											datasets[3] ??= { data: [], type: 'bar', label: 'Enfants' }
 											datasets[0].data.push(d?.men ?? 0)
 											datasets[1].data.push(d?.women ?? 0)
 											datasets[2].data.push(d?.pregnantWomen ?? 0)
+											datasets[3].data.push(d?.children ?? 0)
 											return datasets
 										}, []
 									)
