@@ -7,7 +7,7 @@
 		resourceNames,
 		seasonsTranslations
 	} from '$lib/translations'
-	import { getWorldCivilizations, type WorldCivilizationDetail } from '../services/api/world-api'
+	import { getWorldCivilizationDetails, type WorldCivilizationDetail } from '../services/api/world-api'
 
 	interface Props {
 		data: PageData;
@@ -40,7 +40,7 @@
 		if (!world) return
 		worldCivLoading = true
 		worldCivDetails = []
-		getWorldCivilizations(world.id)
+		getWorldCivilizationDetails(world.id)
 			.then((civs) => { worldCivDetails = civs })
 			.catch(() => { worldCivDetails = [] })
 			.finally(() => { worldCivLoading = false })

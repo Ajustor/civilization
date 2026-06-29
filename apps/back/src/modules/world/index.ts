@@ -175,7 +175,16 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   .get('/:worldId/civilizations', async ({ civilizationsDbClient, params: { worldId } }) => {
     const civilizations = await civilizationsDbClient.getAllRawByWorldId(worldId, { people: false })
     return {
-      civilizations: civilizations
+      civilizations: civilizations.map((civ) => ({
+        id: civ.id,
+        name: civ.name,
+      })),
+    }
+  })
+  .get('/:worldId/civilizations/details', async ({ civilizationsDbClient, params: { worldId } }) => {
+    const civs = await civilizationsDbClient.getAllRawByWorldId(worldId, { people: false })
+    return {
+      civilizations: civs
         .filter((civ) => (civ.people?.length ?? 0) > 0)
         .map((civ) => ({
           id: civ.id,
