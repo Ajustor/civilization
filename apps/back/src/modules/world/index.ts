@@ -119,7 +119,7 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
   // Server-Sent Events: pushes a `month` event whenever this world advances a
   // month, so connected browsers can refresh on-screen data live. Public (only
   // exposes a month number) so the browser's EventSource works without a bearer.
-  .get('/:worldId/events', ({ params: { worldId }, set }) => {
+  .get('/:worldId/events', ({ params: { worldId } }) => {
     const encoder = new TextEncoder()
     let unsubscribe: () => void = () => { }
     let keepAlive: ReturnType<typeof setInterval>
@@ -149,12 +149,22 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       },
     })
 
-    set.headers['content-type'] = 'text/event-stream'
-    set.headers['cache-control'] = 'no-cache'
-    set.headers['connection'] = 'keep-alive'
-    // Disable proxy buffering (nginx & co) so events are flushed immediately.
-    set.headers['x-accel-buffering'] = 'no'
-    return stream
+    // Return a raw Response, NOT the bare ReadableStream: when a handler returns
+    // a ReadableStream, Elysia treats it as a generator stream and re-serialises
+    // every chunk as `data: <JSON>\n\n`. That double-wraps our already-formatted
+    // SSE frames (the browser then only ever sees anonymous `message` events, so
+    // `addEventListener('month', …)` never fires and the live refresh is dead).
+    // A returned Response is passed through verbatim, keeping the `event: month`
+    // frames intact.
+    return new Response(stream, {
+      headers: {
+        'content-type': 'text/event-stream',
+        'cache-control': 'no-cache',
+        'connection': 'keep-alive',
+        // Disable proxy buffering (nginx & co) so events are flushed immediately.
+        'x-accel-buffering': 'no',
+      },
+    })
   })
   // Lightweight current-month endpoint, used as a polling fallback for the live
   // refresh when SSE is blocked/buffered by a reverse proxy.
