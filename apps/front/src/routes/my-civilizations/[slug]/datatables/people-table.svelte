@@ -2,6 +2,7 @@
 	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
 	import { OCCUPATIONS } from '$lib/translations'
+	import { getOccupationMeta } from '$lib/gameData'
 	import ChildDetails from './childDetails.svelte'
 	import { ArrowUp, ArrowDown, ArrowUpDown } from '@lucide/svelte'
 
@@ -136,7 +137,15 @@
 					</td>
 					<td style="padding:8px 12px;">{person.years}</td>
 					<td style="padding:8px 12px;">{person.lifeCounter}</td>
-					<td style="padding:8px 12px;">{person.occupation ? (OCCUPATIONS[person.occupation] ?? '') : ''}</td>
+					<td style="padding:8px 12px;">
+						{#if person.occupation}
+							{@const occMeta = getOccupationMeta(person.occupation)}
+							{OCCUPATIONS[person.occupation] ?? ''}
+							{#if occMeta.retirementAge != null}
+								<span style="color:oklch(0.55 0.04 50); font-size:13px; white-space:nowrap;">({occMeta.minAge} → {occMeta.retirementAge} ans)</span>
+							{/if}
+						{/if}
+					</td>
 					<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
 					<td style="padding:8px 12px;">
 						{#if person.child}
