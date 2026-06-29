@@ -75,7 +75,7 @@ export const getPeopleFromCivilizationPaginated = async (authToken: string, civi
     query: {
       page,
       count,
-      ...(sort ? { sort } : {})
+      ...(sort ? { sortField: sort.field, sortOrder: sort.order } : {})
     },
     headers: {
       authorization: `Bearer ${authToken}`
