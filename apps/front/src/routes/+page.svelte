@@ -106,7 +106,7 @@
 								<button
 									class="civ-inner-card"
 									onclick={() => (civListOpen = true)}
-									style="text-align:left; cursor:pointer; border:none; background:none; padding:0; width:100%;"
+									style="text-align:left; cursor:pointer; width:100%; font:inherit; color:inherit;"
 									title="Voir la liste des civilisations en vie"
 								>
 									<div style="font-family:'Tangerine',cursive; font-size:40px; color:oklch(0.45 0.09 150);">{alive}</div>
@@ -133,7 +133,12 @@
 						<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-top:20px;">
 							{#await worldStats.topCivilizations then topCivs}
 								{#if topCivs?.length}
-									<div class="civ-inner-card">
+									<button
+										class="civ-inner-card"
+										onclick={() => (civListOpen = true)}
+										style="text-align:left; cursor:pointer; width:100%; font:inherit; color:inherit;"
+										title="Voir la liste des civilisations en vie"
+									>
 										<h2 class="civ-section-title">Classement des civilisations</h2>
 										<div style="display:flex; flex-direction:column; gap:11px;">
 											{#each topCivs.slice(0, 5) as civ, i}
@@ -145,7 +150,7 @@
 												</div>
 											{/each}
 										</div>
-									</div>
+									</button>
 								{/if}
 							{/await}
 							{#await worldStats.menAndWomen then ratio}
