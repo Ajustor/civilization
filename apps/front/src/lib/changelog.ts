@@ -43,6 +43,10 @@ export const changelog: ChangelogEntry[] = [
 			{
 				kind: 'improvement',
 				text: 'La page du monde indique désormais combien de civilisations sont en mode rapide et la vitesse de jeu en cours (1 mois ou 1 an toutes les 15 minutes).'
+			},
+			{
+				kind: 'fix',
+				text: 'Les offres de marché d’une civilisation disparaissent désormais lorsqu’elle meurt ou est supprimée.'
 			}
 		]
 	},
