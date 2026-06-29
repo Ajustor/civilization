@@ -116,11 +116,13 @@ export class PeopleService {
       throw new Error(`No civilization found for ${civilizationId}`)
     }
 
-    const rawPeopleRequest = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort('_id')
-
-    if (sort?.field) {
-      rawPeopleRequest.sort({ [sort.field]: sort.order })
-    }
+    // Un SEUL appel à .sort() : les appels chaînés se cumulent dans Mongoose, ce
+    // qui mettait `_id` (unique) en clé primaire et rendait le tri demandé sans
+    // effet visible. Ici le champ demandé est primaire et `_id` sert uniquement de
+    // départage stable pour la pagination.
+    const rawPeopleRequest = PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).sort(
+      sort?.field ? { [sort.field]: sort.order, _id: 1 } : { _id: 1 },
+    )
 
     const rawPeople = await rawPeopleRequest.skip(page * count).limit(count)
 
