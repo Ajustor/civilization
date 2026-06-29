@@ -1,6 +1,7 @@
 import { OccupationTypes } from "./enum";
 
 import type { UpgradedWork } from './interface';
+import { RETIREMENT_AGE_BY_OCCUPATION } from './ages'
 
 export const ERUDIT_REQUIRED_AGE = 21;
 
@@ -9,7 +10,7 @@ export class Erudit implements UpgradedWork {
     return personAge >= ERUDIT_REQUIRED_AGE;
   }
 
-  public RETIREMENT_AGE = 80;
+  public RETIREMENT_AGE = RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.ERUDIT];
 
   get occupationType() {
     return OccupationTypes.ERUDIT;

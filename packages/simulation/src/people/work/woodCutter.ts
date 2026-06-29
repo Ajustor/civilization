@@ -3,6 +3,7 @@ import { ResourceTypes } from '../../resource'
 import type { Work } from './interface'
 import type { World } from '../../world'
 import { Civilization } from '../../civilization'
+import { RETIREMENT_AGE_BY_OCCUPATION } from './ages'
 
 const MINIMAL_AGE_TO_UPGRADE = 18
 
@@ -11,7 +12,7 @@ export class WoodCutter implements Work {
     return personAge >= MINIMAL_AGE_TO_UPGRADE
   }
   collectedResource = 10
-  private RETIREMENT_AGE = 60
+  private RETIREMENT_AGE = RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.WOODCUTTER]
 
   get occupationType() {
     return OccupationTypes.WOODCUTTER

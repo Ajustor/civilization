@@ -1,5 +1,6 @@
 import { OccupationTypes } from './enum'
 import type { UpgradedWork } from './interface'
+import { RETIREMENT_AGE_BY_OCCUPATION } from './ages'
 
 const MINIMAL_AGE_TO_UPGRADE = 25
 
@@ -8,7 +9,7 @@ export class Miner implements UpgradedWork {
     return personAge >= MINIMAL_AGE_TO_UPGRADE
   }
 
-  public RETIREMENT_AGE = 50
+  public RETIREMENT_AGE = RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.MINER]
   get occupationType(): OccupationTypes {
     return OccupationTypes.MINER
   }
