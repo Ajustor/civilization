@@ -235,7 +235,7 @@
 
 <svelte:head><title>Technologies — {data.civilization.name}</title></svelte:head>
 
-<div class="civ-page-wrapper" style="max-width: 100%;">
+<div class="civ-page-wrapper" style="width: 100%; max-width: none;">
 	<Breadcrumb items={[
 		{ label: 'Mes civilisations', href: '/my-civilizations' },
 		{ label: data.civilization.name, href: `/my-civilizations/${data.civilization.id}` },
