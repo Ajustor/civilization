@@ -38,7 +38,7 @@ export const defaultCivilizationConfig: CivilizationConfig = {
   PREGNANCY_PROBABILITY: 60,
   CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
   CHANCE_TO_EVOLVE: 20,
-  MAXIMUM_CHILDREN: 10,
+  MAXIMUM_CHILDREN_PERCENTAGE: 25,
   OPEN_EXCHANGE: [],
   AT_WAR_WITH: [],
   MILITARY_RATIO: 0,
@@ -122,6 +122,21 @@ export class Civilization {
 
   get childrenCount(): number {
     return this.people.filter((person) => person.work?.occupationType === OccupationTypes.CHILD).length;
+  }
+
+  // Adults = every living citizen who is not a child (workers, retired,
+  // soldiers, érudits…).
+  get adultsCount(): number {
+    return this.people.filter((person) => person.work?.occupationType !== OccupationTypes.CHILD).length;
+  }
+
+  // Maximum number of simultaneous children, derived as a percentage of the
+  // adult population (config MAXIMUM_CHILDREN_PERCENTAGE). Rounded up so a small
+  // population (e.g. a fresh colony of a couple of adults) is never sterilised
+  // by flooring to zero, while still scaling proportionally with the civ.
+  get maxChildren(): number {
+    const percentage = this.config.MAXIMUM_CHILDREN_PERCENTAGE ?? 0;
+    return Math.ceil((this.adultsCount * percentage) / 100);
   }
 
   get livedMonths(): number {
@@ -456,8 +471,8 @@ export class Civilization {
 
   // Per-woman lifetime child limit (people.ts MAX_NUMBER_OF_CHILD), raised by
   // the Medicine tech's maxChildrenBonus. The civilization-wide simultaneous cap
-  // is governed solely by the user config (MAXIMUM_CHILDREN) and is not affected
-  // by this bonus.
+  // is a percentage of the adult population (config MAXIMUM_CHILDREN_PERCENTAGE,
+  // via `maxChildren`) and is not affected by this bonus.
   get effectiveMaxChildrenPerWoman(): number {
     return MAX_NUMBER_OF_CHILD + this.maxChildrenBonus;
   }
@@ -680,13 +695,13 @@ export class Civilization {
       ({ work }) => work?.occupationType !== OccupationTypes.RETIRED,
     ).length;
 
-    // The maximum number of simultaneous children is governed solely by the
-    // civilization's own configuration (MAXIMUM_CHILDREN) so that what the
-    // player sets is exactly what applies. createNewPeople enforces the same
-    // cap defensively.
+    // The maximum number of simultaneous children is a percentage of the adult
+    // population (config MAXIMUM_CHILDREN_PERCENTAGE), computed by `maxChildren`,
+    // so it scales with the civilization. createNewPeople enforces the same cap
+    // defensively.
     if (
       activePeopleCount < this.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION &&
-      this.childrenCount < this.config.MAXIMUM_CHILDREN
+      this.childrenCount < this.maxChildren
     ) {
       await this.createNewPeople();
     }
@@ -1209,7 +1224,7 @@ export class Civilization {
   private async createNewPeople() {
     // Handle pregnancy
 
-    if (this.config.MAXIMUM_CHILDREN <= this.childrenCount) {
+    if (this.maxChildren <= this.childrenCount) {
       return;
     }
 

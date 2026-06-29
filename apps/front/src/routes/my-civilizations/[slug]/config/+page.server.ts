@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 
 	const configForm = await superValidate(
 		{
-			maximumChildren: civilization.config.MAXIMUM_CHILDREN,
+			maximumChildrenPercentage: civilization.config.MAXIMUM_CHILDREN_PERCENTAGE,
 			maxActivePeopleByCivilization: civilization.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
 			openExchange: civilization.config.OPEN_EXCHANGE ?? [],
 			militaryRatio: civilization.config.MILITARY_RATIO,
@@ -71,7 +71,7 @@ export const actions: Actions = {
 
 		try {
 			await updateCivilization(cookies.get('auth') ?? '', params.slug, {
-				maximumChildren: form.data.maximumChildren,
+				maximumChildrenPercentage: form.data.maximumChildrenPercentage,
 				maxActivePeopleByCivilization: form.data.maxActivePeopleByCivilization,
 				openExchange: form.data.openExchange,
 				militaryRatio: form.data.militaryRatio,
@@ -87,7 +87,7 @@ export const actions: Actions = {
 			const persistedForm = updated
 				? await superValidate(
 						{
-							maximumChildren: updated.config.MAXIMUM_CHILDREN,
+							maximumChildrenPercentage: updated.config.MAXIMUM_CHILDREN_PERCENTAGE,
 							maxActivePeopleByCivilization: updated.config.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION,
 							openExchange: updated.config.OPEN_EXCHANGE ?? [],
 							militaryRatio: updated.config.MILITARY_RATIO,

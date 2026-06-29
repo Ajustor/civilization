@@ -2,7 +2,7 @@ import { t } from 'elysia'
 
 export const UpdateCivilizationDto = t.Object({
   openExchange: t.Optional(t.Array(t.String())),
-  maximumChildren: t.Optional(t.Number()),
+  maximumChildrenPercentage: t.Optional(t.Number()),
   maxActivePeopleByCivilization: t.Optional(t.Number()),
   militaryRatio: t.Optional(t.Number()),
   atWarWith: t.Optional(t.Array(t.String())),

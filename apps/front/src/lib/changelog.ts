@@ -47,6 +47,14 @@ export const changelog: ChangelogEntry[] = [
 			{
 				kind: 'fix',
 				text: 'Les notifications push s’affichent à nouveau correctement (déclaration de guerre, mise en vente sur le marché).'
+			},
+			{
+				kind: 'improvement',
+				text: 'Le nombre maximum d’enfants se règle désormais en pourcentage du nombre d’adultes de la civilisation (et non plus en valeur fixe), pour une croissance proportionnelle à la population.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les personnes affectées à la construction d’un bâtiment ne font plus aucun autre travail (cueillette, recherche) tant que le chantier n’est pas terminé.'
 			}
 		]
 	},

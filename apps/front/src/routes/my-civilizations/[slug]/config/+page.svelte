@@ -92,14 +92,14 @@
 		<div class="civ-inner-card">
 			<h3 class="civ-section-title">Population</h3>
 			<div style="display:flex; flex-direction:column; gap:16px;">
-				<FormField {form} name="maximumChildren">
+				<FormField {form} name="maximumChildrenPercentage">
 					<FormControl>
 						{#snippet children({ props })}
-							<FormLabel>Nombre maximum d'enfants simultanés</FormLabel>
-							<input type="number" min="0" class="input input-bordered w-full" {...props} bind:value={$formData.maximumChildren} />
+							<FormLabel>Pourcentage maximum d'enfants (% des adultes)</FormLabel>
+							<input type="number" min="0" max="100" class="input input-bordered w-full" {...props} bind:value={$formData.maximumChildrenPercentage} />
 						{/snippet}
 					</FormControl>
-					<FormDescription>Limite le nombre d'enfants vivants en même temps dans la civilisation.</FormDescription>
+					<FormDescription>Limite le nombre d'enfants vivants simultanément à ce pourcentage du nombre d'adultes (citoyens non-enfants). Ex. 25 % avec 100 adultes = 25 enfants maximum.</FormDescription>
 					<FormFieldErrors />
 				</FormField>
 

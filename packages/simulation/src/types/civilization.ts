@@ -14,7 +14,9 @@ export type CivilizationConfig = {
   PEOPLE_CHARCOAL_CAN_HEAT: number
   CHANCE_TO_EVOLVE: number
   CHANCE_TO_BUILD_EVOLVED_BUILDING: number
-  MAXIMUM_CHILDREN: number
+  // Maximum number of simultaneous children, expressed as a percentage of the
+  // civilization's adult (non-child) population.
+  MAXIMUM_CHILDREN_PERCENTAGE: number
   OPEN_EXCHANGE: string[]
   AT_WAR_WITH: string[]
   MILITARY_RATIO: number
