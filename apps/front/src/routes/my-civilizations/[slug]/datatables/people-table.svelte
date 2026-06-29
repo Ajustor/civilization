@@ -110,6 +110,7 @@
 							</button>
 						</th>
 					{/each}
+					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Captif</th>
 					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Mois avant accouchement</th>
 					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Enfant à naître</th>
 				</tr>
@@ -117,12 +118,7 @@
 			<tbody>
 				{#each people as person (person.id ?? Math.random())}
 					<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
-						<td style="padding:8px 12px;">
-							{person.name ?? '—'}
-							{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
-								<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="margin-left:6px; font-size:11px; padding:1px 6px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Enlevé(e)</span>
-							{/if}
-						</td>
+						<td style="padding:8px 12px;">{person.name ?? '—'}</td>
 						<td style="padding:8px 12px;">
 							{#if person.gender}
 								<Icon icon={GenderIcons[person.gender]} />
@@ -137,6 +133,13 @@
 								{#if occMeta.retirementAge != null}
 									<span style="color:oklch(0.55 0.04 50); font-size:13px; white-space:nowrap;">({occMeta.minAge} → {occMeta.retirementAge} ans)</span>
 								{/if}
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">
+							{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
+								<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="font-size:12px; padding:2px 8px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Oui</span>
+							{:else}
+								<span style="color:oklch(0.6 0.02 50);">Non</span>
 							{/if}
 						</td>
 						<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
