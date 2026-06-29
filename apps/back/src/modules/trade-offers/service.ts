@@ -1,8 +1,30 @@
 import type { CivilizationType } from '@ajustor/simulation'
-import { CivilizationModel, TradeOfferModel, UserModel } from '../../libs/database/models'
+import {
+  CivilizationModel,
+  TradeOfferModel,
+  UserModel,
+  WorldModel,
+} from '../../libs/database/models'
 import { canFulfill, applyResourceChanges, type ResourceAmount } from './tradeLogic'
+import { pushSender } from '../../libs/services/pushSender'
 
 type StoredResource = { resourceType: string; quantity: number }
+
+// French resource labels, mirrored from the front (`lib/translations/resources.ts`)
+// so push notifications read naturally instead of exposing raw resource keys.
+const RESOURCE_LABELS: Record<string, string> = {
+  food: 'Nourriture',
+  wood: 'Bois',
+  stone: 'Pierre',
+  plank: 'Planche',
+  charcoal: 'Charbon',
+  cookedFood: 'Nourriture préparée',
+}
+
+const formatResourceList = (items: ResourceAmount[]): string =>
+  items
+    .map((r) => `${r.quantity} ${RESOURCE_LABELS[r.resourceType] ?? r.resourceType}`)
+    .join(', ')
 
 export type CreateTradeOfferInput = {
   worldId: string
@@ -27,7 +49,7 @@ export class TradeOfferService {
 
   async create(userId: string, input: CreateTradeOfferInput) {
     await this.assertOwnership(userId, input.fromCivilizationId)
-    return TradeOfferModel.create({
+    const offer = await TradeOfferModel.create({
       worldId: input.worldId,
       fromCivilizationId: input.fromCivilizationId,
       toCivilizationId: input.toCivilizationId ?? null,
@@ -35,6 +57,68 @@ export class TradeOfferService {
       want: input.want,
       status: 'open',
     })
+
+    // Notify the other players that a new offer is up for grabs. Never let a
+    // push failure break offer creation.
+    try {
+      await this.notifyMarketSale(userId, input)
+    } catch (error) {
+      console.error('[TradeOfferService] Failed to send market notification', error)
+    }
+
+    return offer
+  }
+
+  /**
+   * Sends a push notification when a player puts resources up for sale on the
+   * market. An open offer notifies every other player who owns a civilization in
+   * the world; a targeted offer notifies only the addressed civilization's owner.
+   * The seller is always excluded from the recipients.
+   */
+  private async notifyMarketSale(
+    sellerUserId: string,
+    input: CreateTradeOfferInput,
+  ): Promise<void> {
+    const sellerCiv = await CivilizationModel.findById(input.fromCivilizationId, {
+      name: 1,
+    }).lean()
+    const sellerName = sellerCiv?.name ?? 'Une civilisation'
+
+    let recipientIds: string[]
+    if (input.toCivilizationId) {
+      const owner = await UserModel.findOne(
+        { civilizations: input.toCivilizationId },
+        { _id: 1 },
+      ).lean()
+      recipientIds = owner ? [String(owner._id)] : []
+    } else {
+      const world = await WorldModel.findById(input.worldId, {
+        civilizations: 1,
+      }).lean()
+      const owners = await UserModel.find(
+        { civilizations: { $in: world?.civilizations ?? [] } },
+        { _id: 1 },
+      ).lean()
+      recipientIds = owners.map((owner) => String(owner._id))
+    }
+
+    // Deduplicate (a player may own several civilizations) and drop the seller.
+    const recipients = [...new Set(recipientIds)].filter(
+      (id) => id !== sellerUserId,
+    )
+
+    const giveLabel = formatResourceList(input.give)
+    const wantLabel = formatResourceList(input.want)
+
+    await Promise.all(
+      recipients.map((userId) =>
+        pushSender.sendToUser(userId, {
+          title: '🏛️ Nouvelle offre au marché',
+          body: `${sellerName} propose ${giveLabel} contre ${wantLabel}.`,
+          url: `/worlds/${input.worldId}/market`,
+        }),
+      ),
+    )
   }
 
   async listOpenByWorld(worldId: string) {
