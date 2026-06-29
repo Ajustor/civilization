@@ -433,9 +433,12 @@
 		}
 	}
 
-	// Noms des civilisations actuellement attaquées (depuis la config persistée).
+	// Noms des civilisations attaquées — dérivés de la sélection EN COURS du
+	// formulaire (`$warFormData.atWarWith`), pour que l'indicateur se mette à jour
+	// en temps réel dès qu'on coche/décoche une cible (et reflète l'état enregistré
+	// au chargement), sans attendre un aller-retour serveur.
 	const warTargetNames = $derived(
-		((data.civilization.config?.AT_WAR_WITH as string[]) ?? [])
+		($warFormData.atWarWith ?? [])
 			.map((id) => data.worldCivilizations.find((c) => c.id === id)?.name)
 			.filter((name): name is string => Boolean(name))
 	)
