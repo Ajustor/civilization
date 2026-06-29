@@ -39,6 +39,26 @@ export const changelog: ChangelogEntry[] = [
 			{
 				kind: 'feature',
 				text: 'Ajout de cette page de journal des mises à jour pour suivre les nouveautés du jeu.'
+			},
+			{
+				kind: 'fix',
+				text: 'Le rafraîchissement automatique en direct fonctionne de nouveau : la civilisation se met à jour dès que le monde avance d’un mois, sans recharger la page.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les notifications push s’affichent à nouveau correctement (déclaration de guerre, mise en vente sur le marché).'
+			},
+			{
+				kind: 'improvement',
+				text: 'Le nombre maximum d’enfants se règle désormais en pourcentage du nombre d’adultes de la civilisation (et non plus en valeur fixe), pour une croissance proportionnelle à la population.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les personnes affectées à la construction d’un bâtiment ne font plus aucun autre travail (cueillette, recherche) tant que le chantier n’est pas terminé.'
+			},
+			{
+				kind: 'feature',
+				text: 'Le bloc « Constructions en cours » affiche désormais qui construit quoi : la liste des citoyens sur un chantier, leur métier, le bâtiment construit et le temps restant.'
 			}
 		]
 	},

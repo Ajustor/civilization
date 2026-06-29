@@ -74,7 +74,11 @@ export const civilizationMapper = (
       PEOPLE_CHARCOAL_CAN_HEAT: c.PEOPLE_CHARCOAL_CAN_HEAT,
       CHANCE_TO_EVOLVE: c.CHANCE_TO_EVOLVE,
       CHANCE_TO_BUILD_EVOLVED_BUILDING: c.CHANCE_TO_BUILD_EVOLVED_BUILDING,
-      MAXIMUM_CHILDREN: c.MAXIMUM_CHILDREN,
+      // Fallback for civilizations saved before the percentage migration, whose
+      // stored config has no MAXIMUM_CHILDREN_PERCENTAGE yet.
+      MAXIMUM_CHILDREN_PERCENTAGE:
+        c.MAXIMUM_CHILDREN_PERCENTAGE ??
+        defaultCivilizationConfig.MAXIMUM_CHILDREN_PERCENTAGE,
       // OPEN_EXCHANGE and AT_WAR_WITH are stored as ObjectId refs
       OPEN_EXCHANGE: (c.OPEN_EXCHANGE ?? []).map(String),
       AT_WAR_WITH: (c.AT_WAR_WITH ?? []).map(String),
@@ -797,10 +801,10 @@ export class CivilizationService {
           CHANCE_TO_BUILD_EVOLVED_BUILDING:
             currentConfig.CHANCE_TO_BUILD_EVOLVED_BUILDING ??
             defaultCivilizationConfig.CHANCE_TO_BUILD_EVOLVED_BUILDING,
-          MAXIMUM_CHILDREN:
-            body.maximumChildren ??
-            currentConfig.MAXIMUM_CHILDREN ??
-            defaultCivilizationConfig.MAXIMUM_CHILDREN,
+          MAXIMUM_CHILDREN_PERCENTAGE:
+            body.maximumChildrenPercentage ??
+            currentConfig.MAXIMUM_CHILDREN_PERCENTAGE ??
+            defaultCivilizationConfig.MAXIMUM_CHILDREN_PERCENTAGE,
           MAX_ACTIVE_PEOPLE_BY_CIVILIZATION:
             body.maxActivePeopleByCivilization ??
             currentConfig.MAX_ACTIVE_PEOPLE_BY_CIVILIZATION ??

@@ -1,4 +1,4 @@
-import { Gender, OccupationTypes, type PeopleEntity } from '@ajustor/simulation'
+import { BuildingTypes, Gender, OccupationTypes, type PeopleEntity } from '@ajustor/simulation'
 import { Schema } from 'mongoose'
 
 const PersonSchema = new Schema<PeopleEntity>({
@@ -9,6 +9,11 @@ const PersonSchema = new Schema<PeopleEntity>({
   },
   buildingMonthsLeft: Number,
   isBuilding: Boolean,
+  buildingType: {
+    type: String,
+    enum: BuildingTypes,
+    default: null
+  },
   lifeCounter: Number,
   month: Number,
   numberOfChild: Number,

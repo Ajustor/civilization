@@ -65,6 +65,31 @@
 	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
 	let combatLogsPromise = $state(data.lazy.combatLogs)
 
+	// Citizens currently on a construction site. Resolved from the server-loaded
+	// promise into local state so it can be joined with the pending constructions
+	// and refreshed when the world advances a month (invalidateAll re-runs load).
+	type BuilderInfo = {
+		name?: string | null
+		occupation?: string | null
+		buildingType?: string | null
+		buildingMonthsLeft: number
+	}
+	let buildersList = $state<BuilderInfo[]>([])
+	$effect(() => {
+		const pending = data.lazy.builders
+		let cancelled = false
+		Promise.resolve(pending)
+			.then((builders) => {
+				if (!cancelled) {
+					buildersList = (builders ?? []) as BuilderInfo[]
+				}
+			})
+			.catch(() => {})
+		return () => {
+			cancelled = true
+		}
+	})
+
 	const refreshStats = () => {
 		const stats = callGetStats(data.civilization.id)
 		statsPromise = stats.then((s) => s.civilization)
@@ -286,6 +311,39 @@
 			: monthsRemaining === 1
 				? 'Prête le mois prochain'
 				: `Prête dans ${monthsRemaining} mois`
+
+	// Link each builder to a pending construction so we can show who builds what.
+	// Primary match: the builder's recorded buildingType. Fallback (for sites
+	// started before builders tracked their building): match the months left
+	// against one of the group's slots. Builders that match nothing are surfaced
+	// separately so none are hidden.
+	const constructionView = $derived.by(() => {
+		const pool = buildersList.map((builder) => ({ builder, used: false }))
+
+		const groups = pendingGroups.map((group) => {
+			const builders: BuilderInfo[] = []
+
+			for (const item of pool) {
+				if (!item.used && item.builder.buildingType === group.buildingType) {
+					item.used = true
+					builders.push(item.builder)
+				}
+			}
+
+			const groupMonths = new Set(group.breakdown.map((slot) => slot.monthsRemaining))
+			for (const item of pool) {
+				if (!item.used && !item.builder.buildingType && groupMonths.has(item.builder.buildingMonthsLeft)) {
+					item.used = true
+					builders.push(item.builder)
+				}
+			}
+
+			return { ...group, builders }
+		})
+
+		const unlinked = pool.filter((item) => !item.used).map((item) => item.builder)
+		return { groups, unlinked }
+	})
 
 	// ── Prochain bâtiment à construire ──────────────────────────────────────────
 	// Déplacé depuis la page de configuration : le joueur choisit ici le bâtiment
@@ -1023,24 +1081,60 @@
 				<p style="color:oklch(0.55 0.03 50); font-size:15px; font-style:italic; margin-top:8px;">Aucune construction en cours pour le moment.</p>
 			{:else}
 				<div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
-					{#each pendingGroups as group (group.buildingType)}
-						<div style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70);">
-							<div style="flex:1; min-width:0;">
-								<div style="font-family:'Marcellus',serif; font-size:16px; color:oklch(0.35 0.04 40);">
-									{buildingNames[group.buildingType] ?? group.buildingType}
-									{#if group.count > 1}<span style="color:oklch(0.5 0.03 50); font-size:14px;"> ×{group.count}</span>{/if}
+					{#each constructionView.groups as group (group.buildingType)}
+						<div style="padding:12px 16px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70);">
+							<div style="display:flex; align-items:center; gap:12px;">
+								<div style="flex:1; min-width:0;">
+									<div style="font-family:'Marcellus',serif; font-size:16px; color:oklch(0.35 0.04 40);">
+										{buildingNames[group.buildingType] ?? group.buildingType}
+										{#if group.count > 1}<span style="color:oklch(0.5 0.03 50); font-size:14px;"> ×{group.count}</span>{/if}
+									</div>
+									<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+										{#each group.breakdown as slot}
+											<span style="font-size:13px; color:oklch(0.42 0.06 50); background:oklch(0.92 0.03 78); border:1px solid oklch(0.82 0.04 70); border-radius:999px; padding:2px 10px;">
+												{#if group.breakdown.length > 1 || slot.count > 1}{slot.count} · {/if}{monthsLabel(slot.monthsRemaining)}
+											</span>
+										{/each}
+									</div>
 								</div>
-								<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
-									{#each group.breakdown as slot}
-										<span style="font-size:13px; color:oklch(0.42 0.06 50); background:oklch(0.92 0.03 78); border:1px solid oklch(0.82 0.04 70); border-radius:999px; padding:2px 10px;">
-											{#if group.breakdown.length > 1 || slot.count > 1}{slot.count} · {/if}{monthsLabel(slot.monthsRemaining)}
-										</span>
-									{/each}
-								</div>
+							</div>
+
+							<!-- Constructeurs affectés à ce bâtiment -->
+							<div style="margin-top:10px; padding-top:10px; border-top:1px dashed oklch(0.82 0.04 70);">
+								{#if group.builders.length}
+									<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:6px;">Constructeurs ({group.builders.length})</div>
+									<div style="display:flex; flex-direction:column; gap:6px;">
+										{#each group.builders as builder}
+											<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+												<span style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.32 0.04 40);">{builder.name ?? 'Citoyen'}</span>
+												{#if builder.occupation}<span style="font-size:13px; color:oklch(0.5 0.04 55);">· {OCCUPATIONS[builder.occupation as OccupationTypes]}</span>{/if}
+												<span style="margin-left:auto; font-size:13px; color:oklch(0.5 0.03 50);">{monthsLabel(builder.buildingMonthsLeft)}</span>
+											</div>
+										{/each}
+									</div>
+								{:else}
+									<div style="font-size:13px; color:oklch(0.55 0.03 50); font-style:italic;">Aucun constructeur actif (le chantier se poursuit).</div>
+								{/if}
 							</div>
 						</div>
 					{/each}
 				</div>
+
+				{#if constructionView.unlinked.length}
+					<div style="margin-top:12px;">
+						<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:6px;">Autres constructeurs ({constructionView.unlinked.length})</div>
+						<div style="display:flex; flex-direction:column; gap:6px;">
+							{#each constructionView.unlinked as builder}
+								<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 12px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70);">
+									<span style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.32 0.04 40);">{builder.name ?? 'Citoyen'}</span>
+									{#if builder.occupation}<span style="font-size:13px; color:oklch(0.5 0.04 55);">· {OCCUPATIONS[builder.occupation as OccupationTypes]}</span>{/if}
+									{#if builder.buildingType}<span style="font-size:13px; color:oklch(0.42 0.06 50);">→ {buildingNames[builder.buildingType as BuildingTypes] ?? builder.buildingType}</span>{/if}
+									<span style="margin-left:auto; font-size:13px; color:oklch(0.5 0.03 50);">{monthsLabel(builder.buildingMonthsLeft)}</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			{/if}
 		</div>
 

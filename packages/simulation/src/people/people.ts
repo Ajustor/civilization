@@ -4,6 +4,7 @@ import { Carpenter } from './work/carpenter'
 import { Farmer } from './work/farmer'
 import type { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
+import type { BuildingTypes } from '../buildings/enum'
 import { DeathCause } from './death'
 import { Retired } from './work/retired'
 import { Tree } from '../utils/tree/tree'
@@ -70,6 +71,7 @@ export type PeopleConstructorParams = {
   lifeCounter: number
   isBuilding?: boolean
   buildingMonthsLeft?: number
+  buildingType?: BuildingTypes | null
   pregnancyMonthsLeft?: number
   lineage?: Lineage
   numberOfChild?: number
@@ -95,6 +97,7 @@ export class People {
   lifeCounter: number
   isBuilding: boolean
   buildingMonthsLeft: number
+  buildingType: BuildingTypes | null
   pregnancyMonthsLeft: number
   gender: Gender
   child: People | null = null
@@ -117,6 +120,7 @@ export class People {
     lifeCounter = 3,
     isBuilding = false,
     buildingMonthsLeft = 0,
+    buildingType = null,
     pregnancyMonthsLeft = 0,
     lineage,
     numberOfChild = 0,
@@ -127,6 +131,7 @@ export class People {
     this.lifeCounter = lifeCounter
     this.isBuilding = isBuilding
     this.buildingMonthsLeft = buildingMonthsLeft
+    this.buildingType = buildingType
     this.gender = gender
     this.pregnancyMonthsLeft = pregnancyMonthsLeft
     this.lineage = lineage
@@ -152,6 +157,7 @@ export class People {
       this.buildingMonthsLeft -= 1
       if (this.buildingMonthsLeft <= 0) {
         this.isBuilding = false
+        this.buildingType = null
       }
     }
   }
@@ -179,11 +185,13 @@ export class People {
   }
 
   collectResource(world: World, civilization: Civilization): boolean {
-    if (!this.work?.canWork(this.years) && !this.isBuilding) {
+    // A person assigned to a construction site is busy building and does no
+    // other work (collecting resources) until the building is finished.
+    if (this.isBuilding) {
       return false
     }
 
-    if (!this.work) {
+    if (!this.work?.canWork(this.years)) {
       return false
     }
 
@@ -193,9 +201,10 @@ export class People {
     return false
   }
 
-  startBuilding(buildingMonthsLeft = 2): void {
+  startBuilding(buildingMonthsLeft = 2, buildingType: BuildingTypes | null = null): void {
     this.isBuilding = true
     this.buildingMonthsLeft = buildingMonthsLeft
+    this.buildingType = buildingType
   }
 
   canConceive(maxNumberOfChild: number = MAX_NUMBER_OF_CHILD): boolean {
@@ -318,6 +327,7 @@ export class People {
       name: this.name,
       buildingMonthsLeft: this.buildingMonthsLeft,
       isBuilding: this.isBuilding,
+      buildingType: this.buildingType,
       lifeCounter: this.lifeCounter,
       month: this.month,
       occupation: this.work?.occupationType,

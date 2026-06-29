@@ -3,7 +3,7 @@ import type { MongoCivilizationType } from '../civilizations/service'
 import { CivilizationModel, PersonModel } from '../../libs/database/models'
 import { type AnyBulkWriteOperation, type SortOrder } from 'mongoose'
 
-export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, pregnancyMonthsLeft, child, lineage, originCivilizationId }: PeopleType): People => {
+export const personMapper = ({ id, name, gender, month, lifeCounter, occupation, buildingMonthsLeft, isBuilding, buildingType, pregnancyMonthsLeft, child, lineage, originCivilizationId }: PeopleType): People => {
   const peopleBuilder = new PeopleBuilder()
     .withId(id)
     .withGender(gender)
@@ -11,6 +11,7 @@ export const personMapper = ({ id, name, gender, month, lifeCounter, occupation,
     .withLifeCounter(lifeCounter)
     .withIsBuilding(isBuilding)
     .withBuildingMonthsLeft(buildingMonthsLeft)
+    .withBuildingType(buildingType ?? null)
     .withOriginCivilizationId(originCivilizationId)
 
   if (name) {

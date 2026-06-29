@@ -36,7 +36,7 @@ const ConfigSchema = new Schema({
   PEOPLE_CHARCOAL_CAN_HEAT: Number,
   CHANCE_TO_EVOLVE: Number,
   CHANCE_TO_BUILD_EVOLVED_BUILDING: Number,
-  MAXIMUM_CHILDREN: Number,
+  MAXIMUM_CHILDREN_PERCENTAGE: Number,
   OPEN_EXCHANGE: {
     type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
     required: true,
@@ -97,7 +97,7 @@ const civilizationSchema = new Schema(
         PEOPLE_CHARCOAL_CAN_HEAT: 10,
         CHANCE_TO_EVOLVE: 20,
         CHANCE_TO_BUILD_EVOLVED_BUILDING: 25,
-        MAXIMUM_CHILDREN: 10,
+        MAXIMUM_CHILDREN_PERCENTAGE: 25,
         OPEN_EXCHANGE: [],
         MILITARY_RATIO: 0,
         NEXT_BUILDING_TO_BUILD: null,

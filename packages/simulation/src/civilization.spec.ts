@@ -1136,4 +1136,43 @@ describe('Civilization', () => {
       })
     })
   })
+
+  describe('maxChildren (percentage of adults)', () => {
+    const makeAdult = (id: string) =>
+      new PeopleBuilder()
+        .withGender(Gender.MALE)
+        .withLifeCounter(12)
+        .withMonth(240)
+        .withOccupation(OccupationTypes.FARMER)
+        .withId(id)
+        .build()
+
+    it('counts only non-child citizens as adults', () => {
+      const child = new PeopleBuilder()
+        .withGender(Gender.FEMALE)
+        .withLifeCounter(12)
+        .withMonth(24)
+        .withOccupation(OccupationTypes.CHILD)
+        .withId('c1')
+        .build()
+      civilization.addPeople(makeAdult('a1'), makeAdult('a2'), child)
+      expect(civilization.adultsCount).toBe(2)
+    })
+
+    it('caps simultaneous children at the configured percentage of adults (rounded up)', () => {
+      civilization.config.MAXIMUM_CHILDREN_PERCENTAGE = 25
+      civilization.addPeople(
+        ...Array.from({ length: 10 }, (_, i) => makeAdult(`a${i}`)),
+      )
+      // 10 adults * 25% = 2.5 -> ceil = 3
+      expect(civilization.maxChildren).toBe(3)
+    })
+
+    it('still allows at least one child for a tiny population (no sterilisation)', () => {
+      civilization.config.MAXIMUM_CHILDREN_PERCENTAGE = 25
+      civilization.addPeople(makeAdult('a1'), makeAdult('a2'))
+      // 2 adults * 25% = 0.5 -> ceil = 1
+      expect(civilization.maxChildren).toBe(1)
+    })
+  })
 })

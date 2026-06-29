@@ -13,6 +13,7 @@ import {
   getPeopleFromCivilizationPaginated,
   getCivilizationPeopleJobsStats,
   getCivilizationPeopleRatioStats,
+  getCivilizationBuilders,
 } from '../../../services/api/people-api'
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
@@ -44,6 +45,8 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
         civilization: getCivilizationStats(cookies.get('auth') ?? '', params.slug),
       },
       combatLogs: getCombatLogs(cookies.get('auth') ?? '', params.slug, 5, 0),
+      // Citizens currently on a construction site (who builds what).
+      builders: getCivilizationBuilders(cookies.get('auth') ?? '', params.slug).catch(() => []),
     },
   }
 }

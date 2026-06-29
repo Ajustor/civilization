@@ -2,6 +2,7 @@ import { Gender } from '../people/enum'
 import type { OccupationTypes } from '../people/work/enum'
 import { People, type Lineage } from '../people/people'
 import type { PeopleEntity } from '../types/people'
+import type { BuildingTypes } from '../buildings/enum'
 
 export class PeopleBuilder {
   private peopleEntity: People
@@ -42,6 +43,11 @@ export class PeopleBuilder {
 
   withBuildingMonthsLeft(buildingMonthsLeft: number): PeopleBuilder {
     this.peopleEntity.buildingMonthsLeft = buildingMonthsLeft
+    return this
+  }
+
+  withBuildingType(buildingType: BuildingTypes | null): PeopleBuilder {
+    this.peopleEntity.buildingType = buildingType
     return this
   }
 
