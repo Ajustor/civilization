@@ -101,8 +101,7 @@ export const actions: Actions = {
       await updateCivilization(cookies.get('auth') ?? '', params.slug, {
         atWarWith: form.data.atWarWith,
       })
-      message(form, { status: 'success', text: 'Cibles de guerre mises à jour' })
-      return { form }
+      return { form: message(form, { status: 'success', text: 'Cibles de guerre mises à jour' }) }
     } catch (requestError) {
       error(
         (requestError as { status?: number }).status ?? 500,
