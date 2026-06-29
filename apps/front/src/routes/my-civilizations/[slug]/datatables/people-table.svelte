@@ -12,7 +12,7 @@
 	type Props = {
 		people: PeopleType[]
 		totalPeople: number
-		updateData: (pageIndex: number, pageSize: number) => void
+		updateData: (pageIndex: number, pageSize: number, sort?: { field: string; order: 'asc' | 'desc' } | null) => void
 		pageIndex: number
 		pageSize: number
 		currentCivilizationId?: string
@@ -33,6 +33,13 @@
 	const hasPreviousPage = $derived(pageIndex > 0)
 	const hasNextPage = $derived(pageIndex + 1 < pageCount)
 
+	const mapField = (k: SortKey): string => k === 'years' ? 'month' : k
+
+	const buildSort = (): { field: string; order: 'asc' | 'desc' } | null => {
+		if (!sortKey || !sortOrder) return null
+		return { field: mapField(sortKey), order: sortOrder }
+	}
+
 	function toggleSort(key: SortKey) {
 		if (sortKey === key) {
 			if (sortOrder === 'asc') {
@@ -45,23 +52,8 @@
 			sortKey = key
 			sortOrder = 'asc'
 		}
+		updateData(0, pageSize, buildSort())
 	}
-
-	const sortedPeople = $derived.by(() => {
-		if (!sortKey || !sortOrder) return people
-		const k = sortKey
-		const o = sortOrder
-		return [...people].sort((a, b) => {
-			const av = a[k] as string | number | null | undefined
-			const bv = b[k] as string | number | null | undefined
-			if (av == null && bv == null) return 0
-			if (av == null) return 1
-			if (bv == null) return -1
-			if (av < bv) return o === 'asc' ? -1 : 1
-			if (av > bv) return o === 'asc' ? 1 : -1
-			return 0
-		})
-	})
 
 	const sortableColumns: { key: SortKey; header: string }[] = [
 		{ key: 'name', header: 'Nom' },
@@ -76,13 +68,13 @@
 	<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 0;">
 		<div style="display:flex; align-items:center; gap:8px;">
 			<button
-				onclick={() => updateData(pageIndex - 1, pageSize)}
+				onclick={() => updateData(pageIndex - 1, pageSize, buildSort())}
 				disabled={!hasPreviousPage}
 				style="padding:6px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer; opacity:{!hasPreviousPage ? 0.4 : 1};"
 			>Précédent</button>
 			<span style="font-size:15px; color:oklch(0.5 0.03 50);">{pageIndex + 1} / {pageCount}</span>
 			<button
-				onclick={() => updateData(pageIndex + 1, pageSize)}
+				onclick={() => updateData(pageIndex + 1, pageSize, buildSort())}
 				disabled={!hasNextPage}
 				style="padding:6px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer; opacity:{!hasNextPage ? 0.4 : 1};"
 			>Suivant</button>
@@ -90,7 +82,7 @@
 		<select
 			value={pageSize}
 			style="padding:6px 12px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.97 0.015 84); color:oklch(0.35 0.04 40); font-family:'EB Garamond',serif; font-size:15px;"
-			onchange={(e) => updateData(0, Number(e.currentTarget.value))}
+			onchange={(e) => updateData(0, Number(e.currentTarget.value), buildSort())}
 		>
 			<option disabled>Éléments par page</option>
 			<option value={10}>10</option>
@@ -122,7 +114,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each sortedPeople as person (person.id ?? Math.random())}
+			{#each people as person (person.id ?? Math.random())}
 				<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
 					<td style="padding:8px 12px;">
 						{person.name ?? '—'}

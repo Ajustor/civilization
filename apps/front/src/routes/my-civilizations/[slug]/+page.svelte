@@ -56,6 +56,7 @@
 
 	let pageIndex = $state(0)
 	let pageSize = $state(10)
+	let peopleSort = $state<{ field: string; order: 'asc' | 'desc' } | null>(null)
 	// Drive the citizens table from local state: reassigning the SvelteKit `data`
 	// prop's nested promise is NOT reactive in Svelte 5, so the table never updated.
 	let peoplePromise = $state<Promise<PeopleType[]>>(data.lazy.people)
@@ -109,13 +110,16 @@
 	const openPanel = (p: Panel) => { activePanel = p }
 	const closePanel = () => { activePanel = null }
 
-	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
+	const retrievePeople = async (newPageIndex: number, newPageSize: number, sort?: { field: string; order: 'asc' | 'desc' } | null) => {
+		if (sort !== undefined) {
+			peopleSort = sort
+		}
 		const previous = peoplePromise
 		pageIndex = newPageIndex
 		pageSize = newPageSize
 		peoplePromise = (async () => {
 			try {
-				const { people } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize)
+				const { people } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize, peopleSort ?? undefined)
 				return people
 			} catch (error) {
 				console.error(error)
