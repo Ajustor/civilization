@@ -60,14 +60,6 @@
 		}
 	}
 
-	const toggleWar = (civilizationId: string, checked: boolean | 'indeterminate') => {
-		const fd = $formData as ConfigFormData
-		if (checked === true) {
-			$formData.atWarWith = [...fd.atWarWith, civilizationId]
-		} else {
-			$formData.atWarWith = fd.atWarWith.filter((id: string) => id !== civilizationId)
-		}
-	}
 
 </script>
 
@@ -142,44 +134,7 @@
 			{/if}
 		</div>
 
-		<!-- Militaire -->
-		<div class="civ-inner-card">
-			<h3 class="civ-section-title">Militaire</h3>
-			<div style="display:flex; flex-direction:column; gap:16px;">
-				<FormField {form} name="militaryRatio">
-					<FormControl>
-						{#snippet children({ props })}
-							<FormLabel>Ratio militaire (%)</FormLabel>
-							<input type="number" min="0" max="100" class="input input-bordered w-full" {...props} bind:value={$formData.militaryRatio} />
-						{/snippet}
-					</FormControl>
-					<FormDescription>Part des adultes entretenus comme soldats (0–100%).</FormDescription>
-					<FormFieldErrors />
-				</FormField>
-
-				{#if data.worldCivilizations.length}
-					<FormFieldset {form} name="atWarWith" class="flex flex-col gap-3">
-						<FormLegend>Civilisations à attaquer</FormLegend>
-						{#each data.worldCivilizations as otherCivilization}
-							<div class="flex items-center gap-2">
-								<Checkbox
-									id="war-{otherCivilization.id}"
-									checked={($formData as ConfigFormData).atWarWith.includes(otherCivilization.id)}
-									onCheckedChange={(checked: boolean | 'indeterminate') => toggleWar(otherCivilization.id, checked)}
-								/>
-								<label for="war-{otherCivilization.id}" style="font-size:15px; cursor:pointer;">{otherCivilization.name}</label>
-							</div>
-						{/each}
-						<FormFieldErrors />
-					</FormFieldset>
-				{:else}
-					<p style="color:oklch(0.5 0.03 50);">Aucune autre civilisation dans ce monde.</p>
-				{/if}
-
-				</div>
-			</div>
-
-			<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
+		<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
 	</form>
 </div>
 </div>

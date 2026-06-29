@@ -2,6 +2,7 @@
 	import { type PeopleType, Gender } from '@ajustor/simulation'
 	import Icon from '@iconify/svelte'
 	import { OCCUPATIONS } from '$lib/translations'
+	import { getOccupationMeta } from '$lib/gameData'
 	import ChildDetails from './childDetails.svelte'
 	import { ArrowUp, ArrowDown, ArrowUpDown } from '@lucide/svelte'
 
@@ -11,7 +12,7 @@
 	type Props = {
 		people: PeopleType[]
 		totalPeople: number
-		updateData: (pageIndex: number, pageSize: number) => void
+		updateData: (pageIndex: number, pageSize: number, sort?: { field: string; order: 'asc' | 'desc' } | null) => void
 		pageIndex: number
 		pageSize: number
 		currentCivilizationId?: string
@@ -32,6 +33,13 @@
 	const hasPreviousPage = $derived(pageIndex > 0)
 	const hasNextPage = $derived(pageIndex + 1 < pageCount)
 
+	const mapField = (k: SortKey): string => k === 'years' ? 'month' : k
+
+	const buildSort = (): { field: string; order: 'asc' | 'desc' } | null => {
+		if (!sortKey || !sortOrder) return null
+		return { field: mapField(sortKey), order: sortOrder }
+	}
+
 	function toggleSort(key: SortKey) {
 		if (sortKey === key) {
 			if (sortOrder === 'asc') {
@@ -44,23 +52,8 @@
 			sortKey = key
 			sortOrder = 'asc'
 		}
+		updateData(0, pageSize, buildSort())
 	}
-
-	const sortedPeople = $derived.by(() => {
-		if (!sortKey || !sortOrder) return people
-		const k = sortKey
-		const o = sortOrder
-		return [...people].sort((a, b) => {
-			const av = a[k] as string | number | null | undefined
-			const bv = b[k] as string | number | null | undefined
-			if (av == null && bv == null) return 0
-			if (av == null) return 1
-			if (bv == null) return -1
-			if (av < bv) return o === 'asc' ? -1 : 1
-			if (av > bv) return o === 'asc' ? 1 : -1
-			return 0
-		})
-	})
 
 	const sortableColumns: { key: SortKey; header: string }[] = [
 		{ key: 'name', header: 'Nom' },
@@ -75,13 +68,13 @@
 	<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 0;">
 		<div style="display:flex; align-items:center; gap:8px;">
 			<button
-				onclick={() => updateData(pageIndex - 1, pageSize)}
+				onclick={() => updateData(pageIndex - 1, pageSize, buildSort())}
 				disabled={!hasPreviousPage}
 				style="padding:6px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer; opacity:{!hasPreviousPage ? 0.4 : 1};"
 			>Précédent</button>
 			<span style="font-size:15px; color:oklch(0.5 0.03 50);">{pageIndex + 1} / {pageCount}</span>
 			<button
-				onclick={() => updateData(pageIndex + 1, pageSize)}
+				onclick={() => updateData(pageIndex + 1, pageSize, buildSort())}
 				disabled={!hasNextPage}
 				style="padding:6px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; cursor:pointer; opacity:{!hasNextPage ? 0.4 : 1};"
 			>Suivant</button>
@@ -89,7 +82,7 @@
 		<select
 			value={pageSize}
 			style="padding:6px 12px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.97 0.015 84); color:oklch(0.35 0.04 40); font-family:'EB Garamond',serif; font-size:15px;"
-			onchange={(e) => updateData(0, Number(e.currentTarget.value))}
+			onchange={(e) => updateData(0, Number(e.currentTarget.value), buildSort())}
 		>
 			<option disabled>Éléments par page</option>
 			<option value={10}>10</option>
@@ -99,52 +92,62 @@
 			<option value={1000}>1000</option>
 		</select>
 	</div>
-	<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
-		<thead>
-			<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
-				{#each sortableColumns as col (col.key)}
-					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">
-						<button onclick={() => toggleSort(col.key)} style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:inherit; color:inherit; padding:0;">
-							{col.header}
-							{#if sortKey === col.key && sortOrder === 'asc'}
-								<ArrowUp size="14" />
-							{:else if sortKey === col.key && sortOrder === 'desc'}
-								<ArrowDown size="14" />
-							{:else}
-								<ArrowUpDown size="14" />
-							{/if}
-						</button>
-					</th>
-				{/each}
-				<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Mois avant accouchement</th>
-				<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Enfant à naître</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each sortedPeople as person (person.id ?? Math.random())}
-				<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
-					<td style="padding:8px 12px;">
-						{person.name ?? '—'}
-						{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
-							<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="margin-left:6px; font-size:11px; padding:1px 6px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Enlevé(e)</span>
-						{/if}
-					</td>
-					<td style="padding:8px 12px;">
-						{#if person.gender}
-							<Icon icon={GenderIcons[person.gender]} />
-						{/if}
-					</td>
-					<td style="padding:8px 12px;">{person.years}</td>
-					<td style="padding:8px 12px;">{person.lifeCounter}</td>
-					<td style="padding:8px 12px;">{person.occupation ? (OCCUPATIONS[person.occupation] ?? '') : ''}</td>
-					<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
-					<td style="padding:8px 12px;">
-						{#if person.child}
-							<ChildDetails gender={person.child.gender} occupation={person.child.occupation} />
-						{/if}
-					</td>
+	<div style="overflow-x:auto;">
+		<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
+			<thead>
+				<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
+					{#each sortableColumns as col (col.key)}
+						<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">
+							<button onclick={() => toggleSort(col.key)} style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:inherit; color:inherit; padding:0;">
+								{col.header}
+								{#if sortKey === col.key && sortOrder === 'asc'}
+									<ArrowUp size="14" />
+								{:else if sortKey === col.key && sortOrder === 'desc'}
+									<ArrowDown size="14" />
+								{:else}
+									<ArrowUpDown size="14" />
+								{/if}
+							</button>
+						</th>
+					{/each}
+					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Mois avant accouchement</th>
+					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Enfant à naître</th>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each people as person (person.id ?? Math.random())}
+					<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
+						<td style="padding:8px 12px;">
+							{person.name ?? '—'}
+							{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
+								<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="margin-left:6px; font-size:11px; padding:1px 6px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Enlevé(e)</span>
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">
+							{#if person.gender}
+								<Icon icon={GenderIcons[person.gender]} />
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">{person.years}</td>
+						<td style="padding:8px 12px;">{person.lifeCounter}</td>
+						<td style="padding:8px 12px;">
+							{#if person.occupation}
+								{@const occMeta = getOccupationMeta(person.occupation)}
+								{OCCUPATIONS[person.occupation] ?? ''}
+								{#if occMeta.retirementAge != null}
+									<span style="color:oklch(0.55 0.04 50); font-size:13px; white-space:nowrap;">({occMeta.minAge} → {occMeta.retirementAge} ans)</span>
+								{/if}
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
+						<td style="padding:8px 12px;">
+							{#if person.child}
+								<ChildDetails gender={person.child.gender} occupation={person.child.occupation} />
+							{/if}
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 </div>

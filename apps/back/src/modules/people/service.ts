@@ -200,6 +200,17 @@ export class PeopleService {
     return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({ occupation: OccupationTypes.CHILD })
   }
 
+  public async countCaptives(civilizationId: string): Promise<number> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    return PersonModel.find<PeopleType>({ _id: { $in: civilization.people } }).countDocuments({
+      originCivilizationId: { $nin: [null, civilizationId] }
+    })
+  }
+
   public async countPeopleWithJob(civilizationId: string, occupation: OccupationTypes): Promise<number> {
     const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {

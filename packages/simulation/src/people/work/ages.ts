@@ -23,3 +23,20 @@ export const MINIMAL_AGE_TO_BECOME: Record<OccupationTypes, number> = {
   [OccupationTypes.ERUDIT]: 21,
   [OccupationTypes.SOLDIER]: 18,
 }
+
+// Âge de retraite par métier. Centralise les constantes RETIREMENT_AGE jusque-là
+// dupliquées dans chaque classe de travail (single source of truth, comme
+// MINIMAL_AGE_TO_BECOME). 0 = sans objet (Enfant / Retraité).
+export const RETIREMENT_AGE_BY_OCCUPATION: Record<OccupationTypes, number> = {
+  [OccupationTypes.CHILD]: 0,
+  [OccupationTypes.RETIRED]: 0,
+  [OccupationTypes.GATHERER]: 70,
+  [OccupationTypes.WOODCUTTER]: 60,
+  [OccupationTypes.FARMER]: 70,
+  [OccupationTypes.MINER]: 50,
+  [OccupationTypes.CARPENTER]: 60,
+  [OccupationTypes.CHARCOAL_BURNER]: 60,
+  [OccupationTypes.KITCHEN_ASSISTANT]: 70,
+  [OccupationTypes.ERUDIT]: 80,
+  [OccupationTypes.SOLDIER]: 60,
+}

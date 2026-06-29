@@ -21,7 +21,7 @@ export { splitCivilization } from './colonize'
 export type { SplitParams, SplitResult, ResourceTransfer } from './colonize'
 
 export { OccupationTypes } from './people/work/enum'
-export { MINIMAL_AGE_TO_BECOME } from './people/work/ages'
+export { MINIMAL_AGE_TO_BECOME, RETIREMENT_AGE_BY_OCCUPATION } from './people/work/ages'
 export { DeathCause } from './people/death'
 export type { DeathRecord } from './people/death'
 export { Gender } from './people/enum'

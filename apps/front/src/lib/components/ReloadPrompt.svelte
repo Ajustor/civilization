@@ -6,14 +6,13 @@
 
 	const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW({
 		onRegistered(r) {
-			if (__RELOAD_SW__) {
-				r &&
-					setInterval(() => {
-						console.log('Checking for sw update')
-						r.update()
-					}, 20000 /* 20s for testing purposes */)
-			} else {
-				console.log(`SW Registered: ${r}`)
+			// Vérifie périodiquement si une nouvelle version a été déployée, afin qu'une
+			// application restée ouverte propose le rafraîchissement sans attendre un
+			// rechargement complet de la page.
+			if (r) {
+				setInterval(() => {
+					r.update()
+				}, 60_000)
 			}
 		},
 		onRegisterError(error) {

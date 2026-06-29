@@ -6,6 +6,7 @@ const statsPeopleSchema = new Schema({
   men: Number,
   women: Number,
   pregnantWomen: Number,
+  children: Number,
 })
 
 const civilizationStatsSchema = new Schema(

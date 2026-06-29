@@ -328,6 +328,13 @@ export class Civilization {
     );
   }
 
+  get library(): Library | undefined {
+    return this.buildings.find<Library>(
+      (building): building is Library =>
+        building.getType() === BuildingTypes.LIBRARY,
+    );
+  }
+
   get wall(): Wall | undefined {
     return this.buildings.find<Wall>(
       (building): building is Wall => building.getType() === BuildingTypes.WALL,
@@ -434,6 +441,11 @@ export class Civilization {
   releaseCaptives(count: number): People[] {
     const candidates = this.getPeopleWithoutOccupation(OccupationTypes.SOLDIER);
     const captured = candidates.slice(0, count);
+    for (const captive of captured) {
+      if (!captive.originCivilizationId) {
+        captive.originCivilizationId = this.id;
+      }
+    }
     this.removePeople(captured.map(({ id }) => id));
     return captured;
   }
@@ -719,7 +731,7 @@ export class Civilization {
     this._occupationIndex = null;
     this.adaptPeopleJob();
     this.progressConstructions();
-    this.buildNewBuilding();
+    this.buildNewBuilding(world);
 
     if (!this.nobodyAlive()) {
       this.livedMonths++;
@@ -917,7 +929,9 @@ export class Civilization {
 
     // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
     if (chosen === BuildingTypes.WALL) {
-      const builders = this.people.filter((person) => person.canWork()).length;
+      const builders = this.people.filter(
+        (person) => person.canWork() && person.work?.occupationType !== OccupationTypes.SOLDIER,
+      ).length;
       if (builders < Wall.minBuilders) {
         return; // keep the request; retry next month
       }
@@ -941,68 +955,106 @@ export class Civilization {
     }
   }
 
-  private buildNewBuilding() {
+  private buildNewBuilding(_world?: World) {
     this.buildChosenBuilding();
     this.buildNewHouses();
 
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)) {
+    const candidates = this.autoBuildCandidates()
+      .filter((candidate) => candidate.weight > 0)
+      .sort((a, b) => b.weight - a.weight);
+
+    for (const candidate of candidates) {
+      if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
         this.buildNew(
-          BuildingTypes.CACHE,
-          Cache.constructionCosts,
-          Cache.workerRequiredToBuild,
-          Cache.timeToBuild,
+          candidate.type,
+          candidate.ctor.constructionCosts,
+          candidate.ctor.workerRequiredToBuild,
+          candidate.ctor.timeToBuild,
         );
       }
     }
+  }
 
-    // TODO: create a new function to determine if building is full
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.KILN,
-        Kiln.constructionCosts,
-        Kiln.workerRequiredToBuild,
-        Kiln.timeToBuild,
-      );
-    }
+  /**
+   * Candidates for auto-construction, weighted by civilization needs.
+   * Weight 0 means no need (candidate is filtered out before the chance roll).
+   * Candidates are sorted by descending weight so the highest-priority need
+   * reserves builders and resources first. Final gating (tech unlock, resource
+   * check, available workers) is applied inside buildNew().
+   *
+   * A new instance of a staffed building is only queued when:
+   *   - none exists yet (bootstrap weight), OR
+   *   - existing instances are full AND there is a surplus of workers of the
+   *     required occupation beyond current capacity (expansion weight ∝ surplus).
+   * This prevents building copies that would remain unstaffed.
+   */
+  private autoBuildCandidates(): {
+    type: BuildingTypes;
+    ctor: {
+      constructionCosts: ConstructionCost[];
+      workerRequiredToBuild: WorkerRequiredToBuild[];
+      timeToBuild: number;
+    };
+    weight: number;
+  }[] {
+    const pendingCount = (type: BuildingTypes) =>
+      this.pendingConstructions.filter((p) => p.buildingType === type).length;
 
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.SAWMILL,
-        Sawmill.constructionCosts,
-        Sawmill.workerRequiredToBuild,
-        Sawmill.timeToBuild,
-      );
-    }
-
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.FARM,
-        Farm.constructionCosts,
-        Farm.workerRequiredToBuild,
-        Farm.timeToBuild,
-      );
-    }
-
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.CAMPFIRE,
-        Campfire.constructionCosts,
-        Campfire.workerRequiredToBuild,
-        Campfire.timeToBuild,
-      );
-    }
-
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.mine?.count && !this.isBuildingPending(BuildingTypes.MINE)) {
-        this.buildNew(
-          BuildingTypes.MINE,
-          Mine.constructionCosts,
-          Mine.workerRequiredToBuild,
-          Mine.timeToBuild,
-        );
+    // Staffed building: build the first (bootstrap), or expand only when all
+    // existing instances are full and there is a surplus of qualified workers.
+    const expansionWeight = (
+      builtCount: number,
+      type: BuildingTypes,
+      occupation: OccupationTypes,
+      workersPerBuilding: number,
+      bootstrap: number,
+    ): number => {
+      const totalCount = builtCount + pendingCount(type);
+      if (totalCount === 0) {
+        return bootstrap;
       }
-    }
+      const workers = this.getPeopleWithOccupation(occupation).length;
+      const surplus = workers - totalCount * workersPerBuilding;
+      return surplus > 0 ? Math.min(10, surplus) : 0;
+    };
+
+    return [
+      {
+        type: BuildingTypes.CACHE,
+        ctor: Cache,
+        weight: !this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE) ? 8 : 0,
+      },
+      {
+        type: BuildingTypes.FARM,
+        ctor: Farm,
+        weight: expansionWeight(this.farm?.count ?? 0, BuildingTypes.FARM, OccupationTypes.FARMER, 5, 6),
+      },
+      {
+        type: BuildingTypes.CAMPFIRE,
+        ctor: Campfire,
+        weight: expansionWeight(this.campfire?.count ?? 0, BuildingTypes.CAMPFIRE, OccupationTypes.KITCHEN_ASSISTANT, 1, 4),
+      },
+      {
+        type: BuildingTypes.SAWMILL,
+        ctor: Sawmill,
+        weight: expansionWeight(this.sawmill?.count ?? 0, BuildingTypes.SAWMILL, OccupationTypes.CARPENTER, 2, 4),
+      },
+      {
+        type: BuildingTypes.KILN,
+        ctor: Kiln,
+        weight: expansionWeight(this.kiln?.count ?? 0, BuildingTypes.KILN, OccupationTypes.CHARCOAL_BURNER, 2, 4),
+      },
+      {
+        type: BuildingTypes.MINE,
+        ctor: Mine,
+        weight: expansionWeight(this.mine?.count ?? 0, BuildingTypes.MINE, OccupationTypes.MINER, 10, 9),
+      },
+      {
+        type: BuildingTypes.LIBRARY,
+        ctor: Library,
+        weight: expansionWeight(this.library?.count ?? 0, BuildingTypes.LIBRARY, OccupationTypes.ERUDIT, 2, 3),
+      },
+    ];
   }
 
   private buildNewHouses() {
@@ -1027,7 +1079,9 @@ export class Civilization {
     if (workerNeeded < 0) {
       return;
     }
-    const filteredWorkers = this.people.filter((citizen) => citizen.canWork());
+    const filteredWorkers = this.people.filter(
+      (citizen) => citizen.canWork() && citizen.work?.occupationType !== OccupationTypes.SOLDIER,
+    );
     const workers = filteredWorkers.slice(
       0,
       Math.min(workerNeeded, filteredWorkers.length),
@@ -1206,7 +1260,9 @@ export class Civilization {
         (person) =>
           person.work?.occupationType !== OccupationTypes.SOLDIER &&
           // Une femme enceinte ne peut pas devenir soldat.
-          person.pregnancyMonthsLeft <= 0,
+          person.pregnancyMonthsLeft <= 0 &&
+          // Un citoyen occupé à construire ne peut pas être enrôlé.
+          !person.isBuilding,
       );
       const toRecruit = targetSoldiers - currentSoldiers.length;
       for (const person of recruitable.slice(0, toRecruit)) {

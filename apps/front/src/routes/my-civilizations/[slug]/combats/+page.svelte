@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PageData } from './$types'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+  import { resourceNames } from '$lib/translations'
+  import type { ResourceTypes } from '@ajustor/simulation'
 
   interface Props {
     data: PageData;
@@ -80,7 +82,7 @@
                       <div style="display:flex; flex-wrap:wrap; gap:8px;">
                         {#each log.plunderedResources as r}
                           <span style="font-size:13px; background:oklch(0.93 0.03 80); border:1px solid oklch(0.8 0.04 70); border-radius:4px; padding:3px 10px; color:oklch(0.4 0.05 50);">
-                            {r.type}: +{fmt(r.amount)}
+                            {resourceNames[r.type as ResourceTypes] ?? r.type}: +{fmt(r.amount)}
                           </span>
                         {/each}
                       </div>

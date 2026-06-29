@@ -4,6 +4,7 @@ import { ResourceTypes } from '../../resource'
 import type { Work } from './interface'
 import type { World } from '../../world'
 import { getRandomInt } from '../../utils/random'
+import { RETIREMENT_AGE_BY_OCCUPATION } from './ages'
 
 const MINIMAL_AGE_TO_UPGRADE = 18
 
@@ -12,7 +13,7 @@ export class Gatherer implements Work {
     return personAge >= MINIMAL_AGE_TO_UPGRADE
   }
 
-  public RETIREMENT_AGE = 70
+  public RETIREMENT_AGE = RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.GATHERER]
 
   collectedResource: number = 20
 

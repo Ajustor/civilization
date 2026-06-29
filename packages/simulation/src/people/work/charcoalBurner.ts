@@ -1,5 +1,6 @@
 import { OccupationTypes } from './enum'
 import type { UpgradedWork } from './interface'
+import { RETIREMENT_AGE_BY_OCCUPATION } from './ages'
 
 const MINIMAL_AGE_TO_UPGRADE = 21
 
@@ -8,7 +9,7 @@ export class CharcoalBurner implements UpgradedWork {
     return personAge >= MINIMAL_AGE_TO_UPGRADE
   }
 
-  private RETIREMENT_AGE = 60
+  private RETIREMENT_AGE = RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.CHARCOAL_BURNER]
 
   get occupationType(): OccupationTypes {
     return OccupationTypes.CHARCOAL_BURNER

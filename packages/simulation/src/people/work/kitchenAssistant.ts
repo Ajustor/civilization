@@ -1,5 +1,6 @@
 import { OccupationTypes } from './enum'
 import type { UpgradedWork } from './interface'
+import { RETIREMENT_AGE_BY_OCCUPATION } from './ages'
 
 export const KITCHEN_ASSISTANT_REQUIRED_AGE = 21
 
@@ -8,7 +9,7 @@ export class KitchenAssistant implements UpgradedWork {
     return personAge >= KITCHEN_ASSISTANT_REQUIRED_AGE
   }
 
-  public RETIREMENT_AGE = 70
+  public RETIREMENT_AGE = RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.KITCHEN_ASSISTANT]
 
   get occupationType() {
     return OccupationTypes.KITCHEN_ASSISTANT

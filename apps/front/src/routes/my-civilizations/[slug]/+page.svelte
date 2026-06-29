@@ -32,6 +32,10 @@
 	import { enhance } from '$app/forms'
 	import { toast } from 'svelte-sonner'
 	import { invalidateAll } from '$app/navigation'
+	import { superForm } from 'sveltekit-superforms'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
+	import { warConfigSchema } from '$lib/schemas/warConfig'
+	import { Checkbox } from '$lib/components/ui/checkbox'
 	import { PUBLIC_BACK_URL } from '$env/static/public'
 	import RecapModal from '$lib/components/RecapModal.svelte'
 	import { callGetRecap } from '../../../services/sveltekit-api/recap'
@@ -41,7 +45,7 @@
 		month: number
 		event?: Events | null
 		resources: { resourceType?: ResourceTypes; quantity?: number }[]
-		people?: { men?: number; women?: number; pregnantWomen?: number }
+		people?: { men?: number; women?: number; pregnantWomen?: number; children?: number }
 	}
 
 	interface Props {
@@ -52,6 +56,7 @@
 
 	let pageIndex = $state(0)
 	let pageSize = $state(10)
+	let peopleSort = $state<{ field: string; order: 'asc' | 'desc' } | null>(null)
 	// Drive the citizens table from local state: reassigning the SvelteKit `data`
 	// prop's nested promise is NOT reactive in Svelte 5, so the table never updated.
 	let peoplePromise = $state<Promise<PeopleType[]>>(data.lazy.people)
@@ -101,17 +106,21 @@
 	// Which panel is expanded: null = closed
 	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
 	let activePanel = $state<Panel>(null)
+	let civMenuOpen = $state(false)
 
 	const openPanel = (p: Panel) => { activePanel = p }
 	const closePanel = () => { activePanel = null }
 
-	const retrievePeople = async (newPageIndex: number, newPageSize: number) => {
+	const retrievePeople = async (newPageIndex: number, newPageSize: number, sort?: { field: string; order: 'asc' | 'desc' } | null) => {
+		if (sort !== undefined) {
+			peopleSort = sort
+		}
 		const previous = peoplePromise
 		pageIndex = newPageIndex
 		pageSize = newPageSize
 		peoplePromise = (async () => {
 			try {
-				const { people } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize)
+				const { people } = await callGetPeople(data.civilization.id, newPageIndex, newPageSize, peopleSort ?? undefined)
 				return people
 			} catch (error) {
 				console.error(error)
@@ -399,6 +408,38 @@
 		}
 	})
 
+	// ── Guerre & conflits ──────────────────────────────────────────────────────
+	const warForm = superForm(data.warForm, {
+		dataType: 'json',
+		resetForm: false,
+		validators: zodClient(warConfigSchema),
+		onError({ result }) {
+			toast.error(result.error?.message ?? 'Une erreur est survenue')
+		},
+		onUpdated({ form }) {
+			if (form.message?.status === 'success') {
+				toast.success(form.message.text)
+				invalidateAll()
+			}
+		}
+	})
+	const { form: warFormData, enhance: warEnhance } = warForm
+
+	const toggleWar = (civilizationId: string, checked: boolean | 'indeterminate') => {
+		if (checked === true) {
+			$warFormData.atWarWith = [...$warFormData.atWarWith, civilizationId]
+		} else {
+			$warFormData.atWarWith = $warFormData.atWarWith.filter((id) => id !== civilizationId)
+		}
+	}
+
+	// Noms des civilisations actuellement attaquées (depuis la config persistée).
+	const warTargetNames = $derived(
+		((data.civilization.config?.AT_WAR_WITH as string[]) ?? [])
+			.map((id) => data.worldCivilizations.find((c) => c.id === id)?.name)
+			.filter((name): name is string => Boolean(name))
+	)
+
 	// ── Stat helpers ──────────────────────────────────────────────────────────
 	const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
 	const pct = (n: number, total: number) => total > 0 ? Math.round(n / total * 100) : 0
@@ -559,9 +600,11 @@
 								acc[0] ??= { data: [], type: 'line', label: 'Hommes' }
 								acc[1] ??= { data: [], type: 'line', label: 'Femmes' }
 								acc[2] ??= { data: [], type: 'line', label: 'Femmes enceintes' }
+								acc[3] ??= { data: [], type: 'bar', label: 'Enfants' }
 								acc[0].data.push(p?.men ?? 0)
 								acc[1].data.push(p?.women ?? 0)
 								acc[2].data.push(p?.pregnantWomen ?? 0)
+								acc[3].data.push(p?.children ?? 0)
 								return acc
 							}, []
 						)}
@@ -659,6 +702,7 @@
 							{@const women = peopleRatio.menAndWomen.women}
 							{@const pregnant = peopleRatio.pregnantWomen}
 							{@const children = peopleRatio.children ?? 0}
+							{@const captives = peopleRatio.captives ?? 0}
 							{@const total = men + women}
 							{@const ratio = women > 0 ? (men / women).toFixed(2) : '─'}
 							<div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">
@@ -686,6 +730,8 @@
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{women > 0 ? Math.round(men / women * 100) : '─'} hommes</span>
 												<span style="color:oklch(0.5 0.04 50);">Enfants</span>
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(children)} ({pct(children, total)}%)</span>
+												<span style="color:oklch(0.5 0.04 50);">Captifs</span>
+												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(captives)} ({pct(captives, total)}%)</span>
 												<span style="color:oklch(0.5 0.04 50);">Total</span>
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(total)}</span>
 											</div>
@@ -724,50 +770,88 @@
 	<div class="civ-card" style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
 		<!-- Civ header -->
 		<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:20px; border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:20px;">
-			<div>
-				<h1 style="font-family:'Tangerine',cursive; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
-				<div style="font-size:18px; color:oklch(0.46 0.03 50); margin-top:4px;">Prospère depuis {~~(data.civilization.livedMonths / 12)} ans et {data.civilization.livedMonths % 12} mois</div>
+			<!-- Left: title + stats -->
+			<div style="display:flex; flex-direction:column; gap:14px;">
+				<div>
+					<h1 style="font-family:'Tangerine',cursive; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
+					<div style="font-size:18px; color:oklch(0.46 0.03 50); margin-top:4px;">Prospère depuis {~~(data.civilization.livedMonths / 12)} ans et {data.civilization.livedMonths % 12} mois</div>
+				</div>
+				<!-- Stats group -->
+				<div style="display:flex; gap:26px; text-align:center; align-items:center;">
+					<div>
+						<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.42 0.09 150);">{data.civilization.citizensCount}</div>
+						<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
+					</div>
+					<div>
+						<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
+						<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
+					</div>
+					<div>
+						<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 250);">{data.civilization.researchPoints ?? 0}</div>
+						<div style="font-size:14px; color:oklch(0.5 0.03 50);">points de recherche</div>
+					</div>
+				</div>
 			</div>
-			<div style="display:flex; gap:26px; text-align:center; align-items:center;">
-				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.42 0.09 150);">{data.civilization.citizensCount}</div>
-					<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
-				</div>
-				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
-					<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
-				</div>
-				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 250);">{data.civilization.researchPoints ?? 0}</div>
-					<div style="font-size:14px; color:oklch(0.5 0.03 50);">points de recherche</div>
-				</div>
-				{#if data.worldId}
-					<a href="/worlds/{data.worldId}/market" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
-						Marché
+			<!-- Right cluster: actions only -->
+			<div style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-left:auto;">
+				<!-- Desktop actions group -->
+				<div class="civ-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+					{#if data.worldId}
+						<a href="/worlds/{data.worldId}/market" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
+							Marché
+						</a>
+					{/if}
+					<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
+					<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
+					<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
+						<Settings size="16" /> Configurer
 					</a>
-				{/if}
-				<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
-				<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
-				<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
-					<Settings size="16" /> Configurer
-				</a>
-				{#if hasColonizationTech}
-					<a
-						href="/my-civilizations/{data.civilization.id}/colonize"
-						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;"
-					>
-						🌍 Fonder une colonie
-					</a>
-				{:else}
-					<span
-						title="Nécessite la technologie Colonisation"
-						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.65 0.03 50); font-family:'EB Garamond',serif; font-size:15px; cursor:not-allowed; opacity:0.55;"
+					{#if hasColonizationTech}
+						<a
+							href="/my-civilizations/{data.civilization.id}/colonize"
+							style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;"
+						>
+							🌍 Fonder une colonie
+						</a>
+					{:else}
+						<span
+							title="Nécessite la technologie Colonisation"
+							style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.65 0.03 50); font-family:'EB Garamond',serif; font-size:15px; cursor:not-allowed; opacity:0.55;"
 					>
 						🔒 Fonder une colonie
 					</span>
 				{/if}
 			</div>
+			<!-- Mobile hamburger (hidden on desktop, shown on mobile via CSS) -->
+			<button
+				onclick={() => civMenuOpen = !civMenuOpen}
+				class="civ-actions-toggle"
+				style="display:none; background:none; border:1px solid oklch(0.74 0.05 60); border-radius:4px; cursor:pointer; padding:8px 10px;"
+				aria-label="Menu actions"
+				aria-expanded={civMenuOpen}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="oklch(0.44 0.03 45)" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+				</svg>
+			</button>
 		</div>
+		<!-- Mobile actions dropdown -->
+		{#if civMenuOpen}
+			<div class="civ-actions-menu" style="width:100%; border-top:1px solid oklch(0.76 0.05 60); padding-top:12px; display:flex; flex-direction:column; gap:4px; margin-top:12px;">
+				{#if data.worldId}
+					<a href="/worlds/{data.worldId}/market" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Marché</a>
+				{/if}
+				<a href="/my-civilizations/{data.civilization.id}/technologies" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Technologies</a>
+				<a href="/my-civilizations/{data.civilization.id}/cemetery" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.72 0.02 80); text-decoration:none; background:oklch(0.18 0.018 282); border-radius:3px;">🪦 Cimetière</a>
+				<a href="/my-civilizations/{data.civilization.id}/config" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;"><Settings size="16" /> Configurer</a>
+				{#if hasColonizationTech}
+					<a href="/my-civilizations/{data.civilization.id}/colonize" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">🌍 Fonder une colonie</a>
+				{:else}
+					<span style="display:flex; align-items:center; gap:8px; padding:12px 8px; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.65 0.03 50); cursor:not-allowed; opacity:0.55;" title="Nécessite la technologie Colonisation">🔒 Fonder une colonie</span>
+				{/if}
+			</div>
+		{/if}
+		</div><!-- /civ header -->
 
 		<!-- Bonus de technologies actifs -->
 		{#if hasTechBonus}
@@ -851,9 +935,11 @@
 											datasets[0] ??= { data: [], type: 'line', label: 'Hommes' }
 											datasets[1] ??= { data: [], type: 'line', label: 'Femmes' }
 											datasets[2] ??= { data: [], type: 'line', label: 'Femmes enceintes' }
+											datasets[3] ??= { data: [], type: 'bar', label: 'Enfants' }
 											datasets[0].data.push(d?.men ?? 0)
 											datasets[1].data.push(d?.women ?? 0)
 											datasets[2].data.push(d?.pregnantWomen ?? 0)
+											datasets[3].data.push(d?.children ?? 0)
 											return datasets
 										}, []
 									)
@@ -969,7 +1055,7 @@
 
 		<!-- People table -->
 		<div class="civ-inner-card" style="margin-top:20px;">
-			<h2 class="civ-section-title">Citoyens ({data.civilization.citizensCount} au total)</h2>
+			<h2 class="civ-section-title">Citoyens ({data.civilization.citizensCount} au total){#await peopleRatioPromise then peopleRatio}{#if peopleRatio && (peopleRatio.captives ?? 0) > 0}<span style="margin-left:8px; font-size:13px; font-family:'EB Garamond',serif; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); border-radius:10px; padding:2px 10px; vertical-align:middle;">dont {peopleRatio.captives} captif{(peopleRatio.captives ?? 0) > 1 ? 's' : ''}</span>{/if}{/await}</h2>
 			{#await peoplePromise}
 				<div style="height:120px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then people}
@@ -1138,6 +1224,45 @@
 			{/if}
 		</div>
 
+		<!-- Guerre & militaire -->
+		<div class="civ-inner-card" style="margin-top:20px;">
+			<h2 class="civ-section-title">Guerre &amp; militaire</h2>
+			{#if warTargetNames.length}
+				<div style="display:flex; align-items:center; gap:8px; padding:10px 14px; margin-bottom:14px; background:oklch(0.96 0.05 30/0.5); border:1px solid oklch(0.6 0.16 30/0.5); border-radius:5px; color:oklch(0.42 0.16 30); font-family:'EB Garamond',serif; font-size:16px;">
+					<span style="font-size:18px;">⚔</span>
+					<span>Vous attaquez : <strong>{warTargetNames.join(', ')}</strong></span>
+				</div>
+			{:else}
+				<p style="color:oklch(0.5 0.03 50); font-size:15px; margin:0 0 14px;">Aucune attaque en cours.</p>
+			{/if}
+
+			<form method="post" use:warEnhance action="?/updateWar" style="display:flex; flex-direction:column; gap:10px;">
+				<label style="display:flex; flex-direction:column; gap:4px; font-size:14px; color:oklch(0.4 0.04 48);">
+					<span style="font-family:'Marcellus',serif; color:oklch(0.35 0.04 40);">Ratio militaire (%)</span>
+					<input type="number" min="0" max="100" bind:value={$warFormData.militaryRatio} style="width:120px; padding:8px 10px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.98 0.01 84); color:oklch(0.3 0.04 40); font-family:'EB Garamond',serif; font-size:15px;" />
+					<span style="font-size:13px; color:oklch(0.5 0.03 50);">Part des adultes (hors enfants et retraités) entretenus comme soldats.</span>
+				</label>
+				{#if data.worldCivilizations.length}
+					<p style="font-size:14px; color:oklch(0.5 0.03 50); margin:0;">Sélectionnez les civilisations à attaquer chaque mois.</p>
+					<div style="display:flex; flex-direction:column; gap:8px;">
+						{#each data.worldCivilizations as otherCivilization}
+							<div style="display:flex; align-items:center; gap:8px;">
+								<Checkbox
+									id="war-{otherCivilization.id}"
+									checked={$warFormData.atWarWith.includes(otherCivilization.id)}
+									onCheckedChange={(checked) => toggleWar(otherCivilization.id, checked)}
+								/>
+								<label for="war-{otherCivilization.id}" style="font-size:15px; cursor:pointer; color:oklch(0.35 0.04 42);">{otherCivilization.name}</label>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p style="color:oklch(0.5 0.03 50); font-size:15px; margin:0;">Aucune autre civilisation dans ce monde.</p>
+				{/if}
+				<button type="submit" style="align-self:flex-start; padding:10px 18px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:15px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer</button>
+			</form>
+		</div>
+
 		<!-- Combat Log Summary -->
 		<div class="civ-inner-card" style="margin-top:24px;">
 			<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -1204,5 +1329,13 @@
 	.chart-panel:focus-visible {
 		outline: 2px solid oklch(0.5 0.13 34);
 		outline-offset: 2px;
+	}
+	@media (max-width: 640px) {
+		.civ-actions {
+			display: none !important;
+		}
+		.civ-actions-toggle {
+			display: flex !important;
+		}
 	}
 </style>

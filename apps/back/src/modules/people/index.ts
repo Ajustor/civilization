@@ -56,22 +56,20 @@ export const peopleModule = new Elysia({ prefix: '/people' })
     set.headers['content-type'] = 'application/json'
     return stream
   })
-  .get('/:civilizationId/paginated', ({ peopleService, params: { civilizationId }, query: {
-    page = 0, count = 10, sort
-  } }) => peopleService.getPeopleFromCivilizationPaginated(civilizationId, count, page, sort), {
-    query: t.Optional(t.Object({
-      count: t.Number({ minimum: 0 }),
-      page: t.Number({ minimum: 0 }),
-      sort: t.Optional(t.Object({
-        field: t.String(),
-        order: t.Union([
-          t.TemplateLiteral('${asc|ascending|desc|descending}'),
-          t.Literal(1),
-          t.Literal(-1)
-        ])
+  .get('/:civilizationId/paginated',
+    ({ peopleService, params: { civilizationId }, query: { page = 0, count = 10, sortField, sortOrder } }) => {
+      const sort = sortField && sortOrder ? { field: sortField, order: sortOrder } : undefined
+      return peopleService.getPeopleFromCivilizationPaginated(civilizationId, count, page, sort)
+    },
+    {
+      query: t.Optional(t.Object({
+        count: t.Number({ minimum: 0 }),
+        page: t.Number({ minimum: 0 }),
+        sortField: t.Optional(t.String()),
+        sortOrder: t.Optional(t.Union([t.Literal('asc'), t.Literal('desc')]))
       }))
-    }))
-  })
+    }
+  )
   .get('/:civilizationId/stats', async ({ peopleService, params: { civilizationId } }) => {
     const peoples = await peopleService.getPeopleFromCivilization(civilizationId)
     if (!peoples) {
@@ -94,13 +92,14 @@ export const peopleModule = new Elysia({ prefix: '/people' })
     return { menAndWomen, pregnantWomen, jobs }
   })
   .get('/:civilizationId/stats/peopleRatio', async ({ peopleService, params: { civilizationId } }) => {
-    const [menAndWomen, pregnantWomen, children] = await Promise.all([
+    const [menAndWomen, pregnantWomen, children, captives] = await Promise.all([
       peopleService.countGenders(civilizationId),
       peopleService.countPregnant(civilizationId),
-      peopleService.countChildren(civilizationId)
+      peopleService.countChildren(civilizationId),
+      peopleService.countCaptives(civilizationId)
     ])
 
-    return { menAndWomen, pregnantWomen, children }
+    return { menAndWomen, pregnantWomen, children, captives }
   })
   .get('/:civilizationId/stats/jobs', async ({ peopleService, params: { civilizationId } }) => {
     const jobs: { [key in OccupationTypes]?: number } = {}

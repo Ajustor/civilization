@@ -9,3 +9,7 @@ dist
 apps/front/core.1
 .qodo
 docs
+.idea
+.remember
+.vscode
+.claude
