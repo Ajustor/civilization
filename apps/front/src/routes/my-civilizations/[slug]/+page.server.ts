@@ -5,9 +5,10 @@ import {
   getMyCivilizationFromId,
   getCivilizationWorld,
   getCombatLogs,
+  updateCivilization,
 } from '../../../services/api/civilization-api'
-import { redirect } from '@sveltejs/kit'
-import type { PageServerLoad } from './$types'
+import { fail, redirect } from '@sveltejs/kit'
+import type { Actions, PageServerLoad } from './$types'
 import {
   getPeopleFromCivilizationPaginated,
   getCivilizationPeopleJobsStats,
@@ -46,3 +47,24 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
     },
   }
 }
+
+export const actions: Actions = {
+  // Choix du prochain bâtiment à construire, déplacé depuis la page de
+  // configuration vers le bloc « Constructions en cours » de la civilisation.
+  updateNextBuilding: async ({ cookies, params, request }) => {
+    const formData = await request.formData()
+    const raw = formData.get('nextBuildingToBuild')
+    const nextBuildingToBuild = raw ? String(raw) : null
+
+    try {
+      await updateCivilization(cookies.get('auth') ?? '', params.slug, {
+        nextBuildingToBuild,
+      })
+      return { success: true }
+    } catch (requestError) {
+      return fail(requestError?.status ?? 500, {
+        message: requestError?.value ?? 'Une erreur est survenue',
+      })
+    }
+  },
+} satisfies Actions
