@@ -42,7 +42,7 @@ export const changelog: ChangelogEntry[] = [
 			},
 			{
 				kind: 'feature',
-				text: 'La guerre se gère directement depuis la page de la civilisation : choix des civilisations à attaquer et indicateur des attaques en cours, sans passer par les réglages.'
+				text: 'La guerre se gère directement depuis la page de la civilisation : choix des civilisations à attaquer, ratio militaire et indicateur des attaques en cours, sans passer par les réglages.'
 			},
 			{
 				kind: 'feature',
@@ -62,7 +62,7 @@ export const changelog: ChangelogEntry[] = [
 			},
 			{
 				kind: 'improvement',
-				text: 'En-tête de la civilisation réorganisé : boutons d’action regroupés, menu déroulant sur mobile et tableaux enfin lisibles sur petit écran.'
+				text: 'En-tête de la civilisation réorganisé : statistiques regroupées à gauche, boutons d’action à droite avec menu déroulant sur mobile, et tableaux enfin lisibles sur petit écran.'
 			},
 			{
 				kind: 'improvement',
