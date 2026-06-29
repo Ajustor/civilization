@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
 	import { getWorldsInfos } from '../../services/api/world-api'
-	import { resourceNames, eventsName, eventsDescription } from '$lib/translations'
-	import { type ResourceTypes, type Events } from '@ajustor/simulation'
+	import { resourceNames, eventsName, eventsDescription, buildingNames, OCCUPATIONS } from '$lib/translations'
+	import { type ResourceTypes, type Events, BuildingTypes, OccupationTypes, getBuildingGate, getTechNode } from '@ajustor/simulation'
+	import { getBuildingMeta, getOccupationMeta } from '$lib/gameData'
 
 	type WorldInfo = Awaited<ReturnType<typeof getWorldsInfos>>[number]
 
@@ -39,31 +40,85 @@
 	const civilizationsCount = $derived(selectedWorld?.civilizations?.length ?? 0)
 
 	// ── Données de règles (valeurs issues de la simulation) ────────────────────
-	const OCCUPATION_RULES = [
-		{ name: 'Enfant', age: 'dès 4 ans (peut évoluer dès 12 ans)', eat: 1, role: 'Récolte 5 nourriture ou pierre par mois' },
-		{ name: 'Récolteur', age: '12 à 70 ans', eat: 2, role: 'Récolte 20 nourriture ou pierre par mois' },
-		{ name: 'Coupeur de bois', age: '12 à 60 ans', eat: 2, role: 'Récolte 10 bois par mois' },
-		{ name: 'Fermier', age: '21 à 70 ans', eat: 3, role: 'Exploite une Ferme (jusqu’à 100 nourriture / mois)' },
-		{ name: 'Charpentier', age: '21 à 60 ans', eat: 3, role: 'Exploite une Scierie (produit des planches)' },
-		{ name: 'Charbonnier', age: '21 à 60 ans', eat: 3, role: 'Exploite un Four à chaux (produit du charbon)' },
-		{ name: 'Commis de cuisine', age: '21 à 70 ans', eat: 2, role: 'Exploite un Feu de camp (produit de la nourriture préparée)' },
-		{ name: 'Mineur', age: '25 à 50 ans', eat: 3, role: 'Exploite une Mine (produit de la pierre)' },
-		{ name: 'Érudit', age: '21 à 80 ans', eat: 2, role: 'Exploite une Bibliothèque (produit des points de recherche)' },
-		{ name: 'Soldat', age: '18 à 60 ans', eat: 3, role: 'Défend la civilisation et mène les attaques' },
-		{ name: 'Retraité', age: 'après la vie active', eat: 1, role: 'Ne travaille plus' }
+
+	// Données éditoriales par métier (non dérivables) : facteur de nourriture et rôle.
+	const OCCUPATION_EDITORIAL: Partial<Record<OccupationTypes, { eat: number; role: string }>> = {
+		[OccupationTypes.CHILD]: { eat: 1, role: 'Récolte 5 nourriture ou pierre par mois' },
+		[OccupationTypes.GATHERER]: { eat: 2, role: 'Récolte 20 nourriture ou pierre par mois' },
+		[OccupationTypes.WOODCUTTER]: { eat: 2, role: 'Récolte 10 bois par mois' },
+		[OccupationTypes.FARMER]: { eat: 3, role: "Exploite une Ferme (jusqu'à 100 nourriture / mois)" },
+		[OccupationTypes.CARPENTER]: { eat: 3, role: 'Exploite une Scierie (produit des planches)' },
+		[OccupationTypes.CHARCOAL_BURNER]: { eat: 3, role: 'Exploite un Four à chaux (produit du charbon)' },
+		[OccupationTypes.KITCHEN_ASSISTANT]: { eat: 2, role: 'Exploite un Feu de camp (produit de la nourriture préparée)' },
+		[OccupationTypes.MINER]: { eat: 3, role: 'Exploite une Mine (produit de la pierre)' },
+		[OccupationTypes.ERUDIT]: { eat: 2, role: 'Exploite une Bibliothèque (produit des points de recherche)' },
+		[OccupationTypes.SOLDIER]: { eat: 3, role: 'Défend la civilisation et mène les attaques' },
+		[OccupationTypes.RETIRED]: { eat: 1, role: 'Ne travaille plus' }
+	}
+
+	const OCCUPATION_ORDER: OccupationTypes[] = [
+		OccupationTypes.CHILD, OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER,
+		OccupationTypes.FARMER, OccupationTypes.CARPENTER, OccupationTypes.CHARCOAL_BURNER,
+		OccupationTypes.KITCHEN_ASSISTANT, OccupationTypes.MINER, OccupationTypes.ERUDIT,
+		OccupationTypes.SOLDIER, OccupationTypes.RETIRED
 	]
 
-	const BUILDING_RULES = [
-		{ name: 'Maison', cost: '15 bois', time: '2 mois', build: '—', operate: '—', unlock: '', effect: 'Loge 4 citoyens (un logement évite la perte de point de vie)' },
-		{ name: 'Ferme', cost: '10 planches + 10 pierre', time: '2 mois', build: '2 récolteurs', operate: '5 fermiers', unlock: '', effect: 'Produit 100 nourriture / mois' },
-		{ name: 'Bibliothèque', cost: '15 bois + 10 pierre', time: '4 mois', build: '2 récolteurs', operate: '2 érudits', unlock: '', effect: 'Produit 2 points de recherche par mois (bibliothèque pleinement dotée)' },
-		{ name: 'Four à chaux', cost: '20 pierre', time: '4 mois', build: '2 coupeurs de bois', operate: '2 charbonniers', unlock: 'Artisanat', effect: '5 bois → 10 charbon' },
-		{ name: 'Scierie', cost: '15 pierre', time: '4 mois', build: '—', operate: '2 charpentiers', unlock: 'Artisanat', effect: '1 bois → 5 planches' },
-		{ name: 'Mine', cost: 'aucun', time: '10 mois', build: '5 récolteurs', operate: '10 mineurs', unlock: 'Maçonnerie', effect: 'Produit de la pierre (1 à 100 par mineur)' },
-		{ name: 'Feu de camp', cost: '15 bois', time: '2 mois', build: '2 récolteurs', operate: '1 commis de cuisine', unlock: '', effect: '10 nourriture → 7 nourriture préparée' },
-		{ name: 'Entrepôt', cost: 'aucun', time: '1 mois', build: '1 récolteur', operate: '—', unlock: '', effect: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible.' },
-		{ name: 'Muraille', cost: '2000 pierre + 1500 bois', time: '12 mois', build: '250 bâtisseurs', operate: '—', unlock: 'Maçonnerie', effect: 'Bloque une attaque entière, puis est détruite' }
+	const OCCUPATION_RULES = OCCUPATION_ORDER.map((occ) => {
+		const meta = getOccupationMeta(occ)
+		const editorial = OCCUPATION_EDITORIAL[occ]
+		let age: string
+		if (occ === OccupationTypes.CHILD) {
+			age = 'dès 4 ans (peut évoluer dès 12 ans)'
+		} else if (occ === OccupationTypes.RETIRED) {
+			age = 'après la vie active'
+		} else {
+			age = `${meta.minAge} à ${meta.retirementAge} ans`
+		}
+		return {
+			name: OCCUPATIONS[occ],
+			age,
+			eat: editorial?.eat ?? 0,
+			role: editorial?.role ?? ''
+		}
+	})
+
+	// Textes éditoriaux par bâtiment (effet en prose), conservés tels quels.
+	const BUILDING_EFFECT: Record<BuildingTypes, string> = {
+		[BuildingTypes.HOUSE]: 'Loge 4 citoyens (un logement évite la perte de point de vie)',
+		[BuildingTypes.FARM]: 'Produit 100 nourriture / mois',
+		[BuildingTypes.LIBRARY]: 'Produit 2 points de recherche par mois (bibliothèque pleinement dotée)',
+		[BuildingTypes.KILN]: '5 bois → 10 charbon',
+		[BuildingTypes.SAWMILL]: '1 bois → 5 planches',
+		[BuildingTypes.MINE]: 'Produit de la pierre (1 à 100 par mineur)',
+		[BuildingTypes.CAMPFIRE]: '10 nourriture → 7 nourriture préparée',
+		[BuildingTypes.CACHE]: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible.',
+		[BuildingTypes.WALL]: 'Bloque une attaque entière, puis est détruite'
+	}
+
+	const formatResources = (list: { resource: string; amount: number }[]) =>
+		list.length ? list.map((c) => `${c.amount} ${resourceNames[c.resource as ResourceTypes] ?? c.resource}`).join(' + ') : 'aucun'
+
+	const formatWorkers = (list: { occupation: string; amount?: number; count?: number }[]) =>
+		list.length ? list.map((w) => `${w.amount ?? w.count} ${OCCUPATIONS[w.occupation as OccupationTypes] ?? w.occupation}`).join(', ') : '—'
+
+	const BUILDING_ORDER: BuildingTypes[] = [
+		BuildingTypes.HOUSE, BuildingTypes.FARM, BuildingTypes.LIBRARY, BuildingTypes.KILN,
+		BuildingTypes.SAWMILL, BuildingTypes.MINE, BuildingTypes.CAMPFIRE, BuildingTypes.CACHE, BuildingTypes.WALL
 	]
+
+	const BUILDING_RULES = BUILDING_ORDER.map((bt) => {
+		const meta = getBuildingMeta(bt)
+		const gate = getBuildingGate(bt)
+		return {
+			name: buildingNames[bt],
+			cost: formatResources(meta.constructionCosts),
+			time: `${meta.timeToBuild} mois`,
+			build: formatWorkers(meta.buildWorkers),
+			operate: formatWorkers(meta.operatingWorkers),
+			unlock: gate ? (getTechNode(gate)?.name ?? gate) : '',
+			effect: BUILDING_EFFECT[bt]
+		}
+	})
 
 	// Arbre de technologies — valeurs miroir de TECH_TREE (packages/simulation).
 	const TECHNOLOGIES = [
