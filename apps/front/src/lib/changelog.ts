@@ -38,7 +38,7 @@ export const changelog: ChangelogEntry[] = [
 			},
 			{
 				kind: 'feature',
-				text: 'Sur la page du monde, un clic sur la carte des civilisations en vie ouvre la liste détaillée de toutes les civilisations du monde (population, ancienneté, nombre de bâtiments, mode rapide).'
+				text: 'Sur la page du monde, un clic sur la carte des civilisations en vie ou sur le classement ouvre la liste détaillée de toutes les civilisations du monde (population, ancienneté, nombre de bâtiments, mode rapide).'
 			},
 			{
 				kind: 'improvement',
