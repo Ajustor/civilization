@@ -695,6 +695,7 @@
 							{@const women = peopleRatio.menAndWomen.women}
 							{@const pregnant = peopleRatio.pregnantWomen}
 							{@const children = peopleRatio.children ?? 0}
+							{@const captives = peopleRatio.captives ?? 0}
 							{@const total = men + women}
 							{@const ratio = women > 0 ? (men / women).toFixed(2) : '─'}
 							<div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">
@@ -722,6 +723,8 @@
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{women > 0 ? Math.round(men / women * 100) : '─'} hommes</span>
 												<span style="color:oklch(0.5 0.04 50);">Enfants</span>
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(children)} ({pct(children, total)}%)</span>
+												<span style="color:oklch(0.5 0.04 50);">Captifs</span>
+												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(captives)} ({pct(captives, total)}%)</span>
 												<span style="color:oklch(0.5 0.04 50);">Total</span>
 												<span style="font-weight:600; color:oklch(0.32 0.04 40);">{fmt(total)}</span>
 											</div>
@@ -1005,7 +1008,7 @@
 
 		<!-- People table -->
 		<div class="civ-inner-card" style="margin-top:20px;">
-			<h2 class="civ-section-title">Citoyens ({data.civilization.citizensCount} au total)</h2>
+			<h2 class="civ-section-title">Citoyens ({data.civilization.citizensCount} au total){#await peopleRatioPromise then peopleRatio}{#if peopleRatio && (peopleRatio.captives ?? 0) > 0}<span style="margin-left:8px; font-size:13px; font-family:'EB Garamond',serif; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); border-radius:10px; padding:2px 10px; vertical-align:middle;">dont {peopleRatio.captives} captif{(peopleRatio.captives ?? 0) > 1 ? 's' : ''}</span>{/if}{/await}</h2>
 			{#await peoplePromise}
 				<div style="height:120px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
 			{:then people}
