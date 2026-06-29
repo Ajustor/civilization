@@ -46,4 +46,16 @@ describe('RETIREMENT_AGE_BY_OCCUPATION', () => {
     expect(MINIMAL_AGE_TO_BECOME[OccupationTypes.MINER]).toBe(25)
     expect(MINIMAL_AGE_TO_BECOME[OccupationTypes.GATHERER]).toBe(12)
   })
+
+  it('WoodCutter et CharcoalBurner (RETIREMENT_AGE privé) utilisent bien l\'âge de la map', () => {
+    const wc = new WoodCutter()
+    expect(wc.canWork(RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.WOODCUTTER] - 1)).toBe(true)
+    expect(wc.canWork(RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.WOODCUTTER])).toBe(false)
+    expect(wc.canRetire(RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.WOODCUTTER])).toBe(true)
+
+    const cb = new CharcoalBurner()
+    expect(cb.canWork(RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.CHARCOAL_BURNER] - 1)).toBe(true)
+    expect(cb.canWork(RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.CHARCOAL_BURNER])).toBe(false)
+    expect(cb.canRetire(RETIREMENT_AGE_BY_OCCUPATION[OccupationTypes.CHARCOAL_BURNER])).toBe(true)
+  })
 })
