@@ -179,11 +179,13 @@ export class People {
   }
 
   collectResource(world: World, civilization: Civilization): boolean {
-    if (!this.work?.canWork(this.years) && !this.isBuilding) {
+    // A person assigned to a construction site is busy building and does no
+    // other work (collecting resources) until the building is finished.
+    if (this.isBuilding) {
       return false
     }
 
-    if (!this.work) {
+    if (!this.work?.canWork(this.years)) {
       return false
     }
 

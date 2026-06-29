@@ -864,7 +864,8 @@ export class Civilization {
 
     const totalCapacity = requiredPerLibrary * library.count
     const erudits = this.getPeopleWithOccupation(OccupationTypes.ERUDIT).filter(
-      (person) => person.work?.canWork(person.years),
+      // A building erudit is busy on a construction site and does not research.
+      (person) => person.work?.canWork(person.years) && !person.isBuilding,
     )
     const staffed = Math.min(erudits.length, totalCapacity)
 
