@@ -134,6 +134,17 @@
 			{/if}
 		</div>
 
+		<!-- Mode rapide -->
+		<div class="civ-inner-card">
+			<h3 class="civ-section-title">Mode rapide</h3>
+			<div style="display:flex; align-items:flex-start; gap:10px;">
+				<Checkbox id="speedMode" checked={$formData.speedMode} onCheckedChange={(c) => ($formData.speedMode = c === true)} />
+				<label for="speedMode" style="font-size:15px; cursor:pointer;">
+					Activer le mode rapide. Si <strong>toutes</strong> les civilisations d'un monde l'activent, le temps avance d'un an (12 mois) à chaque tick au lieu d'un mois.
+				</label>
+			</div>
+		</div>
+
 		<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
 	</form>
 </div>

@@ -84,6 +84,7 @@ export const civilizationMapper = (
       AT_WAR_WITH: (c.AT_WAR_WITH ?? []).map(String),
       MILITARY_RATIO: c.MILITARY_RATIO ?? 0,
       NEXT_BUILDING_TO_BUILD: c.NEXT_BUILDING_TO_BUILD ?? null,
+      SPEED_MODE: c.SPEED_MODE ?? defaultCivilizationConfig.SPEED_MODE,
     })
   }
 
@@ -826,6 +827,10 @@ export class CivilizationService {
             body.atWarWith ??
             currentConfig.AT_WAR_WITH ??
             defaultCivilizationConfig.AT_WAR_WITH,
+          SPEED_MODE:
+            body.speedMode ??
+            currentConfig.SPEED_MODE ??
+            defaultCivilizationConfig.SPEED_MODE,
         },
       },
     )
