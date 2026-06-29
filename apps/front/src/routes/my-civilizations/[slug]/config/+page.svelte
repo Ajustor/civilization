@@ -60,14 +60,6 @@
 		}
 	}
 
-	const toggleWar = (civilizationId: string, checked: boolean | 'indeterminate') => {
-		const fd = $formData as ConfigFormData
-		if (checked === true) {
-			$formData.atWarWith = [...fd.atWarWith, civilizationId]
-		} else {
-			$formData.atWarWith = fd.atWarWith.filter((id: string) => id !== civilizationId)
-		}
-	}
 
 </script>
 
@@ -156,25 +148,6 @@
 					<FormDescription>Part des adultes entretenus comme soldats (0–100%).</FormDescription>
 					<FormFieldErrors />
 				</FormField>
-
-				{#if data.worldCivilizations.length}
-					<FormFieldset {form} name="atWarWith" class="flex flex-col gap-3">
-						<FormLegend>Civilisations à attaquer</FormLegend>
-						{#each data.worldCivilizations as otherCivilization}
-							<div class="flex items-center gap-2">
-								<Checkbox
-									id="war-{otherCivilization.id}"
-									checked={($formData as ConfigFormData).atWarWith.includes(otherCivilization.id)}
-									onCheckedChange={(checked: boolean | 'indeterminate') => toggleWar(otherCivilization.id, checked)}
-								/>
-								<label for="war-{otherCivilization.id}" style="font-size:15px; cursor:pointer;">{otherCivilization.name}</label>
-							</div>
-						{/each}
-						<FormFieldErrors />
-					</FormFieldset>
-				{:else}
-					<p style="color:oklch(0.5 0.03 50);">Aucune autre civilisation dans ce monde.</p>
-				{/if}
 
 				</div>
 			</div>

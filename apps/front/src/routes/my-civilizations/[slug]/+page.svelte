@@ -32,6 +32,10 @@
 	import { enhance } from '$app/forms'
 	import { toast } from 'svelte-sonner'
 	import { invalidateAll } from '$app/navigation'
+	import { superForm } from 'sveltekit-superforms'
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
+	import { warConfigSchema } from '$lib/schemas/warConfig'
+	import { Checkbox } from '$lib/components/ui/checkbox'
 	import { PUBLIC_BACK_URL } from '$env/static/public'
 	import RecapModal from '$lib/components/RecapModal.svelte'
 	import { callGetRecap } from '../../../services/sveltekit-api/recap'
@@ -398,6 +402,38 @@
 			timeToBuild: meta.timeToBuild
 		}
 	})
+
+	// ── Guerre & conflits ──────────────────────────────────────────────────────
+	const warForm = superForm(data.warForm, {
+		dataType: 'json',
+		resetForm: false,
+		validators: zodClient(warConfigSchema),
+		onError({ result }) {
+			toast.error(result.error?.message ?? 'Une erreur est survenue')
+		},
+		onUpdated({ form }) {
+			if (form.message?.status === 'success') {
+				toast.success(form.message.text)
+				invalidateAll()
+			}
+		}
+	})
+	const { form: warFormData, enhance: warEnhance } = warForm
+
+	const toggleWar = (civilizationId: string, checked: boolean | 'indeterminate') => {
+		if (checked === true) {
+			$warFormData.atWarWith = [...$warFormData.atWarWith, civilizationId]
+		} else {
+			$warFormData.atWarWith = $warFormData.atWarWith.filter((id) => id !== civilizationId)
+		}
+	}
+
+	// Noms des civilisations actuellement attaquées (depuis la config persistée).
+	const warTargetNames = $derived(
+		((data.civilization.config?.AT_WAR_WITH as string[]) ?? [])
+			.map((id) => data.worldCivilizations.find((c) => c.id === id)?.name)
+			.filter((name): name is string => Boolean(name))
+	)
 
 	// ── Stat helpers ──────────────────────────────────────────────────────────
 	const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
@@ -1135,6 +1171,40 @@
 						</div>
 					</div>
 				{/if}
+			{/if}
+		</div>
+
+		<!-- Guerre & conflits -->
+		<div class="civ-inner-card" style="margin-top:20px;">
+			<h2 class="civ-section-title">Guerre &amp; conflits</h2>
+			{#if warTargetNames.length}
+				<div style="display:flex; align-items:center; gap:8px; padding:10px 14px; margin-bottom:14px; background:oklch(0.96 0.05 30/0.5); border:1px solid oklch(0.6 0.16 30/0.5); border-radius:5px; color:oklch(0.42 0.16 30); font-family:'EB Garamond',serif; font-size:16px;">
+					<span style="font-size:18px;">⚔</span>
+					<span>Vous attaquez : <strong>{warTargetNames.join(', ')}</strong></span>
+				</div>
+			{:else}
+				<p style="color:oklch(0.5 0.03 50); font-size:15px; margin:0 0 14px;">Aucune attaque en cours.</p>
+			{/if}
+
+			{#if data.worldCivilizations.length}
+				<form method="post" use:warEnhance action="?/updateWar" style="display:flex; flex-direction:column; gap:10px;">
+					<p style="font-size:14px; color:oklch(0.5 0.03 50); margin:0;">Sélectionnez les civilisations à attaquer chaque mois.</p>
+					<div style="display:flex; flex-direction:column; gap:8px;">
+						{#each data.worldCivilizations as otherCivilization}
+							<div style="display:flex; align-items:center; gap:8px;">
+								<Checkbox
+									id="war-{otherCivilization.id}"
+									checked={$warFormData.atWarWith.includes(otherCivilization.id)}
+									onCheckedChange={(checked) => toggleWar(otherCivilization.id, checked)}
+								/>
+								<label for="war-{otherCivilization.id}" style="font-size:15px; cursor:pointer; color:oklch(0.35 0.04 42);">{otherCivilization.name}</label>
+							</div>
+						{/each}
+					</div>
+					<button type="submit" style="align-self:flex-start; padding:10px 18px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:15px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer les cibles</button>
+				</form>
+			{:else}
+				<p style="color:oklch(0.5 0.03 50); font-size:15px;">Aucune autre civilisation dans ce monde.</p>
 			{/if}
 		</div>
 
