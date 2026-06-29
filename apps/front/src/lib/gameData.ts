@@ -1,7 +1,7 @@
+import type { ResourceTypes } from '@ajustor/simulation'
 import {
 	BuildingTypes,
 	OccupationTypes,
-	ResourceTypes,
 	MINIMAL_AGE_TO_BECOME,
 	RETIREMENT_AGE_BY_OCCUPATION,
 	House,
@@ -91,7 +91,7 @@ export function getBuildingMeta(type: BuildingTypes): BuildingMeta {
 		inputResources: instance.inputResources ?? [],
 		operatingWorkers: instance.workerTypeRequired ?? [],
 		buildWorkers: Cls.workerRequiredToBuild ?? [],
-		constructionCosts: Cls.constructionCosts ?? [],
+		constructionCosts: Cls.constructionCosts ?? [], // Mine hérite de [] (AbstractExtractionBuilding) : gratuite à construire
 		timeToBuild: Cls.timeToBuild ?? 0,
 		researchOutput: type === BuildingTypes.LIBRARY ? Library.researchOutput : undefined,
 		housingCapacity: type === BuildingTypes.HOUSE ? House.capacity : undefined,
