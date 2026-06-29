@@ -328,6 +328,13 @@ export class Civilization {
     );
   }
 
+  get library(): Library | undefined {
+    return this.buildings.find<Library>(
+      (building): building is Library =>
+        building.getType() === BuildingTypes.LIBRARY,
+    );
+  }
+
   get wall(): Wall | undefined {
     return this.buildings.find<Wall>(
       (building): building is Wall => building.getType() === BuildingTypes.WALL,
@@ -719,7 +726,7 @@ export class Civilization {
     this._occupationIndex = null;
     this.adaptPeopleJob();
     this.progressConstructions();
-    this.buildNewBuilding();
+    this.buildNewBuilding(world);
 
     if (!this.nobodyAlive()) {
       this.livedMonths++;
@@ -941,68 +948,112 @@ export class Civilization {
     }
   }
 
-  private buildNewBuilding() {
+  private buildNewBuilding(world?: World) {
     this.buildChosenBuilding();
     this.buildNewHouses();
 
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)) {
+    const candidates = this.autoBuildCandidates(world)
+      .filter((candidate) => candidate.weight > 0)
+      .sort((a, b) => b.weight - a.weight);
+
+    for (const candidate of candidates) {
+      if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
         this.buildNew(
-          BuildingTypes.CACHE,
-          Cache.constructionCosts,
-          Cache.workerRequiredToBuild,
-          Cache.timeToBuild,
+          candidate.type,
+          candidate.ctor.constructionCosts,
+          candidate.ctor.workerRequiredToBuild,
+          candidate.ctor.timeToBuild,
         );
       }
     }
+  }
 
-    // TODO: create a new function to determine if building is full
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.KILN,
-        Kiln.constructionCosts,
-        Kiln.workerRequiredToBuild,
-        Kiln.timeToBuild,
-      );
-    }
+  /**
+   * Candidates for auto-construction, weighted by civilization needs.
+   * Weight 0 means no need (candidate is filtered out before the chance roll).
+   * Candidates are sorted by descending weight so the highest-priority need
+   * reserves builders and resources first. Final gating (tech unlock, resource
+   * check, available workers) is applied inside buildNew().
+   */
+  private autoBuildCandidates(world?: World): {
+    type: BuildingTypes;
+    ctor: {
+      constructionCosts: ConstructionCost[];
+      workerRequiredToBuild: WorkerRequiredToBuild[];
+      timeToBuild: number;
+    };
+    weight: number;
+  }[] {
+    const pop = Math.max(1, this._people.length);
+    const stock = (resource: ResourceTypes) =>
+      this.getResource(resource).quantity;
+    // Returns 10 when current stock is 0, 0 when it meets or exceeds the target.
+    const needWeight = (current: number, target: number) =>
+      target <= 0
+        ? 0
+        : Math.max(0, Math.min(10, (1 - current / target) * 10));
+    const heatingSeason =
+      world !== undefined && world.getMonth() % 12 >= 6;
 
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.SAWMILL,
-        Sawmill.constructionCosts,
-        Sawmill.workerRequiredToBuild,
-        Sawmill.timeToBuild,
-      );
-    }
+    const libraryCount = this.library?.count ?? 0;
+    const eruditCount = this.getPeopleWithOccupation(OccupationTypes.ERUDIT).length;
+    // Each library hosts 2 erudits (Library.workerTypeRequired[0].count).
+    const eruditSlots = libraryCount * 2;
+    const libraryWeight =
+      eruditCount > eruditSlots ? 5 : libraryCount === 0 ? 2 : 0;
 
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.FARM,
-        Farm.constructionCosts,
-        Farm.workerRequiredToBuild,
-        Farm.timeToBuild,
-      );
-    }
-
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      this.buildNew(
-        BuildingTypes.CAMPFIRE,
-        Campfire.constructionCosts,
-        Campfire.workerRequiredToBuild,
-        Campfire.timeToBuild,
-      );
-    }
-
-    if (isWithinChance(this.config.CHANCE_TO_BUILD_EVOLVED_BUILDING)) {
-      if (!this.mine?.count && !this.isBuildingPending(BuildingTypes.MINE)) {
-        this.buildNew(
-          BuildingTypes.MINE,
-          Mine.constructionCosts,
-          Mine.workerRequiredToBuild,
-          Mine.timeToBuild,
-        );
-      }
-    }
+    return [
+      {
+        type: BuildingTypes.CACHE,
+        ctor: Cache,
+        weight:
+          !this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)
+            ? 8
+            : 0,
+      },
+      {
+        type: BuildingTypes.FARM,
+        ctor: Farm,
+        weight: needWeight(stock(ResourceTypes.RAW_FOOD), 5 * pop),
+      },
+      {
+        type: BuildingTypes.CAMPFIRE,
+        ctor: Campfire,
+        weight:
+          stock(ResourceTypes.RAW_FOOD) >= 20
+            ? needWeight(stock(ResourceTypes.COOKED_FOOD), 3 * pop)
+            : 0,
+      },
+      {
+        type: BuildingTypes.SAWMILL,
+        ctor: Sawmill,
+        weight: needWeight(stock(ResourceTypes.PLANK), 2 * pop),
+      },
+      {
+        type: BuildingTypes.KILN,
+        ctor: Kiln,
+        weight:
+          heatingSeason && stock(ResourceTypes.WOOD) >= 5
+            ? needWeight(
+                stock(ResourceTypes.CHARCOAL),
+                Math.max(1, Math.ceil(pop / 10) * 3),
+              )
+            : 0,
+      },
+      {
+        type: BuildingTypes.MINE,
+        ctor: Mine,
+        weight:
+          !this.mine?.count && !this.isBuildingPending(BuildingTypes.MINE)
+            ? 9
+            : 0,
+      },
+      {
+        type: BuildingTypes.LIBRARY,
+        ctor: Library,
+        weight: libraryWeight,
+      },
+    ];
   }
 
   private buildNewHouses() {
