@@ -30,6 +30,68 @@ export const changeKindColors: Record<ChangeKind, string> = {
 export const changelog: ChangelogEntry[] = [
 	{
 		date: '2026-06-29',
+		title: 'Civilisation détaillée, guerre en façade & confort de jeu',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'Chaque bâtiment de la civilisation peut être déplié pour révéler sa production, sa main-d’œuvre d’exploitation, son coût et son temps de construction.'
+			},
+			{
+				kind: 'feature',
+				text: 'La liste des citoyens indique désormais la tranche d’âge d’activité de chaque métier.'
+			},
+			{
+				kind: 'feature',
+				text: 'La guerre se gère directement depuis la page de la civilisation : choix des civilisations à attaquer et indicateur des attaques en cours, sans passer par les réglages.'
+			},
+			{
+				kind: 'feature',
+				text: 'Les citoyens captifs sont mis en évidence : repère « Enlevé(e) » dans la liste et compteur de captifs.'
+			},
+			{
+				kind: 'feature',
+				text: 'Les enfants apparaissent maintenant, sous forme de barres, dans le graphique de progression de la population.'
+			},
+			{
+				kind: 'feature',
+				text: 'Les civilisations construisent désormais aussi des Bibliothèques d’elles-mêmes.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Auto-construction plus fine : un nouveau bâtiment n’est ajouté que si les exemplaires existants sont pleins (sauf s’il n’en existe aucun), en suivant les besoins réels de la civilisation.'
+			},
+			{
+				kind: 'improvement',
+				text: 'En-tête de la civilisation réorganisé : boutons d’action regroupés, menu déroulant sur mobile et tableaux enfin lisibles sur petit écran.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Le tri des citoyens s’applique désormais à toute la population, et plus seulement à la page affichée.'
+			},
+			{
+				kind: 'improvement',
+				text: 'La page des règles affiche des valeurs synchronisées avec le jeu (coûts, main-d’œuvre, production) — fini les informations périmées.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les soldats ne sont plus envoyés sur les chantiers de construction.'
+			},
+			{
+				kind: 'fix',
+				text: 'Un citoyen occupé à construire ne peut plus être enrôlé comme soldat.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les ressources pillées sont désormais traduites sur la page des conflits.'
+			},
+			{
+				kind: 'fix',
+				text: 'Une nouvelle version du jeu est détectée plus rapidement : une invitation à rafraîchir apparaît sans avoir à recharger manuellement.'
+			}
+		]
+	},
+	{
+		date: '2026-06-29',
 		title: 'Constructions plus accessibles & journal des mises à jour',
 		changes: [
 			{
