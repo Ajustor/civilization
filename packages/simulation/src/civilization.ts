@@ -441,6 +441,11 @@ export class Civilization {
   releaseCaptives(count: number): People[] {
     const candidates = this.getPeopleWithoutOccupation(OccupationTypes.SOLDIER);
     const captured = candidates.slice(0, count);
+    for (const captive of captured) {
+      if (!captive.originCivilizationId) {
+        captive.originCivilizationId = this.id;
+      }
+    }
     this.removePeople(captured.map(({ id }) => id));
     return captured;
   }
@@ -924,7 +929,9 @@ export class Civilization {
 
     // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
     if (chosen === BuildingTypes.WALL) {
-      const builders = this.people.filter((person) => person.canWork()).length;
+      const builders = this.people.filter(
+        (person) => person.canWork() && person.work?.occupationType !== OccupationTypes.SOLDIER,
+      ).length;
       if (builders < Wall.minBuilders) {
         return; // keep the request; retry next month
       }
@@ -1078,7 +1085,9 @@ export class Civilization {
     if (workerNeeded < 0) {
       return;
     }
-    const filteredWorkers = this.people.filter((citizen) => citizen.canWork());
+    const filteredWorkers = this.people.filter(
+      (citizen) => citizen.canWork() && citizen.work?.occupationType !== OccupationTypes.SOLDIER,
+    );
     const workers = filteredWorkers.slice(
       0,
       Math.min(workerNeeded, filteredWorkers.length),
@@ -1257,7 +1266,9 @@ export class Civilization {
         (person) =>
           person.work?.occupationType !== OccupationTypes.SOLDIER &&
           // Une femme enceinte ne peut pas devenir soldat.
-          person.pregnancyMonthsLeft <= 0,
+          person.pregnancyMonthsLeft <= 0 &&
+          // Un citoyen occupé à construire ne peut pas être enrôlé.
+          !person.isBuilding,
       );
       const toRecruit = targetSoldiers - currentSoldiers.length;
       for (const person of recruitable.slice(0, toRecruit)) {
