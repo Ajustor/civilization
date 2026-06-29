@@ -37,6 +37,10 @@ export const changelog: ChangelogEntry[] = [
 				text: 'Nouveau « mode rapide » par civilisation (dans les réglages). Si toutes les civilisations d’un monde l’activent, le temps avance d’un an (12 mois) à chaque tick au lieu d’un mois.'
 			},
 			{
+				kind: 'improvement',
+				text: 'La durée du mode rapide (nombre de mois simulés par tick) est désormais propre à chaque monde — 12 mois (un an) par défaut.'
+			},
+			{
 				kind: 'feature',
 				text: 'Sur la page du monde, un clic sur la carte des civilisations en vie ou sur le classement ouvre la liste détaillée de toutes les civilisations du monde (population, ancienneté, nombre de bâtiments, mode rapide).'
 			},

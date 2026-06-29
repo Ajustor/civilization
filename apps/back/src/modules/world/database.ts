@@ -12,6 +12,7 @@ const extractWorldConfig = (config?: Partial<WorldConfig> | null): Partial<World
     BASE_FOOD_GENERATION: config.BASE_FOOD_GENERATION,
     BASE_WOOD_GENERATION: config.BASE_WOOD_GENERATION,
     EVENT_CHANCE: config.EVENT_CHANCE,
+    SPEED_MODE_MONTHS: config.SPEED_MODE_MONTHS,
   }
 }
 

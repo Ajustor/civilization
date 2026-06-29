@@ -28,6 +28,9 @@ export type WorldConfig = {
   BASE_FOOD_GENERATION: number
   BASE_WOOD_GENERATION: number
   EVENT_CHANCE: number
+  // Nombre de mois simulés par tick quand TOUTES les civilisations du monde sont
+  // en mode rapide (par défaut 12 = un an).
+  SPEED_MODE_MONTHS: number
 }
 
 const seasons = {
@@ -51,6 +54,7 @@ const defaultConfig: WorldConfig = {
   BASE_WOOD_GENERATION: 15_000,
   BASE_FOOD_GENERATION: 30_000,
   EVENT_CHANCE: 30,
+  SPEED_MODE_MONTHS: 12,
 }
 
 // Fraction of the gap between two trading civilizations that is closed each
@@ -83,6 +87,7 @@ export class World {
       BASE_FOOD_GENERATION: config.BASE_FOOD_GENERATION ?? defaultConfig.BASE_FOOD_GENERATION,
       BASE_WOOD_GENERATION: config.BASE_WOOD_GENERATION ?? defaultConfig.BASE_WOOD_GENERATION,
       EVENT_CHANCE: config.EVENT_CHANCE ?? defaultConfig.EVENT_CHANCE,
+      SPEED_MODE_MONTHS: config.SPEED_MODE_MONTHS ?? defaultConfig.SPEED_MODE_MONTHS,
     }
   }
 

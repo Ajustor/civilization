@@ -11,7 +11,8 @@ describe('World', () => {
   const worldConfig: WorldConfig = {
     BASE_FOOD_GENERATION: 100,
     BASE_WOOD_GENERATION: 200,
-    EVENT_CHANCE: 0
+    EVENT_CHANCE: 0,
+    SPEED_MODE_MONTHS: 12
   }
 
   // World instance initializes with default name and month
@@ -263,7 +264,8 @@ describe('World', () => {
       config: {
         BASE_FOOD_GENERATION: 30000,
         BASE_WOOD_GENERATION: 15000,
-        EVENT_CHANCE: 30
+        EVENT_CHANCE: 30,
+        SPEED_MODE_MONTHS: 12
       }
     }
 
