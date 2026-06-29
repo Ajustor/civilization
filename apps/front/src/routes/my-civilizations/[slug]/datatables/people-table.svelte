@@ -92,60 +92,62 @@
 			<option value={1000}>1000</option>
 		</select>
 	</div>
-	<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
-		<thead>
-			<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
-				{#each sortableColumns as col (col.key)}
-					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">
-						<button onclick={() => toggleSort(col.key)} style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:inherit; color:inherit; padding:0;">
-							{col.header}
-							{#if sortKey === col.key && sortOrder === 'asc'}
-								<ArrowUp size="14" />
-							{:else if sortKey === col.key && sortOrder === 'desc'}
-								<ArrowDown size="14" />
-							{:else}
-								<ArrowUpDown size="14" />
-							{/if}
-						</button>
-					</th>
-				{/each}
-				<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Mois avant accouchement</th>
-				<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Enfant à naître</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each people as person (person.id ?? Math.random())}
-				<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
-					<td style="padding:8px 12px;">
-						{person.name ?? '—'}
-						{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
-							<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="margin-left:6px; font-size:11px; padding:1px 6px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Enlevé(e)</span>
-						{/if}
-					</td>
-					<td style="padding:8px 12px;">
-						{#if person.gender}
-							<Icon icon={GenderIcons[person.gender]} />
-						{/if}
-					</td>
-					<td style="padding:8px 12px;">{person.years}</td>
-					<td style="padding:8px 12px;">{person.lifeCounter}</td>
-					<td style="padding:8px 12px;">
-						{#if person.occupation}
-							{@const occMeta = getOccupationMeta(person.occupation)}
-							{OCCUPATIONS[person.occupation] ?? ''}
-							{#if occMeta.retirementAge != null}
-								<span style="color:oklch(0.55 0.04 50); font-size:13px; white-space:nowrap;">({occMeta.minAge} → {occMeta.retirementAge} ans)</span>
-							{/if}
-						{/if}
-					</td>
-					<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
-					<td style="padding:8px 12px;">
-						{#if person.child}
-							<ChildDetails gender={person.child.gender} occupation={person.child.occupation} />
-						{/if}
-					</td>
+	<div style="overflow-x:auto;">
+		<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
+			<thead>
+				<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
+					{#each sortableColumns as col (col.key)}
+						<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">
+							<button onclick={() => toggleSort(col.key)} style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer; font-family:inherit; font-size:inherit; color:inherit; padding:0;">
+								{col.header}
+								{#if sortKey === col.key && sortOrder === 'asc'}
+									<ArrowUp size="14" />
+								{:else if sortKey === col.key && sortOrder === 'desc'}
+									<ArrowDown size="14" />
+								{:else}
+									<ArrowUpDown size="14" />
+								{/if}
+							</button>
+						</th>
+					{/each}
+					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Mois avant accouchement</th>
+					<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Enfant à naître</th>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each people as person (person.id ?? Math.random())}
+					<tr style="border-bottom:1px solid oklch(0.88 0.03 70);">
+						<td style="padding:8px 12px;">
+							{person.name ?? '—'}
+							{#if person.originCivilizationId && person.originCivilizationId !== currentCivilizationId}
+								<span title="Enlevé(e) à une autre civilisation lors d'un conflit" style="margin-left:6px; font-size:11px; padding:1px 6px; border-radius:3px; background:oklch(0.92 0.05 40); color:oklch(0.4 0.12 35); white-space:nowrap;">Enlevé(e)</span>
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">
+							{#if person.gender}
+								<Icon icon={GenderIcons[person.gender]} />
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">{person.years}</td>
+						<td style="padding:8px 12px;">{person.lifeCounter}</td>
+						<td style="padding:8px 12px;">
+							{#if person.occupation}
+								{@const occMeta = getOccupationMeta(person.occupation)}
+								{OCCUPATIONS[person.occupation] ?? ''}
+								{#if occMeta.retirementAge != null}
+									<span style="color:oklch(0.55 0.04 50); font-size:13px; white-space:nowrap;">({occMeta.minAge} → {occMeta.retirementAge} ans)</span>
+								{/if}
+							{/if}
+						</td>
+						<td style="padding:8px 12px;">{person.pregnancyMonthsLeft ?? ''}</td>
+						<td style="padding:8px 12px;">
+							{#if person.child}
+								<ChildDetails gender={person.child.gender} occupation={person.child.occupation} />
+							{/if}
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 </div>

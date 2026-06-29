@@ -106,6 +106,7 @@
 	// Which panel is expanded: null = closed
 	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
 	let activePanel = $state<Panel>(null)
+	let civMenuOpen = $state(false)
 
 	const openPanel = (p: Panel) => { activePanel = p }
 	const closePanel = () => { activePanel = null }
@@ -771,46 +772,81 @@
 				<h1 style="font-family:'Tangerine',cursive; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
 				<div style="font-size:18px; color:oklch(0.46 0.03 50); margin-top:4px;">Prospère depuis {~~(data.civilization.livedMonths / 12)} ans et {data.civilization.livedMonths % 12} mois</div>
 			</div>
-			<div style="display:flex; gap:26px; text-align:center; align-items:center;">
-				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.42 0.09 150);">{data.civilization.citizensCount}</div>
-					<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
+			<!-- Right cluster: stats + actions -->
+			<div style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-left:auto;">
+				<!-- Stats group -->
+				<div style="display:flex; gap:26px; text-align:center; align-items:center;">
+					<div>
+						<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.42 0.09 150);">{data.civilization.citizensCount}</div>
+						<div style="font-size:14px; color:oklch(0.5 0.03 50);">citoyens</div>
+					</div>
+					<div>
+						<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
+						<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
+					</div>
+					<div>
+						<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 250);">{data.civilization.researchPoints ?? 0}</div>
+						<div style="font-size:14px; color:oklch(0.5 0.03 50);">points de recherche</div>
+					</div>
 				</div>
-				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 38);">{data.civilization.buildings.reduce<number>((a: number, b: { count: number }) => a + b.count, 0)}</div>
-					<div style="font-size:14px; color:oklch(0.5 0.03 50);">bâtiments</div>
-				</div>
-				<div>
-					<div style="font-family:'Tangerine',cursive; font-size:32px; color:oklch(0.45 0.1 250);">{data.civilization.researchPoints ?? 0}</div>
-					<div style="font-size:14px; color:oklch(0.5 0.03 50);">points de recherche</div>
-				</div>
-				{#if data.worldId}
-					<a href="/worlds/{data.worldId}/market" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
-						Marché
+				<!-- Desktop actions group -->
+				<div class="civ-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+					{#if data.worldId}
+						<a href="/worlds/{data.worldId}/market" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
+							Marché
+						</a>
+					{/if}
+					<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
+					<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
+					<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
+						<Settings size="16" /> Configurer
 					</a>
-				{/if}
-				<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
-				<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
-				<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
-					<Settings size="16" /> Configurer
-				</a>
-				{#if hasColonizationTech}
-					<a
-						href="/my-civilizations/{data.civilization.id}/colonize"
-						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;"
-					>
-						🌍 Fonder une colonie
-					</a>
-				{:else}
-					<span
-						title="Nécessite la technologie Colonisation"
-						style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.65 0.03 50); font-family:'EB Garamond',serif; font-size:15px; cursor:not-allowed; opacity:0.55;"
+					{#if hasColonizationTech}
+						<a
+							href="/my-civilizations/{data.civilization.id}/colonize"
+							style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;"
+						>
+							🌍 Fonder une colonie
+						</a>
+					{:else}
+						<span
+							title="Nécessite la technologie Colonisation"
+							style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; color:oklch(0.65 0.03 50); font-family:'EB Garamond',serif; font-size:15px; cursor:not-allowed; opacity:0.55;"
 					>
 						🔒 Fonder une colonie
 					</span>
 				{/if}
 			</div>
+			<!-- Mobile hamburger (hidden on desktop, shown on mobile via CSS) -->
+			<button
+				onclick={() => civMenuOpen = !civMenuOpen}
+				class="civ-actions-toggle"
+				style="display:none; background:none; border:1px solid oklch(0.74 0.05 60); border-radius:4px; cursor:pointer; padding:8px 10px;"
+				aria-label="Menu actions"
+				aria-expanded={civMenuOpen}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="oklch(0.44 0.03 45)" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+				</svg>
+			</button>
 		</div>
+		<!-- Mobile actions dropdown -->
+		{#if civMenuOpen}
+			<div class="civ-actions-menu" style="width:100%; border-top:1px solid oklch(0.76 0.05 60); padding-top:12px; display:flex; flex-direction:column; gap:4px; margin-top:12px;">
+				{#if data.worldId}
+					<a href="/worlds/{data.worldId}/market" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Marché</a>
+				{/if}
+				<a href="/my-civilizations/{data.civilization.id}/technologies" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Technologies</a>
+				<a href="/my-civilizations/{data.civilization.id}/cemetery" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.72 0.02 80); text-decoration:none; background:oklch(0.18 0.018 282); border-radius:3px;">🪦 Cimetière</a>
+				<a href="/my-civilizations/{data.civilization.id}/config" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;"><Settings size="16" /> Configurer</a>
+				{#if hasColonizationTech}
+					<a href="/my-civilizations/{data.civilization.id}/colonize" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">🌍 Fonder une colonie</a>
+				{:else}
+					<span style="display:flex; align-items:center; gap:8px; padding:12px 8px; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.65 0.03 50); cursor:not-allowed; opacity:0.55;" title="Nécessite la technologie Colonisation">🔒 Fonder une colonie</span>
+				{/if}
+			</div>
+		{/if}
+		</div><!-- /civ header -->
 
 		<!-- Bonus de technologies actifs -->
 		{#if hasTechBonus}
@@ -1281,5 +1317,13 @@
 	.chart-panel:focus-visible {
 		outline: 2px solid oklch(0.5 0.13 34);
 		outline-offset: 2px;
+	}
+	@media (max-width: 640px) {
+		.civ-actions {
+			display: none !important;
+		}
+		.civ-actions-toggle {
+			display: flex !important;
+		}
 	}
 </style>

@@ -20,12 +20,13 @@
 	}
 </script>
 
+<div style="overflow-x:auto;">
 <table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.3 0.04 40);">
 	<thead>
 		<tr style="border-bottom:2px solid oklch(0.78 0.045 70);">
-			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Type de bâtiment</th>
-			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Capacité / Unité restante</th>
-			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50);">Nombre</th>
+			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Type de bâtiment</th>
+			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Capacité / Unité restante</th>
+			<th style="text-align:left; padding:8px 12px; font-weight:600; color:oklch(0.4 0.04 50); white-space:nowrap;">Nombre</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -120,3 +121,4 @@
 		{/each}
 	</tbody>
 </table>
+</div>
