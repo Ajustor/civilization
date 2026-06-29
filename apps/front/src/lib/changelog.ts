@@ -39,6 +39,14 @@ export const changelog: ChangelogEntry[] = [
 			{
 				kind: 'feature',
 				text: 'Ajout de cette page de journal des mises à jour pour suivre les nouveautés du jeu.'
+			},
+			{
+				kind: 'fix',
+				text: 'Le rafraîchissement automatique en direct fonctionne de nouveau : la civilisation se met à jour dès que le monde avance d’un mois, sans recharger la page.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les notifications push s’affichent à nouveau correctement (déclaration de guerre, mise en vente sur le marché).'
 			}
 		]
 	},
