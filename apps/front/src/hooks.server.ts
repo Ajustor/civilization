@@ -1,6 +1,6 @@
 import { redirect, type Handle } from '@sveltejs/kit'
 import { getUser } from './services/api/user-api'
-const unprotectedRoutes = ['/', '/login', '/rules', '/register', '/i-forgot', '/favicon.ico']
+const unprotectedRoutes = ['/', '/login', '/rules', '/register', '/i-forgot', '/changelog', '/favicon.ico']
 
 export const handle: Handle = async ({ event, resolve }) => {
 	if (unprotectedRoutes.includes(event.url.pathname)) {
