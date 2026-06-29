@@ -30,6 +30,28 @@ export const changeKindColors: Record<ChangeKind, string> = {
 export const changelog: ChangelogEntry[] = [
 	{
 		date: '2026-06-29',
+		title: 'Mode rapide & vue du monde enrichie',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'Nouveau « mode rapide » par civilisation (dans les réglages). Si toutes les civilisations d’un monde l’activent, le temps avance d’un an (12 mois) à chaque tick au lieu d’un mois.'
+			},
+			{
+				kind: 'feature',
+				text: 'Sur la page du monde, un clic sur la carte des civilisations en vie ouvre la liste détaillée de toutes les civilisations du monde (population, ancienneté, nombre de bâtiments, mode rapide).'
+			},
+			{
+				kind: 'improvement',
+				text: 'La page du monde indique désormais combien de civilisations sont en mode rapide et la vitesse de jeu en cours (1 mois ou 1 an toutes les 15 minutes).'
+			},
+			{
+				kind: 'fix',
+				text: 'Les offres de marché d’une civilisation disparaissent désormais lorsqu’elle meurt ou est supprimée.'
+			}
+		]
+	},
+	{
+		date: '2026-06-29',
 		title: 'Civilisation détaillée, guerre en façade & confort de jeu',
 		changes: [
 			{

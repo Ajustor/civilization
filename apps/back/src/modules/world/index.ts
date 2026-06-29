@@ -181,3 +181,18 @@ export const worldModule = new Elysia({ prefix: '/worlds' })
       })),
     }
   })
+  .get('/:worldId/civilizations/details', async ({ civilizationsDbClient, params: { worldId } }) => {
+    const civs = await civilizationsDbClient.getAllRawByWorldId(worldId, { people: false })
+    return {
+      civilizations: civs
+        .filter((civ) => (civ.people?.length ?? 0) > 0)
+        .map((civ) => ({
+          id: civ.id,
+          name: civ.name,
+          population: civ.people?.length ?? 0,
+          livedMonths: civ.livedMonths,
+          buildingsCount: (civ.buildings ?? []).reduce((s: number, b: { count?: number }) => s + (b.count ?? 0), 0),
+          speedMode: civ.config?.SPEED_MODE === true,
+        })),
+    }
+  })

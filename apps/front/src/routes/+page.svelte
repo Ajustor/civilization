@@ -7,6 +7,7 @@
 		resourceNames,
 		seasonsTranslations
 	} from '$lib/translations'
+	import { getWorldCivilizationDetails, type WorldCivilizationDetail } from '../services/api/world-api'
 
 	interface Props {
 		data: PageData;
@@ -15,6 +16,9 @@
 	let { data }: Props = $props()
 
 	let selectedWorldIndex = $state(0)
+	let civListOpen = $state(false)
+	let worldCivDetails = $state<WorldCivilizationDetail[]>([])
+	let worldCivLoading = $state(false)
 
 	const tabActive = "padding:9px 18px; border-radius:999px; border:1px solid oklch(0.5 0.13 34); background:oklch(0.5 0.13 34); cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.95 0.02 84);"
 	const tabIdle = "padding:9px 18px; border-radius:999px; border:1px solid oklch(0.78 0.05 65); background:oklch(0.97 0.015 84); cursor:pointer; font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.03 50);"
@@ -27,6 +31,27 @@
 		plank: 'oklch(0.58 0.07 65)',
 		charcoal: 'oklch(0.4 0.02 60)',
 	}
+
+	$effect(() => {
+		// Re-fetch whenever the selected world changes.
+		// data.worlds is a resolved WorldInfos[] from the server load.
+		const worlds = data.worlds as unknown as Array<{ id: string }>
+		const world = worlds[selectedWorldIndex]
+		if (!world) return
+		worldCivLoading = true
+		worldCivDetails = []
+		getWorldCivilizationDetails(world.id)
+			.then((civs) => { worldCivDetails = civs })
+			.catch(() => { worldCivDetails = [] })
+			.finally(() => { worldCivLoading = false })
+	})
+
+	const speedCount = $derived(worldCivDetails.filter((c) => c.speedMode).length)
+	const speedLabel = $derived(
+		speedCount > 0 && speedCount === worldCivDetails.length
+			? '1 an / 15 min'
+			: '1 mois / 15 min'
+	)
 </script>
 
 <svelte:head>
@@ -78,10 +103,23 @@
 						<!-- Alive/dead counts -->
 						<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:24px;">
 							{#await worldStats.aliveCivilizations then alive}
-								<div class="civ-inner-card">
+								<button
+									class="civ-inner-card"
+									onclick={() => (civListOpen = true)}
+									style="text-align:left; cursor:pointer; border:none; background:none; padding:0; width:100%;"
+									title="Voir la liste des civilisations en vie"
+								>
 									<div style="font-family:'Tangerine',cursive; font-size:40px; color:oklch(0.45 0.09 150);">{alive}</div>
 									<div style="font-size:16px; color:oklch(0.48 0.03 50);">civilisations en vie</div>
-								</div>
+									{#if !worldCivLoading && worldCivDetails.length > 0}
+										<div style="margin-top:8px; font-size:14px; color:oklch(0.5 0.09 40);">
+											{speedCount} / {worldCivDetails.length} en mode rapide
+										</div>
+										<div style="margin-top:4px; display:inline-block; padding:2px 10px; border-radius:999px; background:oklch(0.88 0.06 60); border:1px solid oklch(0.72 0.08 55); font-size:13px; color:oklch(0.4 0.08 40);">
+											⚡ {speedLabel}
+										</div>
+									{/if}
+								</button>
 							{/await}
 							{#await worldStats.deadCivilizations then dead}
 								<div class="civ-inner-card">
@@ -154,3 +192,58 @@
 		{/if}
 	{/await}
 </div>
+
+<!-- Civilisations en vie — modale détaillée -->
+{#if civListOpen}
+	<div
+		role="presentation"
+		style="position:fixed; inset:0; z-index:50; background:rgba(40,25,10,.45); display:flex; align-items:center; justify-content:center; padding:16px;"
+		onclick={() => (civListOpen = false)}
+	>
+		<div
+			style="background:radial-gradient(circle at 18% 12%, rgba(150,110,60,.06), transparent 45%), oklch(0.95 0.022 84); border:1px solid oklch(0.78 0.045 70); box-shadow:inset 0 0 0 5px oklch(0.93 0.03 84), inset 0 0 0 6px oklch(0.74 0.05 60), 0 20px 48px rgba(60,40,20,.24); border-radius:5px; padding:32px; width:100%; max-width:560px; max-height:80vh; display:flex; flex-direction:column;"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+				<h2 style="font-family:'Marcellus',serif; font-size:22px; margin:0; color:oklch(0.3 0.04 40);">Civilisations en vie</h2>
+				<button
+					onclick={() => (civListOpen = false)}
+					style="background:none; border:none; cursor:pointer; font-size:22px; color:oklch(0.5 0.03 50); line-height:1; padding:4px 8px;"
+					aria-label="Fermer"
+				>✕</button>
+			</div>
+
+			{#if worldCivLoading}
+				<p style="font-size:16px; color:oklch(0.5 0.03 50); text-align:center;">Chargement…</p>
+			{:else if worldCivDetails.length === 0}
+				<p style="font-size:16px; color:oklch(0.5 0.03 50); text-align:center;">Aucune civilisation vivante.</p>
+			{:else}
+				<div style="overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+					{#each worldCivDetails as civ}
+						{@const years = Math.floor(civ.livedMonths / 12)}
+						{@const months = civ.livedMonths % 12}
+						<div style="padding:14px 16px; border:1px solid oklch(0.85 0.03 70); border-radius:5px; background:oklch(0.98 0.01 84); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+							<div style="flex:1; min-width:0;">
+								<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+									<span style="font-family:'Marcellus',serif; font-size:18px; color:oklch(0.3 0.04 40);">{civ.name}</span>
+									{#if civ.speedMode}
+										<span style="padding:1px 8px; border-radius:999px; background:oklch(0.88 0.06 60); border:1px solid oklch(0.72 0.08 55); font-size:12px; color:oklch(0.4 0.08 40); white-space:nowrap;">⚡ Mode rapide</span>
+									{/if}
+								</div>
+								<div style="margin-top:5px; font-size:14px; color:oklch(0.5 0.03 50); display:flex; flex-wrap:wrap; gap:14px;">
+									<span>👥 {civ.population} hab.</span>
+									<span>🏛️ {civ.buildingsCount} bâtiments</span>
+									<span>⏳ {years > 0 ? `${years} an${years > 1 ? 's' : ''} ` : ''}{months > 0 ? `${months} mois` : years === 0 ? '0 mois' : ''}</span>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</div>
+{/if}

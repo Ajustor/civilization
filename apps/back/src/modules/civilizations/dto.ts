@@ -7,6 +7,7 @@ export const UpdateCivilizationDto = t.Object({
   militaryRatio: t.Optional(t.Number()),
   atWarWith: t.Optional(t.Array(t.String())),
   nextBuildingToBuild: t.Optional(t.Union([t.String(), t.Null()])),
+  speedMode: t.Optional(t.Boolean()),
 })
 
 export type UpdateCivilizationDtoType = typeof UpdateCivilizationDto.static

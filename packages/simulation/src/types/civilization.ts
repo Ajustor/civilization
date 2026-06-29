@@ -21,6 +21,7 @@ export type CivilizationConfig = {
   AT_WAR_WITH: string[]
   MILITARY_RATIO: number
   NEXT_BUILDING_TO_BUILD: BuildingTypes | null
+  SPEED_MODE: boolean
 }
 
 

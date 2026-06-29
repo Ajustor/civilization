@@ -44,6 +44,7 @@ const ConfigSchema = new Schema({
   },
   MILITARY_RATIO: { type: Number, default: 0 },
   NEXT_BUILDING_TO_BUILD: { type: String, default: null },
+  SPEED_MODE: { type: Boolean, default: false },
   AT_WAR_WITH: {
     type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
     required: true,
@@ -101,6 +102,7 @@ const civilizationSchema = new Schema(
         OPEN_EXCHANGE: [],
         MILITARY_RATIO: 0,
         NEXT_BUILDING_TO_BUILD: null,
+        SPEED_MODE: false,
         AT_WAR_WITH: [],
       },
     },

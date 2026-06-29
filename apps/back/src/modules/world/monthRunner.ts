@@ -1,6 +1,6 @@
 import { Gender, World } from '@ajustor/simulation'
 import type { CombatRecord } from '@ajustor/simulation'
-import { CivilizationStatsModel, CombatLogModel, GraveModel } from '../../libs/database/models'
+import { CivilizationStatsModel, CombatLogModel, GraveModel, TradeOfferModel } from '../../libs/database/models'
 import type { CivilizationService } from '../civilizations/service'
 
 // Cap on how many graves are kept per civilization so the cemetery doesn't grow
@@ -177,6 +177,18 @@ export async function runMonthForWorld(
   }
 
   await civilizationService.saveAll(worldCivilizations)
+
+  // Une civ qui meurt ce mois-ci (plus aucun habitant) voit ses offres de
+  // marché retirées : un doc « zombie » subsiste en base, mais ses offres ne
+  // doivent plus apparaître sur le marché.
+  const deadCivilizationIds = worldCivilizations
+    .filter((civilization) => civilization.people.length === 0)
+    .map((civilization) => civilization.id)
+  if (deadCivilizationIds.length > 0) {
+    await TradeOfferModel.deleteMany({
+      fromCivilizationId: { $in: deadCivilizationIds },
+    })
+  }
 
   return worldCivilizations
 }

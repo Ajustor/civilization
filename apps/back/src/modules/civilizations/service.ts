@@ -21,6 +21,7 @@ import {
   CombatLogModel,
   GraveModel,
   PersonModel,
+  TradeOfferModel,
   UserModel,
   WorldModel,
 } from '../../libs/database/models'
@@ -84,6 +85,7 @@ export const civilizationMapper = (
       AT_WAR_WITH: (c.AT_WAR_WITH ?? []).map(String),
       MILITARY_RATIO: c.MILITARY_RATIO ?? 0,
       NEXT_BUILDING_TO_BUILD: c.NEXT_BUILDING_TO_BUILD ?? null,
+      SPEED_MODE: c.SPEED_MODE ?? defaultCivilizationConfig.SPEED_MODE,
     })
   }
 
@@ -543,6 +545,7 @@ export class CivilizationService {
     await CivilizationStatsModel.deleteMany({ civilizationId })
     await GraveModel.deleteMany({ civilizationId })
     await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
+    await TradeOfferModel.deleteMany({ fromCivilizationId: civilizationId })
   }
 
   async exist(civilizationName: string): Promise<boolean> {
@@ -735,6 +738,7 @@ export class CivilizationService {
     await CivilizationStatsModel.deleteMany({ civilizationId: targetCivilizationId })
     await GraveModel.deleteMany({ civilizationId: targetCivilizationId })
     await CivilizationModel.deleteOne({ _id: targetCivilizationId })
+    await TradeOfferModel.deleteMany({ fromCivilizationId: targetCivilizationId })
 
     // 7. Nettoyer les références éventuelles vers la civilisation supprimée dans
     // la configuration des autres civilisations (échanges ouverts, guerres) afin
@@ -826,6 +830,10 @@ export class CivilizationService {
             body.atWarWith ??
             currentConfig.AT_WAR_WITH ??
             defaultCivilizationConfig.AT_WAR_WITH,
+          SPEED_MODE:
+            body.speedMode ??
+            currentConfig.SPEED_MODE ??
+            defaultCivilizationConfig.SPEED_MODE,
         },
       },
     )

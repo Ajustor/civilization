@@ -39,7 +39,8 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			openExchange: civilization.config.OPEN_EXCHANGE ?? [],
 			militaryRatio: civilization.config.MILITARY_RATIO,
 			atWarWith: civilization.config.AT_WAR_WITH ?? [],
-			nextBuildingToBuild: civilization.config.NEXT_BUILDING_TO_BUILD ?? null
+			nextBuildingToBuild: civilization.config.NEXT_BUILDING_TO_BUILD ?? null,
+			speedMode: civilization.config.SPEED_MODE ?? false
 		},
 		zod(civilizationConfigSchema)
 	)
@@ -66,7 +67,8 @@ export const actions: Actions = {
 				openExchange: form.data.openExchange,
 				militaryRatio: form.data.militaryRatio,
 				atWarWith: form.data.atWarWith,
-				nextBuildingToBuild: form.data.nextBuildingToBuild
+				nextBuildingToBuild: form.data.nextBuildingToBuild,
+				speedMode: form.data.speedMode
 			})
 
 			// Re-read so the form reflects exactly what was persisted (avoids showing
@@ -82,7 +84,8 @@ export const actions: Actions = {
 							openExchange: updated.config.OPEN_EXCHANGE ?? [],
 							militaryRatio: updated.config.MILITARY_RATIO,
 							atWarWith: updated.config.AT_WAR_WITH ?? [],
-							nextBuildingToBuild: updated.config.NEXT_BUILDING_TO_BUILD ?? null
+							nextBuildingToBuild: updated.config.NEXT_BUILDING_TO_BUILD ?? null,
+							speedMode: updated.config.SPEED_MODE ?? false
 						},
 						zod(civilizationConfigSchema)
 					)

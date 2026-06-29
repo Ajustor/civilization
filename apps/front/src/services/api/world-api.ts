@@ -112,3 +112,30 @@ export async function getWorldCivilizations(worldId: string): Promise<{ id: stri
 
 	return data.civilizations
 }
+
+export type WorldCivilizationDetail = {
+	id: string
+	name: string
+	population: number
+	livedMonths: number
+	buildingsCount: number
+	speedMode: boolean
+}
+
+export async function getWorldCivilizationDetails(worldId: string): Promise<WorldCivilizationDetail[]> {
+	const { data, error } = await client.worlds({ worldId }).civilizations.details.get()
+
+	if (error) {
+		console.error(error)
+		throw error
+	}
+
+	return data.civilizations.map((civ) => ({
+		id: civ.id,
+		name: civ.name,
+		population: civ.population,
+		livedMonths: civ.livedMonths,
+		buildingsCount: civ.buildingsCount,
+		speedMode: civ.speedMode,
+	}))
+}
