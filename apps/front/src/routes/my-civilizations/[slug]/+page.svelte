@@ -770,12 +770,12 @@
 	<div class="civ-card" style="animation:screenIn .46s cubic-bezier(.22,.72,.2,1) .05s both;">
 		<!-- Civ header -->
 		<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:20px; border-bottom:2px solid oklch(0.72 0.05 60); padding-bottom:20px;">
-			<div>
-				<h1 style="font-family:'Tangerine',cursive; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
-				<div style="font-size:18px; color:oklch(0.46 0.03 50); margin-top:4px;">Prospère depuis {~~(data.civilization.livedMonths / 12)} ans et {data.civilization.livedMonths % 12} mois</div>
-			</div>
-			<!-- Right cluster: stats + actions -->
-			<div style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-left:auto;">
+			<!-- Left: title + stats -->
+			<div style="display:flex; flex-direction:column; gap:14px;">
+				<div>
+					<h1 style="font-family:'Tangerine',cursive; font-size:clamp(34px,6vw,46px); margin:0; color:oklch(0.3 0.04 40);">{data.civilization.name}</h1>
+					<div style="font-size:18px; color:oklch(0.46 0.03 50); margin-top:4px;">Prospère depuis {~~(data.civilization.livedMonths / 12)} ans et {data.civilization.livedMonths % 12} mois</div>
+				</div>
 				<!-- Stats group -->
 				<div style="display:flex; gap:26px; text-align:center; align-items:center;">
 					<div>
@@ -791,6 +791,9 @@
 						<div style="font-size:14px; color:oklch(0.5 0.03 50);">points de recherche</div>
 					</div>
 				</div>
+			</div>
+			<!-- Right cluster: actions only -->
+			<div style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-left:auto;">
 				<!-- Desktop actions group -->
 				<div class="civ-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
 					{#if data.worldId}
@@ -1221,9 +1224,9 @@
 			{/if}
 		</div>
 
-		<!-- Guerre & conflits -->
+		<!-- Guerre & militaire -->
 		<div class="civ-inner-card" style="margin-top:20px;">
-			<h2 class="civ-section-title">Guerre &amp; conflits</h2>
+			<h2 class="civ-section-title">Guerre &amp; militaire</h2>
 			{#if warTargetNames.length}
 				<div style="display:flex; align-items:center; gap:8px; padding:10px 14px; margin-bottom:14px; background:oklch(0.96 0.05 30/0.5); border:1px solid oklch(0.6 0.16 30/0.5); border-radius:5px; color:oklch(0.42 0.16 30); font-family:'EB Garamond',serif; font-size:16px;">
 					<span style="font-size:18px;">⚔</span>
@@ -1233,8 +1236,13 @@
 				<p style="color:oklch(0.5 0.03 50); font-size:15px; margin:0 0 14px;">Aucune attaque en cours.</p>
 			{/if}
 
-			{#if data.worldCivilizations.length}
-				<form method="post" use:warEnhance action="?/updateWar" style="display:flex; flex-direction:column; gap:10px;">
+			<form method="post" use:warEnhance action="?/updateWar" style="display:flex; flex-direction:column; gap:10px;">
+				<label style="display:flex; flex-direction:column; gap:4px; font-size:14px; color:oklch(0.4 0.04 48);">
+					<span style="font-family:'Marcellus',serif; color:oklch(0.35 0.04 40);">Ratio militaire (%)</span>
+					<input type="number" min="0" max="100" bind:value={$warFormData.militaryRatio} style="width:120px; padding:8px 10px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.98 0.01 84); color:oklch(0.3 0.04 40); font-family:'EB Garamond',serif; font-size:15px;" />
+					<span style="font-size:13px; color:oklch(0.5 0.03 50);">Part des adultes (hors enfants et retraités) entretenus comme soldats.</span>
+				</label>
+				{#if data.worldCivilizations.length}
 					<p style="font-size:14px; color:oklch(0.5 0.03 50); margin:0;">Sélectionnez les civilisations à attaquer chaque mois.</p>
 					<div style="display:flex; flex-direction:column; gap:8px;">
 						{#each data.worldCivilizations as otherCivilization}
@@ -1248,11 +1256,11 @@
 							</div>
 						{/each}
 					</div>
-					<button type="submit" style="align-self:flex-start; padding:10px 18px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:15px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer les cibles</button>
-				</form>
-			{:else}
-				<p style="color:oklch(0.5 0.03 50); font-size:15px;">Aucune autre civilisation dans ce monde.</p>
-			{/if}
+				{:else}
+					<p style="color:oklch(0.5 0.03 50); font-size:15px; margin:0;">Aucune autre civilisation dans ce monde.</p>
+				{/if}
+				<button type="submit" style="align-self:flex-start; padding:10px 18px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:15px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer</button>
+			</form>
 		</div>
 
 		<!-- Combat Log Summary -->

@@ -46,7 +46,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
     : []
 
   const warForm = await superValidate(
-    { atWarWith: civilization.config.AT_WAR_WITH ?? [] },
+    { atWarWith: civilization.config.AT_WAR_WITH ?? [], militaryRatio: civilization.config.MILITARY_RATIO ?? 0 },
     zod(warConfigSchema),
   )
 
@@ -100,8 +100,9 @@ export const actions: Actions = {
     try {
       await updateCivilization(cookies.get('auth') ?? '', params.slug, {
         atWarWith: form.data.atWarWith,
+        militaryRatio: form.data.militaryRatio,
       })
-      return { form: message(form, { status: 'success', text: 'Cibles de guerre mises à jour' }) }
+      return { form: message(form, { status: 'success', text: 'Réglages militaires mis à jour' }) }
     } catch (requestError) {
       error(
         (requestError as { status?: number }).status ?? 500,

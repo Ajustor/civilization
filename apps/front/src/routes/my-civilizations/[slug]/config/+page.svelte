@@ -134,25 +134,7 @@
 			{/if}
 		</div>
 
-		<!-- Militaire -->
-		<div class="civ-inner-card">
-			<h3 class="civ-section-title">Militaire</h3>
-			<div style="display:flex; flex-direction:column; gap:16px;">
-				<FormField {form} name="militaryRatio">
-					<FormControl>
-						{#snippet children({ props })}
-							<FormLabel>Ratio militaire (%)</FormLabel>
-							<input type="number" min="0" max="100" class="input input-bordered w-full" {...props} bind:value={$formData.militaryRatio} />
-						{/snippet}
-					</FormControl>
-					<FormDescription>Part des adultes entretenus comme soldats (0–100%).</FormDescription>
-					<FormFieldErrors />
-				</FormField>
-
-				</div>
-			</div>
-
-			<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
+		<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
 	</form>
 </div>
 </div>
