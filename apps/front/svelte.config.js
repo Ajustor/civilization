@@ -1,6 +1,9 @@
 import adapter from '@sveltejs/adapter-node'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
-const generateSW = process.env.GENERATE_SW !== 'false'
+// Doit rester cohérent avec vite.config.ts : par défaut on utilise injectManifest
+// (prompt-sw.ts compilé par SvelteKit en service worker, avec handlers push), et
+// generateSW n'est activé qu'explicitement via GENERATE_SW=true.
+const generateSW = process.env.GENERATE_SW === 'true'
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

@@ -24,7 +24,12 @@ const superformsZodAdapter = path.join(
 	'zod4.js',
 )
 
-const generateSW = process.env.GENERATE_SW !== 'false'
+// Par défaut on utilise la stratégie `injectManifest` (notre `prompt-sw.ts`,
+// qui contient le precache Workbox ET les handlers push/notificationclick).
+// `generateSW` (Workbox auto, SANS handler push) reste disponible explicitement
+// via `GENERATE_SW=true` (script `build-generate`). Sans handler push embarqué,
+// les notifications ne s'affichent jamais — d'où ce défaut.
+const generateSW = process.env.GENERATE_SW === 'true'
 
 // The `sveltekit-superforms/adapters` barrel eagerly evaluates EVERY adapter,
 // including the TypeBox one, which throws at build time. This plugin intercepts
