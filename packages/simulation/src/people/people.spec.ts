@@ -39,7 +39,7 @@ describe('People', () => {
     // they keep a collecting occupation (gatherer), they must not gather while
     // building. Guards the regression where `isBuilding` people still collected.
     it('does not collect resources while building', () => {
-      const builder = new People({ month: 25 * 12, gender: Gender.MALE })
+      const builder = new People({ month: 25 * 12, gender: Gender.MALE, lifeCounter: 12 })
       builder.setOccupation(OccupationTypes.GATHERER)
       builder.startBuilding(2)
 
@@ -48,7 +48,7 @@ describe('People', () => {
     })
 
     it('does not collect resources when the person is too old to work', () => {
-      const retiree = new People({ month: 80 * 12, gender: Gender.MALE })
+      const retiree = new People({ month: 80 * 12, gender: Gender.MALE, lifeCounter: 12 })
       retiree.setOccupation(OccupationTypes.GATHERER)
 
       expect(retiree.collectResource({} as never, {} as never)).toBe(false)
@@ -57,7 +57,7 @@ describe('People', () => {
 
   describe('startBuilding tracks what is being built', () => {
     it('records the building type and clears it once construction completes', () => {
-      const builder = new People({ month: 25 * 12, gender: Gender.MALE })
+      const builder = new People({ month: 25 * 12, gender: Gender.MALE, lifeCounter: 12 })
       builder.startBuilding(2, BuildingTypes.HOUSE)
 
       expect(builder.isBuilding).toBe(true)
