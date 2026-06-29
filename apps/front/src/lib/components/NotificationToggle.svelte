@@ -35,14 +35,14 @@
 		try {
 			if (pushState === 'enabled') {
 				pushState = await disablePush(authToken)
-				toast.success("Notifications d'attaque désactivées")
+				toast.success('Notifications désactivées')
 			} else {
 				pushState = await enablePush(authToken)
 				if (pushState === 'enabled') {
-					toast.success("Notifications d'attaque activées")
+					toast.success('Notifications activées')
 				} else if (pushState === 'denied') {
 					toast.error(
-						'Les notifications sont bloquées dans votre navigateur. Autorisez-les pour être prévenu des attaques.'
+						'Les notifications sont bloquées dans votre navigateur. Autorisez-les pour être prévenu en temps réel.'
 					)
 				}
 			}
@@ -60,17 +60,18 @@
 </script>
 
 <div class="civ-inner-card">
-	<h2 class="civ-section-title">Notifications d'attaque</h2>
+	<h2 class="civ-section-title">Notifications</h2>
 
 	{#if pushState === 'unsupported'}
 		<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0;">
 			Votre navigateur ne supporte pas les notifications push. Installez l'application
-			(PWA) ou utilisez un navigateur compatible pour être prévenu des attaques.
+			(PWA) ou utilisez un navigateur compatible pour rester informé.
 		</p>
 	{:else}
 		<p style="font-size:15px; color:oklch(0.48 0.03 50); margin:0 0 14px;">
 			Recevez une notification dès qu'une civilisation vous déclare la guerre, pour avoir
-			le temps de préparer vos défenses.
+			le temps de préparer vos défenses, ou lorsqu'un joueur met des ressources en vente
+			sur le marché du monde. Vous pouvez activer les notifications sur plusieurs appareils.
 		</p>
 
 		{#if pushState === 'denied'}
