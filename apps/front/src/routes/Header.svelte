@@ -11,7 +11,8 @@
 	const navLinks = [
 		{ url: '/', label: 'Les mondes', match: (p: string) => p === '/' || p.startsWith('/worlds') },
 		{ url: '/my-civilizations', label: 'Mes civilisations', match: (p: string) => p.startsWith('/my-civilizations') },
-		{ url: '/rules', label: 'Les règles', match: (p: string) => p.startsWith('/rules') }
+		{ url: '/rules', label: 'Les règles', match: (p: string) => p.startsWith('/rules') },
+		{ url: '/changelog', label: 'Mises à jour', match: (p: string) => p.startsWith('/changelog') }
 	]
 
 	let menuOpen = $state(false)

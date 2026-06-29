@@ -17,23 +17,6 @@
 	import { toast } from 'svelte-sonner'
 
 	type ConfigFormData = z.infer<typeof civilizationConfigSchema>
-	import {
-		BuildingTypes,
-		House,
-		Farm,
-		Kiln,
-		Sawmill,
-		Mine,
-		Campfire,
-		Cache,
-		Wall,
-		Library,
-		getBuildingGate,
-		getTechNode,
-		type ResourceTypes,
-		type OccupationTypes
-	} from '@ajustor/simulation'
-	import { buildingNames, resourceNames, OCCUPATIONS } from '$lib/translations'
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
 	interface Props {
@@ -61,6 +44,11 @@
 		}
 	})
 
+	// Note : le choix du prochain bâtiment à construire a été déplacé vers le bloc
+	// « Constructions en cours » de la page de civilisation. Le champ
+	// `nextBuildingToBuild` reste néanmoins dans le formulaire (chargé puis
+	// réémis tel quel) afin que l'enregistrement de cette page ne l'efface pas.
+
 	const { form: formData, enhance: formEnhance } = form
 
 	const toggleExchange = (civilizationId: string, checked: boolean | 'indeterminate') => {
@@ -81,49 +69,6 @@
 		}
 	}
 
-	// Construction requirements come from the static fields on each building class.
-	type BuildingMeta = {
-		constructionCosts?: { resource: ResourceTypes; amount: number }[]
-		workerRequiredToBuild?: { occupation: OccupationTypes; amount: number }[]
-		timeToBuild?: number
-	}
-	const BUILDING_CLASSES: Record<BuildingTypes, BuildingMeta> = {
-		[BuildingTypes.HOUSE]: House,
-		[BuildingTypes.FARM]: Farm,
-		[BuildingTypes.KILN]: Kiln,
-		[BuildingTypes.SAWMILL]: Sawmill,
-		[BuildingTypes.MINE]: Mine,
-		[BuildingTypes.CAMPFIRE]: Campfire,
-		[BuildingTypes.CACHE]: Cache,
-		[BuildingTypes.WALL]: Wall,
-		[BuildingTypes.LIBRARY]: Library
-	}
-
-	// Bâtiments verrouillés par l'arbre de technologies : pour chaque type gardé
-	// par une techno non encore recherchée, on garde le nom (FR) de cette techno.
-	const researchedTechs = $derived<string[]>(data.civilization.researchedTechs ?? [])
-	const lockedBuildings = $derived.by(() => {
-		const locked = new Map<BuildingTypes, string>()
-		for (const buildingType of Object.values(BuildingTypes)) {
-			const gate = getBuildingGate(buildingType)
-			if (gate && !researchedTechs.includes(gate)) {
-				locked.set(buildingType, getTechNode(gate)?.name ?? gate)
-			}
-		}
-		return locked
-	})
-
-	const selectedBuildingInfo = $derived.by(() => {
-		const type = $formData.nextBuildingToBuild
-		if (!type) return null
-		const meta = BUILDING_CLASSES[type as BuildingTypes]
-		if (!meta) return null
-		return {
-			costs: meta.constructionCosts ?? [],
-			workers: meta.workerRequiredToBuild ?? [],
-			timeToBuild: meta.timeToBuild
-		}
-	})
 </script>
 
 <svelte:head>
@@ -234,69 +179,7 @@
 				</div>
 			</div>
 
-			<!-- Construction -->
-			<div class="civ-inner-card">
-				<h3 class="civ-section-title">Construction</h3>
-				<div style="display:flex; flex-direction:column; gap:16px;">
-				<FormField {form} name="nextBuildingToBuild">
-					<FormControl>
-						{#snippet children({ props })}
-							<FormLabel>Prochain bâtiment à construire</FormLabel>
-							<select
-								{...props}
-								value={$formData.nextBuildingToBuild ?? ''}
-								onchange={(e) => { $formData.nextBuildingToBuild = e.currentTarget.value || null }}
-								class="select select-bordered w-full"
-							>
-								<option value="">Aucun</option>
-								{#each Object.values(BuildingTypes) as buildingType}
-									{@const lockedBy = lockedBuildings.get(buildingType)}
-									<option
-										value={buildingType}
-										disabled={!!lockedBy}
-										title={lockedBy ? `Recherche manquante : ${lockedBy}` : undefined}
-									>{buildingNames[buildingType]}{lockedBy ? ` 🔒 (recherche : ${lockedBy})` : ''}</option>
-								{/each}
-							</select>
-						{/snippet}
-					</FormControl>
-					<FormDescription>Bâtiment que la civilisation cherchera à construire en priorité.</FormDescription>
-					{#if selectedBuildingInfo}
-						<div style="margin-top:10px; padding:12px 14px; border:1px solid oklch(0.8 0.04 70); border-radius:4px; background:oklch(0.97 0.015 84); display:flex; flex-direction:column; gap:10px;">
-							<div style="display:flex; align-items:baseline; gap:8px;">
-								<span style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50);">Temps de construction</span>
-								<span style="font-size:15px; font-weight:600; color:oklch(0.32 0.04 40);">{selectedBuildingInfo.timeToBuild ?? '?'} mois</span>
-							</div>
-							<div>
-								<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ressources requises</div>
-								{#if selectedBuildingInfo.costs.length}
-									<div style="display:flex; flex-wrap:wrap; gap:6px;">
-										{#each selectedBuildingInfo.costs as cost}
-											<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{cost.amount} {resourceNames[cost.resource]}</span>
-										{/each}
-									</div>
-								{:else}
-									<span style="font-size:14px; color:oklch(0.5 0.03 50);">Aucune ressource requise</span>
-								{/if}
-							</div>
-							{#if selectedBuildingInfo.workers.length}
-								<div>
-									<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ouvriers requis pour la construction</div>
-									<div style="display:flex; flex-wrap:wrap; gap:6px;">
-										{#each selectedBuildingInfo.workers as worker}
-											<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{worker.amount} {OCCUPATIONS[worker.occupation]}</span>
-										{/each}
-									</div>
-								</div>
-							{/if}
-						</div>
-					{/if}
-					<FormFieldErrors />
-				</FormField>
-			</div>
-		</div>
-
-		<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
+			<button type="submit" style="align-self:flex-start; padding:12px 22px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24);">Enregistrer la configuration</button>
 	</form>
 </div>
 </div>

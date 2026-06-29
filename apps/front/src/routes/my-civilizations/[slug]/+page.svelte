@@ -9,7 +9,18 @@
 		type OccupationTypes,
 		type PeopleType,
 		Events,
-		TECH_TREE
+		TECH_TREE,
+		House,
+		Farm,
+		Kiln,
+		Sawmill,
+		Mine,
+		Campfire,
+		Cache,
+		Wall,
+		Library,
+		getBuildingGate,
+		getTechNode
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames } from '$lib/translations'
@@ -18,6 +29,8 @@
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
 	import { callGetStats } from '../../../services/sveltekit-api/civilization'
 	import { onMount } from 'svelte'
+	import { enhance } from '$app/forms'
+	import { toast } from 'svelte-sonner'
 	import { invalidateAll } from '$app/navigation'
 	import { PUBLIC_BACK_URL } from '$env/static/public'
 	import RecapModal from '$lib/components/RecapModal.svelte'
@@ -273,6 +286,60 @@
 			: monthsRemaining === 1
 				? 'Prête le mois prochain'
 				: `Prête dans ${monthsRemaining} mois`
+
+	// ── Prochain bâtiment à construire ──────────────────────────────────────────
+	// Déplacé depuis la page de configuration : le joueur choisit ici le bâtiment
+	// que la civilisation cherchera à construire en priorité.
+	type BuildingMeta = {
+		constructionCosts?: { resource: ResourceTypes; amount: number }[]
+		workerRequiredToBuild?: { occupation: OccupationTypes; amount: number }[]
+		timeToBuild?: number
+	}
+	const BUILDING_CLASSES: Record<BuildingTypes, BuildingMeta> = {
+		[BuildingTypes.HOUSE]: House,
+		[BuildingTypes.FARM]: Farm,
+		[BuildingTypes.KILN]: Kiln,
+		[BuildingTypes.SAWMILL]: Sawmill,
+		[BuildingTypes.MINE]: Mine,
+		[BuildingTypes.CAMPFIRE]: Campfire,
+		[BuildingTypes.CACHE]: Cache,
+		[BuildingTypes.WALL]: Wall,
+		[BuildingTypes.LIBRARY]: Library
+	}
+
+	// Bâtiments verrouillés par l'arbre de technologies : pour chaque type gardé
+	// par une techno non encore recherchée, on conserve le nom (FR) de cette techno.
+	const lockedBuildings = $derived.by(() => {
+		const locked = new Map<BuildingTypes, string>()
+		for (const buildingType of Object.values(BuildingTypes)) {
+			const gate = getBuildingGate(buildingType)
+			if (gate && !researchedTechs.includes(gate)) {
+				locked.set(buildingType, getTechNode(gate)?.name ?? gate)
+			}
+		}
+		return locked
+	})
+
+	// Valeur sélectionnée. Initialisée depuis la config persistée et resynchronisée
+	// quand celle-ci change (après enregistrement ou avancée du monde), sans écraser
+	// une modification en cours de l'utilisateur (l'effet ne dépend que de la valeur
+	// persistée).
+	let selectedBuilding = $state<string>(data.civilization.config?.NEXT_BUILDING_TO_BUILD ?? '')
+	$effect(() => {
+		selectedBuilding = data.civilization.config?.NEXT_BUILDING_TO_BUILD ?? ''
+	})
+	let savingBuilding = $state(false)
+
+	const selectedBuildingInfo = $derived.by(() => {
+		if (!selectedBuilding) return null
+		const meta = BUILDING_CLASSES[selectedBuilding as BuildingTypes]
+		if (!meta) return null
+		return {
+			costs: meta.constructionCosts ?? [],
+			workers: meta.workerRequiredToBuild ?? [],
+			timeToBuild: meta.timeToBuild
+		}
+	})
 
 	// ── Stat helpers ──────────────────────────────────────────────────────────
 	const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
@@ -873,6 +940,84 @@
 				<Hammer size="18" style="color:oklch(0.5 0.1 50); flex-shrink:0;" />
 				<h2 class="civ-section-title" style="margin:0;">Constructions en cours ({pendingConstructions.length} au total)</h2>
 			</div>
+
+			<!-- Choix du prochain bâtiment à construire -->
+			<form
+				method="post"
+				action="?/updateNextBuilding"
+				use:enhance={() => {
+					savingBuilding = true
+					return async ({ result, update }) => {
+						savingBuilding = false
+						if (result.type === 'success') {
+							toast.success('Prochain bâtiment mis à jour')
+							await update()
+						} else if (result.type === 'failure') {
+							toast.error((result.data?.message as string) ?? 'Une erreur est survenue')
+						} else {
+							await update()
+						}
+					}
+				}}
+				style="margin-top:12px; padding:14px 16px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70); display:flex; flex-direction:column; gap:10px;"
+			>
+				<label for="nextBuildingToBuild" style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.35 0.04 40);">Prochain bâtiment à construire</label>
+				<div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+					<select
+						id="nextBuildingToBuild"
+						name="nextBuildingToBuild"
+						bind:value={selectedBuilding}
+						class="select select-bordered"
+						style="flex:1; min-width:220px;"
+					>
+						<option value="">Aucun</option>
+						{#each Object.values(BuildingTypes) as buildingType}
+							{@const lockedBy = lockedBuildings.get(buildingType)}
+							<option
+								value={buildingType}
+								disabled={!!lockedBy}
+								title={lockedBy ? `Recherche manquante : ${lockedBy}` : undefined}
+							>{buildingNames[buildingType]}{lockedBy ? ` 🔒 (recherche : ${lockedBy})` : ''}</option>
+						{/each}
+					</select>
+					<button
+						type="submit"
+						disabled={savingBuilding}
+						style="padding:10px 18px; border:none; border-radius:4px; background:oklch(0.5 0.13 34); color:oklch(0.95 0.02 84); font-family:'Marcellus',serif; font-size:15px; cursor:pointer; box-shadow:0 4px 12px rgba(80,30,20,.24); opacity:{savingBuilding ? 0.6 : 1};"
+					>{savingBuilding ? 'Enregistrement…' : 'Enregistrer'}</button>
+				</div>
+				<p style="font-size:13px; color:oklch(0.5 0.03 50); margin:0;">Bâtiment que la civilisation cherchera à construire en priorité.</p>
+				{#if selectedBuildingInfo}
+					<div style="padding:12px 14px; border:1px solid oklch(0.8 0.04 70); border-radius:4px; background:oklch(0.95 0.018 84); display:flex; flex-direction:column; gap:10px;">
+						<div style="display:flex; align-items:baseline; gap:8px;">
+							<span style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50);">Temps de construction</span>
+							<span style="font-size:15px; font-weight:600; color:oklch(0.32 0.04 40);">{selectedBuildingInfo.timeToBuild ?? '?'} mois</span>
+						</div>
+						<div>
+							<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ressources requises</div>
+							{#if selectedBuildingInfo.costs.length}
+								<div style="display:flex; flex-wrap:wrap; gap:6px;">
+									{#each selectedBuildingInfo.costs as cost}
+										<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{cost.amount} {resourceNames[cost.resource]}</span>
+									{/each}
+								</div>
+							{:else}
+								<span style="font-size:14px; color:oklch(0.5 0.03 50);">Aucune ressource requise</span>
+							{/if}
+						</div>
+						{#if selectedBuildingInfo.workers.length}
+							<div>
+								<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ouvriers requis pour la construction</div>
+								<div style="display:flex; flex-wrap:wrap; gap:6px;">
+									{#each selectedBuildingInfo.workers as worker}
+										<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{worker.amount} {OCCUPATIONS[worker.occupation]}</span>
+									{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</form>
 
 			{#if pendingGroups.length === 0}
 				<p style="color:oklch(0.55 0.03 50); font-size:15px; font-style:italic; margin-top:8px;">Aucune construction en cours pour le moment.</p>
