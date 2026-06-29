@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte'
 	import { getWorldsInfos } from '../../services/api/world-api'
 	import { resourceNames, eventsName, eventsDescription, buildingNames, OCCUPATIONS } from '$lib/translations'
-	import { type ResourceTypes, type Events, BuildingTypes, OccupationTypes, getBuildingGate, getTechNode } from '@ajustor/simulation'
+	import { type ResourceTypes, type Events, BuildingTypes, OccupationTypes } from '@ajustor/simulation'
 	import { getBuildingMeta, getOccupationMeta } from '$lib/gameData'
 
 	type WorldInfo = Awaited<ReturnType<typeof getWorldsInfos>>[number]
@@ -108,14 +108,12 @@
 
 	const BUILDING_RULES = BUILDING_ORDER.map((bt) => {
 		const meta = getBuildingMeta(bt)
-		const gate = getBuildingGate(bt)
 		return {
 			name: buildingNames[bt],
 			cost: formatResources(meta.constructionCosts),
 			time: `${meta.timeToBuild} mois`,
 			build: formatWorkers(meta.buildWorkers),
 			operate: formatWorkers(meta.operatingWorkers),
-			unlock: gate ? (getTechNode(gate)?.name ?? gate) : '',
 			effect: BUILDING_EFFECT[bt]
 		}
 	})
@@ -314,9 +312,6 @@
 								<span style="color:oklch(0.55 0.04 55);">Durée</span><span>{b.time}</span>
 								<span style="color:oklch(0.55 0.04 55);">Construit par</span><span>{b.build}</span>
 								<span style="color:oklch(0.55 0.04 55);">Exploité par</span><span>{b.operate}</span>
-								{#if b.unlock}
-									<span style="color:oklch(0.55 0.04 55);">Technologie</span><span style="color:oklch(0.5 0.1 280);">{b.unlock}</span>
-								{/if}
 							</div>
 						</div>
 					{/each}
@@ -330,7 +325,7 @@
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>La <strong>Bibliothèque</strong> est le cœur de la recherche. Dotée de ses <strong>2 érudits</strong>, elle produit <strong>2 points de recherche par mois</strong> ; la production est proportionnelle au nombre d'érudits en poste, et plusieurs bibliothèques se cumulent.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>L'<strong>érudit</strong> est un métier spécialisé : un <strong>récolteur</strong> peut évoluer vers érudit (dès 21 ans), exactement comme vers les autres métiers de production.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les points accumulés se <strong>dépensent</strong> pour débloquer des technologies dans l'<strong>arbre de technologies</strong>. Chaque technologie a un <strong>coût</strong> en points et d'éventuels <strong>prérequis</strong> : on ne peut la rechercher qu'une fois ces prérequis acquis et avec assez de points. Le coût est alors déduit, et la technologie est acquise <strong>définitivement</strong>.</span></li>
-					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Certaines technologies <strong>débloquent des bâtiments</strong> (voir la colonne « Technologie » ci-dessus), d'autres apportent des <strong>bonus permanents</strong>. Les bonus se <strong>cumulent</strong> : les multiplicateurs se multiplient entre eux, les bonus chiffrés s'additionnent.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Certaines technologies <strong>débloquent des bâtiments</strong>, d'autres apportent des <strong>bonus permanents</strong>. Les bonus se <strong>cumulent</strong> : les multiplicateurs se multiplient entre eux, les bonus chiffrés s'additionnent.</span></li>
 				</ul>
 				<div style="overflow-x:auto;">
 					<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:15px; color:oklch(0.4 0.03 50);">
