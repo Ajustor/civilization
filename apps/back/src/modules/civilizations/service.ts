@@ -21,6 +21,7 @@ import {
   CombatLogModel,
   GraveModel,
   PersonModel,
+  TradeOfferModel,
   UserModel,
   WorldModel,
 } from '../../libs/database/models'
@@ -544,6 +545,7 @@ export class CivilizationService {
     await CivilizationStatsModel.deleteMany({ civilizationId })
     await GraveModel.deleteMany({ civilizationId })
     await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
+    await TradeOfferModel.deleteMany({ fromCivilizationId: civilizationId })
   }
 
   async exist(civilizationName: string): Promise<boolean> {
@@ -736,6 +738,7 @@ export class CivilizationService {
     await CivilizationStatsModel.deleteMany({ civilizationId: targetCivilizationId })
     await GraveModel.deleteMany({ civilizationId: targetCivilizationId })
     await CivilizationModel.deleteOne({ _id: targetCivilizationId })
+    await TradeOfferModel.deleteMany({ fromCivilizationId: targetCivilizationId })
 
     // 7. Nettoyer les références éventuelles vers la civilisation supprimée dans
     // la configuration des autres civilisations (échanges ouverts, guerres) afin
