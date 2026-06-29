@@ -6,6 +6,7 @@ import { LIFE_EXPECTANCY, People } from './people'
 
 import { Gender } from './enum'
 import { OccupationTypes } from './work/enum'
+import { BuildingTypes } from '../buildings/enum'
 
 describe('People', () => {
 
@@ -51,6 +52,26 @@ describe('People', () => {
       retiree.setOccupation(OccupationTypes.GATHERER)
 
       expect(retiree.collectResource({} as never, {} as never)).toBe(false)
+    })
+  })
+
+  describe('startBuilding tracks what is being built', () => {
+    it('records the building type and clears it once construction completes', () => {
+      const builder = new People({ month: 25 * 12, gender: Gender.MALE })
+      builder.startBuilding(2, BuildingTypes.HOUSE)
+
+      expect(builder.isBuilding).toBe(true)
+      expect(builder.buildingType).toBe(BuildingTypes.HOUSE)
+
+      // Month 1: still building.
+      builder.ageOneMonth()
+      expect(builder.isBuilding).toBe(true)
+      expect(builder.buildingType).toBe(BuildingTypes.HOUSE)
+
+      // Month 2: construction done, the building type is cleared.
+      builder.ageOneMonth()
+      expect(builder.isBuilding).toBe(false)
+      expect(builder.buildingType).toBeNull()
     })
   })
 })

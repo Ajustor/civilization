@@ -1048,7 +1048,7 @@ export class Civilization {
 
       // One pending entry is pushed per available worker: parallel
       // construction sites are intended (one house per worker in flight).
-      worker.startBuilding(House.timeToBuild);
+      worker.startBuilding(House.timeToBuild, BuildingTypes.HOUSE);
       this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild);
     }
   }
@@ -1097,7 +1097,7 @@ export class Civilization {
       return;
     }
     for (const worker of workers) {
-      worker.startBuilding(timeToBuild);
+      worker.startBuilding(timeToBuild, buildingType);
     }
 
     for (const cost of constructionCosts) {

@@ -55,6 +55,10 @@ export const changelog: ChangelogEntry[] = [
 			{
 				kind: 'fix',
 				text: 'Les personnes affectées à la construction d’un bâtiment ne font plus aucun autre travail (cueillette, recherche) tant que le chantier n’est pas terminé.'
+			},
+			{
+				kind: 'feature',
+				text: 'Le bloc « Constructions en cours » affiche désormais qui construit quoi : la liste des citoyens sur un chantier, leur métier, le bâtiment construit et le temps restant.'
 			}
 		]
 	},

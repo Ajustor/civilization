@@ -42,6 +42,20 @@ export const getCivilizationPeopleJobsStats = async (authToken: string, civiliza
   return stats
 }
 
+export const getCivilizationBuilders = async (authToken: string, civilizationId: string) => {
+  const { data, error } = await client.people({ civilizationId }).builders.get({
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return data.builders
+}
+
 export const getCivilizationPeopleRatioStats = async (authToken: string, civilizationId: string) => {
   const { data: stats, error } = await client.people({ civilizationId }).stats.peopleRatio.get({
     headers: {

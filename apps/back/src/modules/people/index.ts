@@ -112,3 +112,19 @@ export const peopleModule = new Elysia({ prefix: '/people' })
 
     return jobs
   })
+  // Citizens currently on a construction site, with what they are building.
+  // Lets the UI show "who builds what" without loading the full (paginated)
+  // population.
+  .get('/:civilizationId/builders', async ({ peopleService, params: { civilizationId } }) => {
+    const people = await peopleService.getPeopleFromCivilization(civilizationId)
+    const builders = (people ?? [])
+      .filter((person) => person.isBuilding)
+      .map((person) => ({
+        name: person.name ?? null,
+        occupation: person.occupation ?? null,
+        buildingType: person.buildingType ?? null,
+        buildingMonthsLeft: person.buildingMonthsLeft ?? 0,
+      }))
+
+    return { builders }
+  })

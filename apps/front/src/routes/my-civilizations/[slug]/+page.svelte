@@ -1042,6 +1042,25 @@
 					{/each}
 				</div>
 			{/if}
+
+			<!-- Qui construit quoi : citoyens actuellement sur un chantier -->
+			{#await data.lazy.builders then builders}
+				{#if builders && builders.length}
+					<div style="margin-top:16px;">
+						<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:6px;">Qui construit quoi ({builders.length})</div>
+						<div style="display:flex; flex-direction:column; gap:8px;">
+							{#each builders as builder}
+								<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 12px; border-radius:4px; background:oklch(0.97 0.01 84); border:1px solid oklch(0.83 0.04 70);">
+									<span style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.32 0.04 40);">{builder.name ?? 'Citoyen'}</span>
+									{#if builder.occupation}<span style="font-size:13px; color:oklch(0.5 0.04 55);">· {OCCUPATIONS[builder.occupation as OccupationTypes]}</span>{/if}
+									<span style="font-size:13px; color:oklch(0.42 0.06 50);">→ {builder.buildingType ? (buildingNames[builder.buildingType as BuildingTypes] ?? builder.buildingType) : 'Bâtiment'}</span>
+									<span style="margin-left:auto; font-size:13px; color:oklch(0.5 0.03 50);">{monthsLabel(builder.buildingMonthsLeft)}</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			{/await}
 		</div>
 
 		<!-- Combat Log Summary -->
