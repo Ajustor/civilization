@@ -1,14 +1,15 @@
 /**
  * TDD suite for the data-driven auto-construction system.
  *
- * Tests call the private `buildNewBuilding(world)` via bracket notation.
- * Chance is forced to 100 % by setting CHANCE_TO_BUILD_EVOLVED_BUILDING = 100
- * so every candidate whose weight > 0 is attempted.
+ * Tests call the private `buildNewBuilding` / `autoBuildCandidates` via bracket
+ * notation. Chance is forced to 100 % by setting CHANCE_TO_BUILD_EVOLVED_BUILDING
+ * = 100 so every candidate whose weight > 0 is attempted.
  */
 
 import { Civilization } from './civilization'
 import { BuildingTypes } from './buildings/enum'
 import { Cache } from './buildings/cache'
+import { Farm } from './buildings/farm'
 import { Library } from './buildings/library'
 import { People } from './people/people'
 import { Gender } from './people/enum'
@@ -40,79 +41,109 @@ function makeCiv(name = 'TestCiv'): Civilization {
   return civ
 }
 
-// ── Test 1: Library becomes an auto-build candidate ─────────────────────────
+// ── Test 1: expansionWeight — Farm ───────────────────────────────────────────
 
-describe('auto-construction: Library candidate', () => {
-  it('queues a Library when there are enough gatherers, resources, and no library yet', () => {
-    const civ = makeCiv('LibTest')
-
-    // 2 gatherers able to work (Library.workerRequiredToBuild = 2 gatherers)
-    for (let i = 0; i < 3; i++) {
-      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
-    }
-
-    // Library costs: 15 WOOD + 10 STONE
-    civ.addResource(new Resource(ResourceTypes.WOOD, 100))
-    civ.addResource(new Resource(ResourceTypes.STONE, 100))
-    // RAW_FOOD just above 5×pop (3 citizens → target=15) so Farm weight=0.
-    // Keep it below 20 so Campfire weight=0 (condition: stock >= 20).
-    // This ensures no other building competes for the gatherers.
-    civ.addResource(new Resource(ResourceTypes.RAW_FOOD, 16))
-
-    // No library exists → libraryWeight = 2 (libraryCount === 0)
-    expect(civ.library).toBeUndefined()
-
-    civ['buildNewBuilding'](summerWorld())
-
-    expect(
-      civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.LIBRARY),
-    ).toBe(true)
+describe('autoBuildCandidates: Farm expansion weight', () => {
+  it('bootstrap: no farm → weight > 0', () => {
+    const civ = makeCiv()
+    // No farm, no pending farm
+    const candidates = civ['autoBuildCandidates']()
+    const farm = candidates.find((c) => c.type === BuildingTypes.FARM)!
+    expect(farm.weight).toBeGreaterThan(0)
   })
 
-  it('gives a higher weight when erudits exceed current library slots', () => {
-    const civ = makeCiv('LibFull')
+  it('does not expand: 1 farm + 3 farmers (< 5 capacity) → weight === 0', () => {
+    const civ = makeCiv()
+    civ.addBuilding(new Farm(1))
+    for (let i = 0; i < 3; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.FARMER, `f-${i}`))
+    }
+    const candidates = civ['autoBuildCandidates']()
+    const farm = candidates.find((c) => c.type === BuildingTypes.FARM)!
+    // 1 farm × 5 slots = 5 capacity; 3 farmers < 5 → no surplus → weight 0
+    expect(farm.weight).toBe(0)
+  })
 
-    // One existing library (count=1) → 2 erudit slots; add 3 erudits → overflow
+  it('expands: 1 farm + 6 farmers (surplus 1) → weight > 0', () => {
+    const civ = makeCiv()
+    civ.addBuilding(new Farm(1))
+    for (let i = 0; i < 6; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.FARMER, `f-${i}`))
+    }
+    const candidates = civ['autoBuildCandidates']()
+    const farm = candidates.find((c) => c.type === BuildingTypes.FARM)!
+    // 1 farm × 5 slots = 5; 6 farmers → surplus 1 → weight > 0
+    expect(farm.weight).toBeGreaterThan(0)
+  })
+
+  it('pending farm counts as capacity: 0 built + 1 pending → weight === 0 (no bootstrap of 2nd)', () => {
+    const civ = makeCiv()
+    // Simulate a pending construction without resources/workers (direct push)
+    civ.pendingConstructions.push({ buildingType: BuildingTypes.FARM, monthsRemaining: 3 })
+    const candidates = civ['autoBuildCandidates']()
+    const farm = candidates.find((c) => c.type === BuildingTypes.FARM)!
+    // totalCount = 0 built + 1 pending = 1 → not 0 → no bootstrap;
+    // 0 farmers → surplus = 0 - 5 = -5 → weight 0
+    expect(farm.weight).toBe(0)
+  })
+})
+
+// ── Test 2: expansionWeight — Library ────────────────────────────────────────
+
+describe('autoBuildCandidates: Library expansion weight', () => {
+  it('bootstrap: no library → weight > 0', () => {
+    const civ = makeCiv()
+    const candidates = civ['autoBuildCandidates']()
+    const lib = candidates.find((c) => c.type === BuildingTypes.LIBRARY)!
+    expect(lib.weight).toBeGreaterThan(0)
+  })
+
+  it('no expansion: 1 library + 2 erudits (exactly full) → weight === 0', () => {
+    const civ = makeCiv()
+    civ.addBuilding(new Library(1))
+    for (let i = 0; i < 2; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.ERUDIT, `e-${i}`))
+    }
+    const candidates = civ['autoBuildCandidates']()
+    const lib = candidates.find((c) => c.type === BuildingTypes.LIBRARY)!
+    // 1 library × 2 slots = 2; 2 erudits → surplus 0 → weight 0
+    expect(lib.weight).toBe(0)
+  })
+
+  it('expands: 1 library + 3 erudits (surplus 1) → weight > 0', () => {
+    const civ = makeCiv()
     civ.addBuilding(new Library(1))
     for (let i = 0; i < 3; i++) {
       civ.addPeople(makeWorker(OccupationTypes.ERUDIT, `e-${i}`))
     }
-    // Also add gatherers to satisfy workerRequiredToBuild
-    for (let i = 0; i < 3; i++) {
-      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
-    }
-    civ.addResource(new Resource(ResourceTypes.WOOD, 100))
-    civ.addResource(new Resource(ResourceTypes.STONE, 100))
-    // Keep RAW_FOOD just above 5×pop but below 20 so Campfire and Farm weights = 0,
-    // avoiding competition for the 2 gatherers Library needs.
-    civ.addResource(new Resource(ResourceTypes.RAW_FOOD, 16))
-
-    civ['buildNewBuilding'](summerWorld())
-
-    // Should have queued a second Library due to erudit overflow (weight = 5)
-    expect(
-      civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.LIBRARY),
-    ).toBe(true)
+    const candidates = civ['autoBuildCandidates']()
+    const lib = candidates.find((c) => c.type === BuildingTypes.LIBRARY)!
+    // 1 library × 2 slots = 2; 3 erudits → surplus 1 → weight > 0
+    expect(lib.weight).toBeGreaterThan(0)
   })
 })
 
-// ── Test 2: Gated buildings (Kiln, Sawmill) never auto-build without tech ───
+// ── Test 3: Gated buildings (Kiln, Sawmill, Mine) never auto-build without tech ─
 
 describe('auto-construction: tech gating preserved', () => {
   it('does not build KILN or SAWMILL without CRAFTSMANSHIP, even at 100 % chance', () => {
     const civ = makeCiv('NoTech')
     // No technologies researched → KILN and SAWMILL are locked
 
-    // Winter world → Kiln gets heating-season bonus (if it had weight)
+    // Winter world (passes as _world but is now unused internally)
     const world = winterWorld()
 
-    // Abundant resources and workers
+    // Abundant resources and woodcutters/charcoal burners (so weight would be > 0 if unlocked)
     civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
     civ.addResource(new Resource(ResourceTypes.STONE, 1000))
-    civ.addResource(new Resource(ResourceTypes.PLANK, 0))
-    civ.addResource(new Resource(ResourceTypes.CHARCOAL, 0))
     for (let i = 0; i < 10; i++) {
-      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
+      civ.addPeople(makeWorker(OccupationTypes.WOODCUTTER, `wc-${i}`))
+    }
+    for (let i = 0; i < 10; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.CHARCOAL_BURNER, `cb-${i}`))
+    }
+    for (let i = 0; i < 10; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.CARPENTER, `cp-${i}`))
     }
 
     civ['buildNewBuilding'](world)
@@ -126,35 +157,11 @@ describe('auto-construction: tech gating preserved', () => {
   })
 })
 
-// ── Test 3: Weight 0 → no construction ──────────────────────────────────────
-
-describe('auto-construction: weight 0 suppresses build', () => {
-  it('does not queue FARM when raw food stock already covers 5× population', () => {
-    const civ = makeCiv('WellFed')
-    // Population of 3 → target = 5 * 3 = 15; stock = 100 >> 15 → needWeight = 0
-    for (let i = 0; i < 3; i++) {
-      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
-    }
-    // Abundant raw food → Farm weight = 0
-    civ.addResource(new Resource(ResourceTypes.RAW_FOOD, 1000))
-    civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
-    civ.addResource(new Resource(ResourceTypes.STONE, 1000))
-
-    civ['buildNewBuilding'](summerWorld())
-
-    expect(
-      civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.FARM),
-    ).toBe(false)
-  })
-})
-
-// ── Test 4: Cache and Mine gating preserved ──────────────────────────────────
+// ── Test 4: Cache uniqueness and Mine tech-gating ────────────────────────────
 
 describe('auto-construction: Cache uniqueness and Mine tech-gating', () => {
   it('does not queue a second Cache when one already exists', () => {
     const civ = makeCiv('WithCache')
-    // Cache is created by default in some civilizations, but let's be explicit:
-    // add a cache so cache.count = 1
     civ.addBuilding(new Cache())
     civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
     civ.addResource(new Resource(ResourceTypes.STONE, 1000))
@@ -173,12 +180,11 @@ describe('auto-construction: Cache uniqueness and Mine tech-gating', () => {
 
   it('does not queue MINE without MASONRY tech', () => {
     const civ = makeCiv('NoMasonry')
-    // Has CRAFTSMANSHIP but not MASONRY → MINE still locked
     civ.researchedTechs = [TechId.CRAFTSMANSHIP]
 
     civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
     civ.addResource(new Resource(ResourceTypes.STONE, 1000))
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
     }
 
@@ -187,5 +193,55 @@ describe('auto-construction: Cache uniqueness and Mine tech-gating', () => {
     expect(
       civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.MINE),
     ).toBe(false)
+  })
+})
+
+// ── Test 5: Library bootstrap via buildNewBuilding (integration) ─────────────
+
+describe('auto-construction: Library candidate (integration)', () => {
+  it('queues a Library when there is no library, enough gatherers and resources', () => {
+    const civ = makeCiv('LibTest')
+
+    // 6 gatherers: Campfire (bootstrap=4) will claim 2, leaving 4 free for Library (needs 2).
+    // Sawmill is locked (no CRAFTSMANSHIP). Farm needs PLANK (not provided) → can't build.
+    // CACHE needs 200 WOOD + 600 PLANK + 15 gatherers → can't build (only 100 WOOD, no PLANK).
+    for (let i = 0; i < 6; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
+    }
+
+    // Library costs: 15 WOOD + 10 STONE; Campfire costs: 15 WOOD.
+    civ.addResource(new Resource(ResourceTypes.WOOD, 100))
+    civ.addResource(new Resource(ResourceTypes.STONE, 100))
+
+    expect(civ.library).toBeUndefined()
+
+    civ['buildNewBuilding'](summerWorld())
+
+    expect(
+      civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.LIBRARY),
+    ).toBe(true)
+  })
+
+  it('queues a second Library when erudits overflow (1 library + 3 erudits)', () => {
+    const civ = makeCiv('LibFull')
+
+    // One existing library (count=1) → 2 erudit slots. 3 erudits → surplus 1 → weight 1 > 0.
+    civ.addBuilding(new Library(1))
+    for (let i = 0; i < 3; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.ERUDIT, `e-${i}`))
+    }
+    // Add enough gatherers (6) to satisfy Library.workerRequiredToBuild (2 gatherers) even if
+    // Campfire bootstrap (no campfire → weight 4) claims 2 of them first.
+    for (let i = 0; i < 6; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
+    }
+    civ.addResource(new Resource(ResourceTypes.WOOD, 100))
+    civ.addResource(new Resource(ResourceTypes.STONE, 100))
+
+    civ['buildNewBuilding'](summerWorld())
+
+    expect(
+      civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.LIBRARY),
+    ).toBe(true)
   })
 })

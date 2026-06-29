@@ -955,11 +955,11 @@ export class Civilization {
     }
   }
 
-  private buildNewBuilding(world?: World) {
+  private buildNewBuilding(_world?: World) {
     this.buildChosenBuilding();
     this.buildNewHouses();
 
-    const candidates = this.autoBuildCandidates(world)
+    const candidates = this.autoBuildCandidates()
       .filter((candidate) => candidate.weight > 0)
       .sort((a, b) => b.weight - a.weight);
 
@@ -981,8 +981,14 @@ export class Civilization {
    * Candidates are sorted by descending weight so the highest-priority need
    * reserves builders and resources first. Final gating (tech unlock, resource
    * check, available workers) is applied inside buildNew().
+   *
+   * A new instance of a staffed building is only queued when:
+   *   - none exists yet (bootstrap weight), OR
+   *   - existing instances are full AND there is a surplus of workers of the
+   *     required occupation beyond current capacity (expansion weight ∝ surplus).
+   * This prevents building copies that would remain unstaffed.
    */
-  private autoBuildCandidates(world?: World): {
+  private autoBuildCandidates(): {
     type: BuildingTypes;
     ctor: {
       constructionCosts: ConstructionCost[];
@@ -991,74 +997,62 @@ export class Civilization {
     };
     weight: number;
   }[] {
-    const pop = Math.max(1, this._people.length);
-    const stock = (resource: ResourceTypes) =>
-      this.getResource(resource).quantity;
-    // Returns 10 when current stock is 0, 0 when it meets or exceeds the target.
-    const needWeight = (current: number, target: number) =>
-      target <= 0
-        ? 0
-        : Math.max(0, Math.min(10, (1 - current / target) * 10));
-    const heatingSeason =
-      world !== undefined && world.getMonth() % 12 >= 6;
+    const pendingCount = (type: BuildingTypes) =>
+      this.pendingConstructions.filter((p) => p.buildingType === type).length;
 
-    const libraryCount = this.library?.count ?? 0;
-    const eruditCount = this.getPeopleWithOccupation(OccupationTypes.ERUDIT).length;
-    // Each library hosts 2 erudits (Library.workerTypeRequired[0].count).
-    const eruditSlots = libraryCount * 2;
-    const libraryWeight =
-      eruditCount > eruditSlots ? 5 : libraryCount === 0 ? 2 : 0;
+    // Staffed building: build the first (bootstrap), or expand only when all
+    // existing instances are full and there is a surplus of qualified workers.
+    const expansionWeight = (
+      builtCount: number,
+      type: BuildingTypes,
+      occupation: OccupationTypes,
+      workersPerBuilding: number,
+      bootstrap: number,
+    ): number => {
+      const totalCount = builtCount + pendingCount(type);
+      if (totalCount === 0) {
+        return bootstrap;
+      }
+      const workers = this.getPeopleWithOccupation(occupation).length;
+      const surplus = workers - totalCount * workersPerBuilding;
+      return surplus > 0 ? Math.min(10, surplus) : 0;
+    };
 
     return [
       {
         type: BuildingTypes.CACHE,
         ctor: Cache,
-        weight:
-          !this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE)
-            ? 8
-            : 0,
+        weight: !this.cache?.count && !this.isBuildingPending(BuildingTypes.CACHE) ? 8 : 0,
       },
       {
         type: BuildingTypes.FARM,
         ctor: Farm,
-        weight: needWeight(stock(ResourceTypes.RAW_FOOD), 5 * pop),
+        weight: expansionWeight(this.farm?.count ?? 0, BuildingTypes.FARM, OccupationTypes.FARMER, 5, 6),
       },
       {
         type: BuildingTypes.CAMPFIRE,
         ctor: Campfire,
-        weight:
-          stock(ResourceTypes.RAW_FOOD) >= 20
-            ? needWeight(stock(ResourceTypes.COOKED_FOOD), 3 * pop)
-            : 0,
+        weight: expansionWeight(this.campfire?.count ?? 0, BuildingTypes.CAMPFIRE, OccupationTypes.KITCHEN_ASSISTANT, 1, 4),
       },
       {
         type: BuildingTypes.SAWMILL,
         ctor: Sawmill,
-        weight: needWeight(stock(ResourceTypes.PLANK), 2 * pop),
+        weight: expansionWeight(this.sawmill?.count ?? 0, BuildingTypes.SAWMILL, OccupationTypes.CARPENTER, 2, 4),
       },
       {
         type: BuildingTypes.KILN,
         ctor: Kiln,
-        weight:
-          heatingSeason && stock(ResourceTypes.WOOD) >= 5
-            ? needWeight(
-                stock(ResourceTypes.CHARCOAL),
-                Math.max(1, Math.ceil(pop / 10) * 3),
-              )
-            : 0,
+        weight: expansionWeight(this.kiln?.count ?? 0, BuildingTypes.KILN, OccupationTypes.CHARCOAL_BURNER, 2, 4),
       },
       {
         type: BuildingTypes.MINE,
         ctor: Mine,
-        weight:
-          !this.mine?.count && !this.isBuildingPending(BuildingTypes.MINE)
-            ? 9
-            : 0,
+        weight: expansionWeight(this.mine?.count ?? 0, BuildingTypes.MINE, OccupationTypes.MINER, 10, 9),
       },
       {
         type: BuildingTypes.LIBRARY,
         ctor: Library,
-        weight: libraryWeight,
+        weight: expansionWeight(this.library?.count ?? 0, BuildingTypes.LIBRARY, OccupationTypes.ERUDIT, 2, 3),
       },
     ];
   }
