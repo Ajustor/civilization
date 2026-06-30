@@ -10,6 +10,8 @@ export class WorldBuilder {
   private resources: Resource[] = [];
   private civilizations: Civilization[] = [];
   private nextEvent: Events | null = null
+  private lastEvent: Events | null = null
+  private eventStreak: number = 0
   private config?: WorldConfig
 
   withConfig(config?: Partial<WorldConfig> | null): this {
@@ -49,11 +51,23 @@ export class WorldBuilder {
     return this
   }
 
+  withLastEvent(lastEvent: Events | null): this {
+    this.lastEvent = lastEvent
+    return this
+  }
+
+  withEventStreak(eventStreak: number): this {
+    this.eventStreak = eventStreak
+    return this
+  }
+
   build(): World {
     const world = new World(this.name, this.month, this.config)
     world.id = this.id
 
     world.nextEvent = this.nextEvent
+    world.lastEvent = this.lastEvent
+    world.eventStreak = this.eventStreak
 
     // Add resources
     for (const resource of this.resources) {

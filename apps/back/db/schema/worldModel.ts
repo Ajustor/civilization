@@ -13,6 +13,17 @@ export const worldSchema = new Schema({
     default: null,
     enum: Events
   },
+  // Anti-répétition des événements : dernier événement survenu + nb d'occurrences
+  // consécutives. Persistés pour survivre à la reconstruction du monde à chaque tick.
+  lastEvent: {
+    type: String,
+    default: null,
+    enum: Events
+  },
+  eventStreak: {
+    type: Number,
+    default: 0
+  },
   month: {
     type: Number,
     default: 0,

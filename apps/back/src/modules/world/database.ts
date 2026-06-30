@@ -50,7 +50,7 @@ export class WorldsTable {
 
     for (const world of worlds) {
       const builder = new WorldBuilder()
-      builder.withName(world.name).withId(world.id).startingMonth(world.month).withNextEvent(world.nextEvent as Events).withConfig(extractWorldConfig(world.config))
+      builder.withName(world.name).withId(world.id).startingMonth(world.month).withNextEvent(world.nextEvent as Events).withLastEvent(world.lastEvent as Events).withEventStreak(world.eventStreak ?? 0).withConfig(extractWorldConfig(world.config))
 
       builder.addResource(...world.resources.map(({ quantity, resourceType }) => new Resource(resourceType as ResourceTypes, quantity ?? 0)))
 
@@ -64,7 +64,7 @@ export class WorldsTable {
     for (const world of worlds) {
 
       console.time('worldSave')
-      await WorldModel.updateOne({ _id: world.id }, { month: world.getMonth(), nextEvent: world.nextEvent, config: world.getConfig(), resources: world.getResources().map(({ type, quantity }) => ({ resourceType: type, quantity })) })
+      await WorldModel.updateOne({ _id: world.id }, { month: world.getMonth(), nextEvent: world.nextEvent, lastEvent: world.lastEvent, eventStreak: world.eventStreak, config: world.getConfig(), resources: world.getResources().map(({ type, quantity }) => ({ resourceType: type, quantity })) })
       console.timeEnd('worldSave')
     }
   }

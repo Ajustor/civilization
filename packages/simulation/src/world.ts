@@ -8,6 +8,7 @@ import { v4 as randomUUID } from 'uuid'
 import type { CombatRecord, PlunderedResource } from './types/combat'
 import { Earthquake } from './events/earthquake'
 import { Events } from './events/enum'
+import { buildEventWeights, pickWeightedEvent } from './events/selection'
 import { Starvation } from './events/starvation'
 import type { WorldEvent } from './events/interface'
 import { formatCivilizations } from './formatters/civilization'
@@ -75,6 +76,11 @@ export class World {
   private _civilizations: Civilization[] = []
 
   public nextEvent: Events | null = null
+  // Anti-répétition : dernier événement réellement survenu + nombre d'occurrences
+  // consécutives. Persistés (worldModel) pour survivre à la reconstruction du
+  // monde à chaque tick.
+  public lastEvent: Events | null = null
+  public eventStreak: number = 0
   public lastBattles: CombatRecord[] = []
 
   private config: WorldConfig
@@ -400,52 +406,16 @@ export class World {
       return
     }
 
-    const event = Math.random() * 100
+    const weights = buildEventWeights(this.lastEvent, this.eventStreak)
+    const pick = pickWeightedEvent(weights, Math.random())
 
-    switch (true) {
-      case event < 20: {
-        this.nextEvent = Events.EARTHQUAKE
-        break
-      }
-      case event < 40: {
-        this.nextEvent = Events.STARVATION
-        break
-      }
-      case event < 45: {
-        this.nextEvent = Events.FIRE
-        break
-      }
-      case event < 50: {
-        this.nextEvent = Events.RAT_INVASION
-        break
-      }
-      case event < 80: {
-        this.nextEvent = Events.MIGRATION
-        break
-      }
-      // Événements bénéfiques : leur probabilité est inverse à l'ampleur du
-      // bonus (plus le gain est fort, plus c'est rare). Ils occupent la plage
-      // 80-98 qui ne produisait auparavant aucun événement, l'équilibre des
-      // malus (0-80) reste donc inchangé.
-      case event < 88: {
-        this.nextEvent = Events.BOUNTIFUL_HARVEST
-        break
-      }
-      case event < 93: {
-        this.nextEvent = Events.TRADE_CARAVAN
-        break
-      }
-      case event < 96: {
-        this.nextEvent = Events.FORTUNATE_DISCOVERY
-        break
-      }
-      case event < 98: {
-        this.nextEvent = Events.GOLDEN_AGE
-        break
-      }
-      default: {
-        this.nextEvent = null
-      }
+    // On ne met à jour la série que sur un vrai événement : un mois calme (null)
+    // ne réinitialise pas le compteur (il ne « pardonne » pas la répétition).
+    if (pick !== null) {
+      this.eventStreak = pick === this.lastEvent ? this.eventStreak + 1 : 1
+      this.lastEvent = pick
     }
+
+    this.nextEvent = pick
   }
 }
