@@ -29,6 +29,44 @@ export const changeKindColors: Record<ChangeKind, string> = {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: '2026-06-30',
+		title: 'Événements rééquilibrés, migrations & mondes',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'La page « Mes civilisations » regroupe désormais vos civilisations par monde, avec une section par monde.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Les échanges ne sont possibles qu’entre civilisations d’un même monde : la sélection des partenaires ne propose plus que les civilisations du bon monde.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Le mode rapide est désormais activé par défaut pour les nouvelles civilisations.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Événements rééquilibrés : les grandes catastrophes (séisme, famine, vague de migration) sont nettement plus rares, les autres événements un peu plus fréquents.'
+			},
+			{
+				kind: 'feature',
+				text: 'Anti-répétition : un même événement ne tombe quasiment plus plusieurs mois d’affilée — chaque répétition réduit fortement ses chances de revenir.'
+			},
+			{
+				kind: 'feature',
+				text: 'Soldats gardes-frontières : pendant une vague de migration, les soldats retiennent une partie des citoyens qui partiraient (jusqu’à 100 % des départs si la garnison est suffisante).'
+			},
+			{
+				kind: 'improvement',
+				text: 'Migration enrichie : les gens quittent les civilisations en difficulté pour les plus prospères, et plus aucune population n’est perdue dans le vide (les migrants sans terre d’accueil rentrent chez eux).'
+			},
+			{
+				kind: 'fix',
+				text: 'La liste des civilisations se met à jour immédiatement après une suppression ou une récupération de ressources (plus besoin de rafraîchir la page).'
+			}
+		]
+	},
+	{
 		date: '2026-06-29',
 		title: 'Mode rapide & vue du monde enrichie',
 		changes: [

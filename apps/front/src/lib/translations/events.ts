@@ -17,7 +17,7 @@ export const eventsName: EventTranslations = {
 export const eventsDescription: EventTranslations = {
   [Events.EARTHQUAKE]: 'Un tremblement de terre qui ravage les bâtiments.',
   [Events.STARVATION]: 'Les gens ont faim ! Ils vident les réserves du monde et de la civilisation !',
-  [Events.MIGRATION]: "Les gens se déplacent beaucoup en ce moment. Les variations de population risquent d'être importantes",
+  [Events.MIGRATION]: "Les gens quittent les civilisations en difficulté pour les plus prospères. Les soldats qui gardent les frontières peuvent retenir une partie des partants.",
   [Events.FIRE]: "D'immenses incendies se déclarent dans le royaume, les réserves de bois sont détruites",
   [Events.RAT_INVASION]: "Les rongeurs ont faim, ils pillent et détruisent les réserves de nourriture",
   [Events.BOUNTIFUL_HARVEST]: 'Les terres sont généreuses : les réserves de nourriture des civilisations gonflent.',

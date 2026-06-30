@@ -38,6 +38,9 @@
 		selectedWorld ? SEASONS.find((s) => s.months.includes(selectedWorld.month)) ?? null : null
 	)
 	const civilizationsCount = $derived(selectedWorld?.civilizations?.length ?? 0)
+	// Nombre de mois simulés par tick en mode rapide, lu sur la config du monde
+	// sélectionné (12 = un an par défaut).
+	const speedModeMonths = $derived(selectedWorld?.config.SPEED_MODE_MONTHS ?? 12)
 
 	// ── Données de règles (valeurs issues de la simulation) ────────────────────
 
@@ -247,7 +250,7 @@
 				<h2 class="civ-section-title">Le temps qui passe</h2>
 				<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Toutes les 15 minutes, un mois passe dans le monde.</span></li>
-					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span><strong>Mode rapide</strong> : si <strong>toutes</strong> les civilisations d'un monde activent le mode rapide (dans leurs réglages), le temps y avance de <strong>plusieurs mois d'un coup</strong> à chaque pas de 15 minutes — <strong>12 mois (un an) par défaut</strong> — au lieu d'un seul. Ce nombre de mois est <strong>propre à chaque monde</strong> (configurable dans la config du monde). Les mois sont simulés et sauvegardés un par un, exactement comme un déroulement normal.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span><strong>Mode rapide</strong> : si <strong>toutes</strong> les civilisations d'un monde activent le mode rapide (dans leurs réglages — <strong>activé par défaut</strong>), le temps y avance de <strong>{speedModeMonths} mois d'un coup</strong> à chaque pas de 15 minutes au lieu d'un seul. Ce nombre de mois est <strong>propre à chaque monde</strong>{selectedWorld ? ` (${selectedWorld.name} : ${speedModeMonths} mois par tick)` : ' (12 mois — un an — par défaut)'}. Les mois sont simulés et sauvegardés un par un, exactement comme un déroulement normal.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Un cycle complet de 12 mois correspond à une année. Les saisons se succèdent ainsi : <strong>printemps</strong> (mois 0–2), <strong>été</strong> (3–5), <strong>automne</strong> (6–8), <strong>hiver</strong> (9–11).</span></li>
 				</ul>
 			</section>
@@ -368,6 +371,9 @@
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
 					Certains événements sont <strong style="color:oklch(0.45 0.13 145);">bénéfiques</strong> (en vert) : ils offrent un bonus aux civilisations. Plus le bonus est important, plus l'événement est <strong>rare</strong> — l'<em>Âge d'or</em> est ainsi bien plus rare qu'une simple <em>récolte abondante</em>.
 				</p>
+				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
+					Les grandes catastrophes (<em>séisme</em>, <em>famine</em>, <em>vague de migration</em>) ont été rendues plus <strong>rares</strong>, et un <strong>même événement ne se répète quasiment plus plusieurs mois d'affilée</strong> : à chaque répétition, sa probabilité de revenir est fortement réduite.
+				</p>
 				<div style="display:flex; flex-direction:column; gap:10px;">
 					{#each eventEntries as [event, name]}
 						{@const beneficial = beneficialEvents.has(event)}
@@ -385,6 +391,7 @@
 				<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Le <strong>ratio militaire</strong> (configurable) définit la part des adultes (hors enfants et retraités) entretenus comme <strong>soldats</strong>.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Une <strong>femme enceinte</strong> ne peut pas être recrutée comme soldat.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les soldats <strong>gardent les frontières</strong> : pendant une <strong>vague de migration</strong>, ils retiennent une partie des citoyens qui partiraient (jusqu'à <strong>100 % des départs</strong> si la garnison est assez nombreuse).</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Lors d'une bataille, la <strong>force</strong> de chaque camp est la somme des points de vie de ses soldats. Le camp le plus fort l'emporte ; les pertes sont proportionnelles à la force adverse.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>En cas de victoire, l'attaquant <strong>pille 25 %</strong> de chaque ressource et <strong>capture 5 %</strong> de la population adverse (100 captifs maximum).</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Une <strong>Muraille</strong> bloque entièrement une attaque, mais elle est détruite dans l'opération.</span></li>
@@ -395,6 +402,7 @@
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Échanges entre civilisations</h2>
 				<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>L'échange n'est possible qu'entre civilisations d'un <strong>même monde</strong>.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>L'échange n'a lieu que s'il est <strong>mutuel</strong> : les deux civilisations doivent s'ajouter l'une l'autre dans leur configuration.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Chaque mois, pour chaque ressource, leurs stocks sont <strong>rapprochés de leur moyenne</strong> — la civilisation la mieux pourvue aide la plus démunie.</span></li>
 				</ul>

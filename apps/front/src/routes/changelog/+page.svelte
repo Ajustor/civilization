@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { changelog, changeKindLabels, changeKindColors } from '$lib/changelog'
+	import type { ChangeKind, ChangelogChange } from '$lib/changelog'
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+
+	// Ordre d'affichage des changements : nouveautés, puis améliorations, puis corrections.
+	const KIND_ORDER: Record<ChangeKind, number> = { feature: 0, improvement: 1, fix: 2 }
+	const sortByKind = (changes: ChangelogChange[]): ChangelogChange[] =>
+		[...changes].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind])
 
 	const formatDate = (date: string) =>
 		new Date(date).toLocaleDateString('fr-FR', {
@@ -45,7 +51,7 @@
 					</div>
 
 					<div style="display:flex; flex-direction:column; gap:10px;">
-						{#each entry.changes as change}
+						{#each sortByKind(entry.changes) as change}
 							<div style="display:flex; align-items:flex-start; gap:10px;">
 								<span
 									style="flex-shrink:0; font-size:11px; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:oklch(0.97 0.02 84); background:{changeKindColors[
