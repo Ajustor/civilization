@@ -1,8 +1,17 @@
 
-export const callDeleteCivilization = async (civilizationId: string) => fetch('my-civilizations', {
-  method: 'DELETE',
-  body: JSON.stringify({ civilizationId })
-})
+export const callDeleteCivilization = async (civilizationId: string) => {
+  const response = await fetch('my-civilizations', {
+    method: 'DELETE',
+    body: JSON.stringify({ civilizationId })
+  })
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}))
+    throw new Error(body?.error ?? 'Erreur lors de la suppression')
+  }
+
+  return response.json().catch(() => ({}))
+}
 
 export const callReclaimCivilizationResources = async (
   civilizationId: string,
@@ -19,14 +28,6 @@ export const callReclaimCivilizationResources = async (
   }
 
   return body
-}
-
-export const callGetCivilizations = async () => {
-  const response = await fetch('my-civilizations', {
-    method: 'GET'
-  })
-
-  return response.json()
 }
 
 // Fresh snapshot of the lazily-loaded stats (charts + combat logs), used by the

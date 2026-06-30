@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types'
 	import { toast } from 'svelte-sonner'
+	import { invalidateAll } from '$app/navigation'
 	import { superForm } from 'sveltekit-superforms'
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters'
 	import { newCivilizationSchema } from '$lib/schemas/newCivilization'
@@ -13,7 +14,6 @@
 	} from '$lib/components/ui/form'
 	import {
 		callDeleteCivilization,
-		callGetCivilizations,
 		callReclaimCivilizationResources
 	} from '../../services/sveltekit-api/civilization'
 	import { resourceNames } from '$lib/translations'
@@ -35,7 +35,7 @@
 		onUpdate({ result }) {
 			if (result.type === 'success' && result.data?.myCivilizations) {
 				isDialogOpen = false
-				data.myCivilizations = result.data.myCivilizations
+				invalidateAll()
 			}
 		}
 	})
@@ -76,10 +76,9 @@
 		})
 		toast.dismiss(loaderId)
 		toast.success('Civilisation supprimée')
-		const { myCivilizations } = await callGetCivilizations()
-		data.myCivilizations = myCivilizations
 		civilizationIdToDelete = null
 		deleteDialogOpen = false
+		await invalidateAll()
 	}
 
 	const getResourceQty = (civ: CivilizationType, type: ResourceTypes) =>
@@ -113,10 +112,9 @@
 		}
 		toast.dismiss(loaderId)
 		toast.success('Ressources récupérées')
-		const { myCivilizations } = await callGetCivilizations()
-		data.myCivilizations = myCivilizations
 		reclaiming = false
 		closeReclaimModal()
+		await invalidateAll()
 	}
 </script>
 
