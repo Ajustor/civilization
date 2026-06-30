@@ -27,9 +27,10 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		() => [] as Awaited<ReturnType<typeof getMyCivilizations>>
 	)
 
-	// Échanges : uniquement ses propres autres civilisations
+	// Échanges : uniquement ses propres autres civilisations DU MÊME MONDE
+	// (la simulation n'échange qu'au sein d'un monde).
 	const otherCivilizations = (myCivilizations as CivilizationType[])
-		.filter((other) => other.id !== civilization.id)
+		.filter((other) => other.id !== civilization.id && other.worldId === civilization.worldId)
 		.map((other) => ({ id: other.id, name: other.name }))
 
 	const configForm = await superValidate(
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			militaryRatio: civilization.config.MILITARY_RATIO,
 			atWarWith: civilization.config.AT_WAR_WITH ?? [],
 			nextBuildingToBuild: civilization.config.NEXT_BUILDING_TO_BUILD ?? null,
-			speedMode: civilization.config.SPEED_MODE ?? false
+			speedMode: civilization.config.SPEED_MODE ?? true
 		},
 		zod(civilizationConfigSchema)
 	)
@@ -85,7 +86,7 @@ export const actions: Actions = {
 							militaryRatio: updated.config.MILITARY_RATIO,
 							atWarWith: updated.config.AT_WAR_WITH ?? [],
 							nextBuildingToBuild: updated.config.NEXT_BUILDING_TO_BUILD ?? null,
-							speedMode: updated.config.SPEED_MODE ?? false
+							speedMode: updated.config.SPEED_MODE ?? true
 						},
 						zod(civilizationConfigSchema)
 					)

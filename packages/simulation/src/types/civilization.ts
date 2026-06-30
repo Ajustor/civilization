@@ -37,4 +37,8 @@ export type CivilizationType = {
   citizensCount?: number,
   config: CivilizationConfig
   pendingConstructions: PendingConstruction[]
+  // Monde auquel appartient la civilisation. Optionnel car `formatCivilizations`
+  // ne le connaît pas (donnée de persistance) : les routes API l'enrichissent.
+  worldId?: string | null
+  worldName?: string | null
 }

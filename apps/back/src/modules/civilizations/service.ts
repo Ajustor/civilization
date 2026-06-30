@@ -265,6 +265,38 @@ export class CivilizationService {
     return null
   }
 
+  // Résout, pour un lot de civilisations, leur monde (id + nom) en une fois.
+  // Réutilise getWorldId (donc le backfill) pour les ids, puis une seule requête
+  // pour récupérer les noms des mondes concernés.
+  async getWorldRefs(
+    civilizationIds: string[],
+  ): Promise<Record<string, { worldId: string | null; worldName: string | null }>> {
+    const worldIds = await Promise.all(
+      civilizationIds.map((civilizationId) => this.getWorldId(civilizationId)),
+    )
+    const uniqueWorldIds = [
+      ...new Set(worldIds.filter((worldId): worldId is string => Boolean(worldId))),
+    ]
+    const worlds = uniqueWorldIds.length
+      ? await WorldModel.find({ _id: { $in: uniqueWorldIds } }, 'name')
+      : []
+    const worldNameById = new Map(
+      worlds.map((world) => [world._id.toString(), world.name as string]),
+    )
+    const refs: Record<
+      string,
+      { worldId: string | null; worldName: string | null }
+    > = {}
+    civilizationIds.forEach((civilizationId, index) => {
+      const worldId = worldIds[index]
+      refs[civilizationId] = {
+        worldId,
+        worldName: worldId ? (worldNameById.get(worldId) ?? null) : null,
+      }
+    })
+    return refs
+  }
+
   async countGenderForWorld(
     worldId: string,
   ): Promise<{ men: number; women: number }> {
@@ -788,6 +820,20 @@ export class CivilizationService {
     // its current value (or the default for civilizations created before the
     // config existed), and only the fields present in the body override it.
     const currentConfig = civilizationToUpdate.config ?? defaultCivilizationConfig
+
+    // Les échanges ne fonctionnent qu'entre civilisations d'un même monde (la
+    // simulation n'échange qu'au sein d'un monde). On ne conserve donc que les
+    // partenaires du même monde ; les autres (hérités de l'ancienne UI sans
+    // filtre) sont écartés silencieusement plutôt que de bloquer la sauvegarde.
+    if (body.openExchange?.length) {
+      const ownWorldId = await this.getWorldId(civilizationToUpdate.id)
+      const partnerWorldIds = await Promise.all(
+        body.openExchange.map((partnerId) => this.getWorldId(String(partnerId))),
+      )
+      body.openExchange = body.openExchange.filter(
+        (_, index) => partnerWorldIds[index] === ownWorldId,
+      )
+    }
 
     await CivilizationModel.findOneAndUpdate(
       { _id: civilizationToUpdate.id },

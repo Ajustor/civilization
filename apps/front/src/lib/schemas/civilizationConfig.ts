@@ -21,7 +21,7 @@ export const civilizationConfigSchema = z.object({
 		.max(100, 'Le ratio est un pourcentage (0–100)'),
 	atWarWith: z.array(z.string()).default([]),
 	nextBuildingToBuild: z.string().nullable().default(null),
-	speedMode: z.boolean().default(false)
+	speedMode: z.boolean().default(true)
 })
 
 export type CivilizationConfigSchema = typeof civilizationConfigSchema

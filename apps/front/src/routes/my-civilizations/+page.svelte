@@ -84,6 +84,27 @@
 	const getResourceQty = (civ: CivilizationType, type: ResourceTypes) =>
 		civ.resources.find((r) => r.type === type)?.quantity ?? 0
 
+	// Regroupe les civilisations par monde (les échanges ne se font qu'au sein
+	// d'un même monde). Trié par nom de monde pour un affichage stable.
+	const groupCivilizationsByWorld = (civilizations: CivilizationType[]) => {
+		const groups = new Map<
+			string,
+			{ worldId: string | null; worldName: string; civilizations: CivilizationType[] }
+		>()
+		for (const civ of civilizations) {
+			const key = civ.worldId ?? '__unknown__'
+			if (!groups.has(key)) {
+				groups.set(key, {
+					worldId: civ.worldId ?? null,
+					worldName: civ.worldName ?? 'Monde inconnu',
+					civilizations: []
+				})
+			}
+			groups.get(key)!.civilizations.push(civ)
+		}
+		return [...groups.values()].sort((a, b) => a.worldName.localeCompare(b.worldName))
+	}
+
 	const openReclaimModal = (source: CivilizationType, allCivilizations: CivilizationType[]) => {
 		reclaimSource = source
 		reclaimCandidates = allCivilizations.filter((c) => c.id !== source.id)
@@ -322,8 +343,15 @@
 		</div>
 	{:then myCivilizations}
 		{#if myCivilizations.length}
-			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;" class="civ-animate-rise">
-				{#each myCivilizations as civ}
+			<div style="display:flex; flex-direction:column; gap:36px;" class="civ-animate-rise">
+				{#each groupCivilizationsByWorld(myCivilizations) as worldGroup (worldGroup.worldId ?? worldGroup.worldName)}
+					<section>
+						<h2 style="font-family:'Marcellus',serif; font-size:21px; margin:0 0 16px; padding-bottom:9px; border-bottom:2px solid oklch(0.74 0.05 60); color:oklch(0.36 0.06 45); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+							<span>{worldGroup.worldName}</span>
+							<span style="font-size:14px; font-family:'EB Garamond',serif; color:oklch(0.55 0.03 50);">{worldGroup.civilizations.length} civilisation{worldGroup.civilizations.length > 1 ? 's' : ''}</span>
+						</h2>
+						<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;">
+							{#each worldGroup.civilizations as civ (civ.id)}
 					{@const foodQty = getResourceQty(civ, ResourceTypes.RAW_FOOD)}
 					{@const woodQty = getResourceQty(civ, ResourceTypes.WOOD)}
 					{@const maxFood = Math.max(foodQty, 1000)}
@@ -385,6 +413,9 @@
 							<button onclick={() => openDeleteModal(civ.id)} title="Supprimer" style="padding:11px 14px; border:1px solid oklch(0.52 0.2 30); border-radius:4px; background:none; color:oklch(0.52 0.2 30); cursor:pointer; font-size:18px;">✕</button>
 						</div>
 					</div>
+							{/each}
+						</div>
+					</section>
 				{/each}
 			</div>
 		{:else}

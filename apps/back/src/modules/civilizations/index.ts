@@ -60,11 +60,16 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     const counts = await Promise.all(
       civilizations.map((civ) => civilizationService.getRecentAttacksCount(civ.id)),
     )
+    const worldRefs = await civilizationService.getWorldRefs(
+      civilizations.map((civ) => civ.id),
+    )
     return {
       count: civilizations.length,
       civilizations: formatted.map((civ, i) => ({
         ...civ,
         recentAttacksCount: counts[i],
+        worldId: worldRefs[civ.id]?.worldId ?? null,
+        worldName: worldRefs[civ.id]?.worldName ?? null,
       })),
     }
   })
@@ -78,7 +83,15 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       if (!civilization) {
         return { civilization: undefined }
       }
-      return { civilization: formatCivilizations([civilization])[0] }
+      const [formatted] = formatCivilizations([civilization])
+      const worldRefs = await civilizationService.getWorldRefs([civilization.id])
+      return {
+        civilization: {
+          ...formatted,
+          worldId: worldRefs[civilization.id]?.worldId ?? null,
+          worldName: worldRefs[civilization.id]?.worldName ?? null,
+        },
+      }
     },
   )
   .get(
@@ -192,8 +205,13 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
   )
   .patch(
     '/:civilizationId',
-    async ({ civilizationService, params: { civilizationId }, user, body }) => {
-      await civilizationService.update(user.id as string, civilizationId, body)
+    async ({ civilizationService, params: { civilizationId }, user, body, set }) => {
+      try {
+        await civilizationService.update(user.id as string, civilizationId, body)
+      } catch (error) {
+        set.status = 400
+        return { error: error instanceof Error ? error.message : 'Unable to update civilization' }
+      }
     },
     {
       body: UpdateCivilizationDto

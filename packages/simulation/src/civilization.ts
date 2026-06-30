@@ -43,7 +43,7 @@ export const defaultCivilizationConfig: CivilizationConfig = {
   AT_WAR_WITH: [],
   MILITARY_RATIO: 0,
   NEXT_BUILDING_TO_BUILD: null,
-  SPEED_MODE: false,
+  SPEED_MODE: true,
 };
 
 const BUILDING_CONSTRUCTORS = {
