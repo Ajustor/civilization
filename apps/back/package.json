@@ -15,6 +15,7 @@
     "generate:migrations": "bunx drizzle-kit generate",
     "migration": "bun run migrations.ts",
     "populate": "bun run seed.ts",
+    "create:world": "bun run createWorld.ts",
     "backfill:names": "bun run backfillNames.ts",
     "email:preview": "email dev --dir ./src",
     "passAMonth": "bun run src/cron/passAMonth.ts"
