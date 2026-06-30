@@ -34,7 +34,15 @@ export const changelog: ChangelogEntry[] = [
 		changes: [
 			{
 				kind: 'feature',
+				text: 'Quatre événements bénéfiques font leur apparition (récolte abondante, caravane prospère, découverte fortuite et âge d’or). Plus leur bonus est important, plus ils sont rares.'
+			},
+			{
+				kind: 'feature',
 				text: 'Nouveau « mode rapide » par civilisation (dans les réglages). Si toutes les civilisations d’un monde l’activent, le temps avance d’un an (12 mois) à chaque tick au lieu d’un mois.'
+			},
+			{
+				kind: 'improvement',
+				text: 'La durée du mode rapide (nombre de mois simulés par tick) est désormais propre à chaque monde — 12 mois (un an) par défaut.'
 			},
 			{
 				kind: 'feature',

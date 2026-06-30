@@ -30,6 +30,7 @@ export const worldSchema = new Schema({
       BASE_FOOD_GENERATION: { type: Number, default: 30000 },
       BASE_WOOD_GENERATION: { type: Number, default: 15000 },
       EVENT_CHANCE: { type: Number, default: 30 },
+      SPEED_MODE_MONTHS: { type: Number, default: 12 },
     }, { _id: false }),
     default: () => ({})
   },

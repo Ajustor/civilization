@@ -6,7 +6,7 @@ import { Wall } from './buildings/wall'
 import { Gender } from './people/enum'
 import { OccupationTypes } from './people/work/enum'
 
-const peaceConfig: WorldConfig = { BASE_FOOD_GENERATION: 0, BASE_WOOD_GENERATION: 0, EVENT_CHANCE: 0 }
+const peaceConfig: WorldConfig = { BASE_FOOD_GENERATION: 0, BASE_WOOD_GENERATION: 0, EVENT_CHANCE: 0, SPEED_MODE_MONTHS: 12 }
 
 const army = (civ: Civilization, soldiers: number, civilians: number) => {
   for (let i = 0; i < soldiers; i++) {
