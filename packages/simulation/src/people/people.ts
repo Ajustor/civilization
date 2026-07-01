@@ -302,20 +302,16 @@ export class People {
       if (this.lineage.father) {
         result.push(this.lineage.father.id)
         if (this.lineage.father.lineage) {
-          result.push(
-            this.lineage.father.lineage.father.id,
-            this.lineage.father.lineage.mother.id,
-          )
+          if (this.lineage.father.lineage.father) result.push(this.lineage.father.lineage.father.id)
+          if (this.lineage.father.lineage.mother) result.push(this.lineage.father.lineage.mother.id)
         }
       }
 
       if (this.lineage.mother) {
         result.push(this.lineage.mother.id)
         if (this.lineage.mother.lineage) {
-          result.push(
-            this.lineage.mother.lineage.father.id,
-            this.lineage.mother.lineage.mother.id,
-          )
+          if (this.lineage.mother.lineage.father) result.push(this.lineage.mother.lineage.father.id)
+          if (this.lineage.mother.lineage.mother) result.push(this.lineage.mother.lineage.mother.id)
         }
       }
     }
