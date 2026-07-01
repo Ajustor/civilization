@@ -313,6 +313,9 @@
 			<!-- Bâtiments -->
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Bâtiments</h2>
+				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
+					Un chantier occupe des ouvriers sur plusieurs mois jusqu'à son achèvement. <strong>Priorité à la survie</strong> : si une civilisation ne parvient pas à nourrir toute sa population un mois, elle ne lance <strong>aucun nouveau chantier</strong> ce mois-là (la main-d'œuvre reste dédiée à la récolte) ; les chantiers déjà en cours se poursuivent.
+				</p>
 				<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
 					{#each BUILDING_RULES as b}
 						<div style="padding:14px 16px; border:1px solid oklch(0.84 0.03 72); border-radius:4px; display:flex; flex-direction:column; gap:6px;">

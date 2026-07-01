@@ -29,6 +29,28 @@ export const changeKindColors: Record<ChangeKind, string> = {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: '2026-07-01',
+		title: 'Cimetière, construction & protections',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'Le cimetière indique désormais l’âge auquel chaque citoyen est mort.'
+			},
+			{
+				kind: 'fix',
+				text: 'Les constructions repartent : un bug d’affectation de la main-d’œuvre empêchait tout nouveau bâtiment de se construire une fois les ouvriers occupés dans le mois. C’est corrigé.'
+			},
+			{
+				kind: 'fix',
+				text: 'L’invasion de rats fonctionne correctement (elle pouvait auparavant augmenter la nourriture au lieu de la réduire) et la technologie de lutte contre les nuisibles s’applique enfin.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Priorité à la survie : une civilisation qui ne parvient pas à nourrir toute sa population un mois ne lance aucun nouveau chantier ce mois-là — sa main-d’œuvre reste concentrée sur la récolte (les chantiers déjà en cours se poursuivent).'
+			}
+		]
+	},
+	{
 		date: '2026-06-30',
 		title: 'Événements rééquilibrés, migrations & mondes',
 		changes: [

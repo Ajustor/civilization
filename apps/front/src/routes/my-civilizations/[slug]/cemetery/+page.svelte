@@ -67,7 +67,7 @@
 							<span class="stone">🪦</span>
 							<span class="name">{grave.name}</span>
 							<span class="cause">{causeName(grave.cause)}</span>
-							<span class="month">Mois {grave.month}</span>
+							<span class="month">{#if grave.ageAtDeath != null}Décès à {~~(grave.ageAtDeath / 12)} ans · {/if}Mois {grave.month}</span>
 						</li>
 					{/each}
 				</ul>
