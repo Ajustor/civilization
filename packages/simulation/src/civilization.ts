@@ -85,6 +85,10 @@ export class Civilization {
   // Deaths collected during the current month (war casualties + natural deaths),
   // read back after passAMonth to fill the cemetery. Per-instance and transient.
   private _deaths: DeathRecord[] = [];
+  // Passé à true pendant la consommation du mois si au moins un citoyen n'a pas
+  // pu être nourri. Utilisé pour ne lancer aucun nouveau chantier tant que la
+  // survie n'est pas assurée (la main-d'œuvre reste alors dédiée à la récolte).
+  private _starvedThisMonth = false;
   private _occupationIndex: Map<OccupationTypes, People[]> | null = null;
   private _techCache: {
     production: number
@@ -434,7 +438,7 @@ export class Civilization {
     const toKill = Math.floor(soldiers.length * ratio);
     const casualties = soldiers.slice(0, toKill);
     for (const soldier of casualties) {
-      this._deaths.push({ name: soldier.name, cause: DeathCause.WAR });
+      this._deaths.push({ name: soldier.name, cause: DeathCause.WAR, ageAtDeath: soldier.month });
     }
     this.removePeople(casualties.map(({ id }) => id));
   }
@@ -616,6 +620,7 @@ export class Civilization {
           }
         }
 
+        this._starvedThisMonth = true;
         person.decreaseLife(4, DeathCause.STARVATION);
       }
       resolve(null);
@@ -676,6 +681,10 @@ export class Civilization {
   }
 
   async passAMonth(world: World): Promise<void> {
+    // Nouveau mois : on repart d'un état alimentaire sain, réévalué par la
+    // consommation plus bas.
+    this._starvedThisMonth = false;
+
     // Handle resource collection
     this.buildOccupationIndex();
 
@@ -956,7 +965,32 @@ export class Civilization {
     }
   }
 
+  private isSurvivalAtRisk(): boolean {
+    return this._starvedThisMonth;
+  }
+
   private buildNewBuilding(_world?: World) {
+    // Extraction/production/recherche ont déjà marqué leurs ouvriers
+    // `hasWork=true` plus tôt dans le mois. La construction est une phase
+    // d'affectation distincte : on repart d'une ardoise propre pour qu'elle
+    // puisse mobiliser des ouvriers (la double-affectation est empêchée par
+    // `isBuilding`). Sans ce reset, aucun ouvrier n'est disponible après les
+    // phases de travail → plus rien ne se construit. Ce reset laisse aussi
+    // `hasWork` à false pour l'extraction du mois suivant (crucial en mode
+    // rapide, où plusieurs mois s'enchaînent sans recharger l'état depuis la DB).
+    for (const person of this._people) {
+      person.hasWork = false;
+    }
+
+    // Priorité à la survie : si la civilisation n'a pas pu nourrir tout le monde
+    // ce mois-ci, on ne lance AUCUN nouveau chantier — la main-d'œuvre reste
+    // dédiée à la récolte. Les chantiers déjà en cours continuent
+    // (progressConstructions, appelé avant). L'extraction n'est donc prioritaire
+    // sur la construction QUE lorsque la survie est menacée.
+    if (this.isSurvivalAtRisk()) {
+      return;
+    }
+
     this.buildChosenBuilding();
     this.buildNewHouses();
 
@@ -1420,7 +1454,7 @@ export class Civilization {
         person.lifeCounter <= 0
           ? (person.deathCause ?? DeathCause.STARVATION)
           : DeathCause.OLD_AGE;
-      this._deaths.push({ name: person.name, cause });
+      this._deaths.push({ name: person.name, cause, ageAtDeath: person.month });
     }
     this._people = survivors;
   }

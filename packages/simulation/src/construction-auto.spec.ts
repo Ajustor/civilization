@@ -245,3 +245,45 @@ describe('auto-construction: Library candidate (integration)', () => {
     ).toBe(true)
   })
 })
+
+// ── Test 6: construction after the work phase (real-tick regression) ─────────
+
+describe('auto-construction: builders remain available after the work phase', () => {
+  it('still queues a building when workers already have hasWork=true', () => {
+    // In a real passAMonth, extraction/production/research run BEFORE
+    // buildNewBuilding and flag their workers hasWork=true. Construction must
+    // still be able to mobilise workers, otherwise nothing ever gets built.
+    const civ = makeCiv('AfterWork')
+    for (let i = 0; i < 6; i++) {
+      const gatherer = makeWorker(OccupationTypes.GATHERER, `g-${i}`)
+      gatherer.hasWork = true // already worked this month
+      civ.addPeople(gatherer)
+    }
+    civ.addResource(new Resource(ResourceTypes.WOOD, 100))
+    civ.addResource(new Resource(ResourceTypes.STONE, 100))
+
+    civ['buildNewBuilding'](summerWorld())
+
+    expect(civ.pendingConstructions.length).toBeGreaterThan(0)
+  })
+})
+
+// ── Test 7: survival takes priority over construction ────────────────────────
+
+describe('auto-construction: survival takes priority over building', () => {
+  it('does not start new construction when the civilization starved this month', () => {
+    const civ = makeCiv('Starving')
+    for (let i = 0; i < 6; i++) {
+      civ.addPeople(makeWorker(OccupationTypes.GATHERER, `g-${i}`))
+    }
+    // Resources that would otherwise let it build (e.g. a Library / Campfire).
+    civ.addResource(new Resource(ResourceTypes.WOOD, 100))
+    civ.addResource(new Resource(ResourceTypes.STONE, 100))
+    // Simulate what resourceConsumption sets when a citizen cannot be fed.
+    civ['_starvedThisMonth'] = true
+
+    civ['buildNewBuilding'](summerWorld())
+
+    expect(civ.pendingConstructions.length).toBe(0)
+  })
+})

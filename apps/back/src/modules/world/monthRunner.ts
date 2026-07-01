@@ -162,6 +162,7 @@ export async function runMonthForWorld(
       name: death.name,
       cause: death.cause,
       month: deathMonth,
+      ageAtDeath: death.ageAtDeath,
     })),
   )
   if (graveDocs.length) {

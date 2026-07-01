@@ -971,7 +971,7 @@ export class CivilizationService {
   }
 
   async getGraves(civilizationId: string, limit = 20, offset = 0) {
-    return GraveModel.find({ civilizationId }, 'name cause month')
+    return GraveModel.find({ civilizationId }, 'name cause month ageAtDeath')
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit)

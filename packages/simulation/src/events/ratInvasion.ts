@@ -12,7 +12,7 @@ export class RatInvasion implements WorldEvent {
 
       const uneatableFood = civilization.getStorageCapacity(ResourceTypes.RAW_FOOD)
 
-      if (food.quantity && food.quantity < uneatableFood) {
+      if (food.quantity && uneatableFood < food.quantity) {
         const rawLoss = food.quantity - uneatableFood
         const reduction = civilization.getEventDamageReduction(Events.RAT_INVASION)
         food.decrease(Math.floor(rawLoss * (1 - reduction)))

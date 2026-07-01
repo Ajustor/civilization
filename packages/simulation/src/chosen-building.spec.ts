@@ -6,6 +6,7 @@ import { Wall } from './buildings/wall'
 import { Cache } from './buildings/cache'
 import { Gender } from './people/enum'
 import { OccupationTypes } from './people/work/enum'
+import { TechId } from './technology/techTree'
 
 const builders = (civ: Civilization, count: number) => {
   for (let i = 0; i < count; i++) {
@@ -32,6 +33,7 @@ describe('player-chosen next building', () => {
   it('starts the wall when builders and resources suffice, then clears the request', () => {
     const civ = new Civilization('Fortress')
     civ.config = { ...civ.config, NEXT_BUILDING_TO_BUILD: BuildingTypes.WALL }
+    civ.researchedTechs = [TechId.MASONRY] // the Wall is gated behind Masonry
     civ.addResource(new Resource(ResourceTypes.STONE, 5000), new Resource(ResourceTypes.WOOD, 5000))
     builders(civ, Wall.minBuilders + 10)
 
@@ -45,7 +47,9 @@ describe('player-chosen next building', () => {
     const civ = new Civilization('Storage')
     civ.addBuilding(new Cache()) // civilizations start with an Entrepôt
     civ.config = { ...civ.config, NEXT_BUILDING_TO_BUILD: BuildingTypes.CACHE }
-    builders(civ, 5) // free gatherers (a Cache needs 1 to build)
+    // A Cache needs 15 gatherers + 200 wood + 600 planks to build.
+    civ.addResource(new Resource(ResourceTypes.WOOD, 200), new Resource(ResourceTypes.PLANK, 600))
+    builders(civ, 20)
 
     civ['buildNewBuilding']()
 

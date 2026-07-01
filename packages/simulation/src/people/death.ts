@@ -14,4 +14,6 @@ export enum DeathCause {
 export type DeathRecord = {
   name: string
   cause: DeathCause
+  // Âge du citoyen au moment du décès, en mois (affiché en années au cimetière).
+  ageAtDeath: number
 }
