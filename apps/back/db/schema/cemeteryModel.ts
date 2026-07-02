@@ -16,3 +16,20 @@ export const graveSchema = new Schema(
 )
 
 graveSchema.index({ civilizationId: 1, createdAt: -1 })
+
+// Compteurs cumulés de décès par cause, un document par civilisation. Les tombes
+// sont élaguées au-delà d'un plafond (GRAVES_PER_CIVILIZATION), donc le bilan du
+// cimetière ne peut pas être recalculé depuis les stèles conservées : ce document
+// garde le décompte complet depuis la fondation.
+export const cemeteryStatsSchema = new Schema(
+  {
+    civilizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Civilization',
+      required: true,
+      unique: true,
+    },
+    causes: { type: Map, of: Number, default: {} },
+  },
+  { timestamps: true },
+)

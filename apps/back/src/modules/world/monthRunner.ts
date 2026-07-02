@@ -1,6 +1,7 @@
 import { Gender, World } from '@ajustor/simulation'
 import type { CombatRecord } from '@ajustor/simulation'
-import { CivilizationStatsModel, CombatLogModel, GraveModel, TradeOfferModel } from '../../libs/database/models'
+import { Types } from 'mongoose'
+import { CemeteryStatsModel, CivilizationStatsModel, CombatLogModel, GraveModel, TradeOfferModel } from '../../libs/database/models'
 import type { CivilizationService } from '../civilizations/service'
 
 // Cap on how many graves are kept per civilization so the cemetery doesn't grow
@@ -19,6 +20,73 @@ async function pruneGraves(civilizationId: string) {
     .limit(toRemove)
     .lean()
   await GraveModel.deleteMany({ _id: { $in: oldest.map((grave) => grave._id) } })
+}
+
+type GraveDoc = {
+  civilizationId: string
+  name: string
+  cause: string
+  month: number
+  ageAtDeath?: number
+}
+
+// Cumule les décès du mois dans les compteurs persistants (CemeteryStats), qui
+// survivent à l'élagage des tombes. Les civilisations d'avant ces compteurs sont
+// amorcées depuis leurs stèles encore conservées — AVANT l'insertion des tombes
+// du mois, pour ne pas compter deux fois les morts de ce mois-ci.
+async function recordDeathCauseCounts(graveDocs: GraveDoc[]) {
+  const civilizationIds = [...new Set(graveDocs.map((grave) => grave.civilizationId))]
+
+  const existing = await CemeteryStatsModel.find(
+    { civilizationId: { $in: civilizationIds } },
+    'civilizationId',
+  ).lean()
+  const alreadyTracked = new Set(existing.map((doc) => String(doc.civilizationId)))
+  const toSeed = civilizationIds.filter((id) => !alreadyTracked.has(String(id)))
+
+  if (toSeed.length) {
+    const grouped = await GraveModel.aggregate<{
+      _id: { civilizationId: Types.ObjectId; cause: string }
+      count: number
+    }>([
+      { $match: { civilizationId: { $in: toSeed.map((id) => new Types.ObjectId(id)) } } },
+      { $group: { _id: { civilizationId: '$civilizationId', cause: '$cause' }, count: { $sum: 1 } } },
+    ])
+
+    const seeds = new Map<string, Record<string, number>>()
+    for (const id of toSeed) {
+      seeds.set(String(id), {})
+    }
+    for (const { _id, count } of grouped) {
+      const causes = seeds.get(String(_id.civilizationId))
+      if (causes) {
+        causes[_id.cause] = count
+      }
+    }
+    await CemeteryStatsModel.insertMany(
+      [...seeds].map(([civilizationId, causes]) => ({ civilizationId, causes })),
+      // Un doc peut avoir été créé entre-temps (lecture concurrente) : on ignore
+      // le doublon plutôt que de faire échouer tout le mois.
+      { ordered: false },
+    ).catch(() => {})
+  }
+
+  const increments = new Map<string, Record<string, number>>()
+  for (const grave of graveDocs) {
+    const civIncrements = increments.get(grave.civilizationId) ?? {}
+    const key = `causes.${grave.cause}`
+    civIncrements[key] = (civIncrements[key] ?? 0) + 1
+    increments.set(grave.civilizationId, civIncrements)
+  }
+  await CemeteryStatsModel.bulkWrite(
+    [...increments].map(([civilizationId, inc]) => ({
+      updateOne: {
+        filter: { civilizationId },
+        update: { $inc: inc },
+        upsert: true,
+      },
+    })),
+  )
 }
 
 /**
@@ -166,6 +234,9 @@ export async function runMonthForWorld(
     })),
   )
   if (graveDocs.length) {
+    // L'amorçage des compteurs cumulés lit les tombes existantes : il doit
+    // précéder l'insertion des tombes du mois.
+    await recordDeathCauseCounts(graveDocs)
     await GraveModel.insertMany(graveDocs)
     const civilizationIdsWithDeaths = [
       ...new Set(

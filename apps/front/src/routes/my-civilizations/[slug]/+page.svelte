@@ -40,6 +40,7 @@
 	import RecapModal from '$lib/components/RecapModal.svelte'
 	import { callGetRecap } from '../../../services/sveltekit-api/recap'
 	import type { RecapData } from '@ajustor/civ-api'
+	import type { ChartOptions } from 'chart.js'
 
 	type CivilizationStat = {
 		month: number
@@ -73,6 +74,7 @@
 	let statsPromise = $state<Promise<CivilizationStat[]>>(data.lazy.stats.civilization as Promise<CivilizationStat[]>)
 	let jobsPromise = $state(data.lazy.stats.jobs)
 	let peopleRatioPromise = $state(data.lazy.stats.peopleRatio)
+	let agePyramidPromise = $state(data.lazy.stats.agePyramid)
 	let combatLogsPromise = $state(data.lazy.combatLogs)
 
 	// Citizens currently on a construction site. Resolved from the server-loaded
@@ -105,11 +107,12 @@
 		statsPromise = stats.then((s) => s.civilization)
 		jobsPromise = stats.then((s) => s.jobs)
 		peopleRatioPromise = stats.then((s) => s.peopleRatio)
+		agePyramidPromise = stats.then((s) => s.agePyramid)
 		combatLogsPromise = stats.then((s) => s.combatLogs)
 	}
 
 	// Which panel is expanded: null = closed
-	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | null
+	type Panel = 'resources' | 'population' | 'jobs' | 'gender' | 'pyramid' | null
 	let activePanel = $state<Panel>(null)
 	let civMenuOpen = $state(false)
 
@@ -410,6 +413,14 @@
 	})
 	let savingBuilding = $state(false)
 
+	// Bâtiments uniques (mine) : une seule à la fois, l'option est grisée tant
+	// qu'un exemplaire est debout — miroir de la règle côté simulation.
+	const hasMine = $derived(
+		data.civilization.buildings.some(
+			(b: { type: string; count: number }) => b.type === BuildingTypes.MINE && b.count > 0
+		)
+	)
+
 	const selectedBuildingInfo = $derived.by(() => {
 		if (!selectedBuilding) return null
 		const meta = BUILDING_CLASSES[selectedBuilding as BuildingTypes]
@@ -464,6 +475,71 @@
 	const signedFmt = (d: number) => (d > 0 ? '+' : '') + fmt(d)
 
 	const CHART_OPTS = { maintainAspectRatio: false, responsive: true }
+
+	// ── Pyramide des âges ───────────────────────────────────────────────────────
+	// Barres divergentes : hommes en négatif (à gauche), femmes en positif (à
+	// droite), tranches les plus âgées en haut. Les valeurs négatives ne servent
+	// qu'au rendu — l'axe et les infobulles affichent la valeur absolue.
+	// Paire de couleurs validée (CVD ΔE 15.3, contraste ≥ 3:1 sur le fond crème).
+	const PYRAMID_COLORS = { men: '#3F76B4', women: '#B25C92' }
+	const PYRAMID_SURFACE = '#f1ebdb'
+	type PyramidBucket = { from: number; to: number; men: number; women: number }
+	const pyramidChart = (buckets: PyramidBucket[]) => {
+		const ordered = [...buckets].reverse()
+		const dataset = (label: string, values: number[], color: string) => ({
+			label,
+			data: values,
+			backgroundColor: color,
+			// Fin liseré couleur du fond : sépare visuellement les deux moitiés à l'axe.
+			borderColor: PYRAMID_SURFACE,
+			borderWidth: 1,
+			borderRadius: 4
+		})
+		return {
+			labels: ordered.map((bucket) => `${bucket.from}–${bucket.to} ans`),
+			datasets: [
+				dataset('Hommes', ordered.map((bucket) => -bucket.men), PYRAMID_COLORS.men),
+				dataset('Femmes', ordered.map((bucket) => bucket.women), PYRAMID_COLORS.women)
+			]
+		}
+	}
+	// Typage par cast : les signatures des callbacks (ticks, tooltip) sont
+	// conformes à l'exécution mais ne passent pas le DeepPartial de chart.js.
+	const pyramidOptions = (compact: boolean) => (({
+		...CHART_OPTS,
+		indexAxis: 'y' as const,
+		scales: {
+			x: {
+				stacked: true,
+				ticks: {
+					color: 'oklch(0.5 0.04 50)',
+					callback: (value: string | number) => Math.abs(Number(value)).toLocaleString('fr-FR')
+				},
+				grid: { color: 'oklch(0.9 0.02 78)' }
+			},
+			y: {
+				stacked: true,
+				ticks: {
+					color: 'oklch(0.5 0.04 50)',
+					autoSkip: compact,
+					font: { family: "'EB Garamond', serif", size: compact ? 11 : 13 }
+				},
+				grid: { display: false }
+			}
+		},
+		plugins: {
+			legend: {
+				position: 'bottom' as const,
+				labels: { color: 'oklch(0.4 0.04 50)', font: { family: "'EB Garamond', serif", size: 13 } }
+			},
+			tooltip: {
+				callbacks: {
+					label: (item: { dataset: { label?: string }; parsed: { x: number } }) =>
+						`${item.dataset.label} : ${Math.abs(item.parsed.x).toLocaleString('fr-FR')}`
+				}
+			}
+		}
+	}) as unknown as Partial<ChartOptions<'bar'>>)
 
 	// ── Chart time window ───────────────────────────────────────────────────────
 	// Keep the progression charts readable by showing a configurable number of
@@ -526,6 +602,7 @@
 						{:else if activePanel === 'population'}Progression de la population
 						{:else if activePanel === 'jobs'}Répartition des métiers
 						{:else if activePanel === 'gender'}Rapport homme / femme
+						{:else if activePanel === 'pyramid'}Pyramide des âges
 						{/if}
 					</h2>
 				</div>
@@ -767,6 +844,39 @@
 									{/await}
 								</div>
 							</div>
+						{/if}
+					{/await}
+
+				<!-- ── PYRAMID panel ────────────────────────────────────── -->
+				{:else if activePanel === 'pyramid'}
+					{#await agePyramidPromise}
+						<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
+					{:then agePyramid}
+						{@const buckets = (agePyramid?.buckets ?? []) as PyramidBucket[]}
+						{#if buckets.length}
+							<div style="display:flex; flex-direction:column; gap:20px;">
+								<div style="position:relative; height:{Math.max(320, buckets.length * 32 + 80)}px;">
+									{#await import('$lib/components/charts/Bar.svelte') then { default: Bar }}
+										<Bar data={pyramidChart(buckets)} options={pyramidOptions(false)} />
+									{/await}
+								</div>
+								<!-- Vue tabulaire des mêmes données -->
+								<div>
+									<div style="display:grid; grid-template-columns:140px auto auto auto; gap:6px 24px; padding:8px 0; border-bottom:2px solid oklch(0.78 0.04 70); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.52 0.05 50);">
+										<span>Tranche d'âge</span><span style="text-align:right;">Hommes</span><span style="text-align:right;">Femmes</span><span style="text-align:right;">Total</span>
+									</div>
+									{#each [...buckets].reverse() as bucket}
+										<div style="display:grid; grid-template-columns:140px auto auto auto; gap:6px 24px; padding:8px 0; border-bottom:1px solid oklch(0.88 0.03 70); font-size:15px;">
+											<span style="color:oklch(0.36 0.04 42);">{bucket.from}–{bucket.to} ans</span>
+											<span style="text-align:right; color:oklch(0.32 0.04 40);">{fmt(bucket.men)}</span>
+											<span style="text-align:right; color:oklch(0.32 0.04 40);">{fmt(bucket.women)}</span>
+											<span style="text-align:right; font-weight:600; color:oklch(0.32 0.04 40);">{fmt(bucket.men + bucket.women)}</span>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{:else}
+							<p style="color:oklch(0.5 0.03 50); font-size:15px;">Pas encore de données démographiques.</p>
 						{/if}
 					{/await}
 				{/if}
@@ -1045,6 +1155,30 @@
 					</button>
 				{/if}
 			{/await}
+
+			{#await agePyramidPromise}
+				<div style="height:200px; border-radius:4px; background:oklch(0.9 0.02 80); animation:civPulse 1.5s ease infinite;"></div>
+			{:then agePyramid}
+				{@const buckets = (agePyramid?.buckets ?? []) as PyramidBucket[]}
+				{#if buckets.length}
+					<button
+						class="chart-panel civ-inner-card"
+						onclick={() => openPanel('pyramid')}
+						style="text-align:left; background:none; width:100%; font-family:inherit;"
+						title="Cliquer pour agrandir"
+					>
+						<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+							<h2 class="civ-section-title" style="margin:0;">Pyramide des âges</h2>
+							<ZoomIn size="16" style="color:oklch(0.6 0.04 60); flex-shrink:0;" />
+						</div>
+						<div style="position:relative; height:240px;">
+							{#await import('$lib/components/charts/Bar.svelte') then { default: Bar }}
+								<Bar data={pyramidChart(buckets)} options={pyramidOptions(true)} />
+							{/await}
+						</div>
+					</button>
+				{/if}
+			{/await}
 		</div>
 
 		<!-- Resources -->
@@ -1146,11 +1280,20 @@
 						<option value="">Aucun</option>
 						{#each Object.values(BuildingTypes) as buildingType}
 							{@const lockedBy = lockedBuildings.get(buildingType)}
+							{@const uniqueBlocked = buildingType === BuildingTypes.MINE && hasMine}
 							<option
 								value={buildingType}
-								disabled={!!lockedBy}
-								title={lockedBy ? `Recherche manquante : ${lockedBy}` : undefined}
-							>{buildingNames[buildingType]}{lockedBy ? ` 🔒 (recherche : ${lockedBy})` : ''}</option>
+								disabled={!!lockedBy || uniqueBlocked}
+								title={lockedBy
+									? `Recherche manquante : ${lockedBy}`
+									: uniqueBlocked
+										? 'Une seule mine à la fois — elle doit s’épuiser avant d’en creuser une autre'
+										: undefined}
+							>{buildingNames[buildingType]}{lockedBy
+									? ` 🔒 (recherche : ${lockedBy})`
+									: uniqueBlocked
+										? ' ⛏️ (déjà construite)'
+										: ''}</option>
 						{/each}
 					</select>
 					<button

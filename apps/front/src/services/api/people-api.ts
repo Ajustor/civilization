@@ -70,6 +70,20 @@ export const getCivilizationPeopleRatioStats = async (authToken: string, civiliz
   return stats
 }
 
+export const getCivilizationPeopleAgePyramid = async (authToken: string, civilizationId: string) => {
+  const { data: stats, error } = await client.people({ civilizationId }).stats.agePyramid.get({
+    headers: {
+      authorization: `Bearer ${authToken}`
+    }
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return stats
+}
+
 export const getPeopleFromCivilizationPaginated = async (authToken: string, civilizationId: string, { page, count, sort }: { page: number; count: number; sort?: { field: string; order: 'asc' | 'desc' } }) => {
   const { data: people, error } = await client.people({ civilizationId }).paginated.get({
     query: {

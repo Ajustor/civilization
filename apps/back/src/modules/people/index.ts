@@ -101,6 +101,11 @@ export const peopleModule = new Elysia({ prefix: '/people' })
 
     return { menAndWomen, pregnantWomen, children, captives }
   })
+  // Pyramide des âges : effectifs hommes/femmes par tranche de 5 ans.
+  .get('/:civilizationId/stats/agePyramid', async ({ peopleService, params: { civilizationId } }) => {
+    const buckets = await peopleService.getAgePyramid(civilizationId)
+    return { buckets }
+  })
   .get('/:civilizationId/stats/jobs', async ({ peopleService, params: { civilizationId } }) => {
     const jobs: { [key in OccupationTypes]?: number } = {}
 

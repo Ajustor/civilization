@@ -218,6 +218,55 @@ export class PeopleService {
     })
   }
 
+  // Pyramide des âges : effectifs hommes/femmes par tranche d'âge (en années).
+  // Les tranches sont denses de 0 à la plus âgée, pour que le front puisse les
+  // empiler telles quelles sans trous.
+  public async getAgePyramid(
+    civilizationId: string,
+    yearsPerBucket = 5,
+  ): Promise<{ from: number; to: number; men: number; women: number }[]> {
+    const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
+    if (!civilization) {
+      throw new Error(`No civilization found for ${civilizationId}`)
+    }
+
+    const grouped = await PersonModel.aggregate<{
+      _id: { bucket: number; gender: Gender }
+      count: number
+    }>([
+      { $match: { _id: { $in: civilization.people } } },
+      {
+        $group: {
+          _id: {
+            bucket: { $floor: { $divide: ['$month', 12 * yearsPerBucket] } },
+            gender: '$gender',
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ])
+
+    if (!grouped.length) {
+      return []
+    }
+
+    const maxBucket = grouped.reduce((max, { _id }) => Math.max(max, _id.bucket), 0)
+    const buckets = Array.from({ length: maxBucket + 1 }, (_, bucket) => ({
+      from: bucket * yearsPerBucket,
+      to: (bucket + 1) * yearsPerBucket - 1,
+      men: 0,
+      women: 0,
+    }))
+    for (const { _id, count } of grouped) {
+      if (_id.gender === Gender.MALE) {
+        buckets[_id.bucket].men = count
+      } else {
+        buckets[_id.bucket].women = count
+      }
+    }
+    return buckets
+  }
+
   public async countPeopleWithJob(civilizationId: string, occupation: OccupationTypes): Promise<number> {
     const civilization = await CivilizationModel.findById<MongoCivilizationType>(civilizationId, 'people')
     if (!civilization) {

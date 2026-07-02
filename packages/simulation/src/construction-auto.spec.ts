@@ -17,6 +17,7 @@ import { BuildingTypes } from './buildings/enum'
 import { Cache } from './buildings/cache'
 import { Farm } from './buildings/farm'
 import { Library } from './buildings/library'
+import { Mine } from './buildings/mine'
 import { People } from './people/people'
 import { Gender } from './people/enum'
 import { Resource, ResourceTypes } from './resource'
@@ -160,6 +161,20 @@ describe('auto-construction: Cache uniqueness and Mine tech-gating', () => {
 
     const cacheJobs = civ.pendingConstructions.filter((c) => c.buildingType === BuildingTypes.CACHE)
     expect(cacheJobs.length).toBe(0)
+  })
+
+  it('does not queue a second Mine when one already exists (unique building)', () => {
+    const civ = makeCiv('WithMine', {
+      [OccupationTypes.GATHERER]: 20,
+      [OccupationTypes.MINER]: 80,
+    })
+    civ.researchedTechs = [TechId.CRAFTSMANSHIP, TechId.MASONRY]
+    civ.addBuilding(new Mine(1))
+    addWorkers(civ, OccupationTypes.GATHERER, 40) // cible mineurs 32 ≫ 10 slots
+
+    civ['buildNewBuilding'](summerWorld())
+
+    expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.MINE)).toBe(false)
   })
 
   it('does not queue MINE without MASONRY tech', () => {

@@ -4,6 +4,7 @@ import { Resource, ResourceTypes } from './resource'
 import { BuildingTypes } from './buildings/enum'
 import { Wall } from './buildings/wall'
 import { Cache } from './buildings/cache'
+import { Mine } from './buildings/mine'
 import { Gender } from './people/enum'
 import { OccupationTypes } from './people/work/enum'
 import { TechId } from './technology/techTree'
@@ -54,6 +55,19 @@ describe('player-chosen next building', () => {
     civ['buildNewBuilding']()
 
     expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.CACHE)).toBe(true)
+    expect(civ.config.NEXT_BUILDING_TO_BUILD).toBe(null)
+  })
+
+  it('drops a Mine request when one already stands (unique building, no stacking)', () => {
+    const civ = new Civilization('OneMine')
+    civ.researchedTechs = [TechId.CRAFTSMANSHIP, TechId.MASONRY]
+    civ.addBuilding(new Mine(1))
+    civ.config = { ...civ.config, NEXT_BUILDING_TO_BUILD: BuildingTypes.MINE }
+    builders(civ, 20)
+
+    civ['buildNewBuilding']()
+
+    expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.MINE)).toBe(false)
     expect(civ.config.NEXT_BUILDING_TO_BUILD).toBe(null)
   })
 })

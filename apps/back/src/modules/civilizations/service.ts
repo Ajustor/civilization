@@ -17,6 +17,7 @@ import {
 } from '@ajustor/simulation'
 import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
 import {
+  CemeteryStatsModel,
   CivilizationModel,
   CivilizationStatsModel,
   CombatLogModel,
@@ -582,6 +583,7 @@ export class CivilizationService {
     await PersonModel.deleteMany({ _id: { $in: civilizationToDelete.people } })
     await CivilizationStatsModel.deleteMany({ civilizationId })
     await GraveModel.deleteMany({ civilizationId })
+    await CemeteryStatsModel.deleteMany({ civilizationId })
     await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
     await TradeOfferModel.deleteMany({ fromCivilizationId: civilizationId })
   }
@@ -775,6 +777,7 @@ export class CivilizationService {
     // statistiques et son cimetière, comme le fait `delete`.
     await CivilizationStatsModel.deleteMany({ civilizationId: targetCivilizationId })
     await GraveModel.deleteMany({ civilizationId: targetCivilizationId })
+    await CemeteryStatsModel.deleteMany({ civilizationId: targetCivilizationId })
     await CivilizationModel.deleteOne({ _id: targetCivilizationId })
     await TradeOfferModel.deleteMany({ fromCivilizationId: targetCivilizationId })
 
@@ -993,11 +996,28 @@ export class CivilizationService {
   }
 
   async getDeathCauseCounts(civilizationId: string): Promise<Record<string, number>> {
+    // Bilan complet depuis la fondation : les compteurs cumulés survivent à
+    // l'élagage des tombes (plafonnées à 200), contrairement à un agrégat sur
+    // les seules stèles conservées.
+    const stats = await CemeteryStatsModel.findOne({ civilizationId }).lean()
+    if (stats?.causes) {
+      return stats.causes as unknown as Record<string, number>
+    }
+
+    // Civilisation d'avant les compteurs cumulés (et sans décès depuis) : on
+    // repart des tombes encore conservées et on amorce le document pour que
+    // les prochains mois s'y cumulent.
     const grouped = await GraveModel.aggregate<{ _id: string; count: number }>([
       { $match: { civilizationId: new Types.ObjectId(civilizationId) } },
       { $group: { _id: '$cause', count: { $sum: 1 } } },
     ])
-    return Object.fromEntries(grouped.map(({ _id, count }) => [_id, count]))
+    const causes = Object.fromEntries(grouped.map(({ _id, count }) => [_id, count]))
+    await CemeteryStatsModel.updateOne(
+      { civilizationId },
+      { $setOnInsert: { causes } },
+      { upsert: true },
+    ).catch(() => {})
+    return causes
   }
 
   async markCombatLogsViewed(civilizationId: string): Promise<void> {

@@ -1,6 +1,6 @@
 import { Civilization } from '../civilization'
 import { People } from '../people/people'
-import { Resource, ResourceTypes } from '../resource'
+import { ResourceTypes } from '../resource'
 import { BuildingTypes } from './enum'
 import { Gender } from '../people/enum'
 import { OccupationTypes } from '../people/work/enum'
@@ -51,6 +51,20 @@ describe('Mine', () => {
 
     // Several miners extracted stone in a single month and the capacity dropped.
     expect(civ.getResource(ResourceTypes.STONE).quantity).toBeGreaterThan(0)
+  })
+
+  it('never stacks: a completing chantier does not touch a standing mine', () => {
+    // Bâtiment unique — un chantier excédentaire (état hérité d'avant la règle
+    // d'unicité) ne doit ni incrémenter le count ni re-tirer les outputs.
+    const civ = new Civilization('OneMine')
+    const mine = new Mine(1)
+    mine.outputResources = [{ resource: ResourceTypes.STONE, probability: 100 }]
+    civ.addBuilding(mine)
+
+    civ.constructBuilding(BuildingTypes.MINE)
+
+    expect(mine.count).toBe(1)
+    expect(mine.outputResources).toHaveLength(1)
   })
 
   it('disappears once its capacity is exhausted so a new one can be built', () => {

@@ -18,6 +18,7 @@ const updateOne = mock(async () => ({ acknowledged: true }))
 const deleteOne = mock(async () => ({ acknowledged: true, deletedCount: 1 }))
 const statsDeleteMany = mock(async () => ({ acknowledged: true }))
 const gravesDeleteMany = mock(async () => ({ acknowledged: true }))
+const cemeteryStatsDeleteMany = mock(async () => ({ acknowledged: true }))
 const updateMany = mock(async () => ({ acknowledged: true }))
 
 mock.module('../../libs/database/models', () => ({
@@ -32,6 +33,7 @@ mock.module('../../libs/database/models', () => ({
   },
   CivilizationStatsModel: { deleteMany: statsDeleteMany },
   GraveModel: { deleteMany: gravesDeleteMany },
+  CemeteryStatsModel: { deleteMany: cemeteryStatsDeleteMany },
   CombatLogModel: {},
   PersonModel: {},
   WorldModel: {},
@@ -59,6 +61,7 @@ beforeEach(() => {
   deleteOne.mockClear()
   statsDeleteMany.mockClear()
   gravesDeleteMany.mockClear()
+  cemeteryStatsDeleteMany.mockClear()
   updateMany.mockClear()
   userCivilizations = [RECEIVER_ID, TARGET_ID]
   civsById = {

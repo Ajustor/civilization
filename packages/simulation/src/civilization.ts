@@ -75,6 +75,12 @@ const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
 const STORAGE_BUILDINGS = [BuildingTypes.CACHE];
 const EXTRACTIONS_BUILDINGS = [BuildingTypes.MINE];
 
+// Bâtiments limités à UN seul exemplaire par civilisation : ils ne s'empilent
+// pas via `count`. Une mine partage une unique `capacity` tirée au hasard, donc
+// l'empiler corromprait son gisement ; il faut qu'elle s'épuise (et soit
+// détruite) pour pouvoir en creuser une nouvelle.
+const UNIQUE_BUILDINGS = [BuildingTypes.MINE];
+
 export const isExtractionBuilding = (
   building: Building,
 ): building is AbstractExtractionBuilding =>
@@ -565,6 +571,13 @@ export class Civilization {
       return;
     }
 
+    // Un bâtiment unique ne s'empile jamais : un chantier excédentaire (p. ex.
+    // mis en file avant la règle d'unicité) se termine sans effet plutôt que
+    // d'incrémenter le count et de re-tirer des outputs sur la capacité partagée.
+    if (UNIQUE_BUILDINGS.includes(type)) {
+      return;
+    }
+
     if (isExtractionBuilding(existingBuilding)) {
       const buildingType = existingBuilding.getType();
       existingBuilding.generateOutput(
@@ -587,6 +600,15 @@ export class Civilization {
   private isBuildingPending(buildingType: BuildingTypes): boolean {
     return this.pendingConstructions.some(
       (pending) => pending.buildingType === buildingType,
+    );
+  }
+
+  // Un bâtiment unique est bloqué tant qu'un exemplaire est debout OU en chantier.
+  private isUniqueBuildingBlocked(buildingType: BuildingTypes): boolean {
+    return (
+      UNIQUE_BUILDINGS.includes(buildingType) &&
+      (this.buildings.some((building) => building.getType() === buildingType) ||
+        this.isBuildingPending(buildingType))
     );
   }
 
@@ -964,6 +986,13 @@ export class Civilization {
       return;
     }
 
+    // Exception : les bâtiments uniques (mine) ne s'empilent pas. La demande est
+    // abandonnée plutôt que réessayée indéfiniment chaque mois.
+    if (this.isUniqueBuildingBlocked(chosen)) {
+      this.config.NEXT_BUILDING_TO_BUILD = null;
+      return;
+    }
+
     // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
     if (chosen === BuildingTypes.WALL) {
       const builders = this.people.filter(
@@ -1108,7 +1137,11 @@ export class Civilization {
       {
         type: BuildingTypes.MINE,
         ctor: Mine,
-        weight: capacityGap(BuildingTypes.MINE, OccupationTypes.MINER),
+        // Unique : le déficit de mineurs ne pèse rien tant qu'une mine est
+        // debout ou en chantier — capacityGap seul re-queuerait indéfiniment.
+        weight: this.isUniqueBuildingBlocked(BuildingTypes.MINE)
+          ? 0
+          : capacityGap(BuildingTypes.MINE, OccupationTypes.MINER),
       },
       {
         type: BuildingTypes.LIBRARY,
@@ -1175,6 +1208,10 @@ export class Civilization {
     timeToBuild: number,
   ) {
     if (!this.isBuildingUnlocked(buildingType)) {
+      return;
+    }
+
+    if (this.isUniqueBuildingBlocked(buildingType)) {
       return;
     }
 

@@ -71,7 +71,7 @@ function buildEffect(type: BuildingTypes): string | undefined {
 		case BuildingTypes.WALL:
 			return `Bloque une attaque entière, puis est détruite (nécessite ${Wall.minBuilders} bâtisseurs).`
 		case BuildingTypes.MINE:
-			return 'Produit de la pierre — production et capacité tirées au hasard à la construction.'
+			return 'Produit de la pierre — production et capacité tirées au hasard à la construction. Unique : une seule mine à la fois, elle doit s’épuiser avant d’en creuser une nouvelle.'
 		default:
 			return undefined
 	}

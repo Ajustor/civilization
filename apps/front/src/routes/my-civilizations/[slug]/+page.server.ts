@@ -19,6 +19,7 @@ import {
   getPeopleFromCivilizationPaginated,
   getCivilizationPeopleJobsStats,
   getCivilizationPeopleRatioStats,
+  getCivilizationPeopleAgePyramid,
   getCivilizationBuilders,
 } from '../../../services/api/people-api'
 import type { CivilizationType } from '@ajustor/simulation'
@@ -64,6 +65,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
       stats: {
         jobs: getCivilizationPeopleJobsStats(auth, params.slug),
         peopleRatio: getCivilizationPeopleRatioStats(auth, params.slug),
+        agePyramid: getCivilizationPeopleAgePyramid(auth, params.slug),
         civilization: getCivilizationStats(auth, params.slug),
       },
       combatLogs: getCombatLogs(auth, params.slug, 5, 0),

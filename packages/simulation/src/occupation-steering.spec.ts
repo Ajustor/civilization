@@ -13,9 +13,12 @@ import { Civilization } from './civilization'
 import { BuildingTypes } from './buildings/enum'
 import { Farm } from './buildings/farm'
 import { Library } from './buildings/library'
+import { Mine } from './buildings/mine'
 import { People } from './people/people'
 import { Gender } from './people/enum'
 import { OccupationTypes } from './people/work/enum'
+import { TechId } from './technology/techTree'
+import { World } from './world'
 
 type Dist = Partial<Record<OccupationTypes, number>>
 
@@ -146,5 +149,47 @@ describe('autoBuildCandidates: target-driven construction', () => {
     const farm = candidates.find((c) => c.type === BuildingTypes.FARM)!
 
     expect(farm.weight).toBe(0)
+  })
+
+  it('actually queues a MINE when unlocked and the gauge wants miners (no crash)', () => {
+    // Mine has no construction resource cost; buildNew must tolerate that instead of
+    // crashing on `constructionCosts.every`. With MASONRY researched and a strong miner
+    // demand, a mine must get queued.
+    const civ = makeCiv({ [OccupationTypes.GATHERER]: 20, [OccupationTypes.MINER]: 80 })
+    civ.config = { ...civ.config, CHANCE_TO_BUILD_EVOLVED_BUILDING: 100 }
+    civ.researchedTechs = [TechId.CRAFTSMANSHIP, TechId.MASONRY]
+    addGatherers(civ, 40) // miner target = 80% of 40 = 32 → well above one mine's 10 slots
+
+    civ['buildNewBuilding'](new World('test', 4))
+
+    expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.MINE)).toBe(true)
+  })
+
+  it('gives the mine zero weight when one already stands (unique building)', () => {
+    // Une seule mine par civilisation : même avec un gros déficit de mineurs
+    // (cible 32, capacité 10), une mine debout bloque toute nouvelle mine.
+    const civ = makeCiv({ [OccupationTypes.GATHERER]: 20, [OccupationTypes.MINER]: 80 })
+    civ.researchedTechs = [TechId.CRAFTSMANSHIP, TechId.MASONRY]
+    civ.addBuilding(new Mine(1))
+    addGatherers(civ, 40)
+
+    const candidates = civ['autoBuildCandidates']() as { type: BuildingTypes; weight: number }[]
+    const mine = candidates.find((c) => c.type === BuildingTypes.MINE)!
+
+    expect(mine.weight).toBe(0)
+  })
+
+  it('gives the mine zero weight while one is under construction', () => {
+    // Un chantier de mine en cours bloque aussi : capacityGap seul laisserait un
+    // déficit (32 − 10 pending = 22) et re-queuerait une deuxième mine.
+    const civ = makeCiv({ [OccupationTypes.GATHERER]: 20, [OccupationTypes.MINER]: 80 })
+    civ.researchedTechs = [TechId.CRAFTSMANSHIP, TechId.MASONRY]
+    civ.pendingConstructions.push({ buildingType: BuildingTypes.MINE, monthsRemaining: 5 })
+    addGatherers(civ, 40)
+
+    const candidates = civ['autoBuildCandidates']() as { type: BuildingTypes; weight: number }[]
+    const mine = candidates.find((c) => c.type === BuildingTypes.MINE)!
+
+    expect(mine.weight).toBe(0)
   })
 })

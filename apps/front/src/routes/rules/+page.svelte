@@ -92,7 +92,7 @@
 		[BuildingTypes.LIBRARY]: 'Produit 2 points de recherche par mois (bibliothèque pleinement dotée)',
 		[BuildingTypes.KILN]: '5 bois → 10 charbon',
 		[BuildingTypes.SAWMILL]: '1 bois → 5 planches',
-		[BuildingTypes.MINE]: 'Produit de la pierre (1 à 100 par mineur)',
+		[BuildingTypes.MINE]: 'Produit de la pierre (1 à 100 par mineur). Unique : une seule mine à la fois, elle doit s’épuiser avant d’en creuser une nouvelle',
 		[BuildingTypes.CAMPFIRE]: '10 nourriture → 7 nourriture préparée',
 		[BuildingTypes.CACHE]: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible.',
 		[BuildingTypes.WALL]: 'Bloque une attaque entière, puis est détruite'

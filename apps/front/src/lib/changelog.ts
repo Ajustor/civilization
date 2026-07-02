@@ -29,6 +29,24 @@ export const changeKindColors: Record<ChangeKind, string> = {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: '2026-07-02',
+		title: 'Mine unique, pyramide des âges & cimetière',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'Nouvelle pyramide des âges sur la page de votre civilisation : répartition des hommes et des femmes par tranche de 5 ans, avec une vue agrandie et le détail des effectifs.'
+			},
+			{
+				kind: 'fix',
+				text: 'Une civilisation ne peut plus posséder qu’une seule mine à la fois : il était possible d’en empiler plusieurs alors qu’elles partageaient le même gisement. La mine doit désormais s’épuiser (et disparaître) avant qu’une nouvelle puisse être creusée — le sélecteur de bâtiment grise l’option en attendant.'
+			},
+			{
+				kind: 'fix',
+				text: 'Le bilan du cimetière (âmes disparues et causes de décès) reflète désormais l’intégralité de l’histoire de la civilisation, au lieu d’être limité aux 200 dernières tombes conservées.'
+			}
+		]
+	},
+	{
 		date: '2026-07-01',
 		title: 'Cimetière, construction & protections',
 		changes: [
