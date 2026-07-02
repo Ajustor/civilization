@@ -10,7 +10,14 @@ import type { Actions, PageServerLoad } from './$types'
 import { zod4 as zod } from 'sveltekit-superforms/adapters'
 import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 import { error, redirect } from '@sveltejs/kit'
-import type { CivilizationType } from '@ajustor/simulation'
+import { DEFAULT_OCCUPATION_DISTRIBUTION, type CivilizationType } from '@ajustor/simulation'
+
+// Merge the stored distribution over the defaults so every occupation key is present
+// (the form requires all of them, and civs saved before the migration have none).
+const resolveDistribution = (stored?: Record<string, number>) => ({
+	...DEFAULT_OCCUPATION_DISTRIBUTION,
+	...(stored ?? {})
+})
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
 	const auth = cookies.get('auth') ?? ''
@@ -41,7 +48,8 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			militaryRatio: civilization.config.MILITARY_RATIO,
 			atWarWith: civilization.config.AT_WAR_WITH ?? [],
 			nextBuildingToBuild: civilization.config.NEXT_BUILDING_TO_BUILD ?? null,
-			speedMode: civilization.config.SPEED_MODE ?? true
+			speedMode: civilization.config.SPEED_MODE ?? true,
+			occupationDistribution: resolveDistribution(civilization.config.OCCUPATION_DISTRIBUTION)
 		},
 		zod(civilizationConfigSchema)
 	)
@@ -69,7 +77,8 @@ export const actions: Actions = {
 				militaryRatio: form.data.militaryRatio,
 				atWarWith: form.data.atWarWith,
 				nextBuildingToBuild: form.data.nextBuildingToBuild,
-				speedMode: form.data.speedMode
+				speedMode: form.data.speedMode,
+				occupationDistribution: form.data.occupationDistribution
 			})
 
 			// Re-read so the form reflects exactly what was persisted (avoids showing
@@ -86,7 +95,8 @@ export const actions: Actions = {
 							militaryRatio: updated.config.MILITARY_RATIO,
 							atWarWith: updated.config.AT_WAR_WITH ?? [],
 							nextBuildingToBuild: updated.config.NEXT_BUILDING_TO_BUILD ?? null,
-							speedMode: updated.config.SPEED_MODE ?? true
+							speedMode: updated.config.SPEED_MODE ?? true,
+							occupationDistribution: resolveDistribution(updated.config.OCCUPATION_DISTRIBUTION)
 						},
 						zod(civilizationConfigSchema)
 					)

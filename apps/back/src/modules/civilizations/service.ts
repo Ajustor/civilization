@@ -11,6 +11,7 @@ import {
   ResourceTypes,
   isExtractionBuilding,
   defaultCivilizationConfig,
+  sanitizeOccupationDistribution,
   TechId,
   getTechNode,
 } from '@ajustor/simulation'
@@ -86,6 +87,11 @@ export const civilizationMapper = (
       MILITARY_RATIO: c.MILITARY_RATIO ?? 0,
       NEXT_BUILDING_TO_BUILD: c.NEXT_BUILDING_TO_BUILD ?? null,
       SPEED_MODE: c.SPEED_MODE ?? defaultCivilizationConfig.SPEED_MODE,
+      // Sanitize stored data (legacy civs, or values written outside the form):
+      // an invalid distribution falls back to the default so the gauges never break.
+      OCCUPATION_DISTRIBUTION:
+        sanitizeOccupationDistribution(c.OCCUPATION_DISTRIBUTION) ??
+        defaultCivilizationConfig.OCCUPATION_DISTRIBUTION,
     })
   }
 
@@ -880,6 +886,14 @@ export class CivilizationService {
             body.speedMode ??
             currentConfig.SPEED_MODE ??
             defaultCivilizationConfig.SPEED_MODE,
+          // Server-side guard: only persist a distribution that is 8 integer
+          // percentages (known occupations) summing to 100; otherwise keep the
+          // current one (or the default). The front enforces the same rule, this
+          // protects against direct/malformed API calls.
+          OCCUPATION_DISTRIBUTION:
+            sanitizeOccupationDistribution(body.occupationDistribution) ??
+            currentConfig.OCCUPATION_DISTRIBUTION ??
+            defaultCivilizationConfig.OCCUPATION_DISTRIBUTION,
         },
       },
     )

@@ -1,4 +1,4 @@
-import { BuildingTypes, ResourceTypes } from '@ajustor/simulation'
+import { BuildingTypes, DEFAULT_OCCUPATION_DISTRIBUTION, ResourceTypes } from '@ajustor/simulation'
 import { Schema } from 'mongoose'
 import { ResourceSchema } from './resourceSchema'
 import {
@@ -45,6 +45,12 @@ const ConfigSchema = new Schema({
   MILITARY_RATIO: { type: Number, default: 0 },
   NEXT_BUILDING_TO_BUILD: { type: String, default: null },
   SPEED_MODE: { type: Boolean, default: true },
+  // Répartition cible des métiers (pourcentages par métier, somme 100). Objet libre
+  // { [occupation]: number } transmis tel quel à la simulation et au front.
+  OCCUPATION_DISTRIBUTION: {
+    type: Schema.Types.Mixed,
+    default: () => ({ ...DEFAULT_OCCUPATION_DISTRIBUTION }),
+  },
   AT_WAR_WITH: {
     type: [{ type: Schema.Types.ObjectId, ref: 'Civilization' }],
     required: true,
@@ -104,6 +110,7 @@ const civilizationSchema = new Schema(
         NEXT_BUILDING_TO_BUILD: null,
         SPEED_MODE: true,
         AT_WAR_WITH: [],
+        OCCUPATION_DISTRIBUTION: { ...DEFAULT_OCCUPATION_DISTRIBUTION },
       },
     },
     pendingConstructions: {

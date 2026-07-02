@@ -17,6 +17,13 @@ import { People, MAX_NUMBER_OF_CHILD } from "./people/people";
 import { DeathCause, type DeathRecord } from "./people/death";
 import { OccupationTypes } from "./people/work/enum";
 import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
+import {
+  DEFAULT_OCCUPATION_DISTRIBUTION,
+  DISTRIBUTABLE_OCCUPATIONS,
+  OCCUPATION_BUILDING,
+  OCCUPATION_BUILDING_SLOTS,
+  resolveTargetHeadcounts,
+} from "./people/work/distribution";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
 import { TechId, getTechNode, getBuildingGate } from "./technology/techTree";
@@ -44,6 +51,7 @@ export const defaultCivilizationConfig: CivilizationConfig = {
   MILITARY_RATIO: 0,
   NEXT_BUILDING_TO_BUILD: null,
   SPEED_MODE: true,
+  OCCUPATION_DISTRIBUTION: { ...DEFAULT_OCCUPATION_DISTRIBUTION },
 };
 
 const BUILDING_CONSTRUCTORS = {
@@ -106,6 +114,7 @@ export class Civilization {
       ...defaultCivilizationConfig,
       OPEN_EXCHANGE: [...defaultCivilizationConfig.OPEN_EXCHANGE],
       AT_WAR_WITH: [...defaultCivilizationConfig.AT_WAR_WITH],
+      OCCUPATION_DISTRIBUTION: { ...defaultCivilizationConfig.OCCUPATION_DISTRIBUTION },
     },
   ) {
     this._people = [];
@@ -350,24 +359,49 @@ export class Civilization {
     this.buildings.push(house);
   }
 
-  private getWorkerSpaceLeft(workerType: OccupationTypes): number {
-    const peopleWithOccupation = this.getPeopleWithOccupation(workerType).length;
-    return (
-      this.buildings.reduce((space, building) => {
-        if (isExtractionOrProductionBuilding(building)) {
-          const requiredWorker = building.workerTypeRequired.filter(
-            (worker) => worker.occupation === workerType,
-          );
-          if (!requiredWorker.length) {
-            return space;
-          }
-          space +=
-            requiredWorker.reduce((sum, { count }) => sum + count, 0) *
-            building.count;
-        }
-        return space;
-      }, 0) - peopleWithOccupation
-    );
+  // Total staffing slots for an occupation across all built extraction/production
+  // buildings (Σ workerTypeRequired.count × building.count).
+  private occupationCapacity(workerType: OccupationTypes): number {
+    return this.buildings.reduce((space, building) => {
+      if (isExtractionOrProductionBuilding(building)) {
+        space +=
+          building.workerTypeRequired
+            .filter((worker) => worker.occupation === workerType)
+            .reduce((sum, { count }) => sum + count, 0) * building.count;
+      }
+      return space;
+    }, 0);
+  }
+
+  // Occupations the distribution can currently steer toward: base jobs (no
+  // building) plus any specialised job whose building is unlocked by the
+  // researched tech. Locked jobs are excluded so their share is renormalised
+  // onto reachable ones (see resolveTargetHeadcounts).
+  private activeDistributableOccupations(): OccupationTypes[] {
+    return DISTRIBUTABLE_OCCUPATIONS.filter((occupation) => {
+      const building = OCCUPATION_BUILDING[occupation];
+      return !building || this.isBuildingUnlocked(building);
+    });
+  }
+
+  // Size of the civilian working pool the gauges distribute (soldiers, children
+  // and the retired are excluded — soldiers are governed by MILITARY_RATIO).
+  private civilianWorkforce(): number {
+    return this._people.filter(
+      (person) =>
+        person.work &&
+        DISTRIBUTABLE_OCCUPATIONS.includes(person.work.occupationType),
+    ).length;
+  }
+
+  // Target headcount per occupation from the configured percentage split.
+  private occupationTargets(): Map<OccupationTypes, number> {
+    return resolveTargetHeadcounts({
+      distribution:
+        this.config.OCCUPATION_DISTRIBUTION ?? DEFAULT_OCCUPATION_DISTRIBUTION,
+      workforce: this.civilianWorkforce(),
+      activeOccupations: this.activeDistributableOccupations(),
+    });
   }
 
   increaseResource(type: ResourceTypes, count: number) {
@@ -457,13 +491,6 @@ export class Civilization {
 
   getWorkersWhoCanRetire(): People[] {
     return this._people.filter((worker) => worker.canRetire());
-  }
-
-  getWorkersWhoCanUpgrade(): People[] {
-    return this._people.filter(
-      (worker) =>
-        worker.work && OCCUPATION_TREE[worker.work.occupationType]?.length,
-    );
   }
 
   getDestructibleBuildings(): Building[] {
@@ -1011,17 +1038,18 @@ export class Civilization {
   }
 
   /**
-   * Candidates for auto-construction, weighted by civilization needs.
-   * Weight 0 means no need (candidate is filtered out before the chance roll).
-   * Candidates are sorted by descending weight so the highest-priority need
-   * reserves builders and resources first. Final gating (tech unlock, resource
-   * check, available workers) is applied inside buildNew().
+   * Candidates for auto-construction, weighted by the gap between the configured
+   * distribution and the current staffing capacity. Weight 0 means no need
+   * (candidate is filtered out before the chance roll). Candidates are sorted by
+   * descending weight so the highest-priority need reserves builders and resources
+   * first. Final gating (tech unlock, resource check, available workers) is applied
+   * inside buildNew().
    *
-   * A new instance of a staffed building is only queued when:
-   *   - none exists yet (bootstrap weight), OR
-   *   - existing instances are full AND there is a surplus of workers of the
-   *     required occupation beyond current capacity (expansion weight ∝ surplus).
-   * This prevents building copies that would remain unstaffed.
+   * A staffed building is queued when its occupation's target headcount exceeds the
+   * capacity already built plus in-flight (pending) — i.e. the gauge wants more
+   * workers of that trade than existing buildings can employ. This is independent of
+   * the current worker count, which is what lets construction lead job evolution
+   * instead of waiting for a worker surplus that could never form.
    */
   private autoBuildCandidates(): {
     type: BuildingTypes;
@@ -1034,23 +1062,21 @@ export class Civilization {
   }[] {
     const pendingCount = (type: BuildingTypes) =>
       this.pendingConstructions.filter((p) => p.buildingType === type).length;
+    const targets = this.occupationTargets();
 
-    // Staffed building: build the first (bootstrap), or expand only when all
-    // existing instances are full and there is a surplus of qualified workers.
-    const expansionWeight = (
-      builtCount: number,
+    // Missing staffing slots for a building's occupation: target − (built + pending)
+    // capacity. Tech-locked buildings never get weight.
+    const capacityGap = (
       type: BuildingTypes,
       occupation: OccupationTypes,
-      workersPerBuilding: number,
-      bootstrap: number,
     ): number => {
-      const totalCount = builtCount + pendingCount(type);
-      if (totalCount === 0) {
-        return bootstrap;
+      if (!this.isBuildingUnlocked(type)) {
+        return 0;
       }
-      const workers = this.getPeopleWithOccupation(occupation).length;
-      const surplus = workers - totalCount * workersPerBuilding;
-      return surplus > 0 ? Math.min(10, surplus) : 0;
+      const slotsPerBuilding = OCCUPATION_BUILDING_SLOTS[occupation] ?? 0;
+      const pendingCapacity = pendingCount(type) * slotsPerBuilding;
+      const effectiveCapacity = this.occupationCapacity(occupation) + pendingCapacity;
+      return Math.max(0, (targets.get(occupation) ?? 0) - effectiveCapacity);
     };
 
     return [
@@ -1062,32 +1088,32 @@ export class Civilization {
       {
         type: BuildingTypes.FARM,
         ctor: Farm,
-        weight: expansionWeight(this.farm?.count ?? 0, BuildingTypes.FARM, OccupationTypes.FARMER, 5, 6),
+        weight: capacityGap(BuildingTypes.FARM, OccupationTypes.FARMER),
       },
       {
         type: BuildingTypes.CAMPFIRE,
         ctor: Campfire,
-        weight: expansionWeight(this.campfire?.count ?? 0, BuildingTypes.CAMPFIRE, OccupationTypes.KITCHEN_ASSISTANT, 1, 4),
+        weight: capacityGap(BuildingTypes.CAMPFIRE, OccupationTypes.KITCHEN_ASSISTANT),
       },
       {
         type: BuildingTypes.SAWMILL,
         ctor: Sawmill,
-        weight: expansionWeight(this.sawmill?.count ?? 0, BuildingTypes.SAWMILL, OccupationTypes.CARPENTER, 2, 4),
+        weight: capacityGap(BuildingTypes.SAWMILL, OccupationTypes.CARPENTER),
       },
       {
         type: BuildingTypes.KILN,
         ctor: Kiln,
-        weight: expansionWeight(this.kiln?.count ?? 0, BuildingTypes.KILN, OccupationTypes.CHARCOAL_BURNER, 2, 4),
+        weight: capacityGap(BuildingTypes.KILN, OccupationTypes.CHARCOAL_BURNER),
       },
       {
         type: BuildingTypes.MINE,
         ctor: Mine,
-        weight: expansionWeight(this.mine?.count ?? 0, BuildingTypes.MINE, OccupationTypes.MINER, 10, 9),
+        weight: capacityGap(BuildingTypes.MINE, OccupationTypes.MINER),
       },
       {
         type: BuildingTypes.LIBRARY,
         ctor: Library,
-        weight: expansionWeight(this.library?.count ?? 0, BuildingTypes.LIBRARY, OccupationTypes.ERUDIT, 2, 3),
+        weight: capacityGap(BuildingTypes.LIBRARY, OccupationTypes.ERUDIT),
       },
     ];
   }
@@ -1210,72 +1236,125 @@ export class Civilization {
   }
 
   public adaptPeopleJob() {
-    const workers = this.getWorkersWhoCanRetire();
-    for (const citizen of workers) {
+    // 1. Retire those who have reached their occupation's retirement age.
+    for (const citizen of this.getWorkersWhoCanRetire()) {
       citizen.setOccupation(OccupationTypes.RETIRED);
     }
 
-    const peoplesWhoHasNotWork = this.getPeopleWithoutOccupation(
-      OccupationTypes.CHILD,
-    ).filter(
-      ({ work, hasWork }) =>
-        work?.occupationType !== OccupationTypes.RETIRED &&
-        work &&
-        ![OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(
-          work.occupationType,
-        ) &&
-        !hasWork,
-    );
-    for (const peopleWhoHasNotWork of peoplesWhoHasNotWork) {
-      for (const [key, jobs] of Object.entries(OCCUPATION_TREE)) {
-        if (key === OccupationTypes.CHILD) continue;
-        if (
-          peopleWhoHasNotWork.work &&
-          jobs.includes(peopleWhoHasNotWork.work.occupationType)
-        ) {
-          peopleWhoHasNotWork.setOccupation(key as OccupationTypes);
-        }
-      }
-    }
+    // 2. Steer the civilian workforce toward the configured distribution.
+    this.steerOccupationDistribution();
 
-    const workersCanUpgrade = this.getWorkersWhoCanUpgrade();
-    for (const worker of workersCanUpgrade) {
-      const hasChanceToEvolve =
-        worker.work?.occupationType === OccupationTypes.CHILD ||
-        isWithinChance(this.config.CHANCE_TO_EVOLVE);
-      if (hasChanceToEvolve && worker.work && worker.canUpgradeWork()) {
-        // Only keep target trades the worker is actually old enough to take up.
-        // This enforces each job's own entry age (e.g. miners at 25) instead of
-        // relying solely on the source job's upgrade age.
-        const newPossibleOccupations = (
-          OCCUPATION_TREE[worker.work.occupationType] ?? []
-        ).filter(
-          (occupation) => worker.years >= MINIMAL_AGE_TO_BECOME[occupation],
-        );
-
-        if (!newPossibleOccupations.length) {
-          continue;
-        }
-
-        const selectedNewOccupation = getRandomInt(
-          0,
-          newPossibleOccupations.length - 1,
-        );
-        const newOccupation = newPossibleOccupations[selectedNewOccupation];
-
-        if (
-          newOccupation &&
-          (this.getWorkerSpaceLeft(newOccupation) > 0 ||
-            [OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER].includes(
-              newOccupation,
-            ))
-        ) {
-          worker.setOccupation(newOccupation);
-        }
-      }
-    }
-
+    // 3. Military recruitment (governed by MILITARY_RATIO, orthogonal to the gauges).
     this.recruitSoldiers();
+  }
+
+  /**
+   * Move citizens toward the configured occupation distribution:
+   *  - maturing children join the base pool (gatherer/woodcutter) that most needs them,
+   *  - surplus base workers are promoted into specialised jobs that have a gauge-wanted
+   *    free slot (`current < min(target, capacity)`) and whose prerequisites they meet —
+   *    deterministically, filling the largest deficit first,
+   *  - specialists left over-capacity by a destroyed/shrunken building are released
+   *    back to their base pool so they do useful work again.
+   *
+   * No probability gate and no random target: whenever a reachable, gauge-wanted,
+   * unlocked slot is open and a qualified citizen exists, the promotion happens. The
+   * gauge caps specialists at `min(target, capacity)`, so the total of specialists can
+   * never exceed the sum of specialist targets and the base pool stays protected without
+   * an explicit guard.
+   */
+  private steerOccupationDistribution(): void {
+    const targets = this.occupationTargets();
+    const active = new Set(this.activeDistributableOccupations());
+    const current = new Map<OccupationTypes, number>();
+    for (const occupation of DISTRIBUTABLE_OCCUPATIONS) {
+      current.set(occupation, this.getPeopleWithOccupation(occupation).length);
+    }
+
+    const target = (occupation: OccupationTypes) => targets.get(occupation) ?? 0;
+    const count = (occupation: OccupationTypes) => current.get(occupation) ?? 0;
+    const adjust = (occupation: OccupationTypes, delta: number) =>
+      current.set(occupation, count(occupation) + delta);
+
+    // A gauge-wanted free slot: below target, and — for a building-bound job — below
+    // the physical staffing capacity too.
+    const roomCeiling = (occupation: OccupationTypes) =>
+      OCCUPATION_BUILDING[occupation]
+        ? Math.min(target(occupation), this.occupationCapacity(occupation))
+        : target(occupation);
+    const deficit = (occupation: OccupationTypes) =>
+      roomCeiling(occupation) - count(occupation);
+    const hasRoom = (occupation: OccupationTypes) =>
+      active.has(occupation) && deficit(occupation) > 0;
+
+    const BASE_JOBS = [OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER];
+
+    // Snapshot the movers up front so a child promoted to a base job this tick is not
+    // re-promoted to a specialised job in the same tick.
+    const maturingChildren = this._people.filter(
+      (person) =>
+        person.work?.occupationType === OccupationTypes.CHILD &&
+        person.canUpgradeWork(),
+    );
+    const baseUpgraders = this._people.filter(
+      (person) =>
+        person.work &&
+        BASE_JOBS.includes(person.work.occupationType) &&
+        person.canUpgradeWork(),
+    );
+
+    // 2a. Children old enough to work join the more-deficient base pool.
+    for (const child of maturingChildren) {
+      const destination = BASE_JOBS.filter(
+        (job) => child.years >= MINIMAL_AGE_TO_BECOME[job],
+      ).sort((a, b) => target(b) - count(b) - (target(a) - count(a)))[0];
+      if (!destination) continue;
+      child.setOccupation(destination);
+      adjust(destination, 1);
+    }
+
+    // 2b. Promote base workers into gauge-wanted, reachable, unlocked slots.
+    for (const worker of baseUpgraders) {
+      const source = worker.work!.occupationType;
+      const destination = (OCCUPATION_TREE[source] ?? [])
+        .filter(
+          (occupation) =>
+            worker.years >= MINIMAL_AGE_TO_BECOME[occupation] &&
+            hasRoom(occupation),
+        )
+        .sort((a, b) => {
+          const byDeficit = deficit(b) - deficit(a);
+          if (byDeficit !== 0) return byDeficit;
+          // Tie-break: fill the job with the most physical head-room first.
+          return (
+            this.occupationCapacity(b) -
+            count(b) -
+            (this.occupationCapacity(a) - count(a))
+          );
+        })[0];
+      if (!destination) continue;
+      worker.setOccupation(destination);
+      adjust(source, -1);
+      adjust(destination, 1);
+    }
+
+    // 2c. Release specialists a shrunken/destroyed building can no longer staff.
+    for (const [parent, children] of Object.entries(OCCUPATION_TREE)) {
+      if (parent === OccupationTypes.CHILD) continue;
+      for (const occupation of children) {
+        if (!OCCUPATION_BUILDING[occupation]) continue;
+        const excess = count(occupation) - this.occupationCapacity(occupation);
+        if (excess <= 0) continue;
+        const overstaffed = this._people.filter(
+          (person) => person.work?.occupationType === occupation,
+        );
+        for (const person of overstaffed.slice(0, excess)) {
+          person.setOccupation(parent as OccupationTypes);
+          adjust(occupation, -1);
+          adjust(parent as OccupationTypes, 1);
+        }
+      }
+    }
   }
 
   private recruitSoldiers(): void {

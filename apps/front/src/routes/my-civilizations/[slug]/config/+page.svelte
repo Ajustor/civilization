@@ -15,6 +15,8 @@
 	import { civilizationConfigSchema } from '$lib/schemas/civilizationConfig'
 	import type { z } from 'zod'
 	import { toast } from 'svelte-sonner'
+	import { DISTRIBUTABLE_OCCUPATIONS } from '@ajustor/simulation'
+	import { OCCUPATIONS } from '$lib/translations/occupations'
 
 	type ConfigFormData = z.infer<typeof civilizationConfigSchema>
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
@@ -50,6 +52,15 @@
 	// réémis tel quel) afin que l'enregistrement de cette page ne l'efface pas.
 
 	const { form: formData, enhance: formEnhance } = form
+
+	// Total live des jauges : la répartition n'est valide que si elle fait 100 %.
+	const distributionTotal = $derived(
+		DISTRIBUTABLE_OCCUPATIONS.reduce(
+			(sum, occupation) =>
+				sum + (Number(($formData as ConfigFormData).occupationDistribution?.[occupation]) || 0),
+			0
+		)
+	)
 
 	const toggleExchange = (civilizationId: string, checked: boolean | 'indeterminate') => {
 		const fd = $formData as ConfigFormData
@@ -106,6 +117,43 @@
 					<FormFieldErrors />
 				</FormField>
 			</div>
+		</div>
+
+		<!-- Répartition des métiers -->
+		<div class="civ-inner-card">
+			<h3 class="civ-section-title">Répartition des métiers</h3>
+			<p style="color:oklch(0.5 0.03 50); font-size:14px; margin:0 0 12px;">
+				Pourcentage cible de la population active civile pour chaque métier. La construction des
+				bâtiments et l'évolution des citoyens convergent vers ces cibles ; dès qu'un poste se libère et
+				qu'un citoyen a les prérequis, il évolue. Le total doit faire exactement 100 %. Les soldats sont
+				gérés séparément par le ratio militaire.
+			</p>
+			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;">
+				{#each DISTRIBUTABLE_OCCUPATIONS as occupation}
+					<label style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; background:oklch(0.97 0.01 84); border-radius:4px;">
+						<span style="font-size:15px;">{OCCUPATIONS[occupation]}</span>
+						<span style="display:inline-flex; align-items:center; gap:4px;">
+							<input
+								type="number"
+								min="0"
+								max="100"
+								step="1"
+								style="width:72px; text-align:right;"
+								class="input input-bordered"
+								bind:value={$formData.occupationDistribution[occupation]}
+							/>
+							<span style="color:oklch(0.5 0.03 50);">%</span>
+						</span>
+					</label>
+				{/each}
+			</div>
+			<p
+				style="margin:12px 0 0; font-weight:600; color:{distributionTotal === 100
+					? 'oklch(0.5 0.13 150)'
+					: 'oklch(0.5 0.18 25)'};"
+			>
+				Total : {distributionTotal} %{distributionTotal === 100 ? ' ✓' : ' (doit faire 100 %)'}
+			</p>
 		</div>
 
 		<!-- Échanges -->
