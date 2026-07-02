@@ -14,9 +14,12 @@ import {
   sanitizeOccupationDistribution,
   TechId,
   getTechNode,
+  AchievementId,
+  computeAchievementScore,
 } from '@ajustor/simulation'
-import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library } from '@ajustor/simulation'
+import { Campfire, Farm, Kiln, Mine, Sawmill, Cache, Wall, Library, Tent, Warehouse } from '@ajustor/simulation'
 import {
+  AchievementModel,
   CemeteryStatsModel,
   CivilizationModel,
   CivilizationStatsModel,
@@ -41,10 +44,12 @@ const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
   [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.KILN]: Kiln,
+  [BuildingTypes.TENT]: Tent,
   [BuildingTypes.HOUSE]: House,
   [BuildingTypes.SAWMILL]: Sawmill,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.WAREHOUSE]: Warehouse,
   [BuildingTypes.WALL]: Wall,
   [BuildingTypes.LIBRARY]: Library,
 }
@@ -584,6 +589,7 @@ export class CivilizationService {
     await CivilizationStatsModel.deleteMany({ civilizationId })
     await GraveModel.deleteMany({ civilizationId })
     await CemeteryStatsModel.deleteMany({ civilizationId })
+    await AchievementModel.deleteMany({ civilizationId })
     await CivilizationModel.deleteOne({ _id: civilizationToDelete.id })
     await TradeOfferModel.deleteMany({ fromCivilizationId: civilizationId })
   }
@@ -703,7 +709,83 @@ export class CivilizationService {
       $push: { civilizations: colonyDoc._id },
     })
 
+    // 13. Succès « Nouveau monde » pour la civilisation mère (une seule fois,
+    // l'upsert est neutre si le succès est déjà acquis).
+    await AchievementModel.updateOne(
+      { civilizationId, achievementId: AchievementId.FIRST_COLONY },
+      { $setOnInsert: { civilizationId, achievementId: AchievementId.FIRST_COLONY } },
+      { upsert: true },
+    )
+
     return { motherId: civilizationId, colonyId: colonyDoc._id.toString() }
+  }
+
+  // Succès débloqués d'une civilisation du joueur, du plus récent au plus ancien.
+  async getAchievements(userId: string, civilizationId: string) {
+    const user = await UserModel.findOne({ _id: userId })
+    if (!(user?.civilizations ?? []).map(String).includes(civilizationId)) {
+      throw new Error('Civilization not found')
+    }
+    const unlocked = await AchievementModel.find(
+      { civilizationId },
+      'achievementId month createdAt',
+    )
+      .sort({ createdAt: -1 })
+      .lean()
+    const unlockedIds = unlocked.map((doc) => doc.achievementId)
+    return {
+      score: computeAchievementScore(unlockedIds),
+      achievements: unlocked.map((doc) => ({
+        achievementId: doc.achievementId,
+        month: doc.month ?? null,
+        unlockedAt: doc.createdAt,
+      })),
+    }
+  }
+
+  // Tableau des scores : toutes les civilisations ayant au moins un succès,
+  // classées par score décroissant. Le score est la somme des points du
+  // catalogue (@ajustor/simulation) pour les succès débloqués.
+  async getLeaderboard() {
+    const unlocked = await AchievementModel.find(
+      {},
+      'civilizationId achievementId',
+    ).lean()
+    const byCivilization = new Map<string, string[]>()
+    for (const doc of unlocked) {
+      const key = String(doc.civilizationId)
+      const ids = byCivilization.get(key) ?? []
+      ids.push(doc.achievementId)
+      byCivilization.set(key, ids)
+    }
+
+    const civilizationIds = [...byCivilization.keys()]
+    if (!civilizationIds.length) {
+      return { count: 0, leaderboard: [] }
+    }
+
+    const civilizations = await CivilizationModel.find(
+      { _id: { $in: civilizationIds } },
+      'name people',
+    ).lean()
+    const worldRefs = await this.getWorldRefs(civilizationIds)
+
+    const leaderboard = civilizations
+      .map((civilization) => {
+        const civilizationId = String(civilization._id)
+        const achievementIds = byCivilization.get(civilizationId) ?? []
+        return {
+          civilizationId,
+          name: civilization.name as string,
+          isAlive: (civilization.people?.length ?? 0) > 0,
+          worldName: worldRefs[civilizationId]?.worldName ?? null,
+          score: computeAchievementScore(achievementIds),
+          achievements: achievementIds,
+        }
+      })
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+
+    return { count: leaderboard.length, leaderboard }
   }
 
   async reclaimResources(
@@ -778,6 +860,7 @@ export class CivilizationService {
     await CivilizationStatsModel.deleteMany({ civilizationId: targetCivilizationId })
     await GraveModel.deleteMany({ civilizationId: targetCivilizationId })
     await CemeteryStatsModel.deleteMany({ civilizationId: targetCivilizationId })
+    await AchievementModel.deleteMany({ civilizationId: targetCivilizationId })
     await CivilizationModel.deleteOne({ _id: targetCivilizationId })
     await TradeOfferModel.deleteMany({ fromCivilizationId: targetCivilizationId })
 

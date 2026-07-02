@@ -18,7 +18,11 @@ describe('civilization tech aggregates', () => {
   it('gated buildings are locked until their tech is researched', () => {
     const civ = withTechs()
     expect(civ.isBuildingUnlocked(BuildingTypes.SAWMILL)).toBe(false)
-    expect(civ.isBuildingUnlocked(BuildingTypes.HOUSE)).toBe(true)
+    // La Maison est désormais gardée par la recherche Construction ; la Tente
+    // (logement de départ) reste libre.
+    expect(civ.isBuildingUnlocked(BuildingTypes.HOUSE)).toBe(false)
+    expect(civ.isBuildingUnlocked(BuildingTypes.TENT)).toBe(true)
+    expect(withTechs(TechId.CONSTRUCTION).isBuildingUnlocked(BuildingTypes.HOUSE)).toBe(true)
     expect(withTechs(TechId.CRAFTSMANSHIP).isBuildingUnlocked(BuildingTypes.SAWMILL)).toBe(true)
   })
   it('multiplies production factors and sums bonuses', () => {
@@ -146,11 +150,11 @@ describe('research multiplier effects', () => {
   it('defaults to 1 with no techs', () => {
     expect(withTechs().researchMultiplier).toBe(1)
   })
-  it('philosophy gives ×1.25 research multiplier', () => {
-    expect(withTechs(TechId.PHILOSOPHY).researchMultiplier).toBeCloseTo(1.25)
+  it('philosophy gives ×1.15 research multiplier', () => {
+    expect(withTechs(TechId.PHILOSOPHY).researchMultiplier).toBeCloseTo(1.15)
   })
-  it('philosophy + sciences stack multiplicatively to ×1.875', () => {
-    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).researchMultiplier).toBeCloseTo(1.25 * 1.5)
+  it('philosophy + sciences stack multiplicatively to ×1.38', () => {
+    expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).researchMultiplier).toBeCloseTo(1.15 * 1.20)
   })
   it('sciences requires philosophy as prerequisite', () => {
     expect(withTechs().canUnlock(TechId.SCIENCES)).toBe(false)
@@ -211,7 +215,7 @@ describe('tier-2 / tier-3 new roots', () => {
   })
   it('theology stacks multiplicatively with philosophy and sciences', () => {
     const civ = withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.THEOLOGY)
-    expect(civ.researchMultiplier).toBeCloseTo(1.25 * 1.5 * 1.40)
+    expect(civ.researchMultiplier).toBeCloseTo(1.15 * 1.20 * 1.10)
     expect(civ.pregnancyProbabilityBonus).toBe(5)
   })
   it('navigation requires commerce', () => {
@@ -228,7 +232,7 @@ describe('tier-2 / tier-3 new roots', () => {
   })
   it('cartography stacks on philosophy, sciences, astronomy', () => {
     const civ = withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.ASTRONOMY, TechId.CARTOGRAPHY)
-    expect(civ.researchMultiplier).toBeCloseTo(1.25 * 1.5 * 2.0 * 1.30)
+    expect(civ.researchMultiplier).toBeCloseTo(1.15 * 1.20 * 1.20 * 1.10)
   })
   it('industry requires engineering', () => {
     expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION).canUnlock(TechId.INDUSTRY)).toBe(false)
@@ -279,9 +283,9 @@ describe('tier-4 techs', () => {
     expect(withTechs(TechId.PHILOSOPHY).canUnlock(TechId.ASTRONOMY)).toBe(false)
     expect(withTechs(TechId.PHILOSOPHY, TechId.SCIENCES).canUnlock(TechId.ASTRONOMY)).toBe(true)
   })
-  it('astronomy stacks on philosophy and sciences for ×3.75 total research', () => {
+  it('astronomy stacks on philosophy and sciences for ×1.656 total research', () => {
     const civ = withTechs(TechId.PHILOSOPHY, TechId.SCIENCES, TechId.ASTRONOMY)
-    expect(civ.researchMultiplier).toBeCloseTo(1.25 * 1.5 * 2.0)
+    expect(civ.researchMultiplier).toBeCloseTo(1.15 * 1.20 * 1.20)
   })
   it('urbanism requires engineering', () => {
     expect(withTechs(TechId.CRAFTSMANSHIP, TechId.MASONRY, TechId.AGRONOMY, TechId.MECHANIZATION).canUnlock(TechId.URBANISM)).toBe(false)

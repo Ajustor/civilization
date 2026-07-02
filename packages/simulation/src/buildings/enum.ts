@@ -1,4 +1,5 @@
 export enum BuildingTypes {
+  TENT = 'tent',
   HOUSE = 'house',
   FARM = 'farm',
   KILN = 'kiln',
@@ -6,6 +7,7 @@ export enum BuildingTypes {
   MINE = 'mine',
   CAMPFIRE = 'campfire',
   CACHE = 'cache',
+  WAREHOUSE = 'warehouse',
   WALL = 'wall',
   LIBRARY = 'library',
 }

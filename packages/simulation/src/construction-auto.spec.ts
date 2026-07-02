@@ -1,21 +1,24 @@
 /**
  * Suite for the distribution-driven auto-construction system.
  *
- * Construction is now driven by the gap between an occupation's target headcount
- * (from the civilization's OCCUPATION_DISTRIBUTION gauges applied to its civilian
- * workforce) and the staffing capacity already built + pending. A building is
- * weighted when `target > capacity`, independently of the current worker count —
- * this is what lets the civilization grow past one building of each type.
+ * Deux régimes de poids depuis « le métier produit, le bâtiment booste » :
+ *  - Ferme et Bibliothèque sont des boosts : poids = travailleurs du métier NON
+ *    boostés (effectif − places bâties − places en chantier).
+ *  - Les bâtiments dont le métier est exigé (mine, feu de camp, scierie, four)
+ *    gardent un poids piloté par la cible de la jauge (cible − places).
  *
  * Tests call the private `buildNewBuilding` / `autoBuildCandidates` via bracket
  * notation. Chance is forced to 100 % (CHANCE_TO_BUILD_EVOLVED_BUILDING = 100) so
- * every candidate whose weight > 0 is attempted.
+ * every candidate whose weight > 0 is attempted. Les chantiers exigent désormais
+ * des CONSTRUCTEURS (workerRequiredToBuild), ajoutés là où un chantier doit
+ * réellement démarrer.
  */
 
 import { Civilization } from './civilization'
 import { BuildingTypes } from './buildings/enum'
 import { Cache } from './buildings/cache'
 import { Farm } from './buildings/farm'
+import { House } from './buildings/house'
 import { Library } from './buildings/library'
 import { Mine } from './buildings/mine'
 import { People } from './people/people'
@@ -66,34 +69,41 @@ const weightOf = (civ: Civilization, type: BuildingTypes): number =>
 
 // ── Farm: target-driven weight ───────────────────────────────────────────────
 
-describe('autoBuildCandidates: Farm target-driven weight', () => {
-  it('bootstrap: farmer demand and no farm → weight > 0', () => {
-    // 50 % of a 10-strong workforce → 5 farmers wanted, 0 capacity.
-    const civ = makeCiv('Farm', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.FARMER]: 50 })
-    addWorkers(civ, OccupationTypes.GATHERER, 10)
+describe('autoBuildCandidates: Farm boost-driven weight', () => {
+  it('unboosted farmers and no farm → weight > 0', () => {
+    // 5 fermiers, aucune place bâtie : tous non boostés.
+    const civ = makeCiv('Farm')
+    addWorkers(civ, OccupationTypes.FARMER, 5)
     expect(weightOf(civ, BuildingTypes.FARM)).toBeGreaterThan(0)
   })
 
-  it('does not build when capacity already meets the target → weight 0', () => {
-    // 1 farm (5 slots) covers the farmer target of 5 (50 % of 10).
-    const civ = makeCiv('Farm', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.FARMER]: 50 })
+  it('does not build when every farmer is boosted → weight 0', () => {
+    // 1 farm (5 slots) covers the 5 farmers.
+    const civ = makeCiv('Farm')
     civ.addBuilding(new Farm(1))
+    addWorkers(civ, OccupationTypes.FARMER, 5)
+    expect(weightOf(civ, BuildingTypes.FARM)).toBe(0)
+  })
+
+  it('expands when workers exceed built slots → weight > 0', () => {
+    // 10 fermiers, 1 ferme (5 places) : 5 non boostés.
+    const civ = makeCiv('Farm')
+    civ.addBuilding(new Farm(1))
+    addWorkers(civ, OccupationTypes.FARMER, 10)
+    expect(weightOf(civ, BuildingTypes.FARM)).toBe(5)
+  })
+
+  it('gatherers alone do not weight the farm (workers first, building second)', () => {
+    // Sans fermiers, pas de besoin de boost : la jauge convertit d'abord des
+    // fermiers (sans plafond bâtiment), la ferme suit.
+    const civ = makeCiv('Farm', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.FARMER]: 50 })
     addWorkers(civ, OccupationTypes.GATHERER, 10)
     expect(weightOf(civ, BuildingTypes.FARM)).toBe(0)
   })
 
-  it('expands when the target exceeds capacity, with no surplus workers → weight > 0', () => {
-    // The deadlock fix: 30-strong workforce → 15 farmers wanted, 1 farm (5) built,
-    // 0 current farmers. Old surplus rule gave 0; target-driven gives a deficit.
-    const civ = makeCiv('Farm', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.FARMER]: 50 })
-    civ.addBuilding(new Farm(1))
-    addWorkers(civ, OccupationTypes.GATHERER, 30)
-    expect(weightOf(civ, BuildingTypes.FARM)).toBeGreaterThan(0)
-  })
-
   it('counts a pending farm as capacity → no double-queue', () => {
-    const civ = makeCiv('Farm', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.FARMER]: 50 })
-    addWorkers(civ, OccupationTypes.GATHERER, 10) // farmer target 5
+    const civ = makeCiv('Farm')
+    addWorkers(civ, OccupationTypes.FARMER, 5)
     civ.pendingConstructions.push({ buildingType: BuildingTypes.FARM, monthsRemaining: 3 })
     expect(weightOf(civ, BuildingTypes.FARM)).toBe(0)
   })
@@ -101,27 +111,27 @@ describe('autoBuildCandidates: Farm target-driven weight', () => {
 
 // ── Library: target-driven weight ────────────────────────────────────────────
 
-describe('autoBuildCandidates: Library target-driven weight', () => {
-  it('bootstrap: erudit demand and no library → weight > 0', () => {
-    const civ = makeCiv('Lib', { [OccupationTypes.GATHERER]: 80, [OccupationTypes.ERUDIT]: 20 })
-    addWorkers(civ, OccupationTypes.GATHERER, 10) // erudit target 2
+describe('autoBuildCandidates: Library boost-driven weight', () => {
+  it('unboosted erudits and no library → weight > 0', () => {
+    const civ = makeCiv('Lib')
+    addWorkers(civ, OccupationTypes.ERUDIT, 2)
     expect(weightOf(civ, BuildingTypes.LIBRARY)).toBeGreaterThan(0)
   })
 
-  it('does not build when the library covers the target → weight 0', () => {
-    // 1 library (2 slots) covers an erudit target of 2 (20 % of 10).
-    const civ = makeCiv('Lib', { [OccupationTypes.GATHERER]: 80, [OccupationTypes.ERUDIT]: 20 })
+  it('does not build when the library boosts every erudit → weight 0', () => {
+    // 1 library (2 slots) covers the 2 erudits.
+    const civ = makeCiv('Lib')
     civ.addBuilding(new Library(1))
-    addWorkers(civ, OccupationTypes.GATHERER, 10)
+    addWorkers(civ, OccupationTypes.ERUDIT, 2)
     expect(weightOf(civ, BuildingTypes.LIBRARY)).toBe(0)
   })
 
-  it('expands when the erudit target exceeds capacity → weight > 0', () => {
-    // 50 % of 20 → 10 erudits wanted, 1 library (2) built.
-    const civ = makeCiv('Lib', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.ERUDIT]: 50 })
+  it('expands when erudits exceed built slots → weight > 0', () => {
+    // 10 érudits, 1 bibliothèque (2 places) : 8 non boostés.
+    const civ = makeCiv('Lib')
     civ.addBuilding(new Library(1))
-    addWorkers(civ, OccupationTypes.GATHERER, 20)
-    expect(weightOf(civ, BuildingTypes.LIBRARY)).toBeGreaterThan(0)
+    addWorkers(civ, OccupationTypes.ERUDIT, 10)
+    expect(weightOf(civ, BuildingTypes.LIBRARY)).toBe(8)
   })
 })
 
@@ -196,9 +206,12 @@ describe('auto-construction: Cache uniqueness and Mine tech-gating', () => {
 // ── Library integration ──────────────────────────────────────────────────────
 
 describe('auto-construction: Library candidate (integration)', () => {
-  it('queues a Library when erudits are wanted and resources are available', () => {
-    const civ = makeCiv('LibTest', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.ERUDIT]: 50 })
-    addWorkers(civ, OccupationTypes.GATHERER, 10)
+  it('queues a Library when unboosted erudits exist, builders and resources available', () => {
+    const civ = makeCiv('LibTest')
+    // Logement déjà couvert, sinon les constructeurs partent sur des tentes.
+    civ.addBuilding(new House(4))
+    addWorkers(civ, OccupationTypes.ERUDIT, 4)
+    addWorkers(civ, OccupationTypes.BUILDER, 4)
     civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
     civ.addResource(new Resource(ResourceTypes.STONE, 1000))
 
@@ -209,16 +222,29 @@ describe('auto-construction: Library candidate (integration)', () => {
     expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.LIBRARY)).toBe(true)
   })
 
-  it('queues a second Library when the erudit target exceeds capacity', () => {
-    const civ = makeCiv('LibFull', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.ERUDIT]: 50 })
+  it('queues a second Library when erudits exceed the built slots', () => {
+    const civ = makeCiv('LibFull')
     civ.addBuilding(new Library(1)) // capacity 2
-    addWorkers(civ, OccupationTypes.GATHERER, 20) // erudit target 10 → deficit 8
+    civ.addBuilding(new House(4)) // logement couvert (14 habitants)
+    addWorkers(civ, OccupationTypes.ERUDIT, 10) // 8 non boostés
+    addWorkers(civ, OccupationTypes.BUILDER, 4)
     civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
     civ.addResource(new Resource(ResourceTypes.STONE, 1000))
 
     civ['buildNewBuilding'](summerWorld())
 
     expect(civ.pendingConstructions.some((c) => c.buildingType === BuildingTypes.LIBRARY)).toBe(true)
+  })
+
+  it('does NOT queue a Library without builders, even with unboosted erudits', () => {
+    const civ = makeCiv('LibNoBuilder')
+    addWorkers(civ, OccupationTypes.ERUDIT, 4)
+    civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
+    civ.addResource(new Resource(ResourceTypes.STONE, 1000))
+
+    civ['buildNewBuilding'](summerWorld())
+
+    expect(civ.pendingConstructions).toHaveLength(0)
   })
 })
 
@@ -228,16 +254,18 @@ describe('auto-construction: builders remain available after the work phase', ()
   it('still queues a building when workers already have hasWork=true', () => {
     // In a real passAMonth, extraction/production/research run BEFORE buildNewBuilding
     // and flag workers hasWork=true. Construction must reset that so it can mobilise
-    // builders, otherwise nothing ever gets built.
-    const civ = makeCiv('AfterWork', { [OccupationTypes.GATHERER]: 50, [OccupationTypes.ERUDIT]: 50 })
-    for (let i = 0; i < 10; i++) {
-      const gatherer = makeWorker(OccupationTypes.GATHERER, `g-${i}`)
-      gatherer.hasWork = true // already worked this month
-      civ.addPeople(gatherer)
+    // the constructeurs, otherwise nothing ever gets built.
+    const civ = makeCiv('AfterWork')
+    for (let i = 0; i < 4; i++) {
+      const builder = makeWorker(OccupationTypes.BUILDER, `b-${i}`)
+      builder.hasWork = true // already worked this month
+      civ.addPeople(builder)
     }
     civ.addResource(new Resource(ResourceTypes.WOOD, 1000))
     civ.addResource(new Resource(ResourceTypes.STONE, 1000))
 
+    // Déficit de logement → les constructeurs doivent lancer des tentes malgré
+    // leur hasWork=true.
     civ['buildNewBuilding'](summerWorld())
 
     expect(civ.pendingConstructions.length).toBeGreaterThan(0)

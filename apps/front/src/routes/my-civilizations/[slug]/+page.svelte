@@ -11,21 +11,25 @@
 		Events,
 		TECH_TREE,
 		House,
+		Tent,
 		Farm,
 		Kiln,
 		Sawmill,
 		Mine,
 		Campfire,
 		Cache,
+		Warehouse,
 		Wall,
 		Library,
 		getBuildingGate,
-		getTechNode
+		getTechNode,
+		getUpgradeRequirement
 	} from '@ajustor/simulation'
 	import BuildingsTable from './datatables/buildings-table.svelte'
 	import { OCCUPATIONS, resourceNames, eventsName, eventsDescription, buildingNames } from '$lib/translations'
 	import PeopleTable from './datatables/people-table.svelte'
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+	import PercentSlider from '$lib/components/PercentSlider.svelte'
 	import { callGetPeople } from '../../../services/sveltekit-api/people'
 	import { callGetStats } from '../../../services/sveltekit-api/civilization'
 	import { onMount } from 'svelte'
@@ -242,7 +246,7 @@
 		'oklch(0.5 0.02 250)', 'oklch(0.55 0.11 45)'
 	]
 
-	// Storage capacity per resource = (number of Entrepôts) × the cache's per-resource
+	// Storage capacity per resource = (cache-equivalents) × the cache's per-resource
 	// max. Values mirror the Cache building in the simulation (buildings/cache.ts).
 	const STORAGE_PER_CACHE: Record<ResourceTypes, number> = {
 		[ResourceTypes.RAW_FOOD]: 300,
@@ -261,10 +265,18 @@
 		[ResourceTypes.CHARCOAL]: 'oklch(0.42 0.02 250)'
 	}
 	const OVERFLOW_COLOR = 'oklch(0.55 0.2 28)'
+	// Équivalents-cache : un Entrepôt stocke 3× plus qu'une Cache.
 	const cacheCount = $derived(
 		data.civilization.buildings
-			.filter((b: { type: string; count: number }) => b.type === BuildingTypes.CACHE)
-			.reduce<number>((sum: number, b: { count: number }) => sum + b.count, 0)
+			.filter(
+				(b: { type: string; count: number }) =>
+					b.type === BuildingTypes.CACHE || b.type === BuildingTypes.WAREHOUSE
+			)
+			.reduce<number>(
+				(sum: number, b: { type: string; count: number }) =>
+					sum + b.count * (b.type === BuildingTypes.WAREHOUSE ? Warehouse.STORAGE_MULTIPLIER : 1),
+				0
+			)
 	)
 
 	// Multiplicateurs issus des technologies recherchées — miroirs exacts des
@@ -379,6 +391,7 @@
 		timeToBuild?: number
 	}
 	const BUILDING_CLASSES: Record<BuildingTypes, BuildingMeta> = {
+		[BuildingTypes.TENT]: Tent,
 		[BuildingTypes.HOUSE]: House,
 		[BuildingTypes.FARM]: Farm,
 		[BuildingTypes.KILN]: Kiln,
@@ -386,6 +399,7 @@
 		[BuildingTypes.MINE]: Mine,
 		[BuildingTypes.CAMPFIRE]: Campfire,
 		[BuildingTypes.CACHE]: Cache,
+		[BuildingTypes.WAREHOUSE]: Warehouse,
 		[BuildingTypes.WALL]: Wall,
 		[BuildingTypes.LIBRARY]: Library
 	}
@@ -430,6 +444,25 @@
 			workers: meta.workerRequiredToBuild ?? [],
 			timeToBuild: meta.timeToBuild
 		}
+	})
+
+	// Stocks par ressource et effectifs par métier : le moteur réessaie le chantier
+	// choisi chaque mois en silence tant que ressources ou ouvriers manquent — on
+	// affiche donc en direct ce qui bloque sous le sélecteur.
+	const stockByResource = $derived(
+		new Map<string, number>(
+			(data.civilization.resources ?? []).map((r: { type: string; quantity: number }) => [r.type, r.quantity])
+		)
+	)
+	let jobCounts = $state<Record<string, number> | null>(null)
+	$effect(() => {
+		jobsPromise
+			.then((jobs) => {
+				jobCounts = jobs as Record<string, number>
+			})
+			.catch(() => {
+				jobCounts = null
+			})
 	})
 
 	// ── Guerre & conflits ──────────────────────────────────────────────────────
@@ -928,6 +961,7 @@
 						</a>
 					{/if}
 					<a href="/my-civilizations/{data.civilization.id}/technologies" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Technologies</a>
+					<a href="/my-civilizations/{data.civilization.id}/achievements" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">Succès</a>
 					<a href="/my-civilizations/{data.civilization.id}/cemetery" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.42 0.02 280); border-radius:4px; background:oklch(0.18 0.018 282); color:oklch(0.72 0.02 80); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">🪦 Cimetière</a>
 					<a href="/my-civilizations/{data.civilization.id}/config" style="display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:none; color:oklch(0.45 0.06 40); font-family:'EB Garamond',serif; font-size:15px; text-decoration:none;">
 						<Settings size="16" /> Configurer
@@ -968,6 +1002,7 @@
 					<a href="/worlds/{data.worldId}/market" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Marché</a>
 				{/if}
 				<a href="/my-civilizations/{data.civilization.id}/technologies" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Technologies</a>
+				<a href="/my-civilizations/{data.civilization.id}/achievements" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;">Succès</a>
 				<a href="/my-civilizations/{data.civilization.id}/cemetery" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.72 0.02 80); text-decoration:none; background:oklch(0.18 0.018 282); border-radius:3px;">🪦 Cimetière</a>
 				<a href="/my-civilizations/{data.civilization.id}/config" onclick={() => civMenuOpen = false} style="display:flex; align-items:center; gap:8px; padding:12px 8px; border-bottom:1px solid oklch(0.86 0.03 76); font-family:'EB Garamond',serif; font-size:16px; color:oklch(0.45 0.06 40); text-decoration:none;"><Settings size="16" /> Configurer</a>
 				{#if hasColonizationTech}
@@ -1207,7 +1242,7 @@
 							{/if}
 						</div>
 						{#if capacity === 0}
-							<div style="font-size:13px; color:{OVERFLOW_COLOR}; margin-top:4px;">⚠ Aucune capacité de stockage (construisez un Entrepôt)</div>
+							<div style="font-size:13px; color:{OVERFLOW_COLOR}; margin-top:4px;">⚠ Aucune capacité de stockage (construisez une Cache)</div>
 						{:else if over > 0}
 							<div style="font-size:13px; color:{OVERFLOW_COLOR}; margin-top:4px;">⚠ Surplus : +{over.toLocaleString('fr-FR')} au-delà de la capacité de stockage</div>
 						{/if}
@@ -1281,6 +1316,10 @@
 						{#each Object.values(BuildingTypes) as buildingType}
 							{@const lockedBy = lockedBuildings.get(buildingType)}
 							{@const uniqueBlocked = buildingType === BuildingTypes.MINE && hasMine}
+							{@const upgrade = getUpgradeRequirement(buildingType)}
+							{@const upgradeHint = upgrade
+								? ` 🛠️ (consomme ${upgrade.amount} ${buildingNames[upgrade.from]}${upgrade.amount > 1 ? 's' : ''})`
+								: ''}
 							<option
 								value={buildingType}
 								disabled={!!lockedBy || uniqueBlocked}
@@ -1288,12 +1327,14 @@
 									? `Recherche manquante : ${lockedBy}`
 									: uniqueBlocked
 										? 'Une seule mine à la fois — elle doit s’épuiser avant d’en creuser une autre'
-										: undefined}
+										: upgrade
+											? `Évolution : ${upgrade.amount} ${buildingNames[upgrade.from]}${upgrade.amount > 1 ? 's' : ''} consommée${upgrade.amount > 1 ? 's' : ''} au lancement du chantier`
+											: undefined}
 							>{buildingNames[buildingType]}{lockedBy
 									? ` 🔒 (recherche : ${lockedBy})`
 									: uniqueBlocked
 										? ' ⛏️ (déjà construite)'
-										: ''}</option>
+										: upgradeHint}</option>
 						{/each}
 					</select>
 					<button
@@ -1304,17 +1345,26 @@
 				</div>
 				<p style="font-size:13px; color:oklch(0.5 0.03 50); margin:0;">Bâtiment que la civilisation cherchera à construire en priorité.</p>
 				{#if selectedBuildingInfo}
+					{@const missingCosts = selectedBuildingInfo.costs.filter((cost) => (stockByResource.get(cost.resource) ?? 0) < cost.amount)}
+					{@const missingWorkers = jobCounts
+						? selectedBuildingInfo.workers.filter((worker) => (jobCounts?.[worker.occupation] ?? 0) < worker.amount)
+						: []}
 					<div style="padding:12px 14px; border:1px solid oklch(0.8 0.04 70); border-radius:4px; background:oklch(0.95 0.018 84); display:flex; flex-direction:column; gap:10px;">
 						<div style="display:flex; align-items:baseline; gap:8px;">
 							<span style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50);">Temps de construction</span>
 							<span style="font-size:15px; font-weight:600; color:oklch(0.32 0.04 40);">{selectedBuildingInfo.timeToBuild ?? '?'} mois</span>
 						</div>
 						<div>
-							<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ressources requises</div>
+							<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ressources requises (en stock / requis)</div>
 							{#if selectedBuildingInfo.costs.length}
 								<div style="display:flex; flex-wrap:wrap; gap:6px;">
 									{#each selectedBuildingInfo.costs as cost}
-										<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{cost.amount} {resourceNames[cost.resource]}</span>
+										{@const stock = stockByResource.get(cost.resource) ?? 0}
+										{@const enough = stock >= cost.amount}
+										<span
+											title={enough ? 'Stock suffisant' : `Il manque ${(cost.amount - stock).toLocaleString('fr-FR')} ${resourceNames[cost.resource]}`}
+											style="font-size:14px; padding:3px 10px; border-radius:3px; background:{enough ? 'oklch(0.9 0.05 145)' : 'oklch(0.93 0.05 25)'}; color:{enough ? 'oklch(0.34 0.08 145)' : 'oklch(0.42 0.14 25)'};"
+										>{enough ? '✓' : '✗'} {stock.toLocaleString('fr-FR')} / {cost.amount.toLocaleString('fr-FR')} {resourceNames[cost.resource]}</span>
 									{/each}
 								</div>
 							{:else}
@@ -1326,10 +1376,22 @@
 								<div style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.52 0.05 50); margin-bottom:4px;">Ouvriers requis pour la construction</div>
 								<div style="display:flex; flex-wrap:wrap; gap:6px;">
 									{#each selectedBuildingInfo.workers as worker}
-										<span style="font-size:14px; padding:3px 10px; border-radius:3px; background:oklch(0.92 0.03 78); color:oklch(0.35 0.04 42);">{worker.amount} {OCCUPATIONS[worker.occupation]}</span>
+										{@const have = jobCounts?.[worker.occupation]}
+										{@const enough = have === undefined || have >= worker.amount}
+										<span
+											title={enough ? undefined : `Seulement ${have} ${OCCUPATIONS[worker.occupation]} dans la civilisation — il en faut ${worker.amount}, libres le même mois`}
+											style="font-size:14px; padding:3px 10px; border-radius:3px; background:{enough ? 'oklch(0.92 0.03 78)' : 'oklch(0.93 0.05 25)'}; color:{enough ? 'oklch(0.35 0.04 42)' : 'oklch(0.42 0.14 25)'};"
+										>{enough ? '' : '✗ '}{have !== undefined ? `${have} / ` : ''}{worker.amount} {OCCUPATIONS[worker.occupation]}</span>
 									{/each}
 								</div>
 							</div>
+						{/if}
+						{#if missingCosts.length || missingWorkers.length}
+							<p style="margin:0; font-size:13px; color:oklch(0.45 0.1 25); line-height:1.5;">
+								⏳ Les conditions ne sont pas encore réunies : le chantier ne démarre pas ce mois-ci, mais la demande est
+								<strong>conservée</strong> et réessayée chaque mois. Il démarrera automatiquement dès que les ressources
+								seront en stock et que les ouvriers requis seront <strong>libres le même mois</strong> (ni en chantier, ni réquisitionnés).
+							</p>
 						{/if}
 					</div>
 				{/if}
@@ -1411,7 +1473,9 @@
 			<form method="post" use:warEnhance action="?/updateWar" style="display:flex; flex-direction:column; gap:10px;">
 				<label style="display:flex; flex-direction:column; gap:4px; font-size:14px; color:oklch(0.4 0.04 48);">
 					<span style="font-family:'Marcellus',serif; color:oklch(0.35 0.04 40);">Ratio militaire (%)</span>
-					<input type="number" min="0" max="100" bind:value={$warFormData.militaryRatio} style="width:120px; padding:8px 10px; border:1px solid oklch(0.74 0.05 60); border-radius:4px; background:oklch(0.98 0.01 84); color:oklch(0.3 0.04 40); font-family:'EB Garamond',serif; font-size:15px;" />
+					<span style="display:flex; max-width:360px;">
+						<PercentSlider bind:value={$warFormData.militaryRatio} />
+					</span>
 					<span style="font-size:13px; color:oklch(0.5 0.03 50);">Part des adultes (hors enfants et retraités) entretenus comme soldats.</span>
 				</label>
 				{#if data.worldCivilizations.length}

@@ -15,7 +15,7 @@ export class Wall implements Building {
   ]
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
-    { occupation: OccupationTypes.GATHERER, amount: 5 },
+    { occupation: OccupationTypes.BUILDER, amount: 5 },
   ]
 
   getType(): BuildingTypes {

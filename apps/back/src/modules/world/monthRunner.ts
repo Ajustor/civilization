@@ -1,7 +1,7 @@
-import { Gender, World } from '@ajustor/simulation'
+import { AchievementId, Gender, World, evaluateAchievements } from '@ajustor/simulation'
 import type { CombatRecord } from '@ajustor/simulation'
 import { Types } from 'mongoose'
-import { CemeteryStatsModel, CivilizationStatsModel, CombatLogModel, GraveModel, TradeOfferModel } from '../../libs/database/models'
+import { AchievementModel, CemeteryStatsModel, CivilizationStatsModel, CombatLogModel, GraveModel, TradeOfferModel } from '../../libs/database/models'
 import type { CivilizationService } from '../civilizations/service'
 
 // Cap on how many graves are kept per civilization so the cemetery doesn't grow
@@ -87,6 +87,64 @@ async function recordDeathCauseCounts(graveDocs: GraveDoc[]) {
       },
     })),
   )
+}
+
+// Débloque les succès nouvellement mérités ce mois-ci : les succès « d'état »
+// (population, technologies, ressources…) évalués sur chaque civilisation
+// vivante, plus le succès événementiel de première victoire tiré des batailles
+// du mois. Un succès déjà acquis n'est jamais retiré ni ré-inséré (index unique).
+async function grantAchievements(world: World) {
+  const aliveCivilizations = world.civilizations.filter(
+    (civilization) => civilization.people.length > 0,
+  )
+  if (!aliveCivilizations.length) {
+    return
+  }
+
+  const existing = await AchievementModel.find(
+    { civilizationId: { $in: aliveCivilizations.map((civilization) => civilization.id) } },
+    'civilizationId achievementId',
+  ).lean()
+  const ownedByCiv = new Map<string, Set<string>>()
+  for (const doc of existing) {
+    const key = String(doc.civilizationId)
+    const owned = ownedByCiv.get(key) ?? new Set<string>()
+    owned.add(doc.achievementId)
+    ownedByCiv.set(key, owned)
+  }
+
+  const winners = new Set(
+    world.lastBattles.map((record: CombatRecord) =>
+      record.attackerWins ? record.attackerCivId : record.defenderCivId,
+    ),
+  )
+
+  const month = world.getMonth()
+  const unlockedDocs: { civilizationId: string; achievementId: string; month: number }[] = []
+  for (const civilization of aliveCivilizations) {
+    const owned = ownedByCiv.get(civilization.id) ?? new Set<string>()
+    for (const achievement of evaluateAchievements(civilization, owned)) {
+      unlockedDocs.push({
+        civilizationId: civilization.id,
+        achievementId: achievement.id,
+        month,
+      })
+    }
+    if (winners.has(civilization.id) && !owned.has(AchievementId.FIRST_VICTORY)) {
+      unlockedDocs.push({
+        civilizationId: civilization.id,
+        achievementId: AchievementId.FIRST_VICTORY,
+        month,
+      })
+    }
+  }
+
+  if (unlockedDocs.length) {
+    // Un déblocage concurrent (deux mois simulés de front) peut créer un
+    // doublon : l'index unique le rejette, on ignore l'erreur sans faire
+    // échouer le mois.
+    await AchievementModel.insertMany(unlockedDocs, { ordered: false }).catch(() => {})
+  }
 }
 
 /**
@@ -247,6 +305,9 @@ export async function runMonthForWorld(
     ]
     await Promise.all(civilizationIdsWithDeaths.map(pruneGraves))
   }
+
+  // Succès : évaluer l'état de chaque civilisation après le mois écoulé.
+  await grantAchievements(world)
 
   await civilizationService.saveAll(worldCivilizations)
 

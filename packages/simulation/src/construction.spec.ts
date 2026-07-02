@@ -2,9 +2,11 @@ import { Civilization, defaultCivilizationConfig } from './civilization'
 import { People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 import { House } from './buildings/house'
+import { Tent } from './buildings/tent'
 import { BuildingTypes } from './buildings/enum'
 import { Gender } from './people/enum'
 import { OccupationTypes } from './people/work/enum'
+import { TechId } from './technology/techTree'
 import { World } from './world'
 
 const healthyWorld = () => {
@@ -18,6 +20,11 @@ const healthyWorld = () => {
 
 const buildCivilizationNeedingHouses = () => {
   const civ = new Civilization('Builders')
+  // La Maison est désormais gardée par la recherche Construction et consomme
+  // une tente par chantier : on fournit la recherche et un déficit de tentes
+  // (3 tentes = 6 places pour 10 habitants).
+  civ.researchedTechs = [TechId.CONSTRUCTION]
+  civ.addBuilding(new Tent(3))
   civ.addResource(
     new Resource(ResourceTypes.RAW_FOOD, 1_000_000),
     new Resource(ResourceTypes.COOKED_FOOD, 1_000_000),
@@ -60,9 +67,10 @@ describe('uniform construction pipeline', () => {
     }
 
     const houses = civ.buildings.find((b) => b.getType() === BuildingTypes.HOUSE)
-    // 10 people, capacity 4 → ~3 houses needed. Pending houses count toward
-    // effective capacity, so the same deficit must not be re-queued each month.
-    expect(houses?.count ?? 0).toBeGreaterThanOrEqual(3)
+    // 10 habitants, 3 tentes (6 places) → déficit 4. Chaque maison consomme une
+    // tente (gain net +2) → 2 maisons lancées le premier mois. Le pending compte
+    // dans la capacité effective, donc le même déficit n'est pas re-queué.
+    expect(houses?.count ?? 0).toBeGreaterThanOrEqual(2)
     expect(houses?.count ?? 0).toBeLessThanOrEqual(6)
   })
 

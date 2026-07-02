@@ -27,10 +27,13 @@ mock.module('../../libs/database/models', () => ({
   CivilizationModel: {
     updateOne,
   },
+  AchievementModel: {},
+  CemeteryStatsModel: {},
   CivilizationStatsModel: {},
   CombatLogModel: {},
   GraveModel: {},
   PersonModel: {},
+  TradeOfferModel: {},
   WorldModel: {},
 }))
 
@@ -51,24 +54,26 @@ beforeEach(() => {
 })
 
 test('succès : déduit le coût et ajoute la techno, et persiste', async () => {
-  const node = getTechNode(TechId.CRAFTSMANSHIP)! // cost 5, aucun prérequis
-  nextCivilizations = [makeCiv({ researchPoints: 7, researchedTechs: [] })]
+  const node = getTechNode(TechId.CRAFTSMANSHIP)! // aucun prérequis
+  const points = node.cost + 2
+  nextCivilizations = [makeCiv({ researchPoints: points, researchedTechs: [] })]
 
   const result = await service.unlockTech(USER_ID, CIV_ID, TechId.CRAFTSMANSHIP)
 
-  expect(result.researchPoints).toBe(7 - node.cost)
+  expect(result.researchPoints).toBe(points - node.cost)
   expect(result.researchedTechs).toEqual([TechId.CRAFTSMANSHIP])
 
   // Persistance appelée avec le nouvel état.
   expect(updateOne).toHaveBeenCalledTimes(1)
   const [filter, payload] = updateOne.mock.calls[0] as [any, any]
   expect(filter).toEqual({ _id: CIV_ID })
-  expect(payload.researchPoints).toBe(7 - node.cost)
+  expect(payload.researchPoints).toBe(points - node.cost)
   expect(payload.researchedTechs).toEqual([TechId.CRAFTSMANSHIP])
 })
 
 test('refus : pas assez de points de recherche', async () => {
-  nextCivilizations = [makeCiv({ researchPoints: 4, researchedTechs: [] })] // < cost 5
+  const node = getTechNode(TechId.CRAFTSMANSHIP)!
+  nextCivilizations = [makeCiv({ researchPoints: node.cost - 1, researchedTechs: [] })]
 
   await expect(service.unlockTech(USER_ID, CIV_ID, TechId.CRAFTSMANSHIP)).rejects.toThrow(
     'Not enough research points',

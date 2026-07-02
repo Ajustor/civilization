@@ -7,6 +7,7 @@ import { civilizationStatsSchema } from '../../../db/schema/civilizationStatsSch
 import { tradeOfferSchema } from '../../../db/schema/tradeOfferModel'
 import { combatLogSchema } from '../../../db/schema/combatLogModel'
 import { cemeteryStatsSchema, graveSchema } from '../../../db/schema/cemeteryModel'
+import { achievementSchema } from '../../../db/schema/achievementModel'
 
 export const UserModel = model('User', UserSchema)
 export const WorldModel = model('World', worldSchema)
@@ -20,3 +21,4 @@ export const TradeOfferModel = model('TradeOffer', tradeOfferSchema)
 export const CombatLogModel = model('CombatLog', combatLogSchema)
 export const GraveModel = model('Grave', graveSchema)
 export const CemeteryStatsModel = model('CemeteryStats', cemeteryStatsSchema)
+export const AchievementModel = model('Achievement', achievementSchema)

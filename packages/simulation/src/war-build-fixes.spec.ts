@@ -11,7 +11,6 @@ import { People } from './people/people'
 import { Gender } from './people/enum'
 import { Resource, ResourceTypes } from './resource'
 import { OccupationTypes } from './people/work/enum'
-import { House } from './buildings/house'
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -26,43 +25,44 @@ function makeAdult(occupation: OccupationTypes, id: string): People {
 
 // ── Fix 1: Soldiers excluded from house builders ───────────────────────────
 
-describe('Fix 1: soldiers are not picked as house builders', () => {
-  it('a soldier is NOT set to isBuilding after buildNewHouses()', () => {
+describe('Fix 1: only builders are picked for housing construction', () => {
+  it('a soldier is NOT set to isBuilding after buildNewHousing()', () => {
     const civ = new Civilization('BuildTest')
 
     // Add a soldier (should be excluded from building)
     const soldier = makeAdult(OccupationTypes.SOLDIER, 'soldier-1')
     civ.addPeople(soldier)
 
-    // Add a gatherer (should be eligible to build)
-    const gatherer = makeAdult(OccupationTypes.GATHERER, 'gatherer-1')
-    civ.addPeople(gatherer)
+    // Add a builder (seul métier habilité à bâtir)
+    const builder = makeAdult(OccupationTypes.BUILDER, 'builder-a')
+    civ.addPeople(builder)
 
-    // Population = 2; no houses → capacity = 0 → workerNeeded >= 1
-    // Provide enough wood for at least one house (cost = 15)
+    // Population = 2; no housing → capacity = 0 → déficit ≥ 1
+    // Provide enough wood for at least one tent (cost = 8)
     civ.addResource(new Resource(ResourceTypes.WOOD, 100))
 
-    civ['buildNewHouses']()
+    civ['buildNewHousing']()
 
     expect(soldier.isBuilding).toBe(false)
   })
 
-  it('a gatherer IS set to isBuilding after buildNewHouses() when population exceeds housing', () => {
+  it('a BUILDER is set to isBuilding after buildNewHousing(), a gatherer is not', () => {
     const civ = new Civilization('BuildTest2')
-
-    const soldier = makeAdult(OccupationTypes.SOLDIER, 'soldier-2')
-    civ.addPeople(soldier)
 
     const gatherer = makeAdult(OccupationTypes.GATHERER, 'gatherer-2')
     civ.addPeople(gatherer)
 
-    // Population = 2; no houses → capacity = 0 → workerNeeded >= 1
+    const builder = makeAdult(OccupationTypes.BUILDER, 'builder-b')
+    civ.addPeople(builder)
+
+    // Population = 2; no housing → capacity = 0 → déficit ≥ 1
     civ.addResource(new Resource(ResourceTypes.WOOD, 100))
 
-    civ['buildNewHouses']()
+    civ['buildNewHousing']()
 
-    // At least the gatherer (non-soldier) should have been put to work building
-    expect(gatherer.isBuilding).toBe(true)
+    // Seul le constructeur est mobilisé sur le chantier.
+    expect(builder.isBuilding).toBe(true)
+    expect(gatherer.isBuilding).toBe(false)
   })
 })
 

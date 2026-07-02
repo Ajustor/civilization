@@ -38,7 +38,7 @@ export class Sawmill extends AbstractProductionBuilding {
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
-      occupation: OccupationTypes.GATHERER,
+      occupation: OccupationTypes.BUILDER,
       amount: 2,
     },
   ]

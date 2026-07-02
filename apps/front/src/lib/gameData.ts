@@ -5,6 +5,7 @@ import {
 	MINIMAL_AGE_TO_BECOME,
 	RETIREMENT_AGE_BY_OCCUPATION,
 	House,
+	Tent,
 	Farm,
 	Kiln,
 	Sawmill,
@@ -12,8 +13,11 @@ import {
 	Campfire,
 	Cache,
 	Wall,
-	Library
+	Library,
+	Warehouse,
+	getUpgradeRequirement
 } from '@ajustor/simulation'
+import { buildingNames } from './translations/buildings'
 
 export type ResourceAmount = { resource: ResourceTypes; amount: number }
 export type OperatingWorker = { occupation: OccupationTypes; count: number }
@@ -33,8 +37,10 @@ export type BuildingMeta = {
 	timeToBuild: number
 	/** Points de recherche / mois (Bibliothèque). */
 	researchOutput?: number
-	/** Citoyens logés (Maison). */
+	/** Citoyens logés (Tente, Maison). */
 	housingCapacity?: number
+	/** Note d'évolution (bâtiment de base consommé à la construction). */
+	upgradeNote?: string
 	/** Production aléatoire issue des données de la civ (Mine). */
 	isExtraction?: boolean
 	/** Texte d'effet éditorial pour les bâtiments non productifs. */
@@ -49,6 +55,7 @@ export type OccupationMeta = {
 
 // Une classe par type de bâtiment (mêmes classes que la simulation).
 const BUILDING_CLASSES = {
+	[BuildingTypes.TENT]: Tent,
 	[BuildingTypes.HOUSE]: House,
 	[BuildingTypes.FARM]: Farm,
 	[BuildingTypes.KILN]: Kiln,
@@ -56,6 +63,7 @@ const BUILDING_CLASSES = {
 	[BuildingTypes.MINE]: Mine,
 	[BuildingTypes.CAMPFIRE]: Campfire,
 	[BuildingTypes.CACHE]: Cache,
+	[BuildingTypes.WAREHOUSE]: Warehouse,
 	[BuildingTypes.WALL]: Wall,
 	[BuildingTypes.LIBRARY]: Library
 } as const
@@ -64,10 +72,14 @@ const buildingMetaCache = new Map<BuildingTypes, BuildingMeta>()
 
 function buildEffect(type: BuildingTypes): string | undefined {
 	switch (type) {
+		case BuildingTypes.TENT:
+			return `Loge ${Tent.capacity} citoyens (un logement évite la perte de point de vie). Logement de départ, évolue en Maison.`
 		case BuildingTypes.HOUSE:
 			return `Loge ${House.capacity} citoyens (un logement évite la perte de point de vie).`
 		case BuildingTypes.CACHE:
-			return 'Stocke et protège les ressources des événements. Indestructible.'
+			return 'Stocke et protège les ressources des événements. Indestructible. Évolue en Entrepôt.'
+		case BuildingTypes.WAREHOUSE:
+			return `Stocke et protège les ressources des événements (${Warehouse.STORAGE_MULTIPLIER}× la capacité d'une cache). Indestructible.`
 		case BuildingTypes.WALL:
 			return `Bloque une attaque entière, puis est détruite (nécessite ${Wall.minBuilders} bâtisseurs).`
 		case BuildingTypes.MINE:
@@ -75,6 +87,14 @@ function buildEffect(type: BuildingTypes): string | undefined {
 		default:
 			return undefined
 	}
+}
+
+// Note générique d'évolution : « consomme N <bâtiment de base> à la construction ».
+function buildUpgradeNote(type: BuildingTypes): string | undefined {
+	const upgrade = getUpgradeRequirement(type)
+	if (!upgrade) return undefined
+	const baseName = buildingNames[upgrade.from]
+	return `Évolution : consomme ${upgrade.amount} ${baseName}${upgrade.amount > 1 ? 's' : ''} au lancement du chantier.`
 }
 
 export function getBuildingMeta(type: BuildingTypes): BuildingMeta {
@@ -94,9 +114,15 @@ export function getBuildingMeta(type: BuildingTypes): BuildingMeta {
 		constructionCosts: Cls.constructionCosts ?? [], // Mine hérite de [] (AbstractExtractionBuilding) : gratuite à construire
 		timeToBuild: Cls.timeToBuild ?? 0,
 		researchOutput: type === BuildingTypes.LIBRARY ? Library.researchOutput : undefined,
-		housingCapacity: type === BuildingTypes.HOUSE ? House.capacity : undefined,
+		housingCapacity:
+			type === BuildingTypes.HOUSE
+				? House.capacity
+				: type === BuildingTypes.TENT
+					? Tent.capacity
+					: undefined,
 		isExtraction: type === BuildingTypes.MINE,
-		effect: buildEffect(type)
+		effect: buildEffect(type),
+		upgradeNote: buildUpgradeNote(type)
 	}
 
 	buildingMetaCache.set(type, meta)

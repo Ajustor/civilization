@@ -10,4 +10,5 @@ export enum OccupationTypes {
   KITCHEN_ASSISTANT = 'kitchenAssistant',
   SOLDIER = 'soldier',
   ERUDIT = 'erudit',
+  BUILDER = 'builder',
 }

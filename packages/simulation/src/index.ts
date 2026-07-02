@@ -17,11 +17,22 @@ export * from './buildings'
 export { TECH_TREE, TechId, getTechNode, getBuildingGate } from './technology/techTree'
 export type { TechNode, TechEffect } from './technology/techTree'
 
+export {
+  ACHIEVEMENTS,
+  ACHIEVEMENTS_MAX_SCORE,
+  AchievementId,
+  computeAchievementScore,
+  evaluateAchievements,
+  getAchievement,
+} from './achievements/achievements'
+export type { AchievementNode } from './achievements/achievements'
+
 export { splitCivilization } from './colonize'
 export type { SplitParams, SplitResult, ResourceTransfer } from './colonize'
 
 export { OccupationTypes } from './people/work/enum'
 export {
+  BUILDING_REQUIRED_OCCUPATIONS,
   DEFAULT_OCCUPATION_DISTRIBUTION,
   DISTRIBUTABLE_OCCUPATIONS,
   OCCUPATION_BUILDING,
@@ -29,10 +40,17 @@ export {
   resolveTargetHeadcounts,
   sanitizeOccupationDistribution,
 } from './people/work/distribution'
+export {
+  ERUDIT_BASE_RESEARCH,
+  ERUDIT_BOOSTED_RESEARCH,
+  OCCUPATION_PRODUCTION,
+} from './people/work/production'
+export type { OccupationProduction, WorkerConversion } from './people/work/production'
 export { MINIMAL_AGE_TO_BECOME, RETIREMENT_AGE_BY_OCCUPATION } from './people/work/ages'
 export { DeathCause } from './people/death'
 export type { DeathRecord } from './people/death'
 export { Gender } from './people/enum'
+export { Builder } from './people/work/builder'
 export { Carpenter } from './people/work/carpenter'
 export { Farmer } from './people/work/farmer'
 export type { Work } from './people/work/interface'

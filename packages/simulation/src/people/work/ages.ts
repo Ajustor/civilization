@@ -22,6 +22,7 @@ export const MINIMAL_AGE_TO_BECOME: Record<OccupationTypes, number> = {
   [OccupationTypes.KITCHEN_ASSISTANT]: 21,
   [OccupationTypes.ERUDIT]: 21,
   [OccupationTypes.SOLDIER]: 18,
+  [OccupationTypes.BUILDER]: 16,
 }
 
 // Âge de retraite par métier. Centralise les constantes RETIREMENT_AGE jusque-là
@@ -39,4 +40,5 @@ export const RETIREMENT_AGE_BY_OCCUPATION: Record<OccupationTypes, number> = {
   [OccupationTypes.KITCHEN_ASSISTANT]: 70,
   [OccupationTypes.ERUDIT]: 80,
   [OccupationTypes.SOLDIER]: 60,
+  [OccupationTypes.BUILDER]: 60,
 }

@@ -4,7 +4,7 @@ import { BuildingTypes } from '../buildings/enum'
 describe('TECH_TREE', () => {
   it('exposes all nodes with valid ids', () => {
     expect(TECH_TREE.length).toBeGreaterThanOrEqual(14)
-    expect(getTechNode(TechId.CRAFTSMANSHIP)?.cost).toBe(5)
+    expect(getTechNode(TechId.CRAFTSMANSHIP)?.cost).toBe(45)
   })
   it('has only valid prerequisites (no unknown id, no self-reference)', () => {
     const ids = new Set(TECH_TREE.map((n) => n.id))
@@ -15,12 +15,17 @@ describe('TECH_TREE', () => {
       }
     }
   })
-  it('gates SAWMILL, KILN, MINE, WALL only', () => {
+  it('gates SAWMILL, KILN, MINE, WALL, HOUSE and WAREHOUSE', () => {
     expect(getBuildingGate(BuildingTypes.SAWMILL)).toBe(TechId.CRAFTSMANSHIP)
     expect(getBuildingGate(BuildingTypes.KILN)).toBe(TechId.CRAFTSMANSHIP)
     expect(getBuildingGate(BuildingTypes.MINE)).toBe(TechId.MASONRY)
     expect(getBuildingGate(BuildingTypes.WALL)).toBe(TechId.MASONRY)
-    expect(getBuildingGate(BuildingTypes.HOUSE)).toBeUndefined()
+    // La Maison est l'évolution de la Tente, gardée par la recherche Construction.
+    expect(getBuildingGate(BuildingTypes.HOUSE)).toBe(TechId.CONSTRUCTION)
+    // L'Entrepôt est l'évolution de la Cache, gardé par Entreposage.
+    expect(getBuildingGate(BuildingTypes.WAREHOUSE)).toBe(TechId.WAREHOUSING)
+    expect(getBuildingGate(BuildingTypes.TENT)).toBeUndefined()
+    expect(getBuildingGate(BuildingTypes.CACHE)).toBeUndefined()
     expect(getBuildingGate(BuildingTypes.LIBRARY)).toBeUndefined()
   })
 })

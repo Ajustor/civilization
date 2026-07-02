@@ -1,12 +1,12 @@
 import {
-  Cache,
   CivilizationBuilder,
   Gender,
-  House,
+  MINIMAL_AGE_TO_BECOME,
   OccupationTypes,
   People,
   Resource,
   ResourceTypes,
+  Tent,
   formatCivilizations,
 } from '@ajustor/simulation'
 import Elysia, { NotFoundError, t } from 'elysia'
@@ -21,21 +21,50 @@ import { ColonizeDto } from './colonize.dto'
 import { ReclaimDto } from './reclaim.dto'
 
 const INITIAL_CITIZEN_NUMBER = 50
-const INITIAL_CITIZEN_AGE = 12 * 16
 const INITIAL_CITIZEN_LIFE = 3
 const INITIAL_OCCUPATION_CHOICE = [
   OccupationTypes.WOODCUTTER,
   OccupationTypes.GATHERER,
 ]
+
+// Pyramide des âges des fondateurs : la population de départ mêle enfants,
+// jeunes actifs, adultes et quelques anciens au lieu de 50 jumeaux de 16 ans.
+const INITIAL_AGE_PYRAMID: { weight: number; minYears: number; maxYears: number }[] = [
+  { weight: 15, minYears: 2, maxYears: 11 }, // enfants
+  { weight: 30, minYears: 12, maxYears: 20 }, // jeunes actifs
+  { weight: 30, minYears: 21, maxYears: 32 }, // adultes
+  { weight: 17, minYears: 33, maxYears: 44 }, // âge mûr
+  { weight: 8, minYears: 45, maxYears: 55 }, // anciens
+]
+
+const drawInitialAgeInMonths = (): number => {
+  const totalWeight = INITIAL_AGE_PYRAMID.reduce(
+    (sum, bucket) => sum + bucket.weight,
+    0,
+  )
+  let roll = Math.random() * totalWeight
+  const bucket =
+    INITIAL_AGE_PYRAMID.find((candidate) => (roll -= candidate.weight) < 0) ??
+    INITIAL_AGE_PYRAMID[INITIAL_AGE_PYRAMID.length - 1]
+  const years =
+    bucket.minYears +
+    Math.floor(Math.random() * (bucket.maxYears - bucket.minYears + 1))
+  return years * 12 + Math.floor(Math.random() * 12)
+}
 const INITIAL_CIVILIZATION_RESOURCES = {
   RAW_FOOD: 1000,
   WOOD: 100,
   STONE: 0,
 }
 
+// Pas d'entrepôt offert à la fondation : le bâtir (30 bois + 20 planches,
+// 4 récolteurs) est un des premiers objectifs de la civilisation — sans lui,
+// aucune ressource n'est protégée des incendies et invasions de rats.
+// Les fondateurs démarrent sous des tentes : la Maison (capacité double) doit
+// être débloquée par la recherche « Construction » puis bâtie en consommant
+// une tente par maison.
 const INITIAL_CIVILIZATION_BUILDING = [
-  new House(Math.ceil(INITIAL_CITIZEN_NUMBER / 4)),
-  new Cache(),
+  new Tent(Math.ceil(INITIAL_CITIZEN_NUMBER / Tent.capacity)),
 ]
 
 const civilizationServiceInstance = new CivilizationService(new PeopleService())
@@ -51,6 +80,10 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
       civilizations: formatCivilizations(civilizations),
     }
   })
+  // Tableau des scores public : civilisations classées par points de succès.
+  .get('/leaderboard', async ({ civilizationService }) =>
+    civilizationService.getLeaderboard(),
+  )
   .use(authorization('Actions on civilization require auth'))
   .get('/mine', async ({ user, civilizationService }) => {
     const civilizations = await civilizationService.getByUserId(user.id, {
@@ -98,6 +131,17 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
     '/:civilizationId/recap',
     async ({ user, civilizationService, params: { civilizationId } }) =>
       civilizationService.getRecap(user.id as string, civilizationId),
+  )
+  .get(
+    '/:civilizationId/achievements',
+    async ({ user, civilizationService, params: { civilizationId }, set }) => {
+      try {
+        return await civilizationService.getAchievements(user.id as string, civilizationId)
+      } catch (error) {
+        set.status = 404
+        return { error: error instanceof Error ? error.message : 'Civilization not found' }
+      }
+    },
   )
   .post(
     '/:civilizationId/technologies/:techId',
@@ -154,15 +198,22 @@ export const civilizationModule = new Elysia({ prefix: '/civilizations' })
 
       const people = Array.from(Array(INITIAL_CITIZEN_NUMBER)).map((_, idx) => {
         const person = new People({
-          month: INITIAL_CITIZEN_AGE,
+          month: drawInitialAgeInMonths(),
           gender: idx % 2 === 0 ? Gender.FEMALE : Gender.MALE,
           lifeCounter: INITIAL_CITIZEN_LIFE,
         })
 
+        // Les fondateurs trop jeunes pour les métiers de départ commencent
+        // enfants et évolueront d'eux-mêmes à l'âge requis.
+        const startingOccupations = INITIAL_OCCUPATION_CHOICE.filter(
+          (occupation) => person.years >= MINIMAL_AGE_TO_BECOME[occupation],
+        )
         person.setOccupation(
-          INITIAL_OCCUPATION_CHOICE[
-          Math.floor(Math.random() * INITIAL_OCCUPATION_CHOICE.length)
-          ],
+          startingOccupations.length
+            ? startingOccupations[
+            Math.floor(Math.random() * startingOccupations.length)
+            ]
+            : OccupationTypes.CHILD,
         )
 
         return person

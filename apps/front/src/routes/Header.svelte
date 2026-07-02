@@ -11,6 +11,7 @@
 	const navLinks = [
 		{ url: '/', label: 'Les mondes', match: (p: string) => p === '/' || p.startsWith('/worlds') },
 		{ url: '/my-civilizations', label: 'Mes civilisations', match: (p: string) => p.startsWith('/my-civilizations') },
+		{ url: '/leaderboard', label: 'Classement', match: (p: string) => p.startsWith('/leaderboard') },
 		{ url: '/rules', label: 'Les règles', match: (p: string) => p.startsWith('/rules') },
 		{ url: '/changelog', label: 'Mises à jour', match: (p: string) => p.startsWith('/changelog') }
 	]

@@ -3,6 +3,7 @@ import { v4 } from "uuid";
 
 import { isExtractionOrProductionBuilding } from "./buildings";
 import { Cache } from "./buildings/cache";
+import { Warehouse } from "./buildings/warehouse";
 import { Campfire } from "./buildings/campfire";
 import { BuildingTypes } from "./buildings/enum";
 import { Farm } from "./buildings/farm";
@@ -11,6 +12,8 @@ import { Kiln } from "./buildings/kiln";
 import { Library } from "./buildings/library";
 import { Mine } from "./buildings/mine";
 import { Sawmill } from "./buildings/sawmill";
+import { Tent } from "./buildings/tent";
+import { getUpgradeRequirement } from "./buildings/upgrades";
 import { Wall } from "./buildings/wall";
 import { Gender } from "./people/enum";
 import { People, MAX_NUMBER_OF_CHILD } from "./people/people";
@@ -18,19 +21,26 @@ import { DeathCause, type DeathRecord } from "./people/death";
 import { OccupationTypes } from "./people/work/enum";
 import { MINIMAL_AGE_TO_BECOME } from "./people/work/ages";
 import {
+  BUILDING_REQUIRED_OCCUPATIONS,
   DEFAULT_OCCUPATION_DISTRIBUTION,
   DISTRIBUTABLE_OCCUPATIONS,
   OCCUPATION_BUILDING,
   OCCUPATION_BUILDING_SLOTS,
   resolveTargetHeadcounts,
 } from "./people/work/distribution";
+import {
+  ERUDIT_BASE_RESEARCH,
+  ERUDIT_BOOSTED_RESEARCH,
+  OCCUPATION_PRODUCTION,
+  type WorkerConversion,
+} from "./people/work/production";
 import { Resource, ResourceTypes } from "./resource";
 import { OCCUPATION_TREE } from "./technology/occupationTree";
 import { TechId, getTechNode, getBuildingGate } from "./technology/techTree";
 import { Events } from "./events/enum";
 import {
   AbstractExtractionBuilding, AbstractStorageBuilding, type Building, type ConstructionCost,
-  type ExtractionBuilding, type ProductionBuilding, type WorkerRequiredToBuild
+  type ExtractionBuilding, type WorkerRequiredToBuild
 } from "./types/building";
 import { isWithinChance } from "./utils";
 import { hasElementInCommon } from "./utils/array";
@@ -57,23 +67,35 @@ export const defaultCivilizationConfig: CivilizationConfig = {
 const BUILDING_CONSTRUCTORS = {
   [BuildingTypes.FARM]: Farm,
   [BuildingTypes.KILN]: Kiln,
+  [BuildingTypes.TENT]: Tent,
   [BuildingTypes.HOUSE]: House,
   [BuildingTypes.SAWMILL]: Sawmill,
   [BuildingTypes.CAMPFIRE]: Campfire,
   [BuildingTypes.MINE]: Mine,
   [BuildingTypes.CACHE]: Cache,
+  [BuildingTypes.WAREHOUSE]: Warehouse,
   [BuildingTypes.WALL]: Wall,
   [BuildingTypes.LIBRARY]: Library,
 };
 
-const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE];
+const UNDESTRUCTIBLE_BUILDINGS = [BuildingTypes.CACHE, BuildingTypes.WAREHOUSE];
 
 const EXTRACTIONS_RESOURCES: { [key in BuildingTypes]?: ResourceTypes[] } = {
   [BuildingTypes.MINE]: [ResourceTypes.STONE],
 };
 
-const STORAGE_BUILDINGS = [BuildingTypes.CACHE];
+const STORAGE_BUILDINGS = [BuildingTypes.CACHE, BuildingTypes.WAREHOUSE];
 const EXTRACTIONS_BUILDINGS = [BuildingTypes.MINE];
+
+// Bâtiments qui logent des citoyens, du meilleur au plus rudimentaire. La
+// construction automatique vise toujours le premier type débloqué dont le
+// prérequis d'évolution (BUILDING_UPGRADES) est satisfaisable.
+const HOUSING_BUILDINGS = [BuildingTypes.HOUSE, BuildingTypes.TENT];
+
+const HOUSING_CAPACITY: { [key in BuildingTypes]?: number } = {
+  [BuildingTypes.HOUSE]: House.capacity,
+  [BuildingTypes.TENT]: Tent.capacity,
+};
 
 // Bâtiments limités à UN seul exemplaire par civilisation : ils ne s'empilent
 // pas via `count`. Une mine partage une unique `capacity` tirée au hasard, donc
@@ -309,6 +331,22 @@ export class Civilization {
     );
   }
 
+  get tents(): Tent | undefined {
+    return this.buildings.find<Tent>(
+      (building): building is Tent =>
+        building.getType() === BuildingTypes.TENT,
+    );
+  }
+
+  // Capacité totale de logement, tous types confondus (tentes + maisons).
+  get housingCapacity(): number {
+    return this.buildings.reduce(
+      (total, building) =>
+        total + (HOUSING_CAPACITY[building.getType()] ?? 0) * building.count,
+      0,
+    );
+  }
+
   get sawmill(): Sawmill | undefined {
     return this.buildings.find<Sawmill>(
       (building): building is Sawmill =>
@@ -379,12 +417,16 @@ export class Civilization {
     }, 0);
   }
 
-  // Occupations the distribution can currently steer toward: base jobs (no
-  // building) plus any specialised job whose building is unlocked by the
-  // researched tech. Locked jobs are excluded so their share is renormalised
-  // onto reachable ones (see resolveTargetHeadcounts).
+  // Occupations the distribution can currently steer toward. Depuis la refonte
+  // « le métier produit, le bâtiment booste », presque tous les métiers
+  // s'exercent sans bâtiment : seuls ceux de BUILDING_REQUIRED_OCCUPATIONS
+  // (mineur) restent gardés par le déblocage de leur bâtiment. Les métiers
+  // exclus voient leur part renormalisée sur les autres (resolveTargetHeadcounts).
   private activeDistributableOccupations(): OccupationTypes[] {
     return DISTRIBUTABLE_OCCUPATIONS.filter((occupation) => {
+      if (!BUILDING_REQUIRED_OCCUPATIONS.includes(occupation)) {
+        return true;
+      }
       const building = OCCUPATION_BUILDING[occupation];
       return !building || this.isBuildingUnlocked(building);
     });
@@ -588,6 +630,40 @@ export class Civilization {
     }
 
     existingBuilding.count++;
+  }
+
+  // Un bâtiment évolué (BUILDING_UPGRADES) ne peut être lancé que si assez
+  // d'exemplaires de son bâtiment de base sont debout.
+  private hasUpgradeBase(buildingType: BuildingTypes): boolean {
+    const requirement = getUpgradeRequirement(buildingType);
+    if (!requirement) {
+      return true;
+    }
+    const base = this.buildings.find(
+      (building) => building.getType() === requirement.from,
+    );
+    return (base?.count ?? 0) >= requirement.amount;
+  }
+
+  // Consomme le(s) bâtiment(s) de base au lancement du chantier (comme les
+  // ressources). Retourne la capacité de logement perdue par cette consommation
+  // pour que l'appelant puisse raisonner en capacité nette.
+  private consumeUpgradeBase(buildingType: BuildingTypes): number {
+    const requirement = getUpgradeRequirement(buildingType);
+    if (!requirement) {
+      return 0;
+    }
+    const base = this.buildings.find(
+      (building) => building.getType() === requirement.from,
+    );
+    if (!base) {
+      return 0;
+    }
+    base.count -= requirement.amount;
+    if (base.count <= 0) {
+      this.removeBuilding(base);
+    }
+    return (HOUSING_CAPACITY[requirement.from] ?? 0) * requirement.amount;
   }
 
   private startConstruction(buildingType: BuildingTypes, monthsToBuild: number): void {
@@ -797,64 +873,71 @@ export class Civilization {
     }
   }
 
-  private useProductionBuilding(building: ProductionBuilding) {
-    for (let i = building.count; i > 0; i--) {
-      const requiredWorkers = building.workerTypeRequired;
-      const workerByTypes = new Map<OccupationTypes, People[]>();
-      const requiredResourceAmountIndexedByType = new Map<
-        ResourceTypes,
-        number
-      >();
+  /**
+   * Production par citoyen : chaque travailleur du métier produit, avec ou sans
+   * bâtiment. Les places offertes par les bâtiments debout (workerTypeRequired ×
+   * count) sont attribuées aux premiers travailleurs — production « boostée » ;
+   * les autres produisent la version « base » au rendement dégradé
+   * (OCCUPATION_PRODUCTION). Les intrants disponibles plafonnent le nombre de
+   * travailleurs réellement servis, boostés d'abord.
+   */
+  private produceForOccupation(occupation: OccupationTypes): void {
+    const production = OCCUPATION_PRODUCTION[occupation];
+    if (!production) {
+      return;
+    }
 
-      const workerRequiredCount = requiredWorkers.reduce(
-        (count, { count: amount }) => count + amount,
-        0,
-      );
+    const workers = this.getPeopleWithOccupation(occupation).filter((person) =>
+      person.canWork(),
+    );
+    if (!workers.length) {
+      return;
+    }
 
-      for (const requiredWorker of requiredWorkers) {
-        const workers = this.getPeopleWithOccupation(
-          requiredWorker.occupation,
-        ).filter((people) => people.canWork());
+    const boostedCount = Math.min(
+      workers.length,
+      this.occupationCapacity(occupation),
+    );
+    const baseCount = workers.length - boostedCount;
 
-        workerByTypes.set(
-          requiredWorker.occupation,
-          workers.splice(0, requiredWorker.count),
+    for (const worker of workers) {
+      worker.hasWork = true;
+    }
+
+    const conversions: [WorkerConversion, number][] = [
+      [production.boosted, boostedCount],
+      [production.base, baseCount],
+    ];
+
+    for (const [conversion, count] of conversions) {
+      if (count <= 0) {
+        continue;
+      }
+
+      // Les intrants disponibles limitent le nombre de travailleurs servis.
+      let effectiveWorkers = count;
+      for (const input of conversion.inputs) {
+        effectiveWorkers = Math.min(
+          effectiveWorkers,
+          Math.floor(this.getResource(input.resource).quantity / input.amount),
         );
       }
+      if (effectiveWorkers <= 0) {
+        continue;
+      }
 
-      for (const requiredResources of building.inputResources) {
-        const resource = this.getResource(requiredResources.resource);
-
-        if (resource.quantity < requiredResources.amount) {
-          return;
-        }
-
-        requiredResourceAmountIndexedByType.set(
-          requiredResources.resource,
-          requiredResources.amount,
+      for (const input of conversion.inputs) {
+        this.decreaseResource(
+          input.resource,
+          Math.ceil(input.amount * effectiveWorkers),
         );
       }
-      let availableWorkers = 0;
-
-      for (const workers of workerByTypes.values()) {
-        for (const worker of workers) {
-          worker.hasWork = true;
-
-          availableWorkers++;
-        }
-      }
-      const productionRatio = availableWorkers / workerRequiredCount;
-      for (const [
-        resource,
-        amount,
-      ] of requiredResourceAmountIndexedByType.entries()) {
-        this.decreaseResource(resource, amount);
-      }
-
-      for (const producedResource of building.outputResources) {
+      for (const output of conversion.outputs) {
         this.increaseResource(
-          producedResource.resource,
-          Math.ceil(producedResource.amount * productionRatio * this.productionMultiplier),
+          output.resource,
+          Math.ceil(
+            output.amount * effectiveWorkers * this.productionMultiplier,
+          ),
         );
       }
     }
@@ -914,53 +997,38 @@ export class Civilization {
     }
   }
 
+  // La nourriture d'abord (fermiers puis cuisine), puis la chaîne du bois :
+  // les planches du charpentier consomment le bois avant le charbonnier.
   private produceResources() {
-    if (this.sawmill) {
-      this.useProductionBuilding(this.sawmill);
-    }
-
-    if (this.kiln) {
-      this.useProductionBuilding(this.kiln);
-    }
-
-    if (this.farm) {
-      this.useProductionBuilding(this.farm);
-    }
-
-    if (this.campfire) {
-      this.useProductionBuilding(this.campfire);
-    }
+    this.produceForOccupation(OccupationTypes.FARMER);
+    this.produceForOccupation(OccupationTypes.KITCHEN_ASSISTANT);
+    this.produceForOccupation(OccupationTypes.CARPENTER);
+    this.produceForOccupation(OccupationTypes.CHARCOAL_BURNER);
   }
 
+  // Les érudits produisent même sans bibliothèque, mais à un rythme
+  // drastiquement réduit (0,2 pt/mois contre 1 pt avec une place).
   private produceResearch(): void {
-    const library = this.buildings.find(
-      (building) => building.getType() === BuildingTypes.LIBRARY,
-    ) as Library | undefined
-    if (!library) {
-      return
-    }
-
-    const requiredPerLibrary =
-      library.workerTypeRequired.find(
-        (worker) => worker.occupation === OccupationTypes.ERUDIT,
-      )?.count ?? 0
-    if (requiredPerLibrary === 0) {
-      return
-    }
-
-    const totalCapacity = requiredPerLibrary * library.count
     const erudits = this.getPeopleWithOccupation(OccupationTypes.ERUDIT).filter(
-      // A building erudit is busy on a construction site and does not research.
       (person) => person.work?.canWork(person.years) && !person.isBuilding,
     )
-    const staffed = Math.min(erudits.length, totalCapacity)
+    if (!erudits.length) {
+      return
+    }
 
-    for (const erudit of erudits.slice(0, staffed)) {
+    const boosted = Math.min(
+      erudits.length,
+      this.occupationCapacity(OccupationTypes.ERUDIT),
+    )
+    const base = erudits.length - boosted
+
+    for (const erudit of erudits) {
       erudit.hasWork = true
     }
 
     this._researchPoints += Math.floor(
-      Library.researchOutput * (staffed / requiredPerLibrary) * this.researchMultiplier,
+      (boosted * ERUDIT_BOOSTED_RESEARCH + base * ERUDIT_BASE_RESEARCH) *
+      this.researchMultiplier,
     )
   }
 
@@ -993,7 +1061,9 @@ export class Civilization {
       return;
     }
 
-    // Wall precondition: needs at least Wall.minBuilders able-bodied workers.
+    // Wall precondition: needs at least Wall.minBuilders able-bodied citizens
+    // (the whole city pitches in), even though the chantier itself is run by
+    // the declared constructeurs.
     if (chosen === BuildingTypes.WALL) {
       const builders = this.people.filter(
         (person) => person.canWork() && person.work?.occupationType !== OccupationTypes.SOLDIER,
@@ -1048,7 +1118,7 @@ export class Civilization {
     }
 
     this.buildChosenBuilding();
-    this.buildNewHouses();
+    this.buildNewHousing();
 
     const candidates = this.autoBuildCandidates()
       .filter((candidate) => candidate.weight > 0)
@@ -1067,18 +1137,20 @@ export class Civilization {
   }
 
   /**
-   * Candidates for auto-construction, weighted by the gap between the configured
-   * distribution and the current staffing capacity. Weight 0 means no need
-   * (candidate is filtered out before the chance roll). Candidates are sorted by
-   * descending weight so the highest-priority need reserves builders and resources
-   * first. Final gating (tech unlock, resource check, available workers) is applied
+   * Candidates for auto-construction. Weight 0 means no need (candidate is
+   * filtered out before the chance roll). Candidates are sorted by descending
+   * weight so the highest-priority need reserves builders and resources first.
+   * Final gating (tech unlock, resource check, available builders) is applied
    * inside buildNew().
    *
-   * A staffed building is queued when its occupation's target headcount exceeds the
-   * capacity already built plus in-flight (pending) — i.e. the gauge wants more
-   * workers of that trade than existing buildings can employ. This is independent of
-   * the current worker count, which is what lets construction lead job evolution
-   * instead of waiting for a worker surplus that could never form.
+   * Deux régimes de poids :
+   *  - Ferme et Bibliothèque ne sont que des boosts : leur poids est le nombre
+   *    de travailleurs du métier NON boostés (effectif − places bâties − places
+   *    en chantier) — le bâtiment suit les travailleurs pour les accélérer.
+   *  - Les bâtiments dont le métier est exigé (mine, feu de camp, scierie,
+   *    four à chaux) gardent un poids piloté par la cible de la jauge
+   *    (cible − places bâties/en chantier), car sans bâtiment ces travailleurs
+   *    ne peuvent pas exister.
    */
   private autoBuildCandidates(): {
     type: BuildingTypes;
@@ -1093,8 +1165,8 @@ export class Civilization {
       this.pendingConstructions.filter((p) => p.buildingType === type).length;
     const targets = this.occupationTargets();
 
-    // Missing staffing slots for a building's occupation: target − (built + pending)
-    // capacity. Tech-locked buildings never get weight.
+    // Missing staffing slots for a building-required occupation (mine):
+    // target − (built + pending) capacity. Tech-locked buildings never get weight.
     const capacityGap = (
       type: BuildingTypes,
       occupation: OccupationTypes,
@@ -1108,6 +1180,23 @@ export class Civilization {
       return Math.max(0, (targets.get(occupation) ?? 0) - effectiveCapacity);
     };
 
+    // Travailleurs du métier sans place boostée : effectif actuel − places
+    // bâties − places en chantier. C'est le besoin réel de boost.
+    const boostGap = (
+      type: BuildingTypes,
+      occupation: OccupationTypes,
+    ): number => {
+      if (!this.isBuildingUnlocked(type)) {
+        return 0;
+      }
+      const slotsPerBuilding = OCCUPATION_BUILDING_SLOTS[occupation] ?? 0;
+      const pendingCapacity = pendingCount(type) * slotsPerBuilding;
+      const unboosted =
+        this.getPeopleWithOccupation(occupation).length -
+        (this.occupationCapacity(occupation) + pendingCapacity);
+      return Math.max(0, unboosted);
+    };
+
     return [
       {
         type: BuildingTypes.CACHE,
@@ -1117,7 +1206,7 @@ export class Civilization {
       {
         type: BuildingTypes.FARM,
         ctor: Farm,
-        weight: capacityGap(BuildingTypes.FARM, OccupationTypes.FARMER),
+        weight: boostGap(BuildingTypes.FARM, OccupationTypes.FARMER),
       },
       {
         type: BuildingTypes.CAMPFIRE,
@@ -1146,58 +1235,77 @@ export class Civilization {
       {
         type: BuildingTypes.LIBRARY,
         ctor: Library,
-        weight: capacityGap(BuildingTypes.LIBRARY, OccupationTypes.ERUDIT),
+        weight: boostGap(BuildingTypes.LIBRARY, OccupationTypes.ERUDIT),
       },
     ];
   }
 
-  private buildNewHouses() {
-    const canBuild = House.constructionCosts.every(
-      (cost) => this.getResource(cost.resource).quantity >= cost.amount,
+  // Le meilleur logement constructible aujourd'hui : premier type débloqué de
+  // HOUSING_BUILDINGS dont le prérequis d'évolution est satisfaisable. Tant que
+  // la Maison n'est pas recherchée (ou qu'aucune tente n'est disponible), la
+  // civilisation monte des tentes.
+  private pickHousingToBuild(): BuildingTypes | undefined {
+    return HOUSING_BUILDINGS.find(
+      (type) => this.isBuildingUnlocked(type) && this.hasUpgradeBase(type),
     );
-    if (!canBuild) {
-      return;
-    }
+  }
 
-    // Count pending houses toward effective capacity so in-flight construction
+  private buildNewHousing() {
+    // Count pending housing toward effective capacity so in-flight construction
     // isn't re-queued every month until it completes.
-    const pendingHouses = this.pendingConstructions.filter(
-      (pending) => pending.buildingType === BuildingTypes.HOUSE,
-    ).length;
-    const housesTotalCapacity =
-      House.capacity * ((this.houses?.count ?? 0) + pendingHouses);
-    const workerNeeded = Math.ceil(
-      (this._people.length - housesTotalCapacity) / House.capacity,
+    const pendingHousingCapacity = this.pendingConstructions.reduce(
+      (total, pending) =>
+        total + (HOUSING_CAPACITY[pending.buildingType] ?? 0),
+      0,
     );
+    // Capacité nette manquante. Consommer une tente pour lancer une maison
+    // retire immédiatement sa capacité : chaque chantier décrémente ce déficit
+    // de son apport NET (maison 4 − tente 2 = 2).
+    let missingCapacity =
+      this._people.length - (this.housingCapacity + pendingHousingCapacity);
 
-    if (workerNeeded < 0) {
+    if (missingCapacity <= 0) {
       return;
     }
-    const filteredWorkers = this.people.filter(
-      (citizen) => citizen.canWork() && citizen.work?.occupationType !== OccupationTypes.SOLDIER,
-    );
-    const workers = filteredWorkers.slice(
-      0,
-      Math.min(workerNeeded, filteredWorkers.length),
-    );
 
-    for (const worker of workers) {
-      const canContinueBuilding = House.constructionCosts.every(
-        (cost) => this.getResource(cost.resource).quantity >= cost.amount,
-      );
+    // Seuls les constructeurs bâtissent : le nombre de chantiers parallèles est
+    // naturellement plafonné par l'effectif du métier (jauge de répartition).
+    const availableWorkers = this.getPeopleWithOccupation(
+      OccupationTypes.BUILDER,
+    ).filter((citizen) => citizen.canWork());
 
-      if (!canContinueBuilding) {
+    // One pending entry is pushed per available builder: parallel construction
+    // sites are intended (one housing unit per builder in flight).
+    for (const worker of availableWorkers) {
+      if (missingCapacity <= 0) {
         return;
       }
 
-      for (const cost of House.constructionCosts) {
+      const housingType = this.pickHousingToBuild();
+      if (!housingType) {
+        return;
+      }
+
+      const constructor = BUILDING_CONSTRUCTORS[housingType] as {
+        constructionCosts: ConstructionCost[];
+        timeToBuild: number;
+      };
+      const canBuild = constructor.constructionCosts.every(
+        (cost) => this.getResource(cost.resource).quantity >= cost.amount,
+      );
+      if (!canBuild) {
+        return;
+      }
+
+      for (const cost of constructor.constructionCosts) {
         this.decreaseResource(cost.resource, cost.amount);
       }
 
-      // One pending entry is pushed per available worker: parallel
-      // construction sites are intended (one house per worker in flight).
-      worker.startBuilding(House.timeToBuild, BuildingTypes.HOUSE);
-      this.startConstruction(BuildingTypes.HOUSE, House.timeToBuild);
+      const lostCapacity = this.consumeUpgradeBase(housingType);
+      worker.startBuilding(constructor.timeToBuild, housingType);
+      this.startConstruction(housingType, constructor.timeToBuild);
+      missingCapacity -=
+        (HOUSING_CAPACITY[housingType] ?? 0) - lostCapacity;
     }
   }
 
@@ -1215,6 +1323,12 @@ export class Civilization {
       return;
     }
 
+    // Bâtiment évolué : le bâtiment de base requis doit exister (il sera
+    // consommé au lancement du chantier, plus bas).
+    if (!this.hasUpgradeBase(buildingType)) {
+      return;
+    }
+
     const canBuild =
       constructionCosts.every(
         (cost) => this.getResource(cost.resource).quantity >= cost.amount,
@@ -1223,7 +1337,14 @@ export class Civilization {
       return;
     }
 
-    const workers = workerRequiredToBuild.reduce<People[]>(
+    // Aucun chantier ne se construit tout seul : un bâtiment qui ne déclare
+    // pas d'ouvriers requis mobilise au moins un constructeur — seul métier
+    // habilité à bâtir.
+    const requiredWorkers: WorkerRequiredToBuild[] = workerRequiredToBuild.length
+      ? workerRequiredToBuild
+      : [{ occupation: OccupationTypes.BUILDER, amount: 1 }];
+
+    const workers = requiredWorkers.reduce<People[]>(
       (workers, workerRequired) => {
         const availableWorkers = this.getPeopleWithOccupation(
           workerRequired.occupation,
@@ -1244,7 +1365,7 @@ export class Civilization {
 
     if (
       workers.length <
-      workerRequiredToBuild.reduce((sum, { amount }) => sum + amount, 0)
+      requiredWorkers.reduce((sum, { amount }) => sum + amount, 0)
     ) {
       return;
     }
@@ -1256,14 +1377,14 @@ export class Civilization {
       this.decreaseResource(cost.resource, cost.amount);
     }
 
+    this.consumeUpgradeBase(buildingType);
     this.startConstruction(buildingType, timeToBuild);
   }
 
   private checkHousing() {
-    let lastCitizenWithoutHouseIndex = 0;
-    if (this.houses) {
-      lastCitizenWithoutHouseIndex = House.capacity * this.houses.count - 1;
-    }
+    const housingCapacity = this.housingCapacity;
+    const lastCitizenWithoutHouseIndex =
+      housingCapacity > 0 ? housingCapacity - 1 : 0;
     const citizenWithoutHouse = this.people.slice(lastCitizenWithoutHouseIndex);
 
     // Being unsheltered is exposure to the elements, recorded under "cold".
@@ -1313,10 +1434,12 @@ export class Civilization {
     const adjust = (occupation: OccupationTypes, delta: number) =>
       current.set(occupation, count(occupation) + delta);
 
-    // A gauge-wanted free slot: below target, and — for a building-bound job — below
-    // the physical staffing capacity too.
+    // A gauge-wanted free slot: below target. Seuls les métiers qui exigent
+    // physiquement leur bâtiment (mineur) restent plafonnés par la capacité
+    // bâtie — les autres produisent sans bâtiment (rendement réduit), la jauge
+    // seule décide de leur effectif.
     const roomCeiling = (occupation: OccupationTypes) =>
-      OCCUPATION_BUILDING[occupation]
+      BUILDING_REQUIRED_OCCUPATIONS.includes(occupation)
         ? Math.min(target(occupation), this.occupationCapacity(occupation))
         : target(occupation);
     const deficit = (occupation: OccupationTypes) =>
@@ -1376,9 +1499,12 @@ export class Civilization {
     }
 
     // 2c. Release specialists a shrunken/destroyed building can no longer staff.
+    // Ne concerne que les métiers qui exigent leur bâtiment (mineur) : les
+    // autres continuent à produire sans bâtiment, simplement sans boost.
     for (const [parent, children] of Object.entries(OCCUPATION_TREE)) {
       if (parent === OccupationTypes.CHILD) continue;
       for (const occupation of children) {
+        if (!BUILDING_REQUIRED_OCCUPATIONS.includes(occupation)) continue;
         if (!OCCUPATION_BUILDING[occupation]) continue;
         const excess = count(occupation) - this.occupationCapacity(occupation);
         if (excess <= 0) continue;

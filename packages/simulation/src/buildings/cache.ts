@@ -6,7 +6,13 @@ import {
 import { BuildingTypes } from "./enum";
 
 export class Cache extends AbstractStorageBuilding {
-  count = 1;
+  // Le count doit venir du constructeur : l'ignorer ferait retomber les caches
+  // empilées à 1 au rechargement depuis la base (et l'évolution en Entrepôt
+  // exige 2 caches debout).
+  constructor(public count = 1) {
+    super();
+  }
+
   storedResources: StoredResource[] = [
     {
       resource: ResourceTypes.WOOD,
@@ -36,15 +42,18 @@ export class Cache extends AbstractStorageBuilding {
 
   public static timeToBuild = 6;
 
+  // Aligné sur les autres bâtiments (10-25 ressources, ~2 ouvriers), avec un
+  // léger premium : l'entrepôt est indestructible et protège les ressources.
+  // Les planches maintiennent le prérequis implicite d'une scierie en activité.
   public static constructionCosts: ConstructionCost[] = [
-    { amount: 200, resource: ResourceTypes.WOOD },
-    { amount: 600, resource: ResourceTypes.PLANK },
+    { amount: 30, resource: ResourceTypes.WOOD },
+    { amount: 20, resource: ResourceTypes.PLANK },
   ];
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
-      occupation: OccupationTypes.GATHERER,
-      amount: 15,
+      occupation: OccupationTypes.BUILDER,
+      amount: 4,
     },
   ];
 

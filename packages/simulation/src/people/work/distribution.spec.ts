@@ -8,7 +8,7 @@ import {
 } from './distribution'
 
 describe('DEFAULT_OCCUPATION_DISTRIBUTION', () => {
-  it('sums to 100 across exactly the 8 distributable occupations', () => {
+  it('sums to 100 across exactly the distributable occupations (builder inclus)', () => {
     const keys = Object.keys(DEFAULT_OCCUPATION_DISTRIBUTION) as OccupationTypes[]
     expect(new Set(keys)).toEqual(new Set(DISTRIBUTABLE_OCCUPATIONS))
     const sum = keys.reduce((s, k) => s + (DEFAULT_OCCUPATION_DISTRIBUTION[k] ?? 0), 0)

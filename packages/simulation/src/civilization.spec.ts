@@ -5,6 +5,7 @@ jest.mock('./utils', () => ({ isWithinChance }))
 import { EAT_FACTOR, LIFE_EXPECTANCY, People } from './people/people'
 import { Resource, ResourceTypes } from './resource'
 
+import { BuildingTypes } from './buildings/enum'
 import { Civilization } from './civilization'
 import { Farm } from './buildings/farm'
 import { Gender } from './people/enum'
@@ -260,39 +261,43 @@ describe('Civilization', () => {
     })
 
     describe('Testing buildings', () => {
-      it('should decrease required resources when building house', async () => {
+      it('should decrease required resources when building a tent (starting housing)', async () => {
         civilization.addResource(new Resource(ResourceTypes.WOOD, 20))
+        // Seuls les constructeurs bâtissent.
         const person = new PeopleBuilder()
           .withMonth(500)
-          .withOccupation(OccupationTypes.GATHERER)
+          .withOccupation(OccupationTypes.BUILDER)
           .build()
         civilization.addPeople(person)
 
         await civilization.passAMonth(world)
 
         const woodResource = civilization.getResource(ResourceTypes.WOOD)
-        const houses = civilization.houses
 
-        expect(woodResource.quantity).toBe(5)
-        expect(houses?.count).toBe(1)
+        // Sans la recherche Construction, le logement bâti est une tente (8 bois).
+        expect(woodResource.quantity).toBe(12)
+        expect(
+          civilization.pendingConstructions.some(
+            (pending) => pending.buildingType === BuildingTypes.TENT,
+          ),
+        ).toBeTruthy()
         expect(person.canWork()).toBeFalsy()
       })
 
-      it('should not build houses', async () => {
-        civilization.addResource(new Resource(ResourceTypes.WOOD, 10))
+      it('should not build housing without enough resources', async () => {
+        civilization.addResource(new Resource(ResourceTypes.WOOD, 5))
         const person = new PeopleBuilder()
           .withMonth(500)
-          .withOccupation(OccupationTypes.GATHERER)
+          .withOccupation(OccupationTypes.BUILDER)
           .build()
         civilization.addPeople(person)
 
         await civilization.passAMonth(world)
 
         const woodResource = civilization.getResource(ResourceTypes.WOOD)
-        const houses = civilization.houses
 
-        expect(woodResource.quantity).toBe(10)
-        expect(houses?.count).toBe(undefined)
+        expect(woodResource.quantity).toBe(5)
+        expect(civilization.pendingConstructions).toHaveLength(0)
         expect(person.canWork()).toBeTruthy()
       })
 

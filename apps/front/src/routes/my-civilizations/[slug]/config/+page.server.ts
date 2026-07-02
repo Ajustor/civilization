@@ -14,10 +14,14 @@ import { DEFAULT_OCCUPATION_DISTRIBUTION, type CivilizationType } from '@ajustor
 
 // Merge the stored distribution over the defaults so every occupation key is present
 // (the form requires all of them, and civs saved before the migration have none).
-const resolveDistribution = (stored?: Record<string, number>) => ({
-	...DEFAULT_OCCUPATION_DISTRIBUTION,
-	...(stored ?? {})
-})
+// Si le total ne fait plus 100 (ex. répartition enregistrée avant l'ajout du
+// métier Constructeur), on repart de la répartition par défaut — même
+// comportement que la simulation (sanitizeOccupationDistribution).
+const resolveDistribution = (stored?: Record<string, number>) => {
+	const merged = { ...DEFAULT_OCCUPATION_DISTRIBUTION, ...(stored ?? {}) }
+	const total = Object.values(merged).reduce((sum, value) => sum + (value ?? 0), 0)
+	return total === 100 ? merged : { ...DEFAULT_OCCUPATION_DISTRIBUTION }
+}
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
 	const auth = cookies.get('auth') ?? ''

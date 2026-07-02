@@ -15,28 +15,48 @@ export const DISTRIBUTABLE_OCCUPATIONS: OccupationTypes[] = [
   OccupationTypes.ERUDIT,
   OccupationTypes.CARPENTER,
   OccupationTypes.CHARCOAL_BURNER,
+  OccupationTypes.BUILDER,
 ]
 
 /**
  * Balanced-by-default target split (integer percentages summing to 100). Prioritises
  * food (gatherer + farmer + kitchen assistant) and the wood chain (woodcutter +
- * carpenter + charcoal burner) so a fresh civilization stays viable.
+ * carpenter + charcoal burner) so a fresh civilization stays viable. Builders get
+ * 10 % : seuls habilités à bâtir, sans eux plus aucun chantier ne démarre.
  */
 export const DEFAULT_OCCUPATION_DISTRIBUTION: Partial<Record<OccupationTypes, number>> = {
-  [OccupationTypes.GATHERER]: 22,
-  [OccupationTypes.FARMER]: 20,
-  [OccupationTypes.WOODCUTTER]: 13,
-  [OccupationTypes.CARPENTER]: 12,
-  [OccupationTypes.ERUDIT]: 10,
-  [OccupationTypes.KITCHEN_ASSISTANT]: 8,
-  [OccupationTypes.MINER]: 8,
+  [OccupationTypes.GATHERER]: 20,
+  [OccupationTypes.FARMER]: 18,
+  [OccupationTypes.WOODCUTTER]: 12,
+  [OccupationTypes.BUILDER]: 10,
+  [OccupationTypes.CARPENTER]: 10,
+  [OccupationTypes.ERUDIT]: 9,
+  [OccupationTypes.KITCHEN_ASSISTANT]: 7,
+  [OccupationTypes.MINER]: 7,
   [OccupationTypes.CHARCOAL_BURNER]: 7,
 }
 
 /**
+ * Métiers qui exigent physiquement leur bâtiment pour exercer : le mineur (le
+ * gisement EST la mine), et les métiers de transformation — commis de cuisine,
+ * charpentier, charbonnier — qui ont besoin de leur installation. Leur effectif
+ * reste plafonné par les places bâties et leur jauge est inactive tant que le
+ * bâtiment n'est pas débloqué. À l'inverse, le fermier et l'érudit produisent
+ * sans bâtiment, à rendement dégradé (voir production.ts) — leur bâtiment ne
+ * sert que de boost.
+ */
+export const BUILDING_REQUIRED_OCCUPATIONS: OccupationTypes[] = [
+  OccupationTypes.MINER,
+  OccupationTypes.KITCHEN_ASSISTANT,
+  OccupationTypes.CARPENTER,
+  OccupationTypes.CHARCOAL_BURNER,
+]
+
+/**
  * Building each specialised occupation staffs. Base jobs (gatherer, woodcutter)
  * need no building and are therefore absent. Used to (a) know whether a target is
- * reachable given the researched tech and (b) drive construction toward the target.
+ * reachable given the researched tech and (b) drive construction toward boosting
+ * the occupation's workers.
  */
 export const OCCUPATION_BUILDING: Partial<Record<OccupationTypes, BuildingTypes>> = {
   [OccupationTypes.FARMER]: BuildingTypes.FARM,

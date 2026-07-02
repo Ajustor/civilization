@@ -22,6 +22,7 @@ import { Miner } from './work/miner'
 import { KitchenAssistant } from './work/kitchenAssistant'
 import { Soldier } from './work/soldier'
 import { Erudit } from './work/erudit'
+import { Builder } from './work/builder'
 
 const occupations = {
   [OccupationTypes.CARPENTER]: Carpenter,
@@ -35,6 +36,7 @@ const occupations = {
   [OccupationTypes.KITCHEN_ASSISTANT]: KitchenAssistant,
   [OccupationTypes.SOLDIER]: Soldier,
   [OccupationTypes.ERUDIT]: Erudit,
+  [OccupationTypes.BUILDER]: Builder,
 }
 
 export const EAT_FACTOR = {
@@ -49,6 +51,7 @@ export const EAT_FACTOR = {
   [OccupationTypes.CHILD]: 1,
   [OccupationTypes.SOLDIER]: 3,
   [OccupationTypes.ERUDIT]: 2,
+  [OccupationTypes.BUILDER]: 3,
 }
 
 export const MINIMUM_CONCEPTION_AGE = 16

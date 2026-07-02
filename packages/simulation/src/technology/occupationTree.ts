@@ -5,8 +5,15 @@ export const OCCUPATION_TREE: { [key in OccupationTypes]?: OccupationTypes[] } =
     [OccupationTypes.WOODCUTTER]: [
       OccupationTypes.CARPENTER,
       OccupationTypes.CHARCOAL_BURNER,
+      OccupationTypes.BUILDER,
     ],
-    [OccupationTypes.GATHERER]: [OccupationTypes.FARMER, OccupationTypes.MINER, OccupationTypes.KITCHEN_ASSISTANT, OccupationTypes.ERUDIT],
+    [OccupationTypes.GATHERER]: [
+      OccupationTypes.FARMER,
+      OccupationTypes.MINER,
+      OccupationTypes.KITCHEN_ASSISTANT,
+      OccupationTypes.ERUDIT,
+      OccupationTypes.BUILDER,
+    ],
     [OccupationTypes.CHILD]: [
       OccupationTypes.WOODCUTTER,
       OccupationTypes.GATHERER,

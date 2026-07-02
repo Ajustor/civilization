@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
 	import { getWorldsInfos } from '../../services/api/world-api'
-	import { resourceNames, eventsName, eventsDescription, buildingNames, OCCUPATIONS } from '$lib/translations'
-	import { type ResourceTypes, Events, BuildingTypes, OccupationTypes } from '@ajustor/simulation'
+	import { resourceNames, eventsName, eventsDescription, buildingNames, OCCUPATIONS, techNames } from '$lib/translations'
+	import { type ResourceTypes, Events, BuildingTypes, OccupationTypes, TECH_TREE } from '@ajustor/simulation'
 	import { getBuildingMeta, getOccupationMeta } from '$lib/gameData'
 
 	type WorldInfo = Awaited<ReturnType<typeof getWorldsInfos>>[number]
@@ -47,14 +47,15 @@
 	// Données éditoriales par métier (non dérivables) : facteur de nourriture et rôle.
 	const OCCUPATION_EDITORIAL: Partial<Record<OccupationTypes, { eat: number; role: string }>> = {
 		[OccupationTypes.CHILD]: { eat: 1, role: 'Récolte 5 nourriture ou pierre par mois' },
-		[OccupationTypes.GATHERER]: { eat: 2, role: 'Récolte 20 nourriture ou pierre par mois' },
+		[OccupationTypes.GATHERER]: { eat: 2, role: 'Récolte 20 nourriture ou pierre par mois (limité par le stock du monde)' },
 		[OccupationTypes.WOODCUTTER]: { eat: 2, role: 'Récolte 10 bois par mois' },
-		[OccupationTypes.FARMER]: { eat: 3, role: "Exploite une Ferme (jusqu'à 100 nourriture / mois)" },
-		[OccupationTypes.CARPENTER]: { eat: 3, role: 'Exploite une Scierie (produit des planches)' },
-		[OccupationTypes.CHARCOAL_BURNER]: { eat: 3, role: 'Exploite un Four à chaux (produit du charbon)' },
-		[OccupationTypes.KITCHEN_ASSISTANT]: { eat: 2, role: 'Exploite un Feu de camp (produit de la nourriture préparée)' },
-		[OccupationTypes.MINER]: { eat: 3, role: 'Exploite une Mine (produit de la pierre)' },
-		[OccupationTypes.ERUDIT]: { eat: 2, role: 'Exploite une Bibliothèque (produit des points de recherche)' },
+		[OccupationTypes.FARMER]: { eat: 3, role: 'Produit 12 nourriture par mois à la main, 20 avec une place en Ferme (la ferme est un boost, pas un prérequis)' },
+		[OccupationTypes.CARPENTER]: { eat: 3, role: 'Exploite une Scierie (5 planches par bois) — exige son bâtiment' },
+		[OccupationTypes.CHARCOAL_BURNER]: { eat: 3, role: 'Exploite un Four à chaux (2 charbons par bois) — exige son bâtiment' },
+		[OccupationTypes.KITCHEN_ASSISTANT]: { eat: 2, role: 'Exploite un Feu de camp (10 nourriture → 7 préparées) — exige son bâtiment' },
+		[OccupationTypes.MINER]: { eat: 3, role: 'Exploite une Mine (produit de la pierre) — exige son bâtiment' },
+		[OccupationTypes.ERUDIT]: { eat: 2, role: '0,2 point de recherche par mois seul (5 érudits = 1 pt), 1 point avec une place en Bibliothèque (la bibliothèque est un boost, pas un prérequis)' },
+		[OccupationTypes.BUILDER]: { eat: 3, role: 'Seul métier habilité à bâtir : chaque chantier mobilise des constructeurs. Sans chantier, il ne produit rien' },
 		[OccupationTypes.SOLDIER]: { eat: 3, role: 'Défend la civilisation et mène les attaques' },
 		[OccupationTypes.RETIRED]: { eat: 1, role: 'Ne travaille plus' }
 	}
@@ -63,7 +64,7 @@
 		OccupationTypes.CHILD, OccupationTypes.GATHERER, OccupationTypes.WOODCUTTER,
 		OccupationTypes.FARMER, OccupationTypes.CARPENTER, OccupationTypes.CHARCOAL_BURNER,
 		OccupationTypes.KITCHEN_ASSISTANT, OccupationTypes.MINER, OccupationTypes.ERUDIT,
-		OccupationTypes.SOLDIER, OccupationTypes.RETIRED
+		OccupationTypes.BUILDER, OccupationTypes.SOLDIER, OccupationTypes.RETIRED
 	]
 
 	const OCCUPATION_RULES = OCCUPATION_ORDER.map((occ) => {
@@ -87,14 +88,16 @@
 
 	// Textes éditoriaux par bâtiment (effet en prose), conservés tels quels.
 	const BUILDING_EFFECT: Record<BuildingTypes, string> = {
-		[BuildingTypes.HOUSE]: 'Loge 4 citoyens (un logement évite la perte de point de vie)',
-		[BuildingTypes.FARM]: 'Produit 100 nourriture / mois',
-		[BuildingTypes.LIBRARY]: 'Produit 2 points de recherche par mois (bibliothèque pleinement dotée)',
-		[BuildingTypes.KILN]: '5 bois → 10 charbon',
-		[BuildingTypes.SAWMILL]: '1 bois → 5 planches',
-		[BuildingTypes.MINE]: 'Produit de la pierre (1 à 100 par mineur). Unique : une seule mine à la fois, elle doit s’épuiser avant d’en creuser une nouvelle',
-		[BuildingTypes.CAMPFIRE]: '10 nourriture → 7 nourriture préparée',
-		[BuildingTypes.CACHE]: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible.',
+		[BuildingTypes.TENT]: 'Loge 2 citoyens (un logement évite la perte de point de vie). Logement de départ, peut évoluer en Maison',
+		[BuildingTypes.HOUSE]: 'Loge 4 citoyens. Évolution de la Tente : débloquée par la recherche « Construction », chaque maison consomme 1 tente',
+		[BuildingTypes.FARM]: 'Booste 5 fermiers : 20 nourriture / mois chacun au lieu de 12 à la main (boost, pas un prérequis)',
+		[BuildingTypes.LIBRARY]: 'Booste 2 érudits : 1 point de recherche / mois chacun au lieu de 0,2 seul (boost, pas un prérequis)',
+		[BuildingTypes.KILN]: '2 charbonniers, 2 charbons par bois. Indispensable au métier : sans four, pas de charbonniers',
+		[BuildingTypes.SAWMILL]: '2 charpentiers, 5 planches par bois. Indispensable au métier : sans scierie, pas de charpentiers',
+		[BuildingTypes.MINE]: 'Produit de la pierre (1 à 100 par mineur). Indispensable au métier : sans mine, pas de mineurs. Unique : une seule mine à la fois, elle doit s’épuiser avant d’en creuser une nouvelle',
+		[BuildingTypes.CAMPFIRE]: '1 commis de cuisine, 10 nourriture → 7 préparées. Indispensable au métier : sans feu de camp, pas de commis',
+		[BuildingTypes.CACHE]: 'Stocke et protège les ressources (nourriture 300, pierre 300, bois 150, charbon 150, planches 150, nourriture préparée 100). Indestructible. Peut évoluer en Entrepôt',
+		[BuildingTypes.WAREHOUSE]: 'Stocke et protège les ressources (3× la capacité d’une cache). Indestructible. Évolution de la Cache : débloqué par la recherche « Entreposage », chaque entrepôt consomme 2 caches',
 		[BuildingTypes.WALL]: 'Bloque une attaque entière, puis est détruite'
 	}
 
@@ -105,8 +108,9 @@
 		list.length ? list.map((w) => `${w.amount ?? w.count} ${OCCUPATIONS[w.occupation as OccupationTypes] ?? w.occupation}`).join(', ') : '—'
 
 	const BUILDING_ORDER: BuildingTypes[] = [
-		BuildingTypes.HOUSE, BuildingTypes.FARM, BuildingTypes.LIBRARY, BuildingTypes.KILN,
-		BuildingTypes.SAWMILL, BuildingTypes.MINE, BuildingTypes.CAMPFIRE, BuildingTypes.CACHE, BuildingTypes.WALL
+		BuildingTypes.TENT, BuildingTypes.HOUSE, BuildingTypes.FARM, BuildingTypes.LIBRARY, BuildingTypes.KILN,
+		BuildingTypes.SAWMILL, BuildingTypes.MINE, BuildingTypes.CAMPFIRE, BuildingTypes.CACHE,
+		BuildingTypes.WAREHOUSE, BuildingTypes.WALL
 	]
 
 	const BUILDING_RULES = BUILDING_ORDER.map((bt) => {
@@ -121,16 +125,18 @@
 		}
 	})
 
-	// Arbre de technologies — valeurs miroir de TECH_TREE (packages/simulation).
-	const TECHNOLOGIES = [
-		{ name: 'Artisanat', cost: 5, prereq: '—', effect: 'Débloque la Scierie et le Four à chaux.' },
-		{ name: 'Maçonnerie', cost: 10, prereq: 'Artisanat', effect: 'Débloque la Mine et la Muraille.' },
-		{ name: 'Agronomie', cost: 8, prereq: '—', effect: '+15 % de production des bâtiments.' },
-		{ name: 'Mécanisation', cost: 20, prereq: 'Agronomie', effect: '+25 % de production supplémentaire.' },
-		{ name: 'Entreposage', cost: 8, prereq: '—', effect: '+50 % de capacité de stockage.' },
-		{ name: 'Médecine', cost: 12, prereq: '—', effect: '+5 enfants simultanés et +10 % de conception.' },
-		{ name: 'Métallurgie', cost: 15, prereq: 'Maçonnerie', effect: '+25 % de force militaire.' }
-	]
+	// Arbre de technologies — dérivé directement de TECH_TREE (packages/simulation),
+	// trié par coût croissant : plus de tableau miroir à maintenir à la main.
+	const TECHNOLOGIES = [...TECH_TREE]
+		.sort((a, b) => a.cost - b.cost)
+		.map((node) => ({
+			name: node.name,
+			cost: node.cost,
+			prereq: node.prerequisites.length
+				? node.prerequisites.map((p) => techNames[p] ?? p).join(', ')
+				: '—',
+			effect: node.description
+		}))
 
 	const eventEntries = Object.entries(eventsName) as [Events, string][]
 	// Événements bénéfiques : ils sont d'autant plus rares que leur bonus est important.
@@ -255,6 +261,16 @@
 				</ul>
 			</section>
 
+			<!-- Fondation -->
+			<section class="civ-inner-card">
+				<h2 class="civ-section-title">La fondation</h2>
+				<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Une nouvelle civilisation démarre avec <strong>50 fondateurs</strong>, autant d'hommes que de femmes, <strong>1 000 nourriture</strong>, <strong>100 bois</strong> et des tentes — mais <strong>sans cache</strong> : la bâtir (30 bois + 20 planches, 4 récolteurs) est l'un des premiers objectifs, car sans elle aucune ressource n'est protégée des incendies et des invasions de rats.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les fondateurs forment une <strong>pyramide des âges</strong> réaliste : des enfants (2–11 ans), une majorité de jeunes actifs et d'adultes (12–32 ans), des citoyens d'âge mûr (33–44 ans) et quelques anciens (45–55 ans). Les âges exacts sont tirés au sort — chaque civilisation naît différente.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les fondateurs en âge de travailler débutent <strong>récolteurs</strong> ou <strong>coupeurs de bois</strong> ; les plus jeunes commencent <strong>enfants</strong> et évolueront en grandissant.</span></li>
+				</ul>
+			</section>
+
 			<!-- Survie -->
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Survie des citoyens</h2>
@@ -262,7 +278,7 @@
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Chaque citoyen a une jauge de <strong>points de vie</strong> (12 au maximum). Elle monte quand il mange et baisse quand il manque de l'essentiel.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span><strong>Nourriture</strong> : la nourriture préparée est consommée en priorité (rend de la vie). À défaut, la nourriture brute est consommée en plus grande quantité pour un effet moindre. Le besoin dépend du métier (de 1 à 3 par mois).</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Sans aucune nourriture, un citoyen perd <strong>4 points de vie</strong> dans le mois.</span></li>
-					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span><strong>Logement</strong> : une Maison loge 4 citoyens. Un citoyen sans logement perd <strong>1 point de vie</strong> par mois.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span><strong>Logement</strong> : une Tente loge 2 citoyens, une Maison 4 (la Maison, débloquée par la recherche « Construction », consomme 1 tente à la construction). Un citoyen sans logement perd <strong>1 point de vie</strong> par mois.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span><strong>Chauffage</strong> : en automne (2 bois/personne) et en hiver (3 bois/personne), il faut se chauffer. Le charbon est plus efficace : 1 charbon chauffe 10 personnes. Un citoyen non chauffé perd <strong>1 point de vie</strong> par mois.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>À partir de <strong>85 ans</strong>, un citoyen a <strong>20 % de chances de mourir</strong> chaque mois.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Le nombre d'actifs d'une civilisation est <strong>plafonné</strong> (100 000 par défaut, configurable).</span></li>
@@ -284,7 +300,7 @@
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Métiers</h2>
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
-					Les enfants, récolteurs et coupeurs de bois peuvent <strong>évoluer</strong> vers un métier spécialisé (20 % de chance par mois), à condition d'avoir <strong>l'âge requis</strong> pour ce métier (voir colonne Âge). Les métiers spécialisés font fonctionner les bâtiments de production.
+					Les enfants, récolteurs et coupeurs de bois peuvent <strong>évoluer</strong> vers un métier spécialisé, à condition d'avoir <strong>l'âge requis</strong> pour ce métier (voir colonne Âge). Le <strong>métier produit, le bâtiment booste</strong> : le fermier et l'érudit travaillent même sans bâtiment (à rendement réduit), tandis que le mineur, le commis de cuisine, le charpentier et le charbonnier exigent le leur. Le <strong>constructeur</strong> est le seul métier habilité à bâtir : chaque chantier mobilise des constructeurs, et sans eux rien ne se construit.
 				</p>
 				<div style="overflow-x:auto;">
 					<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:15px; color:oklch(0.4 0.03 50);">
@@ -314,7 +330,7 @@
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Bâtiments</h2>
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
-					Un chantier occupe des ouvriers sur plusieurs mois jusqu'à son achèvement. <strong>Priorité à la survie</strong> : si une civilisation ne parvient pas à nourrir toute sa population un mois, elle ne lance <strong>aucun nouveau chantier</strong> ce mois-là (la main-d'œuvre reste dédiée à la récolte) ; les chantiers déjà en cours se poursuivent.
+					Un chantier mobilise des <strong>constructeurs</strong> — seul métier habilité à bâtir — sur plusieurs mois jusqu'à son achèvement (la colonne « Construit par » indique l'équipe requise). Certains bâtiments sont des <strong>évolutions</strong> : leur chantier consomme aussi le bâtiment de base (1 tente par maison, 2 caches par entrepôt). <strong>Priorité à la survie</strong> : si une civilisation ne parvient pas à nourrir toute sa population un mois, elle ne lance <strong>aucun nouveau chantier</strong> ce mois-là ; les chantiers déjà en cours se poursuivent.
 				</p>
 				<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
 					{#each BUILDING_RULES as b}
@@ -336,10 +352,11 @@
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Recherche &amp; technologies</h2>
 				<ul style="list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
-					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>La <strong>Bibliothèque</strong> est le cœur de la recherche. Dotée de ses <strong>2 érudits</strong>, elle produit <strong>2 points de recherche par mois</strong> ; la production est proportionnelle au nombre d'érudits en poste, et plusieurs bibliothèques se cumulent.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Ce sont les <strong>érudits</strong> qui produisent la recherche : <strong>0,2 point par mois</strong> chacun sans bâtiment (5 érudits = 1 point), <strong>1 point par mois</strong> avec une place en <strong>Bibliothèque</strong> (2 places par bibliothèque, qui se cumulent). La bibliothèque est un boost ×5, pas un prérequis.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>L'<strong>érudit</strong> est un métier spécialisé : un <strong>récolteur</strong> peut évoluer vers érudit (dès 21 ans), exactement comme vers les autres métiers de production.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les points accumulés se <strong>dépensent</strong> pour débloquer des technologies dans l'<strong>arbre de technologies</strong>. Chaque technologie a un <strong>coût</strong> en points et d'éventuels <strong>prérequis</strong> : on ne peut la rechercher qu'une fois ces prérequis acquis et avec assez de points. Le coût est alors déduit, et la technologie est acquise <strong>définitivement</strong>.</span></li>
 					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Certaines technologies <strong>débloquent des bâtiments</strong>, d'autres apportent des <strong>bonus permanents</strong>. Les bonus se <strong>cumulent</strong> : les multiplicateurs se multiplient entre eux, les bonus chiffrés s'additionnent.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Les coûts <strong>s'envolent de palier en palier</strong> : les premières découvertes tombent en quelques heures, mais compléter tout l'arbre — jusqu'à l'<strong>ère moderne</strong> — est l'œuvre de nombreuses générations (comptez environ <strong>deux semaines réelles</strong> pour une civilisation studieuse en mode rapide).</span></li>
 				</ul>
 				<div style="overflow-x:auto;">
 					<table style="width:100%; border-collapse:collapse; font-family:'EB Garamond',serif; font-size:15px; color:oklch(0.4 0.03 50);">
@@ -365,11 +382,21 @@
 				</div>
 			</section>
 
+			<!-- Succès & score -->
+			<section class="civ-inner-card">
+				<h2 class="civ-section-title">Succès &amp; classement</h2>
+				<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:17px; line-height:1.6; color:oklch(0.42 0.03 50);">
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Chaque civilisation peut débloquer des <strong>succès</strong> : jalons de population, longévité, technologies, bâtiments, ressources, faits d'armes ou fondation de colonie. Chaque succès rapporte des <strong>points</strong>.</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>Un succès débloqué est <strong>acquis pour toujours</strong>, même si la condition cesse d'être vraie (une ville qui se dépeuple garde son succès de population).</span></li>
+					<li style="display:flex; gap:12px;"><span style="color:oklch(0.5 0.13 34); flex-shrink:0;">·</span><span>La somme des points donne le <strong>score</strong> de la civilisation, visible sur la page <a href="/leaderboard" style="color:oklch(0.45 0.1 145);">Classement</a>, qui départage toutes les civilisations de tous les mondes.</span></li>
+				</ul>
+			</section>
+
 			<!-- Événements -->
 			<section class="civ-inner-card">
 				<h2 class="civ-section-title">Événements</h2>
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
-					Chaque mois, selon la <strong>probabilité d'événement</strong> du monde, un événement peut frapper — ou favoriser — les civilisations. Les ressources stockées dans un <strong>Entrepôt</strong> sont protégées de l'incendie et de l'invasion de rats.
+					Chaque mois, selon la <strong>probabilité d'événement</strong> du monde, un événement peut frapper — ou favoriser — les civilisations. Les ressources stockées dans une <strong>Cache</strong> ou un <strong>Entrepôt</strong> sont protégées de l'incendie et de l'invasion de rats.
 				</p>
 				<p style="font-size:15px; color:oklch(0.5 0.03 50); margin:0 0 14px;">
 					Certains événements sont <strong style="color:oklch(0.45 0.13 145);">bénéfiques</strong> (en vert) : ils offrent un bonus aux civilisations. Plus le bonus est important, plus l'événement est <strong>rare</strong> — l'<em>Âge d'or</em> est ainsi bien plus rare qu'une simple <em>récolte abondante</em>.

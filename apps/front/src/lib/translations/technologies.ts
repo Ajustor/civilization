@@ -1,6 +1,7 @@
 import { TechId } from '@ajustor/simulation'
 
 export const techNames: Record<string, string> = {
+  [TechId.CONSTRUCTION]: 'Construction',
   [TechId.CRAFTSMANSHIP]: 'Artisanat',
   [TechId.MASONRY]: 'Maçonnerie',
   [TechId.AGRONOMY]: 'Agronomie',
@@ -61,6 +62,9 @@ export const techNames: Record<string, string> = {
   [TechId.COLONIZATION]: 'Colonisation',
   [TechId.INDUSTRIALIZATION]: 'Industrialisation',
   [TechId.EMPIRE]: 'Empire',
+  [TechId.ELECTRICITY]: 'Électricité',
+  [TechId.MODERN_MEDICINE]: 'Médecine Moderne',
+  [TechId.GLOBALIZATION]: 'Mondialisation',
   [TechId.FIREPROOFING]: 'Ignifugation',
   [TechId.FOOD_PRESERVATION]: 'Conservation alimentaire',
   [TechId.EARTHWORKS]: 'Terrassement',

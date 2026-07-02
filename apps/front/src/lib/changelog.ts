@@ -30,6 +30,78 @@ export const changeKindColors: Record<ChangeKind, string> = {
 export const changelog: ChangelogEntry[] = [
 	{
 		date: '2026-07-02',
+		title: 'Grands travaux : constructeurs, évolutions de bâtiments et métiers refondus',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'Nouveau métier : le Constructeur. C’est désormais le seul métier habilité à bâtir — chaque chantier mobilise des constructeurs (voir « Construit par » dans les règles), et sans eux rien ne se construit. Une jauge lui est dédiée dans la répartition des métiers (10 % par défaut). Un constructeur sans chantier ne produit rien : sa part est un vrai arbitrage.'
+			},
+			{
+				kind: 'feature',
+				text: 'Le métier produit, le bâtiment booste : le Fermier produit 12 nourriture/mois à la main et 20 avec une place en Ferme ; l’Érudit produit 0,2 point de recherche/mois seul (5 érudits = 1 point) et 1 point avec une place en Bibliothèque. Leurs bâtiments ne sont plus des prérequis mais des accélérateurs, construits automatiquement quand des travailleurs ne sont pas boostés. Le Mineur, le Commis de cuisine, le Charpentier et le Charbonnier continuent d’exiger leur bâtiment.'
+			},
+			{
+				kind: 'feature',
+				text: 'Évolutions de bâtiments : certains bâtiments évoluent désormais à partir d’un bâtiment de base, consommé au lancement du chantier. Les civilisations démarrent sous des Tentes (2 citoyens logés) ; la Maison (4 citoyens) se débloque via la nouvelle recherche « Construction » et consomme 1 tente par maison.'
+			},
+			{
+				kind: 'feature',
+				text: 'L’Entrepôt fait son entrée : l’ancien « Entrepôt » s’appelle désormais Cache, et le nouvel Entrepôt — débloqué par la recherche « Entreposage » — évolue à partir de 2 caches et stocke 3× plus. Comme la cache, il est indestructible et protège les ressources des événements.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Répartition des métiers : les jauges du Fermier et de l’Érudit ne sont plus plafonnées par les bâtiments existants — les citoyens évoluent d’abord, les bâtiments suivent pour les booster. Les répartitions enregistrées avant l’arrivée du Constructeur sont réinitialisées à la répartition par défaut (pensez à repasser par la configuration).'
+			},
+			{
+				kind: 'fix',
+				text: 'Les caches empilées ne retombaient plus à une seule au rechargement de la civilisation.'
+			}
+		]
+	},
+	{
+		date: '2026-07-02',
+		title: 'Fondateurs de tous âges & recherche au long cours',
+		changes: [
+			{
+				kind: 'feature',
+				text: 'Succès & classement : les civilisations débloquent désormais des succès (jalons de population, longévité, découvertes, prospérité, faits d’armes…) qui rapportent des points. Une page « Classement » publique départage toutes les civilisations, et chaque civilisation a sa page de succès. Un succès débloqué reste acquis pour toujours.'
+			},
+			{
+				kind: 'feature',
+				text: 'Les 50 fondateurs d’une nouvelle civilisation n’ont plus tous 16 ans : ils forment désormais une vraie pyramide des âges — enfants, jeunes actifs, adultes, âge mûr et quelques anciens — tirée au sort à la création. Les plus jeunes commencent enfants et évolueront en grandissant.'
+			},
+			{
+				kind: 'feature',
+				text: 'L’arbre des technologies s’ouvre sur une ère moderne : trois nouvelles découvertes de fin de partie — Électricité, Médecine Moderne et Mondialisation.'
+			},
+			{
+				kind: 'improvement',
+				text: 'La recherche devient une aventure au long cours : les coûts des technologies grimpent fortement de palier en palier et les bonus de savoir ont été assagis (×5 cumulés au maximum, contre ×85 auparavant). Comptez environ deux semaines réelles pour compléter l’arbre en mode rapide — les premières découvertes restent accessibles dès les premières heures.'
+			},
+			{
+				kind: 'improvement',
+				text: 'La page des règles liste désormais l’intégralité de l’arbre technologique (coûts, prérequis et effets), toujours à jour, et décrit la composition de la population fondatrice.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Tous les réglages en pourcentage (répartition des métiers, ratio militaire, pourcentage d’enfants, colonie) se font désormais au curseur, avec la possibilité de taper une valeur précise. Dans la répartition des métiers, les autres jauges se recalculent en direct pour que le total fasse toujours 100 %.'
+			},
+			{
+				kind: 'improvement',
+				text: 'Le choix du prochain bâtiment indique désormais en direct ce qui bloque le chantier : stocks de ressources (en stock / requis) et ouvriers disponibles, avec un rappel que la demande est conservée et réessayée chaque mois. Fini les chantiers qui semblent ignorés sans explication.'
+			},
+			{
+				kind: 'improvement',
+				text: 'L’Entrepôt est enfin constructible : son chantier démesuré (200 bois, 600 planches et 15 récolteurs libres en même temps !) est ramené au niveau des autres bâtiments — 30 bois, 20 planches et 4 récolteurs, toujours en 6 mois.'
+			},
+			{
+				kind: 'feature',
+				text: 'Les nouvelles civilisations ne reçoivent plus d’entrepôt à la fondation : le construire devient l’un des premiers objectifs, car sans lui aucune ressource n’est à l’abri des incendies et des invasions de rats.'
+			}
+		]
+	},
+	{
+		date: '2026-07-02',
 		title: 'Mine unique, pyramide des âges & cimetière',
 		changes: [
 			{

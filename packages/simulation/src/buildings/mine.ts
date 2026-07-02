@@ -21,7 +21,7 @@ export class Mine extends AbstractExtractionBuilding {
   capacity = getRandomInt(1000, 100_000)
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
-      occupation: OccupationTypes.GATHERER,
+      occupation: OccupationTypes.BUILDER,
       amount: 5,
     },
   ]

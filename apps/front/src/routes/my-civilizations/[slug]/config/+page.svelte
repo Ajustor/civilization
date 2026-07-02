@@ -20,6 +20,7 @@
 
 	type ConfigFormData = z.infer<typeof civilizationConfigSchema>
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+	import PercentSlider from '$lib/components/PercentSlider.svelte'
 
 	interface Props {
 		data: PageData;
@@ -53,7 +54,7 @@
 
 	const { form: formData, enhance: formEnhance } = form
 
-	// Total live des jauges : la répartition n'est valide que si elle fait 100 %.
+	// Total live des jauges : maintenu à 100 % par le rééquilibrage automatique.
 	const distributionTotal = $derived(
 		DISTRIBUTABLE_OCCUPATIONS.reduce(
 			(sum, occupation) =>
@@ -61,6 +62,41 @@
 			0
 		)
 	)
+
+	// Quand une jauge change, les autres sont recalculées en direct pour que le
+	// total fasse toujours exactement 100 % : le reste (100 − valeur choisie) est
+	// réparti proportionnellement aux valeurs actuelles des autres jauges (parts
+	// égales si elles sont toutes à zéro), avec un arrondi au plus fort reste.
+	const rebalanceDistribution = (changed: string, value: number) => {
+		const current = ($formData as ConfigFormData).occupationDistribution ?? {}
+		const others = DISTRIBUTABLE_OCCUPATIONS.filter((occupation) => occupation !== changed)
+		const remaining = Math.max(0, 100 - value)
+		const othersTotal = others.reduce(
+			(sum, occupation) => sum + (Number(current[occupation]) || 0),
+			0
+		)
+		const exactShares = others.map((occupation) =>
+			othersTotal > 0
+				? ((Number(current[occupation]) || 0) / othersTotal) * remaining
+				: remaining / others.length
+		)
+		const floored = exactShares.map(Math.floor)
+		let leftover = remaining - floored.reduce((sum, share) => sum + share, 0)
+		exactShares
+			.map((exact, index) => ({ index, fraction: exact - floored[index] }))
+			.sort((a, b) => b.fraction - a.fraction)
+			.forEach(({ index }) => {
+				if (leftover > 0) {
+					floored[index] += 1
+					leftover -= 1
+				}
+			})
+		const next: Record<string, number> = { [changed]: value }
+		others.forEach((occupation, index) => {
+			next[occupation] = floored[index]
+		})
+		$formData.occupationDistribution = next
+	}
 
 	const toggleExchange = (civilizationId: string, checked: boolean | 'indeterminate') => {
 		const fd = $formData as ConfigFormData
@@ -99,7 +135,7 @@
 					<FormControl>
 						{#snippet children({ props })}
 							<FormLabel>Pourcentage maximum d'enfants (% des adultes)</FormLabel>
-							<input type="number" min="0" max="100" class="input input-bordered w-full" {...props} bind:value={$formData.maximumChildrenPercentage} />
+							<PercentSlider {...props} bind:value={$formData.maximumChildrenPercentage} />
 						{/snippet}
 					</FormControl>
 					<FormDescription>Limite le nombre d'enfants vivants simultanément à ce pourcentage du nombre d'adultes (citoyens non-enfants). Ex. 25 % avec 100 adultes = 25 enfants maximum.</FormDescription>
@@ -123,27 +159,25 @@
 		<div class="civ-inner-card">
 			<h3 class="civ-section-title">Répartition des métiers</h3>
 			<p style="color:oklch(0.5 0.03 50); font-size:14px; margin:0 0 12px;">
-				Pourcentage cible de la population active civile pour chaque métier. La construction des
-				bâtiments et l'évolution des citoyens convergent vers ces cibles ; dès qu'un poste se libère et
-				qu'un citoyen a les prérequis, il évolue. Le total doit faire exactement 100 %. Les soldats sont
-				gérés séparément par le ratio militaire.
+				Pourcentage cible de la population active civile pour chaque métier. Dès qu'un citoyen a les
+				prérequis, il évolue vers le métier le plus déficitaire. Le <strong>Fermier</strong> et
+				l'<strong>Érudit</strong> produisent même sans bâtiment (à rendement réduit) : leur bâtiment ne
+				fait que les booster, et la civilisation le construit automatiquement quand des travailleurs ne
+				sont pas boostés. Le <strong>Mineur</strong>, le <strong>Commis de cuisine</strong>, le
+				<strong>Charpentier</strong> et le <strong>Charbonnier</strong> exigent leur bâtiment : leur
+				effectif est plafonné par les places bâties. Le <strong>Constructeur</strong> est le seul métier
+				habilité à bâtir — sans constructeurs, aucun chantier ne démarre. Quand vous ajustez une jauge,
+				les autres se recalculent en direct pour que le total fasse toujours exactement 100 %. Les
+				soldats sont gérés séparément par le ratio militaire.
 			</p>
-			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;">
+			<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px;">
 				{#each DISTRIBUTABLE_OCCUPATIONS as occupation}
-					<label style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; background:oklch(0.97 0.01 84); border-radius:4px;">
-						<span style="font-size:15px;">{OCCUPATIONS[occupation]}</span>
-						<span style="display:inline-flex; align-items:center; gap:4px;">
-							<input
-								type="number"
-								min="0"
-								max="100"
-								step="1"
-								style="width:72px; text-align:right;"
-								class="input input-bordered"
-								bind:value={$formData.occupationDistribution[occupation]}
-							/>
-							<span style="color:oklch(0.5 0.03 50);">%</span>
-						</span>
+					<label style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 10px; background:oklch(0.97 0.01 84); border-radius:4px;">
+						<span style="font-size:15px; flex-shrink:0; min-width:96px;">{OCCUPATIONS[occupation]}</span>
+						<PercentSlider
+							bind:value={$formData.occupationDistribution[occupation]}
+							onValueChange={(value) => rebalanceDistribution(occupation, value)}
+						/>
 					</label>
 				{/each}
 			</div>

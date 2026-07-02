@@ -34,8 +34,10 @@ mock.module('../../libs/database/models', () => ({
   CivilizationStatsModel: { deleteMany: statsDeleteMany },
   GraveModel: { deleteMany: gravesDeleteMany },
   CemeteryStatsModel: { deleteMany: cemeteryStatsDeleteMany },
+  AchievementModel: { deleteMany: mock(async () => ({ acknowledged: true })) },
   CombatLogModel: {},
   PersonModel: {},
+  TradeOfferModel: { deleteMany: mock(async () => ({ acknowledged: true })) },
   WorldModel: {},
 }))
 

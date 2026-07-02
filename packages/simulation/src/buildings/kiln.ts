@@ -36,7 +36,7 @@ export class Kiln extends AbstractProductionBuilding {
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
-      occupation: OccupationTypes.WOODCUTTER,
+      occupation: OccupationTypes.BUILDER,
       amount: 2,
     },
   ]

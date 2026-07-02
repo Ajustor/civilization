@@ -40,11 +40,14 @@ describe('Métadonnées de production des bâtiments', () => {
     expect(House.capacity).toBe(4)
   })
 
-  it('Entrepôt : coût et temps réels (non « gratuit »)', () => {
+  it('Entrepôt : coût et temps réels (non « gratuit »), alignés sur les autres bâtiments', () => {
     expect(Cache.timeToBuild).toBe(6)
     expect(Cache.constructionCosts).toEqual([
-      { amount: 200, resource: ResourceTypes.WOOD },
-      { amount: 600, resource: ResourceTypes.PLANK },
+      { amount: 30, resource: ResourceTypes.WOOD },
+      { amount: 20, resource: ResourceTypes.PLANK },
+    ])
+    expect(Cache.workerRequiredToBuild).toEqual([
+      { occupation: OccupationTypes.GATHERER, amount: 4 },
     ])
   })
 })

@@ -3,6 +3,7 @@
   import { enhance } from '$app/forms'
   import { techNames, resourceNames } from '$lib/translations'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+  import PercentSlider from '$lib/components/PercentSlider.svelte'
   import { toast } from 'svelte-sonner'
   import { goto } from '$app/navigation'
 
@@ -10,11 +11,16 @@
 
   const civ = $derived(data.civilization)
   const totalPeople = $derived(civ.citizensCount ?? 0)
+  const civResources = $derived(
+    (civ.resources ?? []) as { type: string; quantity: number }[],
+  )
 
   let colonyName = $state('')
   let populationPercent = $state(20)
   let resourcePercents = $state<Record<string, number>>(
-    Object.fromEntries((civ.resources ?? []).map((r) => [r.type, 0])),
+    Object.fromEntries(
+      ((data.civilization.resources ?? []) as { type: string }[]).map((r) => [r.type, 0]),
+    ),
   )
   let selectedTechs = $state<string[]>([])
   let submitting = $state(false)
@@ -28,7 +34,7 @@
   const canSubmit = $derived(colonyName.trim().length >= 3 && popValid && !submitting)
 
   const resourcesPayload = $derived(
-    (civ.resources ?? [])
+    civResources
       .filter((r) => (resourcePercents[r.type] ?? 0) > 0)
       .map((r) => ({
         type: r.type,
@@ -145,32 +151,31 @@
           {/each}
         </div>
 
-        <input
-          type="range"
-          name="populationPercent"
-          min="5" max="50"
+        <PercentSlider
           bind:value={populationPercent}
-          style="width:100%; accent-color:oklch(0.48 0.12 140); cursor:pointer;"
+          min={5}
+          max={50}
+          accent="oklch(0.48 0.12 140)"
+          name="populationPercent"
         />
         <div style="display:flex; justify-content:space-between; font-family:'EB Garamond',serif; font-size:12px; color:oklch(0.55 0.04 50);">
-          <span>5%</span>
-          <span style="font-family:'Marcellus',serif; color:oklch(0.4 0.1 140);">{populationPercent}%</span>
-          <span>50%</span>
+          <span>5% minimum</span>
+          <span>50% maximum</span>
         </div>
       </section>
 
       <!-- Resources -->
-      {#if (civ.resources ?? []).length > 0}
+      {#if civResources.length > 0}
         <section style="display:flex; flex-direction:column; gap:12px;">
           <h2 style="font-family:'Marcellus',serif; font-size:17px; margin:0; color:oklch(0.35 0.05 45); border-bottom:1px solid oklch(0.85 0.03 60); padding-bottom:6px;">
             Ressources
           </h2>
-          {#each civ.resources ?? [] as resource (resource.type)}
+          {#each civResources as resource (resource.type)}
             {@const pct = resourcePercents[resource.type] ?? 0}
             {@const transferAmt = Math.floor((resource.quantity * pct) / 100)}
             <div style="padding:12px 14px; border:1px solid oklch(0.87 0.03 60); border-radius:5px; background:oklch(0.99 0.008 84); display:flex; flex-direction:column; gap:8px;">
               <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
-                <span style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.32 0.04 40); flex:1;">{resourceNames[resource.type] ?? resource.type}</span>
+                <span style="font-family:'Marcellus',serif; font-size:15px; color:oklch(0.32 0.04 40); flex:1;">{(resourceNames as Record<string, string>)[resource.type] ?? resource.type}</span>
                 <span style="font-family:'EB Garamond',serif; font-size:13px; color:oklch(0.55 0.04 50);">{resource.quantity} dispo.</span>
                 {#if transferAmt > 0}
                   <span style="font-family:'EB Garamond',serif; font-size:13px; color:oklch(0.42 0.12 140); font-weight:600;">→ {transferAmt} transférés</span>
@@ -185,11 +190,9 @@
                   >{p}%</button>
                 {/each}
               </div>
-              <input
-                type="range"
-                min="0" max="100"
+              <PercentSlider
                 bind:value={resourcePercents[resource.type]}
-                style="width:100%; accent-color:oklch(0.48 0.12 140); cursor:pointer;"
+                accent="oklch(0.48 0.12 140)"
               />
             </div>
           {/each}

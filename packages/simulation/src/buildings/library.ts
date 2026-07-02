@@ -28,7 +28,7 @@ export class Library extends AbstractProductionBuilding {
 
   public static workerRequiredToBuild: WorkerRequiredToBuild[] = [
     {
-      occupation: OccupationTypes.GATHERER,
+      occupation: OccupationTypes.BUILDER,
       amount: 2,
     },
   ]

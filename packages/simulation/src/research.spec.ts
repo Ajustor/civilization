@@ -70,11 +70,18 @@ describe('research production', () => {
     civ['produceResearch']()
     expect(civ.researchPoints).toBe(1)
   })
-  it('produces nothing without a library', () => {
-    const civ = new Civilization('NoLib')
-    addErudits(civ, 2)
-    civ['produceResearch']()
-    expect(civ.researchPoints).toBe(0)
+  it('sans bibliothèque, la production est drastiquement réduite (5 érudits = 1 point)', () => {
+    // 2 érudits × 0,2 = 0,4 → arrondi à l'entier inférieur : rien ce mois-ci.
+    const smallCiv = new Civilization('NoLib')
+    addErudits(smallCiv, 2)
+    smallCiv['produceResearch']()
+    expect(smallCiv.researchPoints).toBe(0)
+
+    // 5 érudits × 0,2 = 1 point par mois.
+    const bigCiv = new Civilization('NoLib5')
+    addErudits(bigCiv, 5)
+    bigCiv['produceResearch']()
+    expect(bigCiv.researchPoints).toBe(1)
   })
   it('stacks: 2 libraries with 4 érudits → 4 points', () => {
     const civ = new Civilization('BigAcademy')
